@@ -11,12 +11,6 @@ CREATE TYPE gender_type AS ENUM ('male', 'female', 'other', 'prefer_not_to_say')
 -- Profile types enumeration
 CREATE TYPE profile_type_enum AS ENUM ('student', 'teacher', 'parent', 'admin', 'staff', 'guardian');
 
--- Contact method enumeration
-CREATE TYPE contact_method_enum AS ENUM ('email', 'sms', 'whatsapp', 'none');
-
--- Notification frequency enumeration
-CREATE TYPE notification_frequency_enum AS ENUM ('immediate', 'daily', 'weekly', 'never');
-
 
 -- Core users table - identity and account status
 CREATE TABLE users (
@@ -122,31 +116,6 @@ CREATE TABLE user_profiles (
     UNIQUE(user_id)
 );
 
--- User communication and notification preferences
-CREATE TABLE user_communication_preferences (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Notification channel preferences
-    email_notifications BOOLEAN DEFAULT true,
-    sms_notifications BOOLEAN DEFAULT false,
-    whatsapp_notifications BOOLEAN DEFAULT false,
-    push_notifications BOOLEAN DEFAULT true,
-    in_app_notifications BOOLEAN DEFAULT true,
-    
-    -- Communication preferences
-    preferred_contact_method contact_method_enum DEFAULT 'email',
-    preferred_language VARCHAR(10) DEFAULT 'en',
-    timezone VARCHAR(50) DEFAULT 'Asia/Kolkata',
-    
-    -- Notification frequency settings
-    notification_frequency notification_frequency_enum DEFAULT 'immediate',
-    quiet_hours_start TIME,
-    quiet_hours_end TIME,
-    
-    -- Metadata
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
 
 -- =====================================================
 --  SPECIALIZED PROFILES
@@ -266,9 +235,6 @@ CREATE INDEX idx_parents_profile_id ON parents(profile_id);
 CREATE INDEX idx_student_parents_student_profile_id ON student_parents(student_profile_id);
 CREATE INDEX idx_student_parents_parent_profile_id ON student_parents(parent_profile_id);
 
--- Communication preferences indexes
-CREATE INDEX idx_user_communication_preferences_user_id ON user_communication_preferences(user_id);
-CREATE INDEX idx_user_communication_preferences_notification_frequency ON user_communication_preferences(notification_frequency);
 
 -- User roles indexes (essential for role-based queries)
 CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
@@ -300,8 +266,6 @@ CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
-CREATE TRIGGER update_user_communication_preferences_updated_at BEFORE UPDATE ON user_communication_preferences
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to update last_profile_update
 CREATE OR REPLACE FUNCTION update_last_profile_update()
@@ -365,23 +329,6 @@ CREATE VIEW active_users AS
 SELECT * FROM users 
 WHERE is_active = true AND deleted_at IS NULL;
 
--- User profiles with communication preferences
-CREATE VIEW users_with_preferences AS
-SELECT 
-    u.*,
-    up.first_name,
-    up.last_name,
-    up.profile_type,
-    ucp.email_notifications,
-    ucp.sms_notifications,
-    ucp.whatsapp_notifications,
-    ucp.preferred_contact_method,
-    ucp.timezone
-FROM users u
-LEFT JOIN user_profiles up ON u.id = up.user_id
-LEFT JOIN user_communication_preferences ucp ON u.id = ucp.user_id
-WHERE u.is_active = true AND u.deleted_at IS NULL;
-
 -- =====================================================
 --  COMMENTS FOR DOCUMENTATION
 -- =====================================================
@@ -392,7 +339,6 @@ COMMENT ON TABLE students IS 'Student-specific information and academic data';
 COMMENT ON TABLE teachers IS 'Teacher-specific information and professional data';
 COMMENT ON TABLE parents IS 'Parent/Guardian information';
 COMMENT ON TABLE student_parents IS 'Relationships between students and their parents/guardians';
-COMMENT ON TABLE user_communication_preferences IS 'User notification and communication preferences';
 
 COMMENT ON COLUMN user_profiles.custom_fields IS 'JSONB field for storing custom profile data';
 COMMENT ON COLUMN teachers.professional_info IS 'JSONB field for storing professional-specific information';
