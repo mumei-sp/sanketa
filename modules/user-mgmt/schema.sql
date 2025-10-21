@@ -30,8 +30,8 @@ CREATE TABLE users (
     -- Audit fields
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    updated_by UUID,
+    created_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id),
     
     -- Constraints
     CONSTRAINT chk_username_length CHECK (LENGTH(username) >= 3),
