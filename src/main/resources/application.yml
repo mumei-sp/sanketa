@@ -1,0 +1,72 @@
+fabric:
+  token:
+    # Token time-to-live in seconds (15 minutes default)
+    token-ttl-seconds: 900
+    
+    # HTTP header name for TCT token
+    token-header-name: X-Tenant-Context-Token
+    
+    # Whether to require token for all requests
+    require-token: true
+    
+    # Public paths that don't require token
+    public-paths:
+      - /health
+      - /actuator/**
+      - /api/v1/token/validate
+    
+    # Key ID for signing/verification
+    key-id: default
+    
+    # Ed25519 keys (Base64 encoded)
+    # In production, load these from secrets manager (AWS Secrets Manager, HashiCorp Vault, etc.)
+    # For development, leave empty to auto-generate
+    private-key: ""
+    public-key: ""
+    
+    # Auto-initialize keys if not provided (development only)
+    auto-initialize-keys: true
+    
+    # Key rotation policy (future-proofing)
+    # Note: Key rotation functionality to be implemented
+    key-rotation:
+      # Enable automatic key rotation
+      enabled: false
+      
+      # Rotation interval in days
+      rotation-interval-days: 90
+      
+      # Number of previous keys to keep for verification during rotation grace period
+      keep-previous-keys: 2
+      
+      # Grace period in days after rotation before old keys are invalidated
+      grace-period-days: 7
+      
+      # Rotation strategy: "scheduled" (time-based) or "manual" (on-demand)
+      strategy: scheduled
+      
+      # Notification settings for rotation events (future)
+      notifications:
+        enabled: false
+        # channels: [email, webhook, log]
+
+spring:
+  application:
+    name: fabric
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    # Application-specific logging
+    com.sanketa.fabric: INFO
+    com.sanketa.fabric.token: DEBUG
+    # Framework logging (reduce noise)
+    org.springframework: WARN
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.hibernate: WARN
+    org.apache: WARN
+
