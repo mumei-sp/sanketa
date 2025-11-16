@@ -8,7 +8,8 @@ Fabric is the core platform layer that powers authentication, tenant resolution,
 
 Fabric provides a unified access layer that handles:
 
-- **Authentication** - Secure user authentication across all tenants
+- **Authentication** - Secure user authentication across all tenants (via Keycloak)
 - **Tenant Resolution** - Intelligent routing to the correct school database
 - **Database Routing** - Dynamic connection management for multi-tenant architecture
 - **Data Isolation** - Ensuring complete separation between school instances
+- **Session Context Tokens** - Lightweight PASETO-based tokens for multi-tenant routing
