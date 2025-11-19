@@ -50,12 +50,99 @@ fabric:
         enabled: false
         # channels: [email, webhook, log]
 
+  # Redis Caching Configuration
+  redis:
+    # Enable Redis caching
+    enabled: true
+    
+    # Key prefix for namespace isolation (optional)
+    key-prefix: 
+    
+    # Standalone configuration
+    standalone:
+      host: localhost
+      port: 6379
+      password: ""  # Leave empty if no password
+      database: 0
+    
+    # Connection pool configuration
+    pool:
+      max-active: 20
+      max-idle: 10
+      min-idle: 5
+      max-wait: PT2S  # 2 seconds
+      test-on-borrow: true
+      test-on-return: false
+      test-while-idle: true
+      time-between-eviction-runs: PT30S  # 30 seconds
+    
+    # Timeout configuration
+    timeout:
+      connect: PT10S  # 10 seconds
+      command: PT5S    # 5 seconds
+    
+    # Tenant cache configuration
+    tenant:
+      enabled: true
+      default-ttl: PT30M  # 30 minutes
+      key-prefix: tenant
+      enable-stats: true
+    
+    # User-tenant mapping cache configuration
+    user-tenant:
+      enabled: true
+      default-ttl: PT15M  # 15 minutes (shorter TTL for user data)
+      key-prefix: user-tenant
+      enable-stats: true
+    
+    # Global cache configuration
+    global:
+      enabled: true
+      default-ttl: PT1H  # 1 hour (longer TTL for global data)
+      key-prefix: global
+      enable-stats: true
+    
+    # Health check configuration
+    health:
+      enabled: true
+      interval: PT30S  # Check every 30 seconds
+      timeout: PT5S    # Health check timeout
+      failure-threshold: 3  # Mark unhealthy after 3 consecutive failures
+    
+    # Exception handling configuration
+    exception-handling:
+      # Fail gracefully (return null/do nothing) instead of throwing exceptions
+      # When true: cache failures won't break the application (recommended for production)
+      # When false: cache failures will throw CacheException (caught by GlobalExceptionHandler)
+      fail-gracefully: true
+      
+      # Throw exceptions for critical operations even if fail-gracefully is true
+      # Operations like: put, delete, clear
+      throw-on-critical-operations: false
+      
+      # Log exceptions even when failing gracefully
+      log-exceptions: true
+
 spring:
   application:
     name: fabric
 
 server:
   port: 8080
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized  # Show details when authorized, or use "always" for development
+      show-components: always
+  health:
+    redis:
+      enabled: true  # Enable Redis health indicator
 
 logging:
   level:
