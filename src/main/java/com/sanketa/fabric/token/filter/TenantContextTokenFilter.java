@@ -1,8 +1,11 @@
 package com.sanketa.fabric.token.filter;
 
+import com.sanketa.fabric.cache.model.TenantCacheData;
+import com.sanketa.fabric.cache.tenant.TenantCacheService;
 import com.sanketa.fabric.token.TenantContextTokenProperties;
 import com.sanketa.fabric.token.TenantContextTokenService;
 import com.sanketa.fabric.token.exception.TokenValidationException;
+import com.sanketa.fabric.token.model.RequestContext;
 import com.sanketa.fabric.token.model.TenantContext;
 import com.sanketa.fabric.token.TenantContextStore;
 import jakarta.servlet.FilterChain;
@@ -36,6 +39,7 @@ public class TenantContextTokenFilter extends OncePerRequestFilter {
     
     private final TenantContextTokenService tokenService;
     private final TenantContextTokenProperties properties;
+    private final TenantCacheService tenantCacheService;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     
     @Override
@@ -62,11 +66,11 @@ public class TenantContextTokenFilter extends OncePerRequestFilter {
         }
         
         try {
+            // Validate and parse token
             TenantContext context = tokenService.validateAndParseToken(token);
             request.setAttribute("tenantContext", context);
-            // Set context in ThreadLocal - available throughout the request lifecycle
-            TenantContextStore.setContext(context);
             
+            // Handle active tenant header
             String activeTenantHeader = request.getHeader("X-Active-Tenant-Id");
             if (activeTenantHeader != null && !activeTenantHeader.isEmpty()) {
                 try {
@@ -84,6 +88,37 @@ public class TenantContextTokenFilter extends OncePerRequestFilter {
                     log.warn("Invalid X-Active-Tenant-Id header value: {}", activeTenantHeader);
                 }
             }
+            
+            // Get effective tenant ID (active tenant if set, otherwise first tenant)
+            Long effectiveTenantId = context.getEffectiveTenantId();
+            TenantCacheData activeTenantDetails = loadTenantDetails(effectiveTenantId);
+            
+            if (activeTenantDetails == null) {
+                log.error("Failed to load tenant details for tenant ID: {}. Cannot proceed with DB routing.", 
+                        effectiveTenantId);
+                sendErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Tenant configuration not available. Please contact administrator.");
+                return;
+            }
+            
+            // Validate critical fields for DB routing
+            if (activeTenantDetails.getConnectionString() == null || activeTenantDetails.getConnectionString().isEmpty()) {
+                log.error("Tenant {} has no connection string configured", effectiveTenantId);
+                sendErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Tenant database configuration incomplete. Please contact administrator.");
+                return;
+            }
+            if (activeTenantDetails.getIsHealthy() != null && !activeTenantDetails.getIsHealthy()) {
+                log.warn("Tenant {} database instance is unhealthy", effectiveTenantId);
+                // Note: We still proceed but log the warning - you may want to fail here instead
+            }
+            
+            // RequestContext is immutable (@Value) - cannot be modified after creation
+            RequestContext requestContext = RequestContext.builder()
+                    .tenantContext(context)
+                    .activeTenantDetails(activeTenantDetails)
+                    .build();
+            TenantContextStore.setContext(requestContext);
             
             // Continue filter chain - context is available to all downstream filters and controllers
             filterChain.doFilter(request, response);
@@ -116,6 +151,47 @@ public class TenantContextTokenFilter extends OncePerRequestFilter {
     private boolean isPublicPath(String path) {
         return Arrays.stream(properties.getPublicPaths())
                 .anyMatch(pattern -> pathMatcher.match(pattern, path));
+    }
+    
+    /**
+     * Load tenant details from cache or database
+     * 
+     * @param tenantId Tenant ID to load
+     * @return TenantCacheData with DB connection info, or null if tenant not found
+     */
+    private TenantCacheData loadTenantDetails(Long tenantId) {
+        if (tenantId == null) {
+            log.debug("Cannot load tenant details: tenant ID is null");
+            return null;
+        }
+        
+        try {
+            TenantCacheData cacheData = tenantCacheService.getTenantById(tenantId);
+            
+            if (cacheData != null) {
+                log.debug("Cache hit for tenant ID: {}", tenantId);
+                return cacheData;
+            }
+            
+            log.debug("Cache miss for tenant ID: {}, attempting to load from database", tenantId);
+            
+            cacheData = tenantCacheService.getTenantById(tenantId, () -> {
+                // TODO: Implement database loader to query v_user_tenant_resolution view
+                log.warn("Database loader not implemented yet for tenant ID: {}. " +
+                        "Tenant details must be pre-loaded into cache.", tenantId);
+                return null;
+            });
+            
+            if (cacheData == null) {
+                log.warn("Tenant details not found in cache or database for tenant ID: {}", tenantId);
+                return null;
+            }
+            return cacheData;
+            
+        } catch (Exception e) {
+            log.error("Error loading tenant details for tenant ID: {}", tenantId, e);
+            return null;
+        }
     }
     
     /**
