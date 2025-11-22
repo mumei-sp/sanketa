@@ -1,5 +1,6 @@
 package com.sanketa.fabric.token.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,35 +23,47 @@ public class TenantContext {
     
     /**
      * User ID from Global DB
+     * Maps to PASETO claim "uid"
      */
+    @JsonProperty("uid")
     private Long userId;
     
     /**
      * List of tenant IDs the user has access to
      * Never null (empty list if no tenant access)
+     * Maps to PASETO claim "tenantIds"
      */
+    @JsonProperty("tenantIds")
     private List<Long> tenantIds;
     
     /**
      * Current active tenant ID (if user has selected one)
      * This is typically set via X-Active-Tenant-Id header
+     * Not part of PASETO token - added after validation
      */
+    @JsonProperty("activeTenantId")
     private Long activeTenantId;
     
     /**
      * Key ID used to sign the token
      * Enables key rotation support
+     * Maps to PASETO claim "kid"
      */
+    @JsonProperty("kid")
     private String keyId;
     
     /**
      * Token issued at timestamp (Unix epoch seconds)
+     * Maps to PASETO standard claim "iat"
      */
+    @JsonProperty("iat")
     private Long issuedAt;
     
     /**
      * Token expiration timestamp (Unix epoch seconds)
+     * Maps to PASETO standard claim "exp"
      */
+    @JsonProperty("exp")
     private Long expiresAt;
     
     /**
