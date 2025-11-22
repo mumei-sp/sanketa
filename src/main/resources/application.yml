@@ -18,14 +18,11 @@ fabric:
     # Key ID for signing/verification
     key-id: default
     
-    # Ed25519 keys (Base64 encoded)
-    # In production, load these from secrets manager (AWS Secrets Manager, HashiCorp Vault, etc.)
-    # For development, leave empty to auto-generate
-    private-key: ""
-    public-key: ""
-    
-    # Auto-initialize keys if not provided (development only)
-    auto-initialize-keys: true
+    # HashiCorp Vault Configuration
+    vault:
+      key-id: default
+      # Vault path prefix (default: "secret/data/fabric/token/keys")
+      path-prefix: secret/data/fabric/token/keys
     
     # Key rotation policy (future-proofing)
     # Note: Key rotation functionality to be implemented
@@ -50,7 +47,42 @@ fabric:
         enabled: false
         # channels: [email, webhook, log]
 
-  # Redis Caching Configuration
+  # HashiCorp Vault Configuration
+  vault:
+    enabled: true
+    
+    address: http://localhost:8200
+    
+    namespace: ""
+    
+    # Authentication configuration
+    auth:
+      # Authentication method: token or approle
+      method: token
+      
+      # Token authentication (for development)
+      token:
+        token: ""  # Leave empty to use VAULT_TOKEN env var
+      
+      # AppRole authentication (recommended for production)
+      approle:
+        role-id: ""      # Leave empty to use VAULT_ROLE_ID env var
+        secret-id: ""    # Leave empty to use VAULT_SECRET_ID env var
+        mount-path: approle
+    
+    # Connection configuration (optional - Spring Vault has defaults)
+    connection:
+      timeout: PT10S      # Connection timeout (default: 10 seconds)
+      read-timeout: PT30S  # Read timeout (default: 30 seconds)
+    
+    # TLS/SSL configuration (optional - only needed for HTTPS)
+    tls:
+      verify: true         # Enable TLS verification (set false for dev with self-signed certs)
+
+  # Redis Caching Configuration with separate caches for:
+  # - Tenant data
+  # - User-tenant mappings
+  # - Global/shared data
   redis:
     # Enable Redis caching
     enabled: true
