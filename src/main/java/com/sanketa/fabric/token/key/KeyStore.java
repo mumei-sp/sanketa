@@ -1,6 +1,6 @@
 package com.sanketa.fabric.token.key;
 
-import com.sanketa.fabric.token.TokenErrorCode;
+import com.sanketa.fabric.token.exception.TokenErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @see com.sanketa.fabric.vault.service.VaultKeyStoreLoader For loading keys from HashiCorp Vault
  * @see com.sanketa.fabric.token.config.TokenConfiguration For key initialization
+ * @author mumei
  */
 @Slf4j
 @Component

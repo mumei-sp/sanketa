@@ -1,6 +1,6 @@
 package com.sanketa.fabric.token.key;
 
-import com.sanketa.fabric.token.TokenErrorCode;
+import com.sanketa.fabric.token.exception.TokenErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.stereotype.Component;
@@ -16,6 +16,8 @@ import java.util.Base64;
  * Ed25519 Key Manager
  * 
  * Handles generation, encoding, and decoding of Ed25519 key pairs for PASETO signing.
+ * 
+ * @author mumei
  */
 @Slf4j
 @Component

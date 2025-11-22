@@ -23,6 +23,8 @@ import java.util.Map;
  * HashiCorp Vault Key Store Loader
  * 
  * Loads Ed25519 keys from HashiCorp Vault for horizontally scaled deployments.
+ * 
+ * @author mumei
  */
 @Slf4j
 @Component

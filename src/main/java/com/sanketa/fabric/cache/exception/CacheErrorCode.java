@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 
 /**
  * Error codes for cache operations.
+ * 
+ * @author mumei
  */
 public enum CacheErrorCode implements ErrorCode {
     

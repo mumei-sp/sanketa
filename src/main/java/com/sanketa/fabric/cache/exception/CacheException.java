@@ -5,6 +5,8 @@ import com.sanketa.fabric.exception.ErrorMetadata;
 
 /**
  * Exception thrown for cache-related errors.
+ * 
+ * @author mumei
  */
 public class CacheException extends BaseException {
     

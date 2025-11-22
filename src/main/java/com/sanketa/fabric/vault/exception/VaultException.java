@@ -6,6 +6,8 @@ package com.sanketa.fabric.vault.exception;
  * Wraps Spring Vault exceptions and provides application-specific error handling.
  * Spring Vault automatically handles retries, so this exception is primarily
  * for application-level error reporting.
+ * 
+ * @author mumei
  */
 public class VaultException extends RuntimeException {
     

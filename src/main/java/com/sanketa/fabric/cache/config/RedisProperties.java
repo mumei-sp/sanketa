@@ -16,6 +16,8 @@ import java.time.Duration;
  * - Separate cache configurations for tenants, users, and global data
  * - TTL management per cache type
  * - Health checks and monitoring
+ * 
+ * @author mumei
  */
 @Data
 @Validated

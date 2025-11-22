@@ -9,6 +9,8 @@ import java.time.Duration;
 
 /**
  * Vault configuration properties.
+ * 
+ * @author mumei
  */
 @Data
 @Validated

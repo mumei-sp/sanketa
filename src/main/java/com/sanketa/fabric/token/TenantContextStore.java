@@ -16,6 +16,8 @@ import com.sanketa.fabric.token.model.TenantContext;
  *   <li>Context is cleared by {@link com.sanketa.fabric.token.config.TokenConfiguration#tenantContextCleanupFilter()}
  *       after request processing completes</li>
  * </ul>
+ * 
+ * @author mumei
  */
 public final class TenantContextStore {
     

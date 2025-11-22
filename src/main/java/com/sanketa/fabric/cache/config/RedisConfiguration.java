@@ -24,6 +24,11 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 
+/**
+ * Redis Configuration
+ * 
+ * @author mumei
+ */
 @Slf4j
 @Configuration
 @ConditionalOnProperty(name = "fabric.redis.enabled", havingValue = "true", matchIfMissing = true)

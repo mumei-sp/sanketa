@@ -31,6 +31,8 @@ import java.net.URI;
  * - Connection pooling
  * - Health checks (via Actuator)
  * - Token renewal
+ * 
+ * @author mumei
  */
 @Configuration
 @EnableConfigurationProperties(VaultProperties.class)

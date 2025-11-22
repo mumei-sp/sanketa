@@ -4,6 +4,8 @@ import lombok.Getter;
 
 /**
  * Enum defining cache types with their respective prefixes and configurations.
+ * 
+ * @author mumei
  */
 @Getter
 public enum CacheType {

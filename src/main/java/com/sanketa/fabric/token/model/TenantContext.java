@@ -14,6 +14,8 @@ import java.util.List;
  * 
  * This is the parsed and validated context that flows through the application
  * after token validation. It's thread-safe and can be safely shared across threads.
+ * 
+ * @author mumei
  */
 @Data
 @Builder

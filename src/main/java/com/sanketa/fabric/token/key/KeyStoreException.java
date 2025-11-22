@@ -2,10 +2,12 @@ package com.sanketa.fabric.token.key;
 
 import com.sanketa.fabric.exception.BaseException;
 import com.sanketa.fabric.exception.ErrorMetadata;
-import com.sanketa.fabric.token.TokenErrorCode;
+import com.sanketa.fabric.token.exception.TokenErrorCode;
 
 /**
  * Exception thrown when key store operations fail.
+ * 
+ * @author mumei
  */
 public class KeyStoreException extends BaseException {
 

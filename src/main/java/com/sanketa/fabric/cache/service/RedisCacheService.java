@@ -15,6 +15,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+/**
+ * Redis Cache Service
+ * 
+ * @author mumei
+ */
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "fabric.redis.enabled", havingValue = "true", matchIfMissing = true)

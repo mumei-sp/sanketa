@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Redis Health Indicator
+ * 
+ * @author mumei
+ */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "fabric.redis.enabled", havingValue = "true", matchIfMissing = true)
