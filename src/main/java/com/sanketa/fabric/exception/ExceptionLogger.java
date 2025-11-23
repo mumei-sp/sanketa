@@ -7,8 +7,7 @@ import org.slf4j.MDC;
  * This class provides helper methods for logging exceptions with proper
  * context, MDC (Mapped Diagnostic Context) support, and structured logging.
  * 
- * <p><strong>Usage Examples:</strong></p>
- * <pre>{@code
+ * Usage Examples:
  * // Log BaseException with automatic context
  * ExceptionLogger.logException(myException);
  * 
@@ -21,7 +20,6 @@ import org.slf4j.MDC;
  *         .correlationId("abc-123")
  *         .tenantId("101")
  *         .build());
- * }</pre>
  * 
  * @author mumei
  * @since 1.0.0
@@ -36,8 +34,6 @@ public final class ExceptionLogger {
     /**
      * Logs a BaseException using SLF4J with appropriate log level based on severity.
      * Automatically extracts and sets MDC context from exception metadata.
-     * 
-     * @param ex the exception to log
      */
     public static void logException(BaseException ex) {
         if (!ex.shouldLog()) {
@@ -54,9 +50,6 @@ public final class ExceptionLogger {
     
     /**
      * Logs a BaseException with a custom message.
-     * 
-     * @param ex the exception to log
-     * @param customMessage the custom message to include
      */
     public static void logException(BaseException ex, String customMessage) {
         if (!ex.shouldLog()) {
@@ -123,8 +116,6 @@ public final class ExceptionLogger {
     /**
      * Logs an alert for critical/high severity exceptions.
      * This can be configured to forward to alerting systems via log appenders.
-     * 
-     * @param ex the exception to alert on
      */
     public static void logAlert(BaseException ex) {
         if (!ex.shouldAlert()) {
@@ -145,28 +136,16 @@ public final class ExceptionLogger {
      * Internal method to log exception based on severity.
      */
     private static void logExceptionInternal(BaseException ex) {
-        ErrorSeverity severity = ex.getSeverity();
-        String correlationId = ex.getCorrelationId();
-        String requestId = ex.getRequestId();
-        String tenantId = ex.getTenantId();
-        String userId = ex.getUserId();
-        
-        switch (severity) {
-            case CRITICAL:
-                log.error("Exception occurred: [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        ex.getCode(), ex.getMessage(), correlationId, requestId, tenantId, userId, ex);
-                break;
-            case HIGH:
-                log.error("Exception occurred: [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        ex.getCode(), ex.getMessage(), correlationId, requestId, tenantId, userId, ex);
+        String context = buildContextString(ex);
+        switch (ex.getSeverity()) {
+            case CRITICAL, HIGH:
+                log.error("Exception occurred: [{}] {} | {}", ex.getCode(), ex.getMessage(), context, ex);
                 break;
             case MEDIUM:
-                log.warn("Exception occurred: [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        ex.getCode(), ex.getMessage(), correlationId, requestId, tenantId, userId);
+                log.warn("Exception occurred: [{}] {} | {}", ex.getCode(), ex.getMessage(), context);
                 break;
             case LOW:
-                log.debug("Exception occurred: [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        ex.getCode(), ex.getMessage(), correlationId, requestId, tenantId, userId);
+                log.debug("Exception occurred: [{}] {} | {}", ex.getCode(), ex.getMessage(), context);
                 break;
         }
     }
@@ -175,34 +154,23 @@ public final class ExceptionLogger {
      * Internal method to log exception with custom message.
      */
     private static void logExceptionWithMessage(BaseException ex, String customMessage) {
-        ErrorSeverity severity = ex.getSeverity();
-        String correlationId = ex.getCorrelationId();
-        String requestId = ex.getRequestId();
-        String tenantId = ex.getTenantId();
-        String userId = ex.getUserId();
-        
-        switch (severity) {
-            case CRITICAL:
-                log.error("{} | [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        customMessage, ex.getCode(), ex.getMessage(), 
-                        correlationId, requestId, tenantId, userId, ex);
-                break;
-            case HIGH:
-                log.error("{} | [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        customMessage, ex.getCode(), ex.getMessage(), 
-                        correlationId, requestId, tenantId, userId, ex);
+        String context = buildContextString(ex);
+        switch (ex.getSeverity()) {
+            case CRITICAL, HIGH:
+                log.error("{} | [{}] {} | {}", customMessage, ex.getCode(), ex.getMessage(), context, ex);
                 break;
             case MEDIUM:
-                log.warn("{} | [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        customMessage, ex.getCode(), ex.getMessage(), 
-                        correlationId, requestId, tenantId, userId);
+                log.warn("{} | [{}] {} | {}", customMessage, ex.getCode(), ex.getMessage(), context);
                 break;
             case LOW:
-                log.debug("{} | [{}] {} | correlationId={} | requestId={} | tenantId={} | userId={}", 
-                        customMessage, ex.getCode(), ex.getMessage(), 
-                        correlationId, requestId, tenantId, userId);
+                log.debug("{} | [{}] {} | {}", customMessage, ex.getCode(), ex.getMessage(), context);
                 break;
         }
+    }
+    
+    private static String buildContextString(BaseException ex) {
+        return String.format("correlationId=%s | requestId=%s | tenantId=%s | userId=%s",
+            ex.getCorrelationId(), ex.getRequestId(), ex.getTenantId(), ex.getUserId());
     }
     
     /**
@@ -257,4 +225,3 @@ public final class ExceptionLogger {
         MDC.clear();
     }
 }
-

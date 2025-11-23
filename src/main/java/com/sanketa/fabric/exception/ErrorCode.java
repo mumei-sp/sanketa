@@ -7,8 +7,6 @@ import org.springframework.http.HttpStatus;
  * This enables centralized error code management, internationalization, and consistent
  * error reporting across the entire application.
  * 
- * @param <T> The enum type implementing this interface
- * 
  * @author mumei
  */
 public interface ErrorCode {
@@ -74,4 +72,3 @@ public interface ErrorCode {
         return getSeverity() == ErrorSeverity.CRITICAL || getSeverity() == ErrorSeverity.HIGH;
     }
 }
-

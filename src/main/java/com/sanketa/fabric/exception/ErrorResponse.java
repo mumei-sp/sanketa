@@ -9,10 +9,7 @@ import java.util.Map;
 
 /**
  * Standard error response DTO for REST API error responses.
- * 
  * This class provides a consistent structure for all error responses across the application.
- * It follows REST API best practices and includes all necessary information for clients
- * to understand and handle errors appropriately.
  * 
  * @author mumei
  * @since 1.0.0
@@ -82,4 +79,3 @@ public class ErrorResponse {
      */
     private String stackTrace;
 }
-

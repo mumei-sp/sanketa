@@ -11,22 +11,7 @@ import java.util.Objects;
 /**
  * Base exception class for all application-specific exceptions.
  * 
- * This class provides a comprehensive foundation for exception handling across
- * all services and modules in the application. It includes:
- * 
- * <ul>
- *   <li>Structured error codes for consistent error identification</li>
- *   <li>HTTP status code mapping for REST API responses</li>
- *   <li>Error severity levels for monitoring and alerting</li>
- *   <li>Rich metadata support for contextual information</li>
- *   <li>Timestamp tracking for error occurrence</li>
- *   <li>Correlation ID support for distributed tracing</li>
- *   <li>Configurable stack trace inclusion</li>
- *   <li>Internationalization support</li>
- * </ul>
- * 
- * <p><strong>Usage Example:</strong></p>
- * <pre>{@code
+ * Usage Example:
  * public enum MyServiceErrorCode implements ErrorCode {
  *     RESOURCE_NOT_FOUND("MY_SERVICE_RESOURCE_NOT_FOUND", 
  *                        "Resource not found", 
@@ -53,7 +38,6 @@ import java.util.Objects;
  *         super(errorCode, message, cause);
  *     }
  * }
- * }</pre>
  * 
  * @author mumei
  * @since 1.0.0
@@ -242,39 +226,39 @@ public abstract class BaseException extends RuntimeException implements Serializ
     }
     
     /**
-     * Gets the correlation ID from metadata, if available.
+     * Gets the correlation ID from metadata.
      * 
      * @return the correlation ID, or null if not available
      */
     public String getCorrelationId() {
-        return metadata != null ? metadata.getCorrelationId() : null;
+        return metadata.getCorrelationId();
     }
     
     /**
-     * Gets the request ID from metadata, if available.
+     * Gets the request ID from metadata.
      * 
      * @return the request ID, or null if not available
      */
     public String getRequestId() {
-        return metadata != null ? metadata.getRequestId() : null;
+        return metadata.getRequestId();
     }
     
     /**
-     * Gets the tenant ID from metadata, if available.
+     * Gets the tenant ID from metadata.
      * 
      * @return the tenant ID, or null if not available
      */
     public String getTenantId() {
-        return metadata != null ? metadata.getTenantId() : null;
+        return metadata.getTenantId();
     }
     
     /**
-     * Gets the user ID from metadata, if available.
+     * Gets the user ID from metadata.
      * 
      * @return the user ID, or null if not available
      */
     public String getUserId() {
-        return metadata != null ? metadata.getUserId() : null;
+        return metadata.getUserId();
     }
     
     /**
@@ -300,18 +284,14 @@ public abstract class BaseException extends RuntimeException implements Serializ
     
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-        sb.append("{");
-        sb.append("code='").append(getCode()).append("'");
-        sb.append(", message='").append(getMessage()).append("'");
-        sb.append(", httpStatus=").append(getHttpStatus());
-        sb.append(", severity=").append(getSeverity());
-        sb.append(", timestamp=").append(timestamp);
-        if (metadata != null && metadata.hasAttributes()) {
-            sb.append(", metadata=").append(metadata);
-        }
-        sb.append("}");
-        return sb.toString();
+        return String.format("%s{code='%s', message='%s', httpStatus=%s, severity=%s, timestamp=%s%s}",
+            getClass().getSimpleName(),
+            getCode(),
+            getMessage(),
+            getHttpStatus(),
+            getSeverity(),
+            timestamp,
+            metadata.hasAttributes() ? ", metadata=" + metadata : "");
     }
     
     @Override
@@ -330,4 +310,3 @@ public abstract class BaseException extends RuntimeException implements Serializ
         return Objects.hash(errorCode, getMessage(), getCause(), metadata);
     }
 }
-
