@@ -14,7 +14,6 @@ import java.util.Base64;
 
 /**
  * Ed25519 Key Manager
- * 
  * Handles generation, encoding, and decoding of Ed25519 key pairs for PASETO signing.
  * 
  * @author mumei

@@ -38,4 +38,22 @@ public class TenantContextTokenProperties {
      * Default: /health, /actuator/**
      */
     private String[] publicPaths = {"/health", "/actuator/**"};
+    
+    /**
+     * Vault-specific token configuration
+     */
+    private Vault vault = new Vault();
+    
+    @Data
+    public static class Vault {
+        /**
+         * Key ID to use when loading/storing keys from Vault
+         */
+        private String keyId = "default";
+        
+        /**
+         * Vault path prefix for keys (default: "secret/data/fabric/token/keys")
+         */
+        private String pathPrefix = "secret/data/fabric/token/keys";
+    }
 }

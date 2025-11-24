@@ -7,17 +7,15 @@ import com.sanketa.fabric.token.model.TenantContext;
 /**
  * Thread-local store for Request Context
  * 
- * <p>Provides easy access to request context in any part of the application
+ * Provides easy access to request context in any part of the application
  * without passing it through method parameters. Uses ThreadLocal to ensure
- * thread-safety and isolation between concurrent requests.</p>
+ * thread-safety and isolation between concurrent requests.
  * 
- * <p><b>Lifecycle:</b></p>
- * <ul>
- *   <li>Context is set by {@link com.sanketa.fabric.token.filter.TenantContextTokenFilter}
- *       when a valid token is validated and tenant details are loaded</li>
- *   <li>Context is cleared by {@link com.sanketa.fabric.token.config.TokenConfiguration#tenantContextCleanupFilter()}
- *       after request processing completes</li>
- * </ul>
+ * Lifecycle:
+ *   Context is set by {@link com.sanketa.fabric.token.filter.TenantContextTokenFilter}
+ *       when a valid token is validated and tenant details are loaded
+ *   Context is cleared by {@link com.sanketa.fabric.token.config.TokenConfiguration#tenantContextCleanupFilter()}
+ *       after request processing completes
  * 
  * @author mumei
  */

@@ -1,6 +1,7 @@
 package com.sanketa.fabric.token.key;
 
 import com.sanketa.fabric.token.exception.TokenErrorCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * In-Memory Key Store
  * Stores signing keys (private) and verification keys (public) by key ID.
- * 
  * - Keys are loaded from HashiCorp Vault using {@link com.sanketa.fabric.vault.service.VaultKeyStoreLoader} at application startup.
  * - Supports key rotation by maintaining multiple keys with different KIDs
  * 
@@ -41,6 +41,7 @@ public class KeyStore {
     /**
      * Default key ID used when kid is not specified in token or request.
      */
+    @Getter
     private volatile String defaultKeyId = "default";
     
     /**
@@ -152,14 +153,7 @@ public class KeyStore {
         this.defaultKeyId = keyId;
         log.info("Set default key ID to: {}", keyId);
     }
-    
-    /**
-     * Get the current default key ID.
-     */
-    public String getDefaultKeyId() {
-        return defaultKeyId;
-    }
-    
+
     /**
      * Remove a key from the cache (useful for key rotation).
      * 
