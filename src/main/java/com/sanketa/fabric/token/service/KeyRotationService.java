@@ -40,9 +40,6 @@ public class KeyRotationService {
     @Value("${fabric.token.key-rotation.cleanup-period-days:90}")
     private int cleanupPeriodDays;
     
-    @Value("${fabric.token.key-id:default}")
-    private String defaultKeyId;
-    
     /**
      * Map of keyId -> rotation timestamp
      * Tracks when each key was rotated (when it became non-default)
@@ -66,7 +63,7 @@ public class KeyRotationService {
      * @param oldKeyId The key ID that was replaced (now old)
      */
     public void recordKeyRotation(String oldKeyId) {
-        if (oldKeyId != null && !oldKeyId.equals(defaultKeyId)) {
+        if (oldKeyId != null) {
             keyRotationTimestamps.put(oldKeyId, Instant.now());
             log.info("Recorded rotation timestamp for old key: {} at {}", oldKeyId, Instant.now());
         }
@@ -263,9 +260,11 @@ public class KeyRotationService {
     
     /**
      * Determines if a key should be skipped during cleanup.
+     * Skips the current default key to prevent removing the active key.
      */
     private boolean shouldSkipKeyForCleanup(String keyId) {
-        return keyId.equals(defaultKeyId);
+        String currentDefaultKeyId = keyStore.getDefaultKeyId();
+        return keyId != null && keyId.equals(currentDefaultKeyId);
     }
     
     /**

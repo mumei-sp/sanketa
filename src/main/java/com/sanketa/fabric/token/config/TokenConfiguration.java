@@ -2,6 +2,7 @@ package com.sanketa.fabric.token.config;
 
 import com.sanketa.fabric.token.TenantContextTokenProperties;
 import com.sanketa.fabric.token.key.Ed25519KeyManager;
+import com.sanketa.fabric.token.key.KeyIdUtil;
 import com.sanketa.fabric.token.key.KeyStore;
 import com.sanketa.fabric.token.service.KeyRotationService;
 import com.sanketa.fabric.vault.service.VaultKeyStoreLoader;
@@ -37,6 +38,7 @@ public class TokenConfiguration {
     private final KeyStore keyStore;
     private final TenantContextTokenProperties tokenProperties;
     private final Ed25519KeyManager keyManager;
+    private final KeyIdUtil keyIdUtil;
     
     @Autowired(required = false)
     private VaultKeyStoreLoader vaultKeyStoreLoader;
@@ -44,14 +46,8 @@ public class TokenConfiguration {
     @Autowired(required = false)
     private KeyRotationService keyRotationService;
     
-    @Value("${fabric.token.key-id:default}")
-    private String keyId;
-    
     @Value("${fabric.vault.enabled:true}")
     private boolean vaultEnabled;
-    
-    @Value("${fabric.token.vault.key-id:default}")
-    private String vaultKeyId;
     
     /**
      * Initialize keys from HashiCorp Vault
@@ -139,13 +135,13 @@ public class TokenConfiguration {
          * 
          * This method:
          * 1. Auto-detects the latest key from Vault (supports key rotation on restart)
-         * 2. Falls back to configured vaultKeyId if no keys exist (cold start)
+         * 2. Generates a new date-based key if no keys exist (cold start)
          * 3. Generates a new key if it doesn't exist in Vault
          * 4. Loads existing key from Vault if it exists
          * 5. Registers the key pair as the default key
          */
         private void loadPrimaryKey() throws Exception {
-            log.info("Loading primary key from HashiCorp Vault (configured keyId: {})", vaultKeyId);
+            log.info("Loading primary key from HashiCorp Vault");
             
             String effectiveKeyId = determinePrimaryKeyId();
             KeyPair keyPair = obtainOrGenerateKeyPair(effectiveKeyId);
@@ -158,7 +154,7 @@ public class TokenConfiguration {
          * Determines which key ID to use as the primary key.
          * 
          * Auto-detects the latest key from Vault to support key rotation scenarios.
-         * Falls back to configured vaultKeyId if detection fails or no keys exist.
+         * Generates a new date-based key if no keys exist (cold start).
          * 
          * @return The key ID to use as primary key
          */
@@ -166,17 +162,21 @@ public class TokenConfiguration {
             try {
                 String latestKeyId = vaultKeyStoreLoader.findLatestKeyId();
                 
-                if (latestKeyId != null && !latestKeyId.equals("default")) {
-                    log.info("Auto-detected latest key from Vault: {} (configured: {})", latestKeyId, vaultKeyId);
+                if (latestKeyId != null) {
+                    log.info("Auto-detected latest key from Vault: {}", latestKeyId);
                     return latestKeyId;
                 } else {
-                    log.info("No keys found in Vault, using configured keyId: {}", vaultKeyId);
-                    return vaultKeyId;
+                    // No keys found - generate a new date-based key (cold start)
+                    String newKeyId = keyIdUtil.generateKeyId();
+                    log.info("No keys found in Vault, generating new date-based key: {}", newKeyId);
+                    return newKeyId;
                 }
             } catch (Exception e) {
-                log.warn("Failed to auto-detect latest key from Vault, using configured keyId: {} - {}", 
-                        vaultKeyId, e.getMessage());
-                return vaultKeyId;
+                // On error, generate a new date-based key
+                String newKeyId = keyIdUtil.generateKeyId();
+                log.warn("Failed to auto-detect latest key from Vault, generating new date-based key: {} - {}", 
+                        newKeyId, e.getMessage());
+                return newKeyId;
             }
         }
         
@@ -225,7 +225,7 @@ public class TokenConfiguration {
         private void recordKeyRotationIfNeeded(String previousKeyId, String newKeyId) {
             if (keyRotationService != null 
                     && !newKeyId.equals(previousKeyId) 
-                    && !previousKeyId.equals("default")) {
+                    && previousKeyId != null) {
                 keyRotationService.recordKeyRotation(previousKeyId);
                 log.info("Recorded key rotation: {} -> {}", previousKeyId, newKeyId);
             }

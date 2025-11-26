@@ -12,18 +12,13 @@ import java.util.stream.Collectors;
 
 /**
  * Key ID Utility
- * Key ID Format: "key-YYYYMMDD" or "default"
+ * Key ID Format: "key-YYYYMMDD" (date-based format)
  * 
  * @author mumei
  */
 @Slf4j
 @Component
 public class KeyIdUtil {
-    
-    /**
-     * Default key ID
-     */
-    public static final String DEFAULT_KEY_ID = "default";
     
     /**
      * Key ID prefix
@@ -66,10 +61,6 @@ public class KeyIdUtil {
             return false;
         }
         
-        if (isDefaultKeyId(keyId)) {
-            return true;
-        }
-        
         return matchesKeyIdPattern(keyId);
     }
     
@@ -77,10 +68,10 @@ public class KeyIdUtil {
      * Extracts date from key ID.
      * 
      * @param keyId The key ID to extract date from
-     * @return The extracted date, or null if key ID is invalid or default
+     * @return The extracted date, or null if key ID is invalid
      */
     public LocalDate extractDateFromKeyId(String keyId) {
-        if (isNullOrEmpty(keyId) || isDefaultKeyId(keyId)) {
+        if (isNullOrEmpty(keyId)) {
             return null;
         }
         
@@ -93,16 +84,16 @@ public class KeyIdUtil {
      * Compares key IDs by date extracted from key ID format (key-YYYYMMDD).
      * 
      * @param keyIds List of key IDs to search
-     * @return Latest key ID, or "default" if list is empty or no valid keys found
+     * @return Latest key ID, or null if list is empty or no valid keys found
      */
     public String findLatestKeyId(List<String> keyIds) {
         if (isNullOrEmpty(keyIds)) {
-            return DEFAULT_KEY_ID;
+            return null;
         }
         
         List<String> validKeyIds = filterValidKeyIds(keyIds);
         if (validKeyIds.isEmpty()) {
-            return DEFAULT_KEY_ID;
+            return null;
         }
         
         String latest = findLatestKeyIdByDate(validKeyIds);
@@ -128,16 +119,6 @@ public class KeyIdUtil {
      */
     private boolean isNullOrEmpty(List<?> list) {
         return list == null || list.isEmpty();
-    }
-    
-    /**
-     * Checks if the key ID is the default key ID.
-     * 
-     * @param keyId The key ID to check
-     * @return true if it's the default key ID
-     */
-    private boolean isDefaultKeyId(String keyId) {
-        return DEFAULT_KEY_ID.equals(keyId);
     }
     
     /**
@@ -210,12 +191,12 @@ public class KeyIdUtil {
      * Finds the latest key ID by comparing dates extracted from key IDs.
      * 
      * @param validKeyIds List of valid key IDs
-     * @return The latest key ID, or DEFAULT_KEY_ID if none found
+     * @return The latest key ID, or null if none found
      */
     private String findLatestKeyIdByDate(List<String> validKeyIds) {
         return validKeyIds.stream()
                 .max(createKeyIdDateComparator())
-                .orElse(DEFAULT_KEY_ID);
+                .orElse(null);
     }
     
     /**

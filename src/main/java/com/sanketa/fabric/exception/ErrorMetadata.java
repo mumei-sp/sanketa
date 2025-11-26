@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Generic, immutable metadata container for error context information.
@@ -66,7 +67,7 @@ public final class ErrorMetadata implements Serializable {
      * Creates ErrorMetadata from an existing map.
      */
     public static ErrorMetadata of(Map<String, Object> data) {
-        if (data == null || data.isEmpty()) {
+        if (Objects.isNull(data) || data.isEmpty()) {
             return empty();
         }
         return ErrorMetadata.builder().data(new HashMap<>(data)).build();
@@ -76,7 +77,7 @@ public final class ErrorMetadata implements Serializable {
      * Creates ErrorMetadata with a single key-value pair.
      */
     public static ErrorMetadata of(String key, Object value) {
-        if (key == null || value == null) {
+        if (Objects.isNull(key) || Objects.isNull(value)) {
             return empty();
         }
         Map<String, Object> map = new HashMap<>();
@@ -138,7 +139,7 @@ public final class ErrorMetadata implements Serializable {
      * Returns a new instance (immutable).
      */
     public ErrorMetadata with(String key, Object value) {
-        if (key == null || value == null) {
+        if (Objects.isNull(key) || Objects.isNull(value)) {
             return this;
         }
         return ErrorMetadata.builder()

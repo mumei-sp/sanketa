@@ -40,14 +40,15 @@ public class KeyStore {
     
     /**
      * Default key ID used when kid is not specified in token or request.
+     * Set during initialization from Vault.
      */
     @Getter
-    private volatile String defaultKeyId = "default";
+    private volatile String defaultKeyId;
     
     /**
      * Register a signing key (private key) in the in-memory cache.
      * 
-     * @param keyId Key identifier (e.g., "default", "key-2024-01")
+     * @param keyId Key identifier (e.g., "key-20240115")
      * @param privateKey Private key for signing tokens
      * @throws KeyStoreException if keyId or privateKey is invalid
      */
@@ -64,7 +65,7 @@ public class KeyStore {
     /**
      * Register a verification key (public key) in the in-memory cache.
      * 
-     * @param keyId Key identifier (e.g., "default", "key-2024-01")
+     * @param keyId Key identifier (e.g., "key-20240115")
      * @param publicKey Public key for verifying token signatures
      * @throws KeyStoreException if keyId or publicKey is invalid
      */
@@ -232,9 +233,17 @@ public class KeyStore {
      * 
      * @param keyId Key identifier (can be null or empty)
      * @return Normalized key ID
+     * @throws KeyStoreException if keyId is null/empty and defaultKeyId is not set
      */
     private String normalizeKeyId(String keyId) {
-        return (keyId == null || keyId.trim().isEmpty()) ? defaultKeyId : keyId.trim();
+        if (keyId == null || keyId.trim().isEmpty()) {
+            if (defaultKeyId == null) {
+                throw new KeyStoreException(TokenErrorCode.KEY_ID_INVALID, 
+                        "Key ID is required and no default key ID is set");
+            }
+            return defaultKeyId;
+        }
+        return keyId.trim();
     }
     
     /**

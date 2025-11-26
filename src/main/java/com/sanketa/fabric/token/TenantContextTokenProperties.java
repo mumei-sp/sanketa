@@ -47,11 +47,6 @@ public class TenantContextTokenProperties {
     @Data
     public static class Vault {
         /**
-         * Key ID to use when loading/storing keys from Vault
-         */
-        private String keyId = "default";
-        
-        /**
          * Vault path prefix for keys (default: "secret/data/fabric/token/keys")
          */
         private String pathPrefix = "secret/data/fabric/token/keys";
