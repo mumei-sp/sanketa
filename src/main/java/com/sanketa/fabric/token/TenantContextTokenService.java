@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Tenant Context Token Service
  * 
- * Handles creation, signing, and validation of PASETO v4.public tokens.
+ * Handles creation, signing, and validation of PASETO v2.public tokens.
  * - Stateless token generation and validation
  * - Ed25519 signing with key rotation support (kid)
  * - No database lookups
@@ -54,16 +54,15 @@ public class TenantContextTokenService {
             String effectiveKeyId = (keyId != null && !keyId.isEmpty()) ? keyId : keyStore.getDefaultKeyId();
             PrivateKey signingKey = keyStore.getSigningKey(effectiveKeyId);
 
-            Paseto paseto = Pasetos.V4.PUBLIC.builder()
+            String token = Pasetos.V2.PUBLIC.builder()
+                    .setPrivateKey(signingKey)
                     .setSubject(String.valueOf(userId))
                     .setIssuedAt(now)
                     .setExpiration(expiration)
                     .claim("uid", userId)
                     .claim("tenantIds", tenantIds != null ? tenantIds : List.of())
                     .claim("kid", effectiveKeyId)
-                    .setPrivateKey(signingKey)
-                    .build();
-            String token = paseto.compact();
+                    .compact();
             log.debug("Generated TCT for userId: {}, tenantIds: {}, expiresAt: {}", 
                     userId, tenantIds, expiration);
             

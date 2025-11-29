@@ -55,6 +55,16 @@
             <artifactId>jpaseto-impl</artifactId>
             <version>${paseto.version}</version>
         </dependency>
+        <dependency>
+            <groupId>dev.paseto</groupId>
+            <artifactId>jpaseto-jackson</artifactId>
+            <version>${paseto.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.paseto</groupId>
+            <artifactId>jpaseto-bouncy-castle</artifactId>
+            <version>${paseto.version}</version>
+        </dependency>
 
         <!-- BouncyCastle for Ed25519 -->
         <dependency>
