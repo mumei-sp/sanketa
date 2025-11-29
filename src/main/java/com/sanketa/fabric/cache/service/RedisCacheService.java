@@ -9,11 +9,14 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 
 /**
  * Redis Cache Service
@@ -114,6 +117,29 @@ public class RedisCacheService {
         } else {
             return CacheErrorCode.CACHE_OPERATION_FAILED;
         }
+    }
+    
+    /**
+     * Scan keys matching pattern using SCAN command (non-blocking alternative to KEYS).
+     * This method uses cursor-based iteration to avoid blocking Redis server.
+     */
+    private Set<String> scanKeys(String pattern) {
+        Set<String> keys = new HashSet<>();
+        try {
+            ScanOptions options = ScanOptions.scanOptions()
+                    .match(pattern)
+                    .count(100) // Process 100 keys per iteration
+                    .build();
+            
+            try (Cursor<String> cursor = redisTemplate.scan(options)) {
+                while (cursor.hasNext()) {
+                    keys.add(cursor.next());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error scanning keys with pattern: {}", pattern, e);
+        }
+        return keys;
     }
     
     /**
@@ -275,7 +301,7 @@ public class RedisCacheService {
         
         try {
             String fullPattern = buildKey(cacheType, pattern);
-            Set<String> keys = redisTemplate.keys(fullPattern);
+            Set<String> keys = scanKeys(fullPattern);
             if (!keys.isEmpty()) {
                 redisTemplate.delete(keys);
                 log.debug("Invalidated {} keys matching pattern: {}", keys.size(), fullPattern);
@@ -296,7 +322,7 @@ public class RedisCacheService {
         
         try {
             String pattern = buildKey(cacheType, "*");
-            Set<String> keys = redisTemplate.keys(pattern);
+            Set<String> keys = scanKeys(pattern);
             if (Objects.nonNull(keys) && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
                 log.info("Cleared {} cache keys for type: {}", keys.size(), cacheType);
@@ -346,7 +372,7 @@ public class RedisCacheService {
         
         try {
             String pattern = buildKey(cacheType, "*");
-            Set<String> keys = redisTemplate.keys(pattern);
+            Set<String> keys = scanKeys(pattern);
             int keyCount = Objects.nonNull(keys) ? keys.size() : 0;
             
             return CacheStats.builder()
