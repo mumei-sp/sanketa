@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
+import io.lettuce.core.api.StatefulConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,7 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 /**
  * Redis Configuration
@@ -129,9 +130,8 @@ public class RedisConfiguration {
     /**
      * Create connection pool configuration
      */
-    private org.apache.commons.pool2.impl.GenericObjectPoolConfig<?> createPoolConfig() {
-        org.apache.commons.pool2.impl.GenericObjectPoolConfig<?> poolConfig = 
-                new org.apache.commons.pool2.impl.GenericObjectPoolConfig<>();
+    private GenericObjectPoolConfig<StatefulConnection<?, ?>> createPoolConfig() {
+        GenericObjectPoolConfig<StatefulConnection<?, ?>> poolConfig = new GenericObjectPoolConfig<>();
         
         poolConfig.setMaxTotal(properties.getPool().getMaxActive());
         poolConfig.setMaxIdle(properties.getPool().getMaxIdle());
@@ -161,4 +161,3 @@ public class RedisConfiguration {
         return new GenericJackson2JsonRedisSerializer(objectMapper);
     }
 }
-
