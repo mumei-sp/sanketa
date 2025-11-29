@@ -124,11 +124,11 @@ fabric:
       password: ""  # Leave empty if no password
       database: 0
     
-    # Connection pool configuration
+    # Connection pool configuration (optimized for virtual threads)
     pool:
-      max-active: 20
-      max-idle: 10
-      min-idle: 5
+      max-active: 50
+      max-idle: 20
+      min-idle: 10
       max-wait: PT2S  # 2 seconds
       test-on-borrow: true
       test-on-return: false
@@ -187,11 +187,11 @@ fabric:
     # Enable tenant database routing
     enabled: true
     
-    # Connection pool configuration
+    # Connection pool configuration (optimized for virtual threads)
     pool:
-      max-size: 20              # Maximum pool size per database instance
-      min-idle: 5               # Minimum idle connections per pool
-      max-idle: 10              # Maximum idle connections per pool
+      max-size: 50              # Maximum pool size per database instance
+      min-idle: 10               # Minimum idle connections per pool
+      max-idle: 20              # Maximum idle connections per pool
       connection-timeout: PT30S # Connection timeout (time to wait for a connection from pool)
       idle-timeout: PT10M       # Idle timeout (time before idle connections are removed)
       max-lifetime: PT30M       # Maximum lifetime of a connection in the pool
@@ -236,16 +236,28 @@ fabric:
 spring:
   application:
     name: fabric
+  # Virtual Threads Configuration
+  threads:
+    virtual:
+      enabled: true
 
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 200        # Platform threads (carriers for virtual threads)
+      min-spare: 10   # Minimum platform threads
 
 # Spring Boot Actuator Configuration
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus  # Added metrics and prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true  # Enable Prometheus metrics for monitoring
   endpoint:
     health:
       show-details: when-authorized  # Show details when authorized, or use "always" for development
