@@ -1,132 +1,142 @@
 package com.sanketa.fabric.vault.config;
 
+import com.sanketa.fabric.vault.config.auth.VaultAuthenticationStrategy;
+import com.sanketa.fabric.vault.config.auth.VaultAuthenticationStrategyFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.vault.authentication.AppRoleAuthentication;
-import org.springframework.vault.authentication.AppRoleAuthenticationOptions;
-import org.springframework.vault.authentication.ClientAuthentication;
-import org.springframework.vault.authentication.TokenAuthentication;
-import org.springframework.vault.client.RestTemplateFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.core.VaultTemplate;
-import org.springframework.vault.support.ClientOptions;
-import org.springframework.vault.support.SslConfiguration;
-import org.springframework.vault.support.VaultToken;
 import org.springframework.web.client.RestOperations;
 
 import java.net.URI;
+import java.time.Duration;
+import java.util.Objects;
 
 /**
  * Vault configuration using Spring Vault's VaultTemplate.
  * 
- * Provides:
- * - Token and AppRole authentication
- * - Configurable connection timeouts
- * - TLS/SSL support
- * 
- * Spring Vault automatically handles:
- * - Retry mechanism
- * - Connection pooling
- * - Health checks (via Actuator)
- * - Token renewal
- * 
  * @author mumei
  */
+@Slf4j
 @Configuration
 @EnableConfigurationProperties(VaultProperties.class)
 @ConditionalOnProperty(name = "fabric.vault.enabled", havingValue = "true")
 public class VaultConfiguration {
     
     private final VaultProperties properties;
+    private final VaultAuthenticationStrategyFactory authenticationStrategyFactory;
     
-    public VaultConfiguration(VaultProperties properties) {
-        this.properties = properties;
+    /**
+     * Validates configuration at construction time.
+     */
+    public VaultConfiguration(VaultProperties properties, VaultAuthenticationStrategyFactory authenticationStrategyFactory) {
+        this.properties = Objects.requireNonNull(properties, "VaultProperties cannot be null");
+        this.authenticationStrategyFactory = Objects.requireNonNull(
+            authenticationStrategyFactory, "VaultAuthenticationStrategyFactory cannot be null");
+        validateConfiguration();
     }
     
+    /**
+     * Creates and configures the VaultTemplate bean.
+     */
     @Bean
-    public VaultTemplate vaultTemplate() {
-        VaultEndpoint endpoint = VaultEndpoint.from(URI.create(properties.getAddress()));
+    public VaultTemplate vaultTemplate(RestTemplateBuilder restTemplateBuilder) {
+        VaultEndpoint endpoint = createVaultEndpoint();
+        VaultAuthenticationStrategy strategy = authenticationStrategyFactory.createStrategy();
         
-        if (properties.getNamespace() != null && !properties.getNamespace().isEmpty()) {
-            endpoint.setNamespace(properties.getNamespace());
-        }
+        // Create RestOperations with TLS support
+        RestOperations restOperations = createRestOperations(restTemplateBuilder, strategy);
         
-        ClientOptions clientOptions = getClientOptions();
-        SslConfiguration sslConfiguration = getSslConfiguration();
-        RestOperations restOperations = RestTemplateFactory.create(clientOptions, sslConfiguration);    
-        ClientAuthentication authentication = createAuthentication(restOperations);
-        return new VaultTemplate(endpoint, restOperations, authentication);
+        // Create authentication using the strategy
+        var authentication = strategy.createAuthentication(restOperations);
+        
+        log.info("VaultTemplate configured with {} authentication", strategy.getMethodName());
+        return new VaultTemplate(endpoint, authentication);
     }
     
-    private ClientAuthentication createAuthentication(RestOperations restOperations) {
-        String method = properties.getAuth().getMethod().toLowerCase();
+    /**
+     * Creates and configures the VaultEndpoint.
+     */
+    private VaultEndpoint createVaultEndpoint() {
+        String address = properties.getAddress();
+        if (Objects.isNull(address) || address.isEmpty()) {
+            throw new IllegalStateException("Vault address is required when vault is enabled");
+        }
         
-        switch (method) {
-            case "token":
-                return createTokenAuthentication();
-            case "approle":
-                return createAppRoleAuthentication(restOperations);
-            default:
-                throw new IllegalArgumentException(
-                    "Unsupported authentication method: " + method + ". Supported methods: token, approle");
+        try {
+            URI uri = URI.create(address);
+            return VaultEndpoint.from(uri);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                "Invalid Vault address format: " + address + ". Expected format: http(s)://host:port", e);
         }
     }
     
-    private ClientAuthentication createTokenAuthentication() {
-        String token = properties.getAuth().getToken().getToken();
-        if (token == null || token.isEmpty()) {
-            token = System.getenv("VAULT_TOKEN");
-        }
-        if (token == null || token.isEmpty()) {
-            throw new IllegalStateException(
-                "Vault token not configured. Set fabric.vault.auth.token.token or VAULT_TOKEN environment variable");
-        }
-        return new TokenAuthentication(VaultToken.of(token));
-    }
-    
-    private ClientAuthentication createAppRoleAuthentication(RestOperations restOperations) {
-        String roleId = properties.getAuth().getApprole().getRoleId();
-        String secretId = properties.getAuth().getApprole().getSecretId();
-        String mountPath = properties.getAuth().getApprole().getMountPath();
-        
-        if (roleId == null || roleId.isEmpty()) {
-            roleId = System.getenv("VAULT_ROLE_ID");
-        }
-        if (secretId == null || secretId.isEmpty()) {
-            secretId = System.getenv("VAULT_SECRET_ID");
+    /**
+     * Creates RestOperations with configured timeouts and TLS settings.
+     */
+    private RestOperations createRestOperations(RestTemplateBuilder restTemplateBuilder, VaultAuthenticationStrategy strategy) {
+
+        // Token authentication doesn't require RestOperations
+        if ("token".equals(strategy.getMethodName())) {
+            return null;
         }
         
-        if (roleId == null || roleId.isEmpty() || secretId == null || secretId.isEmpty()) {
-            throw new IllegalStateException(
-                "AppRole credentials not configured. Set fabric.vault.auth.approle.role-id/secret-id " +
-                "or VAULT_ROLE_ID/VAULT_SECRET_ID environment variables");
+        VaultProperties.Connection connection = properties.getConnection();
+        Duration connectionTimeout = connection != null && connection.getTimeout() != null
+            ? connection.getTimeout()
+            : Duration.ofSeconds(10);
+        Duration readTimeout = connection != null && connection.getReadTimeout() != null
+            ? connection.getReadTimeout()
+            : Duration.ofSeconds(30);
+        
+        // Use TLS configuration if TLS is configured
+        VaultProperties.Tls tls = properties.getTls();
+        HttpComponentsClientHttpRequestFactory requestFactory;
+        
+        if (tls != null && (hasTlsConfiguration(tls) || !tls.isVerify())) {
+            // Use TLS configuration with HttpComponents
+            requestFactory = TlsConfigurationHelper.createRequestFactory(tls, connectionTimeout, readTimeout);
+            log.debug("Using TLS configuration for Vault client");
+        } else {
+            // Use default factory with timeouts
+            requestFactory = new HttpComponentsClientHttpRequestFactory();
+            requestFactory.setConnectTimeout(connectionTimeout);
+            requestFactory.setConnectionRequestTimeout(connectionTimeout);
+            requestFactory.setReadTimeout(readTimeout);
+            log.debug("Using default TLS configuration for Vault client");
         }
         
-        AppRoleAuthenticationOptions options = AppRoleAuthenticationOptions.builder()
-            .roleId(AppRoleAuthenticationOptions.RoleId.provided(roleId))
-            .secretId(AppRoleAuthenticationOptions.SecretId.provided(secretId))
-            .appRoleMountPath(mountPath)
+        return restTemplateBuilder
+            .requestFactory(() -> requestFactory)
             .build();
-        return new AppRoleAuthentication(options, restOperations);
     }
     
-    private ClientOptions getClientOptions() {
-        return new ClientOptions(
-            properties.getConnection().getTimeout(),
-            properties.getConnection().getReadTimeout()
-        );
+    /**
+     * Checks if TLS configuration has custom trust/key stores configured.
+     */
+    private boolean hasTlsConfiguration(VaultProperties.Tls tls) {
+        return (tls.getTrustStorePath() != null && !tls.getTrustStorePath().isEmpty()) ||
+               (tls.getKeyStorePath() != null && !tls.getKeyStorePath().isEmpty());
     }
     
-    private SslConfiguration getSslConfiguration() {
-        // For basic TLS verification (most common use case)
-        // For custom certificates, extend this configuration
-        return SslConfiguration.create(
-            properties.getTls().isVerify() 
-                ? SslConfiguration.KeyStoreConfiguration.unconfigured()
-                : SslConfiguration.KeyStoreConfiguration.unconfigured()
-        );
+    /**
+     * Validates the configuration at construction time.
+     */
+    private void validateConfiguration() {
+        if (Objects.isNull(properties.getAddress()) || properties.getAddress().isEmpty()) {
+            throw new IllegalStateException(
+                "Vault address is required when vault is enabled. Set fabric.vault.address");
+        }
+        
+        if (Objects.isNull(properties.getAuth())) {
+            throw new IllegalStateException(
+                "Vault authentication configuration is required. Set fabric.vault.auth");
+        }
     }
 }
-

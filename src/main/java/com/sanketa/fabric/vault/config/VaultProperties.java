@@ -29,11 +29,6 @@ public class VaultProperties {
     private String address = "http://localhost:8200";
     
     /**
-     * Vault namespace (for Vault Enterprise multi-tenancy)
-     */
-    private String namespace = "";
-    
-    /**
      * Authentication configuration
      */
     private Auth auth = new Auth();
@@ -47,6 +42,60 @@ public class VaultProperties {
      * TLS/SSL configuration
      */
     private Tls tls = new Tls();
+    
+    /**
+     * Transit Engine configuration
+     */
+    private Transit transit = new Transit();
+    
+    @Data
+    public static class Transit {
+        /**
+         * Enable Transit Engine for key generation and rotation
+         * When enabled, keys are generated and managed via Transit Engine,
+         * but exported to KV for high-performance in-memory signing
+         */
+        private boolean enabled = false;
+        
+        /**
+         * Transit Engine mount path (default: transit)
+         */
+        private String mountPath = "transit";
+        
+        /**
+         * Key name in Transit Engine (default: fabric-token-key)
+         */
+        private String keyName = "fabric-token-key";
+        
+        /**
+         * Key type (ed25519 for PASETO tokens)
+         */
+        private String keyType = "ed25519";
+        
+        /**
+         * Whether to export keys to KV after generation/rotation
+         * This enables high-performance in-memory signing while using Transit for key management
+         */
+        private boolean exportToKv = true;
+        
+        /**
+         * Automatic key rotation configuration
+         */
+        private Rotation rotation = new Rotation();
+        
+        @Data
+        public static class Rotation {
+            /**
+             * Enable automatic key rotation
+             */
+            private boolean enabled = false;
+            
+            /**
+             * Rotation interval in days
+             */
+            private int intervalDays = 90;
+        }
+    }
     
     /**
      * Authentication configuration
@@ -123,5 +172,36 @@ public class VaultProperties {
          * Set to false only for development with self-signed certificates
          */
         private boolean verify = true;
+        
+        /**
+         * Trust store path (JKS or PKCS12 format)
+         * If not specified, uses default JVM trust store
+         */
+        private String trustStorePath = "";
+        
+        /**
+         * Trust store password
+         */
+        private String trustStorePassword = "";
+        
+        /**
+         * Trust store type (JKS, PKCS12, etc.)
+         */
+        private String trustStoreType = "JKS";
+        
+        /**
+         * Key store path for client certificate authentication (JKS or PKCS12 format)
+         */
+        private String keyStorePath = "";
+        
+        /**
+         * Key store password
+         */
+        private String keyStorePassword = "";
+        
+        /**
+         * Key store type (JKS, PKCS12, etc.)
+         */
+        private String keyStoreType = "JKS";
     }
 }

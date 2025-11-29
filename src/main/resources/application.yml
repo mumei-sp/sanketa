@@ -15,29 +15,30 @@ fabric:
       - /actuator/**
       - /api/v1/token/validate
     
-    # Key ID for signing/verification
-    key-id: default
-    
     # HashiCorp Vault Configuration
     vault:
-      key-id: default
       # Vault path prefix (default: "secret/data/fabric/token/keys")
       path-prefix: secret/data/fabric/token/keys
     
-    # Key rotation policy (future-proofing)
-    # Note: Key rotation functionality to be implemented
+    # Key rotation policy
     key-rotation:
-      # Enable automatic key rotation
+      # Enable automatic key rotation and cleanup
       enabled: false
       
       # Rotation interval in days
-      rotation-interval-days: 90
+      rotation-interval-days: 30
       
-      # Number of previous keys to keep for verification during rotation grace period
+      # Number of previous keys to keep for verification during rotation
       keep-previous-keys: 2
       
-      # Grace period in days after rotation before old keys are invalidated
-      grace-period-days: 7
+      # Cleanup period in days - keys older than this are deleted from both Vault and in-memory
+      # Old keys are kept for this period to allow verification of tokens signed with them
+      cleanup-period-days: 90
+      
+      # This single cron job:
+      # 1. Checks if rotation is needed (every 30 days) and rotates if needed
+      # 2. Cleans up old keys from both Vault and in-memory (after cleanup-period-days)
+      rotation-cron: "0 0 2 * * ?"
       
       # Rotation strategy: "scheduled" (time-based) or "manual" (on-demand)
       strategy: scheduled
@@ -53,7 +54,33 @@ fabric:
     
     address: http://localhost:8200
     
-    namespace: ""
+    # Transit Engine Configuration
+    # When enabled, Transit Engine manages key lifecycle (generation, rotation)
+    # while keys are stored in KV for high-performance in-memory signing
+    transit:
+      # Enable Transit Engine for key management
+      enabled: false
+      
+      # Transit Engine mount path (default: transit)
+      mount-path: transit
+      
+      # Key name in Transit Engine
+      key-name: fabric-token-key
+      
+      # Key type (note: Transit Engine doesn't natively support Ed25519,
+      # so we use a hybrid approach: generate Ed25519 locally, manage via Transit)
+      key-type: ed25519
+      
+      # Export keys to KV for fast access (recommended: true)
+      export-to-kv: true
+      
+      # Automatic key rotation configuration
+      rotation:
+        # Enable automatic key rotation
+        enabled: false
+        
+        # Rotation interval in days
+        interval-days: 30
     
     # Authentication configuration
     auth:
@@ -155,6 +182,57 @@ fabric:
       # Log exceptions even when failing gracefully
       log-exceptions: true
 
+  # Multi-Tenant Database Routing Configuration
+  database:
+    # Enable tenant database routing
+    enabled: true
+    
+    # Connection pool configuration
+    pool:
+      max-size: 20              # Maximum pool size per database instance
+      min-idle: 5               # Minimum idle connections per pool
+      max-idle: 10              # Maximum idle connections per pool
+      connection-timeout: PT30S # Connection timeout (time to wait for a connection from pool)
+      idle-timeout: PT10M       # Idle timeout (time before idle connections are removed)
+      max-lifetime: PT30M       # Maximum lifetime of a connection in the pool
+      test-on-borrow: true      # Test connections on borrow
+      test-on-return: false     # Test connections on return
+      test-while-idle: true     # Test connections while idle
+      time-between-eviction-runs: PT30S  # Time between eviction runs for idle connections
+      validation-query: ""      # Connection validation query (empty = use default for DB type)
+    
+    # Timeout configuration
+    timeout:
+      connect: PT10S    # Connection timeout (time to establish connection)
+      socket: PT30S     # Socket timeout (time to wait for data)
+      query: PT60S      # Query timeout (time to wait for query execution)
+    
+    # Health check configuration
+    health:
+      enabled: true             # Enable health checks
+      interval: PT30S           # Health check interval
+      timeout: PT5S              # Health check timeout
+      failure-threshold: 3      # Number of consecutive failures before marking as unhealthy
+    
+    # Schema switching configuration
+    schema:
+      enabled: true             # Enable schema switching (for schema-based multi-tenancy)
+      validate-schema: true     # Validate schema exists before switching
+      method: hibernate         # Schema switching method: "hibernate" (via hibernate.default_schema) or "sql" (via SET SCHEMA)
+
+  # Tenant warm-up configuration
+  tenant:
+    warmup:
+      # Enable warm-up of critical tenants on application startup
+      enabled: false
+
+      # List of critical tenant identifiers (IDs or codes) to warm on startup
+      # Example:
+      # critical-tenants:
+      #   - 1001
+      #   - 1002
+      critical-tenants: []
+
 spring:
   application:
     name: fabric
@@ -175,6 +253,8 @@ management:
   health:
     redis:
       enabled: true  # Enable Redis health indicator
+    database:
+      enabled: true  # Enable tenant database health indicator
 
 logging:
   level:
