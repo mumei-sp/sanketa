@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -39,7 +40,7 @@ public class RedisHealthIndicator implements HealthIndicator {
     public Health health() {
         // Throttle health checks to avoid overwhelming Redis
         long now = System.currentTimeMillis();
-        if (lastHealth != null && (now - lastCheckTime) < healthConfig.getInterval().toMillis()) {
+        if (Objects.nonNull(lastHealth) && (now - lastCheckTime) < healthConfig.getInterval().toMillis()) {
             return lastHealth;
         }
         
@@ -66,7 +67,7 @@ public class RedisHealthIndicator implements HealthIndicator {
                     Long dbSize = redisTemplate.getConnectionFactory()
                             .getConnection()
                             .dbSize();
-                    if (dbSize != null) {
+                    if (Objects.nonNull(dbSize)) {
                         healthBuilder.withDetail("databaseSize", dbSize);
                     }
                 } catch (Exception e) {

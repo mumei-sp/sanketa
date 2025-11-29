@@ -11,6 +11,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Objects;
 
 /**
  * Ed25519 Key Manager
@@ -70,13 +71,13 @@ public class Ed25519KeyManager {
      * @throws KeyStoreException if privateKey is null or encoding fails
      */
     public String encodePrivateKey(PrivateKey privateKey) {
-        if (privateKey == null) {
+        if (Objects.isNull(privateKey)) {
             throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                     "Private key cannot be null");
         }
         try {
             byte[] encoded = privateKey.getEncoded();
-            if (encoded == null || encoded.length == 0) {
+            if (Objects.isNull(encoded) || encoded.length == 0) {
                 throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                         "Private key encoding returned empty data");
             }
@@ -96,13 +97,13 @@ public class Ed25519KeyManager {
      * @throws KeyStoreException if publicKey is null or encoding fails
      */
     public String encodePublicKey(PublicKey publicKey) {
-        if (publicKey == null) {
+        if (Objects.isNull(publicKey)) {
             throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                     "Public key cannot be null");
         }
         try {
             byte[] encoded = publicKey.getEncoded();
-            if (encoded == null || encoded.length == 0) {
+            if (Objects.isNull(encoded) || encoded.length == 0) {
                 throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                         "Public key encoding returned empty data");
             }
@@ -122,14 +123,14 @@ public class Ed25519KeyManager {
      * @throws KeyStoreException if encodedKey is invalid or decoding fails
      */
     public PrivateKey decodePrivateKey(String encodedKey) {
-        if (encodedKey == null || encodedKey.trim().isEmpty()) {
+        if (Objects.isNull(encodedKey) || encodedKey.trim().isEmpty()) {
             throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                     "Encoded private key cannot be null or empty");
         }
         
         try {
             byte[] keyBytes = Base64.getDecoder().decode(encodedKey.trim());
-            if (keyBytes == null || keyBytes.length == 0) {
+            if (Objects.isNull(keyBytes) || keyBytes.length == 0) {
                 throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                         "Decoded private key bytes are empty");
             }
@@ -164,14 +165,14 @@ public class Ed25519KeyManager {
      * @throws KeyStoreException if encodedKey is invalid or decoding fails
      */
     public PublicKey decodePublicKey(String encodedKey) {
-        if (encodedKey == null || encodedKey.trim().isEmpty()) {
+        if (Objects.isNull(encodedKey) || encodedKey.trim().isEmpty()) {
             throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                     "Encoded public key cannot be null or empty");
         }
         
         try {
             byte[] keyBytes = Base64.getDecoder().decode(encodedKey.trim());
-            if (keyBytes == null || keyBytes.length == 0) {
+            if (Objects.isNull(keyBytes) || keyBytes.length == 0) {
                 throw new KeyStoreException(TokenErrorCode.KEY_ENCODING_ERROR, 
                         "Decoded public key bytes are empty");
             }

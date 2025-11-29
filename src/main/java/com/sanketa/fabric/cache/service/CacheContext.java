@@ -40,7 +40,6 @@ public class CacheContext {
     /**
      * Get value from cache
      */
-    @SuppressWarnings("unchecked")
     public <T> T get(String key, Class<T> type) {
         return cacheService.get(cacheType, key, type);
     }

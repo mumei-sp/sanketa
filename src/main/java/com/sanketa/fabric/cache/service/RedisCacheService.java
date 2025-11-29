@@ -9,9 +9,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -56,7 +56,7 @@ public class RedisCacheService {
                 : config.getKeyPrefix();
         
         String globalPrefix = redisProperties.getKeyPrefix();
-        if (globalPrefix == null || globalPrefix.isEmpty()) {
+        if (Objects.isNull(globalPrefix) || globalPrefix.isEmpty()) {
             // No global prefix, use cache prefix and key only
             return String.format("%s:%s", cachePrefix, key);
         } else {
@@ -130,7 +130,7 @@ public class RedisCacheService {
             String fullKey = buildKey(cacheType, key);
             Object value = redisTemplate.opsForValue().get(fullKey);
             
-            if (value == null) {
+            if (Objects.isNull(value)) {
                 log.debug("Cache miss for key: {}", fullKey);
                 return null;
             }
@@ -192,7 +192,7 @@ public class RedisCacheService {
      */
     public void deleteAll(CacheType cacheType, List<String> keys) {
         RedisProperties.CacheConfig config = getCacheConfig(cacheType);
-        if (!config.isEnabled() || keys == null || keys.isEmpty()) {
+        if (!config.isEnabled() || Objects.isNull(keys) || keys.isEmpty()) {
             return;
         }
         
@@ -238,7 +238,7 @@ public class RedisCacheService {
         try {
             String fullKey = buildKey(cacheType, key);
             Long ttl = redisTemplate.getExpire(fullKey, TimeUnit.SECONDS);
-            return ttl != null ? ttl : -1;
+            return Objects.nonNull(ttl) ? ttl : -1;
         } catch (Exception e) {
             log.error("Error getting TTL for key: {}", key, e);
             return -1;
@@ -276,7 +276,7 @@ public class RedisCacheService {
         try {
             String fullPattern = buildKey(cacheType, pattern);
             Set<String> keys = redisTemplate.keys(fullPattern);
-            if (keys != null && !keys.isEmpty()) {
+            if (!keys.isEmpty()) {
                 redisTemplate.delete(keys);
                 log.debug("Invalidated {} keys matching pattern: {}", keys.size(), fullPattern);
             }
@@ -297,7 +297,7 @@ public class RedisCacheService {
         try {
             String pattern = buildKey(cacheType, "*");
             Set<String> keys = redisTemplate.keys(pattern);
-            if (keys != null && !keys.isEmpty()) {
+            if (Objects.nonNull(keys) && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
                 log.info("Cleared {} cache keys for type: {}", keys.size(), cacheType);
             }
@@ -319,13 +319,13 @@ public class RedisCacheService {
      */
     public <T> T getOrLoad(CacheType cacheType, String key, Supplier<T> loader, Class<T> type, Duration ttl) {
         T value = get(cacheType, key, type);
-        if (value != null) {
+        if (Objects.nonNull(value)) {
             return value;
         }
         
         try {
             value = loader.get();
-            if (value != null) {
+            if (Objects.nonNull(value)) {
                 put(cacheType, key, value, ttl);
             }
             return value;
@@ -347,7 +347,7 @@ public class RedisCacheService {
         try {
             String pattern = buildKey(cacheType, "*");
             Set<String> keys = redisTemplate.keys(pattern);
-            int keyCount = keys != null ? keys.size() : 0;
+            int keyCount = Objects.nonNull(keys) ? keys.size() : 0;
             
             return CacheStats.builder()
                     .cacheType(cacheType)
@@ -358,6 +358,44 @@ public class RedisCacheService {
         } catch (Exception e) {
             log.error("Error getting cache stats for type: {}", cacheType, e);
             return null;
+        }
+    }
+
+    /**
+     * Perform a lightweight Redis warm-up by executing a simple write with a short TTL.
+     *
+     * This method is intended for startup warm-up and will always throw a {@link CacheException}
+     * on failure, regardless of the fail-gracefully configuration.
+     */
+    public void warmup() {
+        doWarmupInternal("global");
+    }
+
+    /**
+     * Perform a lightweight Redis warm-up for a logical tenant identifier.
+     *
+     * @param tenantIdentifier logical tenant identifier (ID or code)
+     */
+    public void warmupTenant(String tenantIdentifier) {
+        String label = tenantIdentifier == null || tenantIdentifier.isBlank()
+                ? "tenant:unknown"
+                : "tenant:" + tenantIdentifier;
+        doWarmupInternal(label);
+    }
+
+    private void doWarmupInternal(String contextLabel) {
+        String key = buildKey(CacheType.GLOBAL, "warmup:" + contextLabel);
+        try {
+            // Short-lived key to validate connectivity and basic operations
+            redisTemplate.opsForValue().set(key, "1", Duration.ofSeconds(5));
+            log.info("Redis warm-up successful ({}) using key {}", contextLabel, key);
+        } catch (Exception e) {
+            log.error("Redis warm-up failed ({}) using key {}", contextLabel, key, e);
+            throw new CacheException(
+                    CacheErrorCode.REDIS_CONNECTION_FAILED,
+                    "Redis warm-up failed for context '%s': %s".formatted(contextLabel, e.getMessage()),
+                    e
+            );
         }
     }
     

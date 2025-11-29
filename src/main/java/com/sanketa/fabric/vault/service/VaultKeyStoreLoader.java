@@ -23,7 +23,6 @@ import java.util.Map;
 
 /**
  * HashiCorp Vault Key Store Loader
- * 
  * Loads Ed25519 keys from HashiCorp Vault for horizontally scaled deployments.
  * 
  * @author mumei
@@ -72,11 +71,9 @@ public class VaultKeyStoreLoader {
         
         try {
             String path = getVaultPath(keyId);
-            
 
             VaultKeyValueOperations kvOperations = vaultTemplate.opsForKeyValue("secret", 
                 VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
-            
             VaultResponseSupport<Map<String, Object>> response = kvOperations.get(path, Map.class);
             if (response == null || response.getData() == null) {
                 throw new VaultException("Key not found in Vault for keyId: " + keyId);
@@ -93,7 +90,6 @@ public class VaultKeyStoreLoader {
             PublicKey publicKey = keyManager.decodePublicKey(publicKeyBase64);
             log.info("Successfully loaded key pair from Vault (keyId: {})", keyId);
             return new KeyPair(publicKey, privateKey);
-            
         } catch (VaultException e) {
             throw e;
         } catch (org.springframework.vault.VaultException e) {
@@ -130,7 +126,6 @@ public class VaultKeyStoreLoader {
             String latestKeyId = keyIdUtil.findLatestKeyId(keyIds);
             log.info("Found latest key ID: {} from {} total keys: {}", latestKeyId, keyIds.size(), keyIds);
             return latestKeyId;
-            
         } catch (org.springframework.vault.VaultException e) {
             log.error("Failed to find latest key ID from Vault", e);
             throw new VaultException("Failed to find latest key ID: " + e.getMessage(), e);
@@ -142,9 +137,6 @@ public class VaultKeyStoreLoader {
     
     /**
      * Load the latest key pair from Vault
-     * 
-     * Automatically finds the latest key ID and loads it.
-     * Useful for loading the most recent key after rotation.
      * 
      * @return KeyPair from the latest key
      * @throws VaultException if unable to find or load latest key, or no keys exist
@@ -227,9 +219,6 @@ public class VaultKeyStoreLoader {
                 VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
             kvOperations.put(path, secretData);
             log.info("Successfully stored key pair to Vault (keyId: {})", keyId);
-        } catch (org.springframework.vault.VaultException e) {
-            log.error("Failed to store key to Vault for keyId: {}", keyId, e);
-            throw new VaultException("Failed to store key to Vault: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Failed to store key to Vault for keyId: {}", keyId, e);
             throw new VaultException("Failed to store key to Vault: " + e.getMessage(), e);
@@ -238,10 +227,6 @@ public class VaultKeyStoreLoader {
     
     /**
      * Check if a key exists in Vault
-     * 
-     * @param keyId Key identifier
-     * @return true if key exists, false otherwise
-     * @throws VaultException if keyId is null or empty
      */
     public boolean keyExistsInVault(String keyId) {
         if (keyId == null || keyId.isEmpty()) {
