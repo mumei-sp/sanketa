@@ -95,7 +95,6 @@ public class TenantEntityManagerFactory {
             case "POSTGRESQL" -> "org.hibernate.dialect.PostgreSQLDialect";
             case "MSSQL", "SQLSERVER" -> "org.hibernate.dialect.SQLServerDialect";
             case "MARIADB" -> "org.hibernate.dialect.MariaDBDialect";
-            case "MYSQL":
             default -> "org.hibernate.dialect.MySQLDialect";
         };
         

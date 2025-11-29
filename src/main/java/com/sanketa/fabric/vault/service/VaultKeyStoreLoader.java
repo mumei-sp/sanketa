@@ -74,12 +74,13 @@ public class VaultKeyStoreLoader {
 
             VaultKeyValueOperations kvOperations = vaultTemplate.opsForKeyValue("secret", 
                 VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
-            VaultResponseSupport<Map<String, Object>> response = kvOperations.get(path, Map.class);
+            VaultResponseSupport<?> response = kvOperations.get(path, Map.class);
             if (response == null || response.getData() == null) {
                 throw new VaultException("Key not found in Vault for keyId: " + keyId);
             }
             
-            Map<String, Object> secret = response.getData();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> secret = (Map<String, Object>) response.getData();
             String privateKeyBase64 = extractString(secret, "private_key");
             String publicKeyBase64 = extractString(secret, "public_key");
             if (privateKeyBase64 == null || publicKeyBase64 == null) {
@@ -238,7 +239,7 @@ public class VaultKeyStoreLoader {
             VaultKeyValueOperations kvOperations = vaultTemplate.opsForKeyValue("secret", 
                 VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
             
-            VaultResponseSupport<Map<String, Object>> response = kvOperations.get(path, Map.class);
+            VaultResponseSupport<?> response = kvOperations.get(path, Map.class);
             return response != null && response.getData() != null;
         } catch (Exception e) {
             log.debug("Key does not exist in Vault for keyId: {}", keyId);
@@ -365,7 +366,7 @@ public class VaultKeyStoreLoader {
             // Step 1: Trigger rotation in Transit Engine (for tracking/audit)
             try {
                 if (transitKeyExists(transitKeyName)) {
-                    transitOps.rotateKey(transitKeyName);
+                    transitOps.rotate(transitKeyName);
                     log.info("Triggered rotation in Transit Engine: {}", transitKeyName);
                 } else {
                     log.warn("Transit Engine key not found, skipping Transit rotation trigger");
@@ -445,7 +446,7 @@ public class VaultKeyStoreLoader {
     public boolean transitKeyExists(String keyName) {
         try {
             VaultTransitOperations transitOps = vaultTemplate.opsForTransit(transitMountPath);
-            transitOps.readKey(keyName);
+            transitOps.getKey(keyName);
             return true;
         } catch (Exception e) {
             log.debug("Transit Engine key does not exist: {}", keyName);
