@@ -11,27 +11,32 @@ import java.util.Objects;
  */
 @Getter
 public enum UserStatus {
-    ACTIVE("active"),
-    INACTIVE("inactive"),
-    SUSPENDED("suspended"),
-    PENDING_VERIFICATION("pending_verification"),
-    LOCKED("locked");
+    ACTIVE("active", 0),
+    INACTIVE("inactive", 1),
+    SUSPENDED("suspended", 2),
+    PENDING_VERIFICATION("pending_verification", 3),  // Default value
+    LOCKED("locked", 4);
     
     private final String value;
+    private final int code;
     
-    UserStatus(String value) {
+    UserStatus(String value, int code) {
         this.value = value;
+        this.code = code;
     }
-
+    
     /**
-     * Convert string value to UserStatus enum.
+     * Get UserStatus by integer code.
+     * 
+     * @param code the integer code
+     * @return the corresponding UserStatus, or null if not found
      */
-    public static UserStatus fromValue(String value) {
-        if (Objects.isNull(value)) {
+    public static UserStatus fromCode(Integer code) {
+        if (Objects.isNull(code)) {
             return null;
         }
         for (UserStatus status : UserStatus.values()) {
-            if (status.value.equalsIgnoreCase(value)) {
+            if (status.code == code) {
                 return status;
             }
         }
@@ -39,18 +44,15 @@ public enum UserStatus {
     }
     
     /**
-     * Convert string value to UserStatus enum, throwing exception if invalid.
+     * Get UserStatus by integer code, throwing exception if invalid.
      */
-    public static UserStatus fromValueOrThrow(String value) {
-        if (Objects.isNull(value)) {
-            throw new IllegalArgumentException("UserStatus value cannot be null");
+    public static UserStatus fromCodeOrThrow(Integer code) {
+        if (Objects.isNull(code)) {
+            throw new IllegalArgumentException("UserStatus code cannot be null");
         }
-        UserStatus status = fromValue(value);
+        UserStatus status = fromCode(code);
         if (Objects.isNull(status)) {
-            throw new IllegalArgumentException("Invalid UserStatus: " + value + ". Valid values are: " + 
-                String.join(", ", java.util.Arrays.stream(UserStatus.values())
-                    .map(UserStatus::getValue)
-                    .toArray(String[]::new)));
+            throw new IllegalArgumentException("Invalid UserStatus code: " + code + ". Valid codes are: 0-4");
         }
         return status;
     }
