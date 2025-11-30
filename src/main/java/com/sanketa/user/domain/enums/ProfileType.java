@@ -11,48 +11,34 @@ import java.util.Objects;
  */
 @Getter
 public enum ProfileType {
-    STUDENT("student"),
-    TEACHER("teacher"),
-    PARENT("parent"),
-    ADMIN("admin"),
-    STAFF("staff"),
-    GUARDIAN("guardian");
+    STUDENT(0, "student"),
+    TEACHER(1, "teacher"),
+    PARENT(2, "parent"),
+    ADMIN(3, "admin"),
+    STAFF(4, "staff"),
+    GUARDIAN(5, "guardian");
     
+    private final int code;
     private final String value;
     
-    ProfileType(String value) {
+    ProfileType(int code, String value) {
+        this.code = code;
         this.value = value;
     }
-
+    
     /**
-     * Convert string value to ProfileType enum.
+     * Get ProfileType by integer code, throwing exception if invalid.
+     * Used by ProfileTypeConverter for safe database mapping.
      */
-    public static ProfileType fromValue(String value) {
-        if (Objects.isNull(value)) {
-            return null;
+    public static ProfileType fromCodeOrThrow(Integer code) {
+        if (Objects.isNull(code)) {
+            throw new IllegalArgumentException("ProfileType code cannot be null");
         }
         for (ProfileType type : ProfileType.values()) {
-            if (type.value.equalsIgnoreCase(value)) {
+            if (type.code == code) {
                 return type;
             }
         }
-        return null;
-    }
-    
-    /**
-     * Convert string value to ProfileType enum, throwing exception if invalid.
-     */
-    public static ProfileType fromValueOrThrow(String value) {
-        if (Objects.isNull(value)) {
-            throw new IllegalArgumentException("ProfileType value cannot be null");
-        }
-        ProfileType type = fromValue(value);
-        if (Objects.isNull(type)) {
-            throw new IllegalArgumentException("Invalid ProfileType: " + value + ". Valid values are: " + 
-                String.join(", ", java.util.Arrays.stream(ProfileType.values())
-                    .map(ProfileType::getValue)
-                    .toArray(String[]::new)));
-        }
-        return type;
+        throw new IllegalArgumentException("Invalid ProfileType code: " + code + ". Valid codes are: 0-5");
     }
 }

@@ -118,7 +118,7 @@ public class User {
      * Check if user is soft deleted.
      */
     public boolean isDeleted() {
-        return Objects.isNull(deletedAt);
+        return Objects.nonNull(deletedAt);
     }
     
     /**
@@ -141,13 +141,13 @@ public class User {
      * Check if user has an active account (active status, not deleted, and verified).
      */
     public boolean isActiveAccount() {
-        return isActive && status == UserStatus.ACTIVE && isDeleted();
+        return isActive && status == UserStatus.ACTIVE && !isDeleted() && isVerified;
     }
     
     /**
      * Check if user can perform actions (not deleted, not suspended, not locked).
      */
     public boolean canPerformActions() {
-        return isDeleted() && status != UserStatus.SUSPENDED && status != UserStatus.LOCKED;
+        return !isDeleted() && status != UserStatus.SUSPENDED && status != UserStatus.LOCKED;
     }
 }

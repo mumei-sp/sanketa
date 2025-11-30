@@ -1,10 +1,7 @@
 package com.sanketa.user.converter;
 
 import com.sanketa.user.domain.enums.UserStatus;
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-
-import java.util.Objects;
 
 /**
  * JPA AttributeConverter for UserStatus enum to TINYINT (Integer) database column.
@@ -15,21 +12,9 @@ import java.util.Objects;
  * @author mumei
  */
 @Converter(autoApply = false)
-public class UserStatusConverter implements AttributeConverter<UserStatus, Integer> {
+public class UserStatusConverter extends AbstractEnumCodeConverter<UserStatus> {
     
-    @Override
-    public Integer convertToDatabaseColumn(UserStatus status) {
-        if (Objects.isNull(status)) {
-            return null;
-        }
-        return status.getCode();
-    }
-    
-    @Override
-    public UserStatus convertToEntityAttribute(Integer code) {
-        if (Objects.isNull(code)) {
-            return null;
-        }
-        return UserStatus.fromCodeOrThrow(code);
+    public UserStatusConverter() {
+        super(UserStatus::getCode, UserStatus::fromCodeOrThrow);
     }
 }

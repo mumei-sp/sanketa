@@ -6,51 +6,37 @@ import java.util.Objects;
 
 /**
  * Preferred contact method enumeration.
- *
+ * 
  * @author mumei
  */
 @Getter
 public enum ContactMethod {
-    EMAIL("email"),
-    PHONE("phone"),
-    SMS("sms"),
-    WHATSAPP("whatsapp");
+    EMAIL(0, "email"),
+    PHONE(1, "phone"),
+    SMS(2, "sms"),
+    WHATSAPP(3, "whatsapp");
     
+    private final int code;
     private final String value;
     
-    ContactMethod(String value) {
+    ContactMethod(int code, String value) {
+        this.code = code;
         this.value = value;
     }
 
     /**
-     * Convert string value to ContactMethod enum.
+     * Get ContactMethod by integer code, throwing exception if invalid.
+     * Used by ContactMethodConverter for safe database mapping.
      */
-    public static ContactMethod fromValue(String value) {
-        if (Objects.isNull(value)) {
-            return null;
+    public static ContactMethod fromCodeOrThrow(Integer code) {
+        if (Objects.isNull(code)) {
+            throw new IllegalArgumentException("ContactMethod code cannot be null");
         }
         for (ContactMethod method : ContactMethod.values()) {
-            if (method.value.equalsIgnoreCase(value)) {
+            if (method.code == code) {
                 return method;
             }
         }
-        return null;
-    }
-    
-    /**
-     * Convert string value to ContactMethod enum, throwing exception if invalid.
-     */
-    public static ContactMethod fromValueOrThrow(String value) {
-        if (Objects.isNull(value)) {
-            throw new IllegalArgumentException("ContactMethod value cannot be null");
-        }
-        ContactMethod method = fromValue(value);
-        if (Objects.isNull(method)) {
-            throw new IllegalArgumentException("Invalid ContactMethod: " + value + ". Valid values are: " + 
-                String.join(", ", java.util.Arrays.stream(ContactMethod.values())
-                    .map(ContactMethod::getValue)
-                    .toArray(String[]::new)));
-        }
-        return method;
+        throw new IllegalArgumentException("Invalid ContactMethod code: " + code + ". Valid codes are: 0-3");
     }
 }
