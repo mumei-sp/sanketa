@@ -7,10 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import java.util.Objects;
 
 /**
  * Configuration for the Global Database connection.
@@ -48,15 +46,6 @@ public class GlobalDatabaseConfiguration {
         return this.globalDataSource;
     }
 
-    /**
-     * JdbcTemplate for convenient access to the Global DB.
-     */
-    @Bean(name = "globalJdbcTemplate")
-    public JdbcTemplate globalJdbcTemplate(DataSource globalDataSource) {
-        Objects.requireNonNull(globalDataSource, "globalDataSource must not be null");
-        return new JdbcTemplate(globalDataSource);
-    }
-
     @PreDestroy
     public void shutdown() {
         if (globalDataSource != null) {
@@ -73,4 +62,3 @@ public class GlobalDatabaseConfiguration {
         return qIndex > 0 ? url.substring(0, qIndex) : url;
     }
 }
-

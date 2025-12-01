@@ -2,6 +2,7 @@ package com.sanketa.fabric.token;
 
 import com.sanketa.fabric.cache.model.TenantCacheData;
 import com.sanketa.fabric.token.model.RequestContext;
+import com.sanketa.fabric.token.model.DatabaseScope;
 import com.sanketa.fabric.token.model.TenantContext;
 
 /**
@@ -60,6 +61,65 @@ public final class TenantContextStore {
      */
     public static boolean hasContext() {
         return CONTEXT_STORE.get() != null;
+    }
+
+    /**
+     * Set advisory database scope to GLOBAL for the current request.
+     *
+     * This does NOT change the underlying DataSource routing; it is purely
+     * a hint that can be used for logging and optional guardrails.
+     */
+    public static void setGlobalScope() {
+        RequestContext context = requireContext();
+        CONTEXT_STORE.set(
+                RequestContext.builder()
+                        .tenantContext(context.getTenantContext())
+                        .activeTenantDetails(context.getActiveTenantDetails())
+                        .dbScope(DatabaseScope.GLOBAL)
+                        .build()
+        );
+    }
+
+    /**
+     * Set advisory database scope to TENANT for the current request.
+     */
+    public static void setTenantScope() {
+        RequestContext context = requireContext();
+        CONTEXT_STORE.set(
+                RequestContext.builder()
+                        .tenantContext(context.getTenantContext())
+                        .activeTenantDetails(context.getActiveTenantDetails())
+                        .dbScope(DatabaseScope.TENANT)
+                        .build()
+        );
+    }
+
+    /**
+     * Execute an operation within a temporary database scope.
+     *
+     * This helper is purely advisory and does not affect DataSource routing.
+     */
+    public static <T> T withScope(DatabaseScope scope, java.util.function.Supplier<T> op) {
+        RequestContext original = requireContext();
+        DatabaseScope previousScope = original.getDbScope();
+        try {
+            CONTEXT_STORE.set(
+                    RequestContext.builder()
+                            .tenantContext(original.getTenantContext())
+                            .activeTenantDetails(original.getActiveTenantDetails())
+                            .dbScope(scope)
+                            .build()
+            );
+            return op.get();
+        } finally {
+            CONTEXT_STORE.set(
+                    RequestContext.builder()
+                            .tenantContext(original.getTenantContext())
+                            .activeTenantDetails(original.getActiveTenantDetails())
+                            .dbScope(previousScope)
+                            .build()
+            );
+        }
     }
     
     /**

@@ -1,5 +1,6 @@
 package com.sanketa.fabric.globaldb.service;
 
+import com.sanketa.fabric.globaldb.UseGlobalDb;
 import com.sanketa.fabric.globaldb.model.UserTenantResolution;
 import com.sanketa.fabric.globaldb.repository.TenantRoutingMetadataRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@UseGlobalDb
 public class TenantRoutingMetadataService {
 
     private final TenantRoutingMetadataRepository tenantRoutingMetadataRepository;
@@ -22,3 +24,4 @@ public class TenantRoutingMetadataService {
         return tenantRoutingMetadataRepository.findTenantResolutionsByKeycloakUserId(keycloakUserId);
     }
 }
+
