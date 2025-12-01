@@ -233,6 +233,23 @@ fabric:
       #   - 1002
       critical-tenants: []
 
+  # Global Database configuration (separate from tenant routing)
+  global-database:
+    # JDBC URL for Global DB (override via env: GLOBAL_DB_URL)
+    url: ${GLOBAL_DB_URL:jdbc:mysql://localhost:3306/sanketa_global?useSSL=false&serverTimezone=UTC}
+    # Credentials (override via env: GLOBAL_DB_USERNAME / GLOBAL_DB_PASSWORD)
+    username: ${GLOBAL_DB_USERNAME:root}
+    password: ${GLOBAL_DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    pool:
+      max-size: 10           # Global DB is mostly metadata, small pool is enough
+      min-idle: 2
+      max-idle: 5
+      connection-timeout: PT10S
+      idle-timeout: PT5M
+      max-lifetime: PT30M
+
 spring:
   application:
     name: fabric

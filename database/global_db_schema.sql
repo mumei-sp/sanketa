@@ -19,26 +19,128 @@
 -- CORE TABLES
 -- ============================================================================
 
+-- users: Global user accounts (identity + account status)
 -- ----------------------------------------------------------------------------
--- users: User mapping table
--- ----------------------------------------------------------------------------
--- Links Keycloak user IDs to internal user IDs. All user details (name, email,
--- profile) are stored in Keycloak. This table only maintains the mapping.
+-- serves as the main global user table for the app and
+-- integrates with Keycloak via keycloak_user_id.
 --
 -- Key Fields:
 --   - keycloak_user_id: Keycloak user UUID (source of truth for user identity)
---   - is_active: Enable/disable user access without deleting
---
+--   - is_active / is_deleted: Access and soft-delete flags
 CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    keycloak_user_id VARCHAR(255) UNIQUE NOT NULL, -- Keycloak user UUID
-    is_active BOOLEAN DEFAULT TRUE NOT NULL, -- User access status
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+
+    -- Identity fields
+    keycloak_user_id VARCHAR(255) UNIQUE,          -- Link to Keycloak user UUID
+    username VARCHAR(255) UNIQUE,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    email_verified_at DATETIME(6),
+    phone VARCHAR(20),
+    phone_verified_at DATETIME(6),
+
+    -- Account status (0=ACTIVE, 1=INACTIVE, 2=SUSPENDED,
+    --                 3=PENDING_VERIFICATION, 4=LOCKED)
+    status TINYINT NOT NULL DEFAULT 3,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL,
+    is_verified BOOLEAN DEFAULT FALSE,
+    deleted_at DATETIME(6),
     is_deleted BOOLEAN DEFAULT FALSE NOT NULL, -- Soft delete flag
+
+    -- Audit fields
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    created_by BIGINT UNSIGNED,
+    updated_by BIGINT UNSIGNED,
+
+    -- Constraints
+    CONSTRAINT chk_username_length CHECK (LENGTH(username) >= 3),
+    CONSTRAINT chk_email_format CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'),
+    CONSTRAINT chk_users_phone_format CHECK (phone IS NULL OR phone REGEXP '^\\+91[6-9][0-9]{9}$'),
+
+    -- Self-referential audit FKs
+    CONSTRAINT fk_users_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_users_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+
+    -- Indexes
     INDEX idx_users_keycloak_user_id (keycloak_user_id),
     INDEX idx_users_is_active (is_active),
-    INDEX idx_users_is_deleted (is_deleted)
+    INDEX idx_users_is_deleted (is_deleted),
+    INDEX idx_users_status (status),
+    INDEX idx_users_created_at (created_at),
+    INDEX idx_users_phone (phone),
+    INDEX idx_users_deleted_at (deleted_at),
+    INDEX idx_users_status_active_deleted (status, is_active, deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- user_profiles: Global profile information for users
+-- ----------------------------------------------------------------------------
+CREATE TABLE user_profiles (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT UNSIGNED NOT NULL,
+    profile_type TINYINT NOT NULL COMMENT '0=STUDENT, 1=TEACHER, 2=PARENT, 3=ADMIN, 4=STAFF, 5=GUARDIAN',
+
+    -- Personal information
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    preferred_name VARCHAR(100),
+    display_name VARCHAR(200),
+    date_of_birth DATE,
+    gender TINYINT COMMENT '0=MALE, 1=FEMALE, 2=OTHER, 3=PREFER_NOT_TO_SAY',
+
+    -- Contact information
+    primary_phone VARCHAR(20),
+    secondary_phone VARCHAR(20),
+    emergency_phone VARCHAR(20),
+    preferred_contact_method TINYINT DEFAULT 0 COMMENT '0=EMAIL, 1=PHONE, 2=SMS, 3=WHATSAPP',
+
+    -- Address information
+    address_line1 VARCHAR(200),
+    address_line2 VARCHAR(200),
+    city VARCHAR(100),
+    state_province VARCHAR(100),
+    postal_code VARCHAR(20),
+    country VARCHAR(100),
+
+    -- Profile media
+    profile_picture_url VARCHAR(500),
+    bio TEXT,
+
+    -- Privacy settings
+    is_public BOOLEAN DEFAULT FALSE,
+    show_email BOOLEAN DEFAULT FALSE,
+    show_phone BOOLEAN DEFAULT FALSE,
+
+    -- Extensibility for custom fields
+    custom_fields JSON DEFAULT ('{}'),
+
+    -- Status and metadata
+    last_profile_update DATETIME(6),
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    updated_by BIGINT UNSIGNED,
+
+    -- Constraints
+    CONSTRAINT chk_name_length CHECK (LENGTH(first_name) >= 1 AND LENGTH(last_name) >= 1),
+    CONSTRAINT chk_date_of_birth CHECK (date_of_birth IS NULL OR date_of_birth <= CURDATE()),
+    CONSTRAINT chk_user_profiles_phone_format CHECK (
+        primary_phone IS NULL OR primary_phone REGEXP '^(\\+91|91)?[6-9][0-9]{9}$'
+    ),
+    CONSTRAINT chk_secondary_phone_format CHECK (
+        secondary_phone IS NULL OR secondary_phone REGEXP '^(\\+91|91)?[6-9][0-9]{9}$'
+    ),
+    CONSTRAINT chk_emergency_phone_format CHECK (
+        emergency_phone IS NULL OR emergency_phone REGEXP '^(\\+91|91)?[6-9][0-9]{9}$'
+    ),
+    UNIQUE(user_id),
+
+    -- Foreign keys
+    CONSTRAINT fk_user_profiles_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_profiles_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+
+    -- Indexes
+    INDEX idx_user_profiles_profile_type (profile_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
@@ -287,6 +389,53 @@ WHERE u.is_deleted = FALSE
     AND di.is_deleted = FALSE
     AND di.is_active = TRUE
     AND (dic.is_deleted = FALSE OR dic.is_deleted IS NULL);
+
+-- ----------------------------------------------------------------------------
+-- Global user-centric views
+-- ----------------------------------------------------------------------------
+
+-- Active users with profile information
+CREATE OR REPLACE VIEW active_users_with_profiles AS
+SELECT 
+    u.id,
+    u.username,
+    u.email,
+    u.status,
+    u.created_at,
+    up.first_name,
+    up.last_name,
+    up.display_name,
+    up.profile_type,
+    up.profile_picture_url
+FROM users u
+LEFT JOIN user_profiles up ON u.id = up.user_id
+WHERE u.is_active = TRUE 
+  AND u.is_deleted = FALSE;
+
+-- Active users only (excludes soft deleted)
+CREATE OR REPLACE VIEW active_users AS
+SELECT * FROM users 
+WHERE is_active = TRUE AND is_deleted = FALSE;
+
+-- ============================================================================
+-- TRIGGERS FOR DATA INTEGRITY (GLOBAL USERS)
+-- ============================================================================
+
+DELIMITER //
+CREATE TRIGGER update_user_profiles_last_update 
+BEFORE UPDATE ON user_profiles
+FOR EACH ROW
+BEGIN
+    SET NEW.last_profile_update = NOW(6);
+END//
+DELIMITER ;
+
+-- ============================================================================
+-- COMMENTS FOR DOCUMENTATION
+-- ============================================================================
+
+ALTER TABLE users COMMENT = 'Core global user accounts with identity and status information';
+ALTER TABLE user_profiles COMMENT = 'Global user profile information and preferences';
 
 -- ============================================================================
 -- END OF SCHEMA
