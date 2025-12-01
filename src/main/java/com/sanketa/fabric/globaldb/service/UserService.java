@@ -1,5 +1,6 @@
 package com.sanketa.fabric.globaldb.service;
 
+import com.sanketa.fabric.globaldb.UseGlobalDb;
 import com.sanketa.fabric.globaldb.model.User;
 import com.sanketa.fabric.globaldb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@UseGlobalDb
 public class UserService {
 
     private final UserRepository userRepository;
