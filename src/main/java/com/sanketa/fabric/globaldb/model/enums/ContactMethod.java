@@ -1,24 +1,22 @@
 package com.sanketa.fabric.globaldb.model.enums;
 
+import lombok.Getter;
+
 /**
  * Preferred contact method codes for a global user profile record.
  */
+@Getter
 public enum ContactMethod {
 
-    UNKNOWN(0),
-    EMAIL(1),
-    PHONE(2),
-    SMS(3),
-    WHATSAPP(4);
+    EMAIL(0),
+    PHONE(1),
+    SMS(2),
+    WHATSAPP(3);
 
     private final int code;
 
     ContactMethod(int code) {
         this.code = code;
-    }
-
-    public int getCode() {
-        return code;
     }
 
     public static ContactMethod fromCode(Integer code) {

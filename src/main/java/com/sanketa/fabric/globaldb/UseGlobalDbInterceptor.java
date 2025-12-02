@@ -30,6 +30,14 @@ import org.springframework.stereotype.Component;
 @Order(2) // Run after tenant context validation, before most business logic
 public class UseGlobalDbInterceptor {
 
+    /**
+     * Sneaky throw utility to preserve checked exception types.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> T sneakyThrow(Throwable throwable) throws T {
+        throw (T) throwable;
+    }
+
     @Around("@annotation(com.sanketa.fabric.globaldb.UseGlobalDb) || @within(com.sanketa.fabric.globaldb.UseGlobalDb)")
     public Object applyGlobalDbScope(ProceedingJoinPoint pjp) throws Throwable {
         if (!TenantContextStore.hasContext()) {
@@ -42,16 +50,19 @@ public class UseGlobalDbInterceptor {
             log.debug("Entering @UseGlobalDb method with GLOBAL dbScope: {}", signature);
         }
 
-        return TenantContextStore.withScope(DatabaseScope.GLOBAL, () -> {
-            try {
-                return pjp.proceed();
-            } catch (Throwable throwable) {
-                // Sneaky rethrow via runtime wrapper to satisfy Supplier<T> signature
-                if (throwable instanceof RuntimeException runtimeException) {
-                    throw runtimeException;
+        try {
+            return TenantContextStore.withScope(DatabaseScope.GLOBAL, () -> {
+                try {
+                    return pjp.proceed();
+                } catch (RuntimeException | Error e) {
+                    throw e;
+                } catch (Throwable throwable) {
+                    throw sneakyThrow(throwable);
                 }
-                throw new RuntimeException(throwable);
-            }
-        });
+            });
+        } catch (Throwable throwable) {
+            // Re-throw the original exception (preserves type)
+            throw throwable;
+        }
     }
 }

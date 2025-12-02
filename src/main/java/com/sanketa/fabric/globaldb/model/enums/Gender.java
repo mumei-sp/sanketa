@@ -1,23 +1,22 @@
 package com.sanketa.fabric.globaldb.model.enums;
 
+import lombok.Getter;
+
 /**
  * Gender codes for a global user profile record.
  */
+@Getter
 public enum Gender {
 
-    UNKNOWN(0),
-    MALE(1),
-    FEMALE(2),
-    OTHER(3);
+    MALE(0),
+    FEMALE(1),
+    OTHER(2),
+    PREFER_NOT_TO_SAY(3);
 
     private final int code;
 
     Gender(int code) {
         this.code = code;
-    }
-
-    public int getCode() {
-        return code;
     }
 
     public static Gender fromCode(Integer code) {
