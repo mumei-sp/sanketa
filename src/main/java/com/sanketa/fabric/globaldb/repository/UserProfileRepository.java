@@ -20,6 +20,47 @@ public class UserProfileRepository {
 
     private final JdbcTemplate globalJdbcTemplate;
 
+    private static final String USER_PROFILE_COLUMNS = """
+            id,
+            user_id,
+            profile_type,
+            first_name,
+            middle_name,
+            last_name,
+            preferred_name,
+            display_name,
+            date_of_birth,
+            gender,
+            primary_phone,
+            secondary_phone,
+            emergency_phone,
+            preferred_contact_method,
+            address_line1,
+            address_line2,
+            city,
+            state_province,
+            postal_code,
+            country,
+            profile_picture_url,
+            bio,
+            is_public,
+            show_email,
+            show_phone,
+            custom_fields,
+            last_profile_update,
+            created_at,
+            updated_at,
+            updated_by
+            """;
+
+    /**
+     * Helper method to safely extract nullable integer from ResultSet.
+     */
+    private static Integer getNullableInt(ResultSet rs, String column) throws SQLException {
+        Object value = rs.getObject(column);
+        return value != null ? rs.getInt(column) : null;
+    }
+
     private static final RowMapper<UserProfile> USER_PROFILE_ROW_MAPPER = new RowMapper<>() {
         @Override
         public UserProfile mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -33,11 +74,11 @@ public class UserProfileRepository {
                     .preferredName(rs.getString("preferred_name"))
                     .displayName(rs.getString("display_name"))
                     .dateOfBirth(GlobalDbJdbcUtils.toLocalDate(rs.getDate("date_of_birth")))
-                    .gender(rs.getObject("gender") != null ? rs.getInt("gender") : null)
+                    .gender(getNullableInt(rs, "gender"))
                     .primaryPhone(rs.getString("primary_phone"))
                     .secondaryPhone(rs.getString("secondary_phone"))
                     .emergencyPhone(rs.getString("emergency_phone"))
-                    .preferredContactMethod(rs.getObject("preferred_contact_method") != null ? rs.getInt("preferred_contact_method") : null)
+                    .preferredContactMethod(getNullableInt(rs, "preferred_contact_method"))
                     .addressLine1(rs.getString("address_line1"))
                     .addressLine2(rs.getString("address_line2"))
                     .city(rs.getString("city"))
@@ -59,42 +100,27 @@ public class UserProfileRepository {
     };
 
     public Optional<UserProfile> findByUserId(Long userId) {
-        String sql = """
-                SELECT id,
-                       user_id,
-                       profile_type,
-                       first_name,
-                       middle_name,
-                       last_name,
-                       preferred_name,
-                       display_name,
-                       date_of_birth,
-                       gender,
-                       primary_phone,
-                       secondary_phone,
-                       emergency_phone,
-                       preferred_contact_method,
-                       address_line1,
-                       address_line2,
-                       city,
-                       state_province,
-                       postal_code,
-                       country,
-                       profile_picture_url,
-                       bio,
-                       is_public,
-                       show_email,
-                       show_phone,
-                       custom_fields,
-                       last_profile_update,
-                       created_at,
-                       updated_at,
-                       updated_by
-                FROM user_profiles
-                WHERE user_id = ?
-                """;
+        if (userId == null) {
+            return Optional.empty();
+        }
+
+        String sql = "SELECT " + USER_PROFILE_COLUMNS + " FROM user_profiles WHERE user_id = ?";
         try {
             UserProfile userProfile = globalJdbcTemplate.queryForObject(sql, USER_PROFILE_ROW_MAPPER, userId);
+            return Optional.ofNullable(userProfile);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<UserProfile> findById(Long profileId) {
+        if (profileId == null) {
+            return Optional.empty();
+        }
+
+        String sql = "SELECT " + USER_PROFILE_COLUMNS + " FROM user_profiles WHERE id = ?";
+        try {
+            UserProfile userProfile = globalJdbcTemplate.queryForObject(sql, USER_PROFILE_ROW_MAPPER, profileId);
             return Optional.ofNullable(userProfile);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();

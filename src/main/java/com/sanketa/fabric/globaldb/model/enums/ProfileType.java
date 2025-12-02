@@ -1,24 +1,24 @@
 package com.sanketa.fabric.globaldb.model.enums;
 
+import lombok.Getter;
+
 /**
  * Profile type codes for a global user profile record.
  */
+@Getter
 public enum ProfileType {
 
-    UNKNOWN(0),
-    STUDENT(1),
-    TEACHER(2),
-    PARENT(3),
-    ADMIN(4);
+    STUDENT(0),
+    TEACHER(1),
+    PARENT(2),
+    ADMIN(3),
+    STAFF(4),
+    GUARDIAN(5);
 
     private final int code;
 
     ProfileType(int code) {
         this.code = code;
-    }
-
-    public int getCode() {
-        return code;
     }
 
     public static ProfileType fromCode(Integer code) {

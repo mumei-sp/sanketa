@@ -1,8 +1,11 @@
 package com.sanketa.fabric.globaldb.model.enums;
 
+import lombok.Getter;
+
 /**
  * Status flags for a global user record.
  */
+@Getter
 public enum UserStatus {
 
     ACTIVE(0),
@@ -15,10 +18,6 @@ public enum UserStatus {
 
     UserStatus(int code) {
         this.code = code;
-    }
-
-    public int getCode() {
-        return code;
     }
 
     public static UserStatus fromCode(Integer code) {
