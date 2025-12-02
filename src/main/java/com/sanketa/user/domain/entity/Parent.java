@@ -1,5 +1,6 @@
 package com.sanketa.user.domain.entity;
 
+import com.sanketa.fabric.globaldb.model.enums.ProfileType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,15 +11,13 @@ import lombok.ToString;
 
 /**
  * Parent/Guardian profile entity.
- * 
+ *
  * @author mumei
  */
 @Entity
-@Table(name = "parents", indexes = {
-    @Index(name = "idx_parents_profile_id", columnList = "profile_id")
-})
-@DiscriminatorValue("parent")
-@PrimaryKeyJoinColumn(name = "profile_id", referencedColumnName = "id")
+@Table(name = "parents")
+@DiscriminatorValue("2") // PARENT = 2
+@PrimaryKeyJoinColumn(name = "profile_id")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,4 +35,9 @@ public class Parent extends UserProfile {
     @Column(name = "parent_info", columnDefinition = "JSON")
     @Builder.Default
     private String parentInfo = "{}"; // JSON object for additional parent info
+
+    @Override
+    public ProfileType getProfileType() {
+        return ProfileType.PARENT;
+    }
 }

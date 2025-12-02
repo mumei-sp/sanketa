@@ -1,5 +1,6 @@
 package com.sanketa.user.domain.entity;
 
+import com.sanketa.fabric.globaldb.model.enums.ProfileType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,18 +13,22 @@ import java.time.LocalDate;
 
 /**
  * Student-specific profile entity.
+ * This entity extends UserProfile using JPA JOINED inheritance strategy.
+ * The student-specific fields are stored in the students table, while
+ * common profile fields are in the user_profiles table.
+ * 
+ * JPA automatically handles the JOIN between user_profiles and students
+ * tables based on the profile_id foreign key.
  * 
  * @author mumei
  */
 @Entity
 @Table(name = "students", indexes = {
-    @Index(name = "idx_students_profile_id", columnList = "profile_id"),
-    @Index(name = "idx_students_student_id", columnList = "student_id"),
     @Index(name = "idx_students_grade_level", columnList = "grade_level"),
     @Index(name = "idx_students_section", columnList = "section")
 })
-@DiscriminatorValue("student")
-@PrimaryKeyJoinColumn(name = "profile_id", referencedColumnName = "id")
+@DiscriminatorValue("0") // STUDENT = 0
+@PrimaryKeyJoinColumn(name = "profile_id")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -49,4 +54,9 @@ public class Student extends UserProfile {
     
     @Column(name = "section", length = 20)
     private String section;
+
+    @Override
+    public ProfileType getProfileType() {
+        return ProfileType.STUDENT;
+    }
 }

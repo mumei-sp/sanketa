@@ -1,5 +1,6 @@
 package com.sanketa.user.domain.entity;
 
+import com.sanketa.fabric.globaldb.model.enums.ProfileType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,17 +13,15 @@ import java.time.LocalDate;
 
 /**
  * Teacher-specific profile entity.
- * 
+ *
  * @author mumei
  */
 @Entity
 @Table(name = "teachers", indexes = {
-    @Index(name = "idx_teachers_profile_id", columnList = "profile_id"),
-    @Index(name = "idx_teachers_employee_id", columnList = "employee_id"),
     @Index(name = "idx_teachers_department", columnList = "department")
 })
-@DiscriminatorValue("teacher")
-@PrimaryKeyJoinColumn(name = "profile_id", referencedColumnName = "id")
+@DiscriminatorValue("1") // TEACHER = 1 (matches ProfileType.TEACHER.getCode())
+@PrimaryKeyJoinColumn(name = "profile_id")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -49,4 +48,9 @@ public class Teacher extends UserProfile {
     @Column(name = "professional_info", columnDefinition = "JSON")
     @Builder.Default
     private String professionalInfo = "{}"; // JSON object for additional professional info
+
+    @Override
+    public ProfileType getProfileType() {
+        return ProfileType.TEACHER;
+    }
 }
