@@ -11,7 +11,7 @@ To empower schools and educational institutions with intelligent, connected, and
 
 ```
 src/
-├── components/            # Global reusable UI components
+├── components/           # Global reusable UI components
 │   ├── ui/               # shadcn-generated components
 │   ├── form/             # Form abstractions & wrappers
 │   ├── inputs/           # Input components (EmailInput, PhoneInput)
