@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
 
 /**
  * Input field component with label, icons, error states, and accessibility support.
@@ -27,6 +28,12 @@ export interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElem
   rightIcon?: React.ReactNode;
   /** Makes rightIcon clickable (removes pointer-events-none) */
   rightIconClickable?: boolean;
+  /** Show character counter (requires maxLength prop) */
+  showCharCount?: boolean;
+  /** Show clear button when input has value */
+  showClearButton?: boolean;
+  /** Callback when clear button is clicked */
+  onClear?: () => void;
 }
 
 /**
@@ -45,9 +52,14 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
       leftIcon,
       rightIcon,
       rightIconClickable = false,
+      showCharCount = false,
+      showClearButton = false,
+      onClear,
       className,
       disabled,
       id,
+      value,
+      maxLength,
       ...props
     },
     ref,
@@ -62,6 +74,23 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
       [error && errorId, subLabel && !error && subLabelId]
         .filter(Boolean)
         .join(" ") || undefined;
+
+    const inputValue = value || "";
+    const hasValue = typeof inputValue === "string" && inputValue.length > 0;
+    const charCount =
+      maxLength && typeof inputValue === "string" ? inputValue.length : 0;
+    const remainingChars = maxLength ? maxLength - charCount : 0;
+
+    const handleClear = () => {
+      if (onClear) {
+        onClear();
+      } else if (props.onChange) {
+        const event = {
+          target: { value: "" },
+        } as React.ChangeEvent<HTMLInputElement>;
+        props.onChange(event);
+      }
+    };
 
     return (
       <div className={cn("flex flex-col gap-1 w-full", wrapperClassName)}>
@@ -105,6 +134,8 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             aria-required={requiredMark}
             aria-invalid={error ? "true" : undefined}
             aria-describedby={describedBy}
+            value={value}
+            maxLength={maxLength}
             className={cn(
               "h-11 rounded-xl border transition-all",
               "focus-visible:ring-2 focus-visible:ring-primary",
@@ -115,13 +146,24 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
                 ? "border-red-500 focus-visible:ring-red-500"
                 : !disabled && "border-gray-300",
               leftIcon ? "pl-10" : "pl-3",
-              rightIcon ? "pr-10" : "pr-3",
+              rightIcon || (showClearButton && hasValue) ? "pr-10" : "pr-3",
               className,
             )}
             {...props}
           />
 
-          {rightIcon && (
+          {showClearButton && hasValue && !disabled && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Clear input"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+
+          {rightIcon && !(showClearButton && hasValue) && (
             <span
               className={cn(
                 "absolute right-3",
@@ -145,7 +187,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           </p>
         )}
 
-        {subLabel && !error && (
+        {subLabel && !error && !showCharCount && (
           <p
             id={subLabelId}
             className={cn(
@@ -156,6 +198,34 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           >
             {subLabel}
           </p>
+        )}
+
+        {showCharCount && maxLength && !error && (
+          <div className="flex justify-between items-center">
+            {subLabel && (
+              <p
+                id={subLabelId}
+                className={cn(
+                  "text-xs text-gray-500",
+                  disabled && "opacity-60",
+                  subLabelClassName,
+                )}
+              >
+                {subLabel}
+              </p>
+            )}
+            <p
+              className={cn(
+                "text-xs ml-auto",
+                remainingChars < maxLength * 0.1
+                  ? "text-red-500"
+                  : "text-gray-500",
+                disabled && "opacity-60",
+              )}
+            >
+              {charCount}/{maxLength}
+            </p>
+          </div>
         )}
       </div>
     );
