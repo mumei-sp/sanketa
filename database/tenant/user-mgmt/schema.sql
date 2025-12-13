@@ -79,6 +79,9 @@ CREATE TABLE students (
     grade_level VARCHAR(50),
     section VARCHAR(20),
     
+    -- Student information (hobbies/interests and medical info)
+    student_info JSON DEFAULT ('{}'),
+    
     -- Constraints
     CONSTRAINT chk_admission_date CHECK (admission_date IS NULL OR admission_date <= CURDATE()),
     CONSTRAINT chk_student_id_format CHECK (student_id REGEXP '^[A-Z0-9]+$'),
