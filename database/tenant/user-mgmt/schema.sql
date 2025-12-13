@@ -32,9 +32,10 @@ CREATE TABLE user_profiles (
     profile_type TINYINT NOT NULL COMMENT '0=STUDENT, 1=TEACHER, 2=PARENT, 3=ADMIN, 4=STAFF, 5=GUARDIAN',
     
     -- Personal information
-    first_name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) COMMENT 'Given name (nullable for Indian naming style)',
     middle_name VARCHAR(100),
-    last_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) COMMENT 'Family name (nullable for Indian naming style)',
+    full_name VARCHAR(300) COMMENT 'Complete full name (nullable - can be derived from first_name/middle_name/last_name if not provided)',
     preferred_name VARCHAR(100),
     display_name VARCHAR(200),
     date_of_birth DATE,
@@ -50,9 +51,15 @@ CREATE TABLE user_profiles (
     
     -- Indexes
     INDEX idx_user_profiles_profile_type (profile_type),
+    INDEX idx_user_profiles_full_name (full_name),
     
     -- Constraints
-    CONSTRAINT chk_user_profiles_name_length CHECK (LENGTH(first_name) >= 1 AND LENGTH(last_name) >= 1),
+    -- Indian naming style: At least one of first_name, last_name, or full_name must be provided
+    CONSTRAINT chk_user_profiles_name_length CHECK (
+        LENGTH(COALESCE(first_name, '')) >= 1 OR
+        LENGTH(COALESCE(last_name, '')) >= 1 OR
+        LENGTH(COALESCE(full_name, '')) >= 1
+    ),
     CONSTRAINT chk_user_profiles_date_of_birth CHECK (date_of_birth IS NULL OR date_of_birth <= CURDATE()),
     UNIQUE KEY uk_user_profiles_user_id (user_id) COMMENT 'One profile per user per tenant (enforced at DB level)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

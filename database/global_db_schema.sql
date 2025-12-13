@@ -81,9 +81,10 @@ CREATE TABLE user_profiles (
     profile_type TINYINT NOT NULL COMMENT '0=STUDENT, 1=TEACHER, 2=PARENT, 3=ADMIN, 4=STAFF, 5=GUARDIAN',
 
     -- Personal information
-    first_name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) COMMENT 'Given name (nullable for Indian naming style)',
     middle_name VARCHAR(100),
-    last_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) COMMENT 'Family name (nullable for Indian naming style)',
+    full_name VARCHAR(300) COMMENT 'Complete full name (nullable - can be derived from first_name/middle_name/last_name if not provided)',
     preferred_name VARCHAR(100),
     display_name VARCHAR(200),
     date_of_birth DATE,
@@ -122,7 +123,12 @@ CREATE TABLE user_profiles (
     updated_by BIGINT UNSIGNED,
 
     -- Constraints
-    CONSTRAINT chk_name_length CHECK (LENGTH(first_name) >= 1 AND LENGTH(last_name) >= 1),
+    -- Indian naming style: At least one of first_name, last_name, or full_name must be provided
+    CONSTRAINT chk_name_length CHECK (
+        LENGTH(COALESCE(first_name, '')) >= 1 OR
+        LENGTH(COALESCE(last_name, '')) >= 1 OR
+        LENGTH(COALESCE(full_name, '')) >= 1
+    ),
     CONSTRAINT chk_date_of_birth CHECK (date_of_birth IS NULL OR date_of_birth <= CURDATE()),
     CONSTRAINT chk_user_profiles_phone_format CHECK (
         primary_phone IS NULL OR primary_phone REGEXP '^(\\+91|91)?[6-9][0-9]{9}$'
@@ -140,7 +146,8 @@ CREATE TABLE user_profiles (
     CONSTRAINT fk_user_profiles_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
 
     -- Indexes
-    INDEX idx_user_profiles_profile_type (profile_type)
+    INDEX idx_user_profiles_profile_type (profile_type),
+    INDEX idx_user_profiles_full_name (full_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
@@ -404,6 +411,7 @@ SELECT
     u.created_at,
     up.first_name,
     up.last_name,
+    up.full_name,
     up.display_name,
     up.profile_type,
     up.profile_picture_url
