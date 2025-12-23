@@ -1,3 +1,5 @@
 export { AppLayout } from "./AppLayout"
 export { AppSidebar } from "./AppSidebar"
 export { Logo } from "./Logo"
+export { default as PageHeader } from "./PageHeader"
+export type { PageHeaderProps, PageHeaderBreadcrumbItem } from "./PageHeader"

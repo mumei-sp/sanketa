@@ -1,8 +1,20 @@
+import { useNavigate } from 'react-router-dom'
+import PageHeader from '@/components/layout/PageHeader'
+
 export default function Expenses() {
+  const navigate = useNavigate()
+
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-bold">Expenses</h1>
-      <p className="text-muted-foreground">Track and manage expenses</p>
+      <PageHeader
+        title="Expenses"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Finance', href: '/finance' },
+          { label: 'Expenses' },
+        ]}
+        onBack={() => navigate('/finance')}
+      />
     </div>
   )
 }
