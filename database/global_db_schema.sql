@@ -15,6 +15,10 @@
 --
 -- ============================================================================
 
+-- Create database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS sanketa_global CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE sanketa_global;
+
 -- ============================================================================
 -- CORE TABLES
 -- ============================================================================
@@ -27,7 +31,7 @@
 -- Key Fields:
 --   - keycloak_user_id: Keycloak user UUID (source of truth for user identity)
 --   - is_active / is_deleted: Access and soft-delete flags
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
 
     -- Identity fields
@@ -75,7 +79,7 @@ CREATE TABLE users (
 -- ----------------------------------------------------------------------------
 -- user_profiles: Global profile information for users
 -- ----------------------------------------------------------------------------
-CREATE TABLE user_profiles (
+CREATE TABLE IF NOT EXISTS user_profiles (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NOT NULL,
     profile_type TINYINT NOT NULL COMMENT '0=STUDENT, 1=TEACHER, 2=PARENT, 3=ADMIN, 4=STAFF, 5=GUARDIAN',
@@ -129,7 +133,8 @@ CREATE TABLE user_profiles (
         LENGTH(COALESCE(last_name, '')) >= 1 OR
         LENGTH(COALESCE(full_name, '')) >= 1
     ),
-    CONSTRAINT chk_date_of_birth CHECK (date_of_birth IS NULL OR date_of_birth <= CURDATE()),
+    -- Note: Date of birth validation (date_of_birth <= CURRENT_DATE) should be done at application level
+    -- MySQL check constraints don't support date functions like CURRENT_DATE, CURDATE(), or NOW()
     CONSTRAINT chk_user_profiles_phone_format CHECK (
         primary_phone IS NULL OR primary_phone REGEXP '^(\\+91|91)?[6-9][0-9]{9}$'
     ),
@@ -160,7 +165,7 @@ CREATE TABLE user_profiles (
 --   - tenant_code: Unique identifier for routing (e.g., "SCHOOL_001")
 --   - name: Display name (minimal, for logging/debugging)
 --
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     tenant_code VARCHAR(50) UNIQUE NOT NULL, -- Unique routing identifier
     name VARCHAR(255) NOT NULL, -- Display name
@@ -187,7 +192,7 @@ CREATE TABLE tenants (
 -- Constraints:
 --   - Unique (user_id, tenant_id) to prevent duplicate mappings
 --
-CREATE TABLE user_tenant_mapping (
+CREATE TABLE IF NOT EXISTS user_tenant_mapping (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL, -- Foreign key to users
     tenant_id BIGINT UNSIGNED NOT NULL, -- Foreign key to tenants
@@ -221,7 +226,7 @@ CREATE TABLE user_tenant_mapping (
 --   - current_tenant_count <= max_tenants (if max_tenants is set)
 --   - current_tenant_count >= 0
 --
-CREATE TABLE database_instances (
+CREATE TABLE IF NOT EXISTS database_instances (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     instance_name VARCHAR(255) UNIQUE NOT NULL, -- Unique database instance name
     database_host VARCHAR(255) NOT NULL, -- Database host address
@@ -258,7 +263,7 @@ CREATE TABLE database_instances (
 -- Constraints:
 --   - Unique (database_instance_id, tenant_schema) prevents schema conflicts
 --
-CREATE TABLE tenant_database_mapping (
+CREATE TABLE IF NOT EXISTS tenant_database_mapping (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     tenant_id BIGINT UNSIGNED UNIQUE NOT NULL, -- Foreign key to tenants (one mapping per tenant)
     database_instance_id BIGINT UNSIGNED NOT NULL, -- Foreign key to database_instances
@@ -289,7 +294,7 @@ CREATE TABLE tenant_database_mapping (
 -- Constraints:
 --   - One credential record per database instance (UNIQUE)
 --
-CREATE TABLE database_instance_credentials (
+CREATE TABLE IF NOT EXISTS database_instance_credentials (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     database_instance_id BIGINT UNSIGNED UNIQUE NOT NULL, -- Foreign key to database_instances (one-to-one)
     connection_string_encrypted TEXT NOT NULL, -- Encrypted full connection string
@@ -318,7 +323,7 @@ CREATE TABLE database_instance_credentials (
 -- Constraints:
 --   - expires_at > issued_at (ensures valid expiration)
 --
-CREATE TABLE fabric_sessions (
+CREATE TABLE IF NOT EXISTS fabric_sessions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL, -- Foreign key to users
     session_token_hash VARCHAR(255) UNIQUE NOT NULL, -- Hashed Fabric JWT token
@@ -428,15 +433,15 @@ WHERE is_active = TRUE AND is_deleted = FALSE;
 -- ============================================================================
 -- TRIGGERS FOR DATA INTEGRITY (GLOBAL USERS)
 -- ============================================================================
+-- Note: DELIMITER is not supported by SQL Maven plugin, so triggers are
+-- created using DROP IF EXISTS followed by CREATE without DELIMITER
 
-DELIMITER //
+DROP TRIGGER IF EXISTS update_user_profiles_last_update;
+
 CREATE TRIGGER update_user_profiles_last_update 
 BEFORE UPDATE ON user_profiles
 FOR EACH ROW
-BEGIN
-    SET NEW.last_profile_update = NOW(6);
-END//
-DELIMITER ;
+SET NEW.last_profile_update = NOW(6);
 
 -- ============================================================================
 -- COMMENTS FOR DOCUMENTATION
