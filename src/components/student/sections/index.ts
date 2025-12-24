@@ -1,0 +1,7 @@
+export { PersonalInfoSection, type PersonalInfoSectionProps } from './PersonalInfoSection'
+export { ProfilePhotoSection, type ProfilePhotoSectionProps } from './ProfilePhotoSection'
+export { AdministrationSection, type AdministrationSectionProps } from './AdministrationSection'
+export { AcademicInfoSection, type AcademicInfoSectionProps } from './AcademicInfoSection'
+export { ContactInfoSection, type ContactInfoSectionProps } from './ContactInfoSection'
+export { GuardianInfoSection, type GuardianInfoSectionProps } from './GuardianInfoSection'
+export { AdditionalInfoSection, type AdditionalInfoSectionProps } from './AdditionalInfoSection'

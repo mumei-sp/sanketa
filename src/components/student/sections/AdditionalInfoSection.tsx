@@ -1,0 +1,65 @@
+import { type Control, useWatch } from 'react-hook-form'
+import { FormSection } from '@/components/form/FormSection'
+import { TextField } from '@/components/form/fields/TextField'
+import { TextareaField } from '@/components/form/fields/TextareaField'
+import { SwitchField } from '@/components/form/fields/SwitchField'
+import type { StudentFormValues } from '@/forms/student/student.schema'
+
+/**
+ * Props for AdditionalInfoSection component
+ */
+export interface AdditionalInfoSectionProps {
+  /** Control object from React Hook Form */
+  control: Control<StudentFormValues>
+  /** Grid column span (for use in TileWrapper grid) */
+  width?: number
+}
+
+/**
+ * AdditionalInfoSection - Form section for additional information.
+ * Displays fields for hobbies, special needs support, and medical condition alert.
+ */
+export function AdditionalInfoSection({ control, width }: AdditionalInfoSectionProps) {
+  const medicalConditionAlert = useWatch({
+    control,
+    name: 'additionalInfo.medicalConditionAlert',
+  })
+
+  return (
+    <FormSection
+      title="Additional Information"
+      description="Additional details about the student"
+      width={width}
+    >
+      <TextField
+        name="additionalInfo.hobbies"
+        control={control}
+        label="Hobbies / Interests"
+        placeholder="Enter hobbies and interests"
+        className="w-full"
+      />
+      <SwitchField
+        name="additionalInfo.specialNeedsSupport"
+        control={control}
+        label="Special Needs Support"
+      />
+      <div className="space-y-2">
+        <SwitchField
+          name="additionalInfo.medicalConditionAlert"
+          control={control}
+          label="Medical Condition Alert"
+        />
+        {medicalConditionAlert && (
+          <TextareaField
+            name="additionalInfo.medicalInfo"
+            control={control}
+            placeholder="Enter medical condition details"
+            rows={3}
+            className="w-full"
+            textareaClassName="max-h-32 overflow-y-auto resize-none"
+          />
+        )}
+      </div>
+    </FormSection>
+  )
+}

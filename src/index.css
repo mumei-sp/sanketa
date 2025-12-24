@@ -121,6 +121,9 @@
   #root {
     @apply h-full;
   }
+  html {
+    @apply font-sans;
+  }
   body {
     @apply bg-background text-foreground font-sans;
   }

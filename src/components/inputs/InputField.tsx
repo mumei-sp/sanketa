@@ -1,7 +1,7 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import * as React from 'react'
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { X } from 'lucide-react'
 
 /**
  * Input field component with label, icons, error states, and accessibility support.
@@ -9,31 +9,31 @@ import { X } from "lucide-react";
  */
 export interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** Label text displayed above the input */
-  label?: string;
+  label?: string
   /** Helper text shown below the input (hidden when error is present) */
-  subLabel?: string;
+  subLabel?: string
   /** Shows required asterisk and sets required/aria-required attributes */
-  requiredMark?: boolean;
+  requiredMark?: boolean
   /** Error message displayed below input with error styling */
-  error?: string;
+  error?: string
   /** Custom className for the wrapper div */
-  wrapperClassName?: string;
+  wrapperClassName?: string
   /** Custom className for the label */
-  labelClassName?: string;
+  labelClassName?: string
   /** Custom className for the subLabel */
-  subLabelClassName?: string;
+  subLabelClassName?: string
   /** Icon rendered on the left side of input */
-  leftIcon?: React.ReactNode;
+  leftIcon?: React.ReactNode
   /** Icon rendered on the right side of input */
-  rightIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode
   /** Makes rightIcon clickable (removes pointer-events-none) */
-  rightIconClickable?: boolean;
+  rightIconClickable?: boolean
   /** Show character counter (requires maxLength prop) */
-  showCharCount?: boolean;
+  showCharCount?: boolean
   /** Show clear button when input has value */
-  showClearButton?: boolean;
+  showClearButton?: boolean
   /** Callback when clear button is clicked */
-  onClear?: () => void;
+  onClear?: () => void
 }
 
 /**
@@ -64,49 +64,46 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
     },
     ref,
   ) => {
-    const inputId = React.useId();
-    const finalId = id || inputId;
-    const errorId = `${finalId}-error`;
-    const subLabelId = `${finalId}-sublabel`;
+    const inputId = React.useId()
+    const finalId = id || inputId
+    const errorId = `${finalId}-error`
+    const subLabelId = `${finalId}-sublabel`
 
     // Build aria-describedby for accessibility
     const describedBy =
-      [error && errorId, subLabel && !error && subLabelId]
-        .filter(Boolean)
-        .join(" ") || undefined;
+      [error && errorId, subLabel && !error && subLabelId].filter(Boolean).join(' ') || undefined
 
-    const inputValue = value || "";
-    const hasValue = typeof inputValue === "string" && inputValue.length > 0;
-    const charCount =
-      maxLength && typeof inputValue === "string" ? inputValue.length : 0;
-    const remainingChars = maxLength ? maxLength - charCount : 0;
+    const inputValue = value || ''
+    const hasValue = typeof inputValue === 'string' && inputValue.length > 0
+    const charCount = maxLength && typeof inputValue === 'string' ? inputValue.length : 0
+    const remainingChars = maxLength ? maxLength - charCount : 0
 
     const handleClear = () => {
       if (onClear) {
-        onClear();
+        onClear()
       } else if (props.onChange) {
         const event = {
-          target: { value: "" },
-        } as React.ChangeEvent<HTMLInputElement>;
-        props.onChange(event);
+          target: { value: '' },
+        } as React.ChangeEvent<HTMLInputElement>
+        props.onChange(event)
       }
-    };
+    }
 
     return (
-      <div className={cn("flex flex-col gap-1 w-full", wrapperClassName)}>
+      <div className={cn('flex flex-col gap-1 w-full', wrapperClassName)}>
         {label && (
           <label
             htmlFor={finalId}
             className={cn(
-              "text-sm font-medium text-gray-700",
-              disabled && "opacity-60",
+              'text-sm font-medium text-gray-700',
+              disabled && 'opacity-60',
               labelClassName,
             )}
           >
             {label}
             {requiredMark && (
               <span className="text-red-500" aria-label="required">
-                {" "}
+                {' '}
                 *
               </span>
             )}
@@ -117,8 +114,8 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           {leftIcon && (
             <span
               className={cn(
-                "absolute left-3 pointer-events-none",
-                disabled ? "text-gray-500" : "text-gray-400",
+                'absolute left-3 pointer-events-none',
+                disabled ? 'text-gray-500' : 'text-gray-400',
               )}
               aria-hidden="true"
             >
@@ -132,21 +129,21 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             disabled={disabled}
             required={requiredMark}
             aria-required={requiredMark}
-            aria-invalid={error ? "true" : undefined}
+            aria-invalid={error ? 'true' : undefined}
             aria-describedby={describedBy}
-            value={value}
+            value={value ?? ''}
             maxLength={maxLength}
             className={cn(
-              "h-11 rounded-xl border transition-all",
-              "focus-visible:ring-2 focus-visible:ring-primary",
+              'h-11 rounded-xl border transition-all',
+              'focus-visible:ring-2 focus-visible:ring-primary',
               disabled
-                ? "bg-gray-100 border-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-white",
+                ? 'bg-gray-100 border-gray-300 text-gray-600 cursor-not-allowed'
+                : 'bg-white',
               !disabled && error
-                ? "border-red-500 focus-visible:ring-red-500"
-                : !disabled && "border-gray-300",
-              leftIcon ? "pl-10" : "pl-3",
-              rightIcon || (showClearButton && hasValue) ? "pr-10" : "pr-3",
+                ? 'border-red-500 focus-visible:ring-red-500'
+                : !disabled && 'border-gray-300',
+              leftIcon ? 'pl-10' : 'pl-3',
+              rightIcon || (showClearButton && hasValue) ? 'pr-10' : 'pr-3',
               className,
             )}
             {...props}
@@ -166,9 +163,9 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           {rightIcon && !(showClearButton && hasValue) && (
             <span
               className={cn(
-                "absolute right-3",
-                disabled ? "text-gray-500" : "text-gray-400",
-                !rightIconClickable && "pointer-events-none",
+                'absolute right-3',
+                disabled ? 'text-gray-500' : 'text-gray-400',
+                !rightIconClickable && 'pointer-events-none',
               )}
               aria-hidden={!rightIconClickable}
             >
@@ -181,7 +178,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           <p
             id={errorId}
             role="alert"
-            className={cn("text-xs text-red-500", disabled && "opacity-60")}
+            className={cn('text-xs text-red-500', disabled && 'opacity-60')}
           >
             {error}
           </p>
@@ -190,11 +187,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
         {subLabel && !error && !showCharCount && (
           <p
             id={subLabelId}
-            className={cn(
-              "text-xs text-gray-500",
-              disabled && "opacity-60",
-              subLabelClassName,
-            )}
+            className={cn('text-xs text-gray-500', disabled && 'opacity-60', subLabelClassName)}
           >
             {subLabel}
           </p>
@@ -205,22 +198,16 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             {subLabel && (
               <p
                 id={subLabelId}
-                className={cn(
-                  "text-xs text-gray-500",
-                  disabled && "opacity-60",
-                  subLabelClassName,
-                )}
+                className={cn('text-xs text-gray-500', disabled && 'opacity-60', subLabelClassName)}
               >
                 {subLabel}
               </p>
             )}
             <p
               className={cn(
-                "text-xs ml-auto",
-                remainingChars < maxLength * 0.1
-                  ? "text-red-500"
-                  : "text-gray-500",
-                disabled && "opacity-60",
+                'text-xs ml-auto',
+                remainingChars < maxLength * 0.1 ? 'text-red-500' : 'text-gray-500',
+                disabled && 'opacity-60',
               )}
             >
               {charCount}/{maxLength}
@@ -228,8 +215,8 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           </div>
         )}
       </div>
-    );
+    )
   },
-);
+)
 
-InputField.displayName = "InputField";
+InputField.displayName = 'InputField'

@@ -10,8 +10,8 @@ export function AppLayout({ logoPath }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <AppSidebar logoPath={logoPath} />
-      <SidebarInset>
-        <main className="flex flex-1 flex-col gap-4 p-4 overflow-auto">
+      <SidebarInset className="overflow-hidden">
+        <main className="flex flex-1 flex-col gap-4 p-4 overflow-auto min-h-0">
           <Outlet />
         </main>
       </SidebarInset>

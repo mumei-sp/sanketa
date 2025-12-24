@@ -1,12 +1,19 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AppLayout } from './components/layout'
 import { generateRoutesFromNavigation } from './config/routes'
+import AddStudent from './pages/AddStudent'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
-    children: generateRoutesFromNavigation(),
+    children: [
+      ...generateRoutesFromNavigation(),
+      {
+        path: 'students/add',
+        element: <AddStudent />,
+      },
+    ],
   },
 ])
 
