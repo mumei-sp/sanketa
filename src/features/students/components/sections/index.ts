@@ -5,3 +5,4 @@ export { AcademicInfoSection, type AcademicInfoSectionProps } from './AcademicIn
 export { ContactInfoSection, type ContactInfoSectionProps } from './ContactInfoSection'
 export { GuardianInfoSection, type GuardianInfoSectionProps } from './GuardianInfoSection'
 export { AdditionalInfoSection, type AdditionalInfoSectionProps } from './AdditionalInfoSection'
+export { GuardianCard, type GuardianCardProps } from './GuardianCard'

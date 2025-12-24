@@ -1,9 +1,13 @@
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
-import { SelectField, type SelectOption } from '@/components/form/fields/SelectField'
-import { DateField } from '@/components/form/fields/DateField'
-import { TextField } from '@/components/form/fields/TextField'
-import type { StudentFormValues } from '@/forms/student/student.schema'
+import {
+  SelectField,
+  DateField,
+  TextField,
+  type SelectOption,
+  GRID_COLS_2,
+} from '@/components/form/fields'
+import type { StudentFormValues } from '../../schemas/student.schema'
 
 /**
  * Props for AcademicInfoSection component
@@ -55,7 +59,7 @@ export function AcademicInfoSection({ control, width }: AcademicInfoSectionProps
       width={width}
       className="self-start"
     >
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
         <SelectField
           name="academicInfo.gradeLevel"
           control={control}

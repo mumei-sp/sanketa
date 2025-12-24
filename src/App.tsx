@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AppLayout } from './components/layout'
 import { generateRoutesFromNavigation } from './config/routes'
-import AddStudent from './pages/AddStudent'
+import AddStudent from './features/students/pages/AddStudent'
 
 const router = createBrowserRouter([
   {

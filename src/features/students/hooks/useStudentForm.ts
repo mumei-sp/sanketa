@@ -1,6 +1,6 @@
 import { useForm, type UseFormReturn, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { StudentSchema, type StudentFormValues } from './student.schema'
+import { StudentSchema, type StudentFormValues } from '../schemas/student.schema'
 
 /**
  * Hook return type for useStudentForm

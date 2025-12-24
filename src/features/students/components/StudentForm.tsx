@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { TileWrapper } from '@/components/tile'
-import { useStudentForm } from '@/forms/student/useStudentForm'
+import { useStudentForm } from '../hooks/useStudentForm'
 import { PersonalInfoSection } from './sections/PersonalInfoSection'
 import { AdministrationSection } from './sections/AdministrationSection'
 import { AcademicInfoSection } from './sections/AcademicInfoSection'
@@ -8,7 +8,7 @@ import { ContactInfoSection } from './sections/ContactInfoSection'
 import { GuardianInfoSection } from './sections/GuardianInfoSection'
 import { AdditionalInfoSection } from './sections/AdditionalInfoSection'
 import { cn } from '@/lib/utils'
-import type { StudentFormValues } from '@/forms/student/student.schema'
+import type { StudentFormValues } from '../schemas/student.schema'
 
 /**
  * Props for StudentForm component
