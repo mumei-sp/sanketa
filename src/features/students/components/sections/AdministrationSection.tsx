@@ -1,7 +1,7 @@
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
 import { TextField } from '@/components/form/fields'
-import type { StudentFormValues } from '../../schemas/student.schema'
+import type { StudentFormValues } from '../../schemas/student-schema'
 
 /**
  * Props for AdministrationSection component

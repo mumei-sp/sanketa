@@ -4,7 +4,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import { StudentForm } from '../components/StudentForm'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import type { StudentFormValues } from '../schemas/student.schema'
+import type { StudentFormValues } from '../schemas/student-schema'
 
 export default function AddStudent() {
   const navigate = useNavigate()

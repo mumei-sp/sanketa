@@ -7,7 +7,7 @@ import {
   type SelectOption,
   GRID_COLS_2,
 } from '@/components/form/fields'
-import type { StudentFormValues } from '../../schemas/student.schema'
+import type { StudentFormValues } from '../../schemas/student-schema'
 
 /**
  * Props for AcademicInfoSection component

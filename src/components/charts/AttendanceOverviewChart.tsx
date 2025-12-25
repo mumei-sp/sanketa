@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
-import { ChartGradient } from '@/theme/gradients'
+import { ChartGradient } from '@/theme/ChartGradient'
 
 interface AttendanceOverviewChartProps {
   data: AttendanceData[]

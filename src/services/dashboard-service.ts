@@ -1,5 +1,5 @@
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
-import { enrollmentTrendsData, attendanceOverviewData } from '@/data/dashboard'
+import { enrollmentTrendsData, attendanceOverviewData } from '@/data/mocks/student-dashboard'
 
 /**
  * Mock API service for fetching enrollment trends
@@ -38,3 +38,4 @@ export async function fetchAttendanceOverview(): Promise<AttendanceData[]> {
     }, delay)
   })
 }
+

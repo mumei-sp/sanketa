@@ -12,7 +12,7 @@ import {
   GUARDIAN_BUTTON_BG_CLASS,
 } from '@/components/form/fields'
 import { GuardianCard } from './GuardianCard'
-import type { StudentFormValues } from '../../schemas/student.schema'
+import type { StudentFormValues } from '../../schemas/student-schema'
 
 /**
  * Props for GuardianInfoSection component

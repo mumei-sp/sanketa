@@ -1,8 +1,8 @@
-import type { Student } from './student.types'
+import type { Student } from '@/pages/students/student-types'
 
 /**
- * Dummy student data matching the reference UI
- * Includes all 8 visible students from the image plus 32 additional students
+ * Mock student data for development and testing
+ * TODO: Replace with real API calls when backend is ready
  */
 export const studentsData: Student[] = [
   // Students from reference image
@@ -448,3 +448,4 @@ export const studentsData: Student[] = [
     avatarUrl: '',
   },
 ]
+

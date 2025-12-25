@@ -1,5 +1,5 @@
-import type { Student } from './student.types'
-import { studentsData } from './student.data'
+import type { Student } from './student-types'
+import { studentsData } from '@/data/mocks/students'
 
 /**
  * Mock API service for fetching students
@@ -19,3 +19,4 @@ export async function fetchStudents(): Promise<Student[]> {
     }, delay)
   })
 }
+

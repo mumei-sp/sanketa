@@ -4,7 +4,7 @@ import type { Table as TanStackTable } from '@tanstack/react-table'
 import { Plus, Search } from 'lucide-react'
 import { DataTable, DataTableSearch } from '@/components/table'
 import { studentColumns } from './student-columns'
-import type { Student } from './student.types'
+import type { Student } from './student-types'
 import { Button } from '@/components/ui/button'
 import {
   Select,

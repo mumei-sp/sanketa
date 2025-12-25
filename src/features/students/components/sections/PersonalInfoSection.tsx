@@ -7,7 +7,7 @@ import {
   SegmentedRadioField,
   GRID_COLS_3,
 } from '@/components/form/fields'
-import type { StudentFormValues } from '../../schemas/student.schema'
+import type { StudentFormValues } from '../../schemas/student-schema'
 
 /**
  * Props for PersonalInfoSection component

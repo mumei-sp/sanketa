@@ -22,3 +22,4 @@ export interface Student {
   status: StudentStatus
   avatarUrl?: string
 }
+
