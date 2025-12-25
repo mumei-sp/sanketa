@@ -27,7 +27,7 @@ export function ProfilePhotoSection({ control, width }: ProfilePhotoSectionProps
       <ProfilePhotoUploadField
         control={control}
         name="contactInfo.profilePictureUrl"
-        height="h-32"
+        height="h-40"
       />
     </FormSection>
   )

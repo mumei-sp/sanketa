@@ -59,7 +59,7 @@ export function AcademicInfoSection({ control, width }: AcademicInfoSectionProps
       width={width}
       className="self-start"
     >
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+      <div className="grid w-full gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
         <SelectField
           name="academicInfo.gradeLevel"
           control={control}

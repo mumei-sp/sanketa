@@ -51,26 +51,32 @@ export function DataTableHeaderCell<TData, TValue>({
 
   const shouldShowSortable = enableSorting && header.column.getCanSort();
 
+  // Render the header from column definition if it exists
+  const renderColumnHeader = () => {
+    if (header.column.columnDef.header) {
+      if (typeof header.column.columnDef.header === "function") {
+        return header.column.columnDef.header({
+          column: header.column,
+          header,
+          table,
+        });
+      }
+      return header.column.columnDef.header as React.ReactNode;
+    }
+    // Fallback: use DataTableColumnHeader with column.id as title
+    return shouldShowSortable ? (
+      <DataTableColumnHeader column={header.column} {...columnHeaderProps} />
+    ) : (
+      header.id
+    );
+  };
+
   return (
     <WrapperComponent
       className={cn(cellClassName, wrapperProps?.className)}
       {...wrapperProps}
     >
-      {shouldShowSortable ? (
-        <DataTableColumnHeader column={header.column} {...columnHeaderProps} />
-      ) : (
-        <>
-          {header.column.columnDef.header
-            ? typeof header.column.columnDef.header === "function"
-              ? header.column.columnDef.header({
-                  column: header.column,
-                  header,
-                  table,
-                })
-              : (header.column.columnDef.header as React.ReactNode)
-            : header.id}
-        </>
-      )}
+      {renderColumnHeader()}
     </WrapperComponent>
   );
 }

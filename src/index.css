@@ -9,7 +9,109 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-family-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Typography: Font Family */
+  --font-family-sans:
+    'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+
+  /* Typography: Font Weights (semantic names) */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Map to Tailwind's default font-weight scale for compatibility */
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  /* Typography: Font Sizes with Line Heights (14px base) */
+  --font-size-xs: 0.857rem; /* 12px */
+  --font-size-xs--line-height: 1.029rem; /* 12px * 1.2 = 14.4px */
+  --font-size-sm: 0.929rem; /* 13px */
+  --font-size-sm--line-height: 1.207rem; /* 13px * 1.3 = 16.9px */
+  --font-size-base: 0.875rem; /* 14px - NEW BASE */
+  --font-size-base--line-height: 1.45rem; /* 14px * 1.45 = 20.3px */
+  --font-size-lg: 1.143rem; /* 16px */
+  --font-size-lg--line-height: 1.3rem; /* 16px * 1.3 = 20.8px */
+  --font-size-xl: 1.429rem; /* 20px */
+  --font-size-xl--line-height: 1.543rem; /* 20px * 1.35 = 27px */
+  --font-size-2xl: 1.714rem; /* 24px */
+  --font-size-2xl--line-height: 1.857rem; /* 24px * 1.3 = 31.2px */
+  --font-size-3xl: 2.143rem; /* 30px */
+  --font-size-3xl--line-height: 2.143rem; /* 30px * 1.2 = 36px */
+  --font-size-4xl: 2.571rem; /* 36px */
+  --font-size-4xl--line-height: 2.571rem; /* 36px * 1.11 = 40px */
+
+  /* Compact Spacing Scale Override (reduced by ~10-15%) */
+  --spacing-0: 0;
+  --spacing-0\.5: 0.125rem; /* 2px */
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-1\.5: 0.375rem; /* 6px */
+  --spacing-2: 0.5rem; /* 8px */
+  --spacing-2\.5: 0.625rem; /* 10px */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-4: 1rem; /* 16px (was 1rem, now equivalent to old p-4) */
+  --spacing-5: 1.125rem; /* 18px (was 1.25rem) */
+  --spacing-6: 1.25rem; /* 20px (was 1.5rem, now equivalent to old p-5) */
+  --spacing-8: 1.5rem; /* 24px (was 2rem, now equivalent to old p-6) */
+  --spacing-10: 1.75rem; /* 28px (was 2.5rem) */
+  --spacing-12: 2rem; /* 32px (was 3rem, now equivalent to old p-8) */
+  --spacing-16: 2.5rem; /* 40px (was 4rem) */
+  --spacing-20: 3rem; /* 48px (was 5rem) */
+  --spacing-24: 3.5rem; /* 56px (was 6rem) */
+  --spacing-32: 4.5rem; /* 72px (was 8rem) */
+  --spacing-40: 5.5rem; /* 88px (was 10rem) */
+  --spacing-48: 6.5rem; /* 104px (was 12rem) */
+  --spacing-64: 8.5rem; /* 136px (was 16rem) */
+
+  /* Override Tailwind spacing scale with compact values */
+  /* Note: Tailwind v4 will use these values for spacing utilities (p-, m-, gap-, etc.) */
+  --spacing-px: 1px;
+  --spacing-0: 0;
+  --spacing-0\.5: 0.125rem;
+  --spacing-1: 0.25rem;
+  --spacing-1\.5: 0.375rem;
+  --spacing-2: 0.5rem;
+  --spacing-2\.5: 0.625rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.125rem;
+  --spacing-6: 1.25rem;
+  --spacing-7: 1.375rem;
+  --spacing-8: 1.5rem;
+  --spacing-9: 1.625rem;
+  --spacing-10: 1.75rem;
+  --spacing-11: 1.875rem;
+  --spacing-12: 2rem;
+  --spacing-14: 2.25rem;
+  --spacing-16: 2.5rem;
+  --spacing-20: 3rem;
+  --spacing-24: 3.5rem;
+  --spacing-28: 4rem;
+  --spacing-32: 4.5rem;
+  --spacing-36: 5rem;
+  --spacing-40: 5.5rem;
+  --spacing-44: 6rem;
+  --spacing-48: 6.5rem;
+  --spacing-52: 7rem;
+  --spacing-56: 7.5rem;
+  --spacing-60: 8rem;
+  --spacing-64: 8.5rem;
+  --spacing-72: 9.5rem;
+  --spacing-80: 10.5rem;
+  --spacing-96: 13rem;
+
+  /* Height scale overrides for components (independent of spacing) */
+  /* These ensure buttons and other components maintain correct pixel sizes */
+  --height-8: 2.286rem; /* 32px at 14px base (32/14) */
+  --height-9: 2.571rem; /* 36px at 14px base (36/14) */
+  --height-10: 2.857rem; /* 40px at 14px base (40/14) */
+  --height-11: 3.143rem; /* 44px at 14px base (44/14) - for table rows */
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -45,40 +147,52 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #f8f8f8;
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: #fff;
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Theme Colors - Using centralized color system */
+  /* Background colors */
+  --background: #f8f8f8; /* background.page */
+  --card: #ffffff; /* background.card */
+  --popover: #ffffff; /* background.card */
+  /* Text colors */
+  --foreground: #15446e; /* text.heading - converted to oklch: oklch(0.30 0.10 240) */
+  --card-foreground: #15446e; /* text.heading */
+  --popover-foreground: #15446e; /* text.heading */
+  /* Primary colors (pink-based) */
+  --primary: #feccfd; /* primary.base - converted to oklch: oklch(0.95 0.08 320) */
+  --primary-foreground: #15446e; /* text.heading for contrast */
+  /* Secondary colors */
+  --secondary: #f5f5f5; /* accent.muted - very subtle background */
+  --secondary-foreground: #15446e; /* text.heading */
+  /* Muted colors */
+  --muted: #fafafa; /* border.muted - very subtle background */
+  --muted-foreground: #737373; /* text.muted */
+  /* Accent colors (blue-based) */
+  --accent: #cdeaf0; /* accent.base - converted to oklch: oklch(0.90 0.05 200) */
+  --accent-foreground: #15446e; /* text.heading for contrast */
+  /* Status colors */
+  --destructive: #f87171; /* status.danger.base - soft red for "At Risk" */
+  /* Border colors */
+  --border: #e5e5e5; /* border.default */
+  --input: #e5e5e5; /* border.default */
+  --ring: #cdeaf0; /* accent.base for focus rings */
+  /* Chart colors - using theme colors */
+  --chart-1: #feccfd; /* primary.base */
+  --chart-2: #cdeaf0; /* accent.base */
+  --chart-3: #15446e; /* text.heading */
+  --chart-4: #f87171; /* status.danger.base */
+  --chart-5: #4ade80; /* status.success.base */
+  /* Sidebar colors */
+  --sidebar: #ffffff; /* background.sidebar */
+  --sidebar-foreground: #15446e; /* text.heading */
+  --sidebar-primary: #feccfd; /* primary.base */
+  --sidebar-primary-foreground: #15446e; /* text.heading */
+  --sidebar-accent: #f5f5f5; /* accent.muted */
+  --sidebar-accent-foreground: #15446e; /* text.heading */
+  --sidebar-border: #e5e5e5; /* border.default */
+  --sidebar-ring: #cdeaf0; /* accent.base */
 }
 
 .dark {
+  /* Dark mode - keeping existing values for now, can be extended later */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -123,8 +237,151 @@
   }
   html {
     @apply font-sans;
+    /* Set base font size to 14px for compact dashboard density */
+    font-size: 0.875rem; /* 14px */
   }
   body {
     @apply bg-background text-foreground font-sans;
+    font-size: var(--font-size-base); /* 14px (0.875rem) */
+    line-height: 1.45; /* Compact line height for body text */
+  }
+
+  /* Global icon defaults for compact density */
+  svg:not([class*='size-']):not([width]):not([height]) {
+    width: 1rem; /* 16px (size-4) */
+    height: 1rem; /* 16px (size-4) */
+  }
+
+  /* Icon stroke width default */
+  svg {
+    stroke-width: 1.5;
+  }
+}
+
+@layer utilities {
+  /* Semantic Font Weight Utilities */
+  /* Note: Tailwind's default font-normal (400), font-medium (500), font-semibold (600), font-bold (700) 
+     are available. These semantic utilities provide programmatic access to the same values. */
+  .font-regular {
+    font-weight: var(--font-weight-regular);
+  }
+
+  /* Semantic Text Role Utilities */
+
+  /* Semantic Text Role Utilities - Compact Dashboard Specs */
+
+  /* pageTitle - Main page headers: 20px, weight 600, line-height 1.3 */
+  /* Usage: <h1 className="text-page-title">Dashboard</h1> */
+  .text-page-title {
+    font-size: var(--font-size-xl); /* 20px (1.429rem) */
+    font-weight: var(--font-weight-semibold); /* 600 */
+    line-height: 1.3; /* 20px * 1.3 = 26px */
+  }
+
+  /* sectionTitle - Card and section headers: 16px, weight 600, line-height 1.35 */
+  /* Usage: <h2 className="text-section-title">Student Information</h2> */
+  .text-section-title {
+    font-size: var(--font-size-lg); /* 16px (1.143rem) */
+    font-weight: var(--font-weight-semibold); /* 600 */
+    line-height: 1.35; /* 16px * 1.35 = 21.6px */
+  }
+
+  /* tableHeader - Table column headers: 13px, weight 500, line-height 1.3 */
+  /* Usage: <th className="text-table-header">Name</th> */
+  .text-table-header {
+    font-size: var(--font-size-sm); /* 13px (0.929rem) */
+    font-weight: var(--font-weight-medium); /* 500 */
+    line-height: 1.3; /* 13px * 1.3 = 16.9px */
+  }
+
+  /* body - Default body text: 14px, weight 400, line-height 1.45 */
+  /* Usage: <p className="text-body">This is body text</p> */
+  .text-body {
+    font-size: var(--font-size-base); /* 14px (0.875rem) */
+    font-weight: var(--font-weight-regular); /* 400 */
+    line-height: 1.45; /* 14px * 1.45 = 20.3px */
+  }
+
+  /* bodyMuted - Secondary/muted text: 13px, weight 400, line-height 1.45 */
+  /* Usage: <p className="text-body-muted text-muted-foreground">Helper text</p> */
+  .text-body-muted {
+    font-size: var(--font-size-sm); /* 13px (0.929rem) */
+    font-weight: var(--font-weight-regular); /* 400 */
+    line-height: 1.45; /* 13px * 1.45 = 18.85px */
+  }
+
+  /* badge - Pills and status labels: 12px, weight 500, line-height 1.2 */
+  /* Usage: <span className="text-badge">Active</span> */
+  .text-badge {
+    font-size: var(--font-size-xs); /* 12px (0.857rem) */
+    font-weight: var(--font-weight-medium); /* 500 */
+    line-height: 1.2; /* 12px * 1.2 = 14.4px */
+  }
+
+  /* caption - Small helper text: 12px, weight 400, line-height 1.3 */
+  /* Usage: <span className="text-caption">Last updated 2 hours ago</span> */
+  .text-caption {
+    font-size: var(--font-size-xs); /* 12px (0.857rem) */
+    font-weight: var(--font-weight-regular); /* 400 */
+    line-height: 1.3; /* 12px * 1.3 = 15.6px */
+  }
+
+  /* numeric - KPIs and metrics: 14px, weight 600, line-height 1.3 */
+  /* Usage: <span className="text-numeric">1,234</span> */
+  .text-numeric {
+    font-size: var(--font-size-base); /* 14px (0.875rem) */
+    font-weight: var(--font-weight-semibold); /* 600 */
+    line-height: 1.3; /* 14px * 1.3 = 18.2px */
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Page Container - Max width constraint for content areas */
+  /* Usage: <div className="page-container">...</div> */
+  .page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    width: 100%;
+  }
+
+  /* Component height overrides for compact density */
+  /* Buttons: ensure correct pixel sizes at 14px base */
+  .h-8 {
+    height: var(--height-8); /* 32px */
+  }
+  .h-9 {
+    height: var(--height-9); /* 36px */
+  }
+  .h-10 {
+    height: var(--height-10); /* 40px */
+  }
+  .h-11 {
+    height: var(--height-11); /* 44px - for table rows */
+  }
+
+  /* Size utilities for icons and squares */
+  .size-8 {
+    width: var(--height-8);
+    height: var(--height-8);
+  }
+  .size-9 {
+    width: var(--height-9);
+    height: var(--height-9);
+  }
+  .size-10 {
+    width: var(--height-10);
+    height: var(--height-10);
+  }
+
+  /* Compact table density utilities */
+  .size-3\.5 {
+    width: 0.875rem; /* 14px at 14px base */
+    height: 0.875rem; /* 14px at 14px base */
+  }
+
+  /* Tighter vertical padding for compact layouts */
+  .py-2\.5 {
+    padding-top: 0.625rem; /* 10px at 14px base */
+    padding-bottom: 0.625rem; /* 10px at 14px base */
   }
 }

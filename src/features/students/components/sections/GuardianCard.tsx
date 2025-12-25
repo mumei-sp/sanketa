@@ -19,10 +19,9 @@ export interface GuardianCardProps {
  */
 export function GuardianCard({ title, children, className }: GuardianCardProps) {
   return (
-    <div className={cn('space-y-4 rounded-lg p-4', 'bg-[#F8F8F8]', className)}>
+    <div className={cn('space-y-4 rounded-lg p-4', 'bg-page', className)}>
       <h4 className="text-sm font-semibold text-gray-700">{title}</h4>
       {children}
     </div>
   )
 }
-

@@ -20,6 +20,8 @@ export interface SwitchFieldProps<T extends FieldValues> {
   disabled?: boolean
   /** Additional className for the wrapper */
   className?: string
+  /** Additional className for the Switch component */
+  switchClassName?: string
 }
 
 /**
@@ -33,6 +35,7 @@ export function SwitchField<T extends FieldValues>({
   description,
   disabled,
   className,
+  switchClassName,
 }: SwitchFieldProps<T>) {
   const fieldId = React.useId()
 
@@ -48,6 +51,7 @@ export function SwitchField<T extends FieldValues>({
               checked={field.value || false}
               onCheckedChange={field.onChange}
               disabled={disabled}
+              className={switchClassName}
               aria-invalid={fieldState.error ? 'true' : 'false'}
               aria-describedby={
                 fieldState.error

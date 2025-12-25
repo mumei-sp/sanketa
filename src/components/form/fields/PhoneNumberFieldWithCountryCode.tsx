@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
+import { Controller, useWatch, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { COUNTRY_CODES } from './constants'
+import { colors } from '@/theme/colors'
 
 /**
  * Props for PhoneNumberFieldWithCountryCode component
@@ -37,6 +38,99 @@ export interface PhoneNumberFieldWithCountryCodeProps<T extends FieldValues> {
 }
 
 /**
+ * Inner component to handle country code select with proper initialization
+ */
+function CountryCodeSelect<T extends FieldValues>({
+  field,
+  defaultCountryCode,
+  countryCodeClassName,
+  countryCodeStyle,
+}: {
+  field: { value: string | undefined; onChange: (value: string) => void }
+  defaultCountryCode: string
+  countryCodeClassName?: string
+  countryCodeStyle?: React.CSSProperties
+}) {
+  const initializedRef = React.useRef(false)
+  
+  // Initialize on mount if value is not set
+  React.useEffect(() => {
+    if (!initializedRef.current && (field.value == null || field.value === '')) {
+      field.onChange(defaultCountryCode)
+      initializedRef.current = true
+    } else if (field.value != null && field.value !== '') {
+      initializedRef.current = true
+    }
+  }, [field, defaultCountryCode])
+  
+  // Ensure we always have a valid value
+  const currentValue = field.value != null && field.value !== '' ? field.value : defaultCountryCode
+  
+  // Find the label for the current value
+  const currentLabel = COUNTRY_CODES.find(code => code.value === currentValue)?.label || currentValue
+  
+  return (
+    <Select
+      value={currentValue}
+      onValueChange={field.onChange}
+    >
+      <SelectTrigger
+        className={cn(
+          'relative !h-9 !w-24 !min-w-24 !max-w-24 rounded-l-md rounded-r-none border-r-0',
+          'hover:bg-accent',
+          'focus-visible:ring-0 focus-visible:ring-offset-0 shadow-xs',
+          '!px-2 !py-1',
+          '!text-heading',
+          '!data-[placeholder]:text-heading',
+          '[&_[data-slot=select-value]]:!hidden',
+          '[&_svg]:!text-heading',
+          '[&_svg]:!shrink-0',
+          '[&_svg]:!ml-auto',
+          countryCodeClassName,
+        )}
+        style={{
+          color: colors.text.heading,
+          backgroundColor: colors.accent.soft,
+          width: '96px',
+          minWidth: '96px',
+          maxWidth: '96px',
+          opacity: 1,
+          visibility: 'visible',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          ...countryCodeStyle,
+        }}
+      >
+        <SelectValue 
+          placeholder={defaultCountryCode}
+          className="!hidden"
+        />
+        {/* Always visible country code text */}
+        <span
+          className="text-muted font-medium text-sm flex-shrink-0"
+          style={{
+            color: colors.text.muted,
+            opacity: 1,
+            visibility: 'visible',
+          }}
+          aria-hidden="true"
+        >
+          {currentLabel}
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        {COUNTRY_CODES.map(code => (
+          <SelectItem key={code.value} value={code.value}>
+            {code.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+/**
  * PhoneNumberFieldWithCountryCode - A reusable phone number input component
  * with country code selector, integrated with React Hook Form.
  */
@@ -60,30 +154,14 @@ export function PhoneNumberFieldWithCountryCode<T extends FieldValues>({
         <Controller
           name={countryCodeName}
           control={control}
+          defaultValue={defaultCountryCode}
           render={({ field }) => (
-            <Select
-              value={field.value != null ? field.value : defaultCountryCode}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger
-                className={cn(
-                  'h-9 w-20 rounded-l-md rounded-r-none border-r-0 bg-gray-100 hover:bg-gray-100',
-                  'focus-visible:ring-0 focus-visible:ring-offset-0 shadow-xs',
-                  'px-3 py-1',
-                  countryCodeClassName,
-                )}
-                style={countryCodeStyle}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COUNTRY_CODES.map(code => (
-                  <SelectItem key={code.value} value={code.value}>
-                    {code.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CountryCodeSelect
+              field={field}
+              defaultCountryCode={defaultCountryCode}
+              countryCodeClassName={countryCodeClassName}
+              countryCodeStyle={countryCodeStyle}
+            />
           )}
         />
         <Controller

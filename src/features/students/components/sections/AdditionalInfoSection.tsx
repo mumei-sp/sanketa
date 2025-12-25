@@ -40,21 +40,23 @@ export function AdditionalInfoSection({ control, width }: AdditionalInfoSectionP
         name="additionalInfo.specialNeedsSupport"
         control={control}
         label="Special Needs Support"
+        switchClassName="h-7 w-14"
       />
       <div className="space-y-2">
         <SwitchField
           name="additionalInfo.medicalConditionAlert"
           control={control}
           label="Medical Condition Alert"
+          switchClassName="h-7 w-14"
         />
         {medicalConditionAlert && (
           <TextareaField
             name="additionalInfo.medicalInfo"
             control={control}
             placeholder="Enter medical condition details"
-            rows={3}
+            rows={10}
             className="w-full"
-            textareaClassName="max-h-32 overflow-y-auto resize-none"
+            textareaClassName="min-h-48 max-h-96 overflow-y-auto resize-none"
           />
         )}
       </div>

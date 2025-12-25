@@ -144,7 +144,7 @@ export default function PageHeader({
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="shrink-0 h-9 w-9 bg-[#FFF] hover:bg-muted"
+              className="shrink-0 h-9 w-9 bg-card hover:bg-muted"
               aria-label="Go back"
             >
               <ArrowLeft className="size-5" />

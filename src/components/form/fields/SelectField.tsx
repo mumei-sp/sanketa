@@ -61,7 +61,7 @@ export function SelectField<T extends FieldValues>({
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <div className={cn('space-y-2', className)}>
+        <div className={cn('w-full space-y-2', className)}>
           {label && (
             <Label htmlFor={fieldId} className={disabled ? 'opacity-60' : ''}>
               {label}
@@ -83,6 +83,7 @@ export function SelectField<T extends FieldValues>({
                     : undefined
               }
               className={cn(
+                'w-full',
                 fieldState.error && 'border-destructive focus-visible:ring-destructive',
               )}
             >

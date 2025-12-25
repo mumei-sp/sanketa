@@ -1,4 +1,5 @@
 import type React from 'react'
+import { colors } from '@/theme/colors'
 
 /**
  * Common country codes for phone number selection
@@ -17,8 +18,10 @@ export const COUNTRY_CODES = [
 /**
  * Phone field styling constants for guardian sections
  */
-export const GUARDIAN_PHONE_FIELD_STYLE: React.CSSProperties = { backgroundColor: '#F3F4F6' }
-export const GUARDIAN_PHONE_FIELD_CLASSNAME = 'hover:bg-[#F8F8F8]'
+export const GUARDIAN_PHONE_FIELD_STYLE: React.CSSProperties = {
+  backgroundColor: colors.accent.soft,
+}
+export const GUARDIAN_PHONE_FIELD_CLASSNAME = 'hover:bg-accent'
 
 /**
  * Grid layout template column constants

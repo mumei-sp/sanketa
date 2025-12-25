@@ -42,7 +42,7 @@ export function ProfilePhotoUploadField<T extends FieldValues>({
     'image/jpeg': ['.jpg', '.jpeg'],
     'image/png': ['.png'],
   },
-  height = 'h-28',
+  height = 'h-36',
   className,
 }: ProfilePhotoUploadFieldProps<T>) {
   const fieldId = React.useId()
