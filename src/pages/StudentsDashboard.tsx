@@ -1,15 +1,17 @@
 import * as React from 'react'
 import PageHeader from '@/components/layout/PageHeader'
+import { TileWrapper } from '@/components/tile'
 import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart'
 import { AttendanceOverviewChart } from '@/components/charts/AttendanceOverviewChart'
 import { fetchEnrollmentTrends, fetchAttendanceOverview } from '@/services/dashboardService'
-import type { EnrollmentData } from '@/data/enrollmentTrends'
-import type { AttendanceData } from '@/data/attendanceOverview'
+import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 /**
  * StudentsDashboard - Main dashboard page displaying enrollment trends and attendance overview charts
  */
 export default function StudentsDashboard() {
+  const isMobile = useIsMobile()
   const [enrollmentData, setEnrollmentData] = React.useState<EnrollmentData[]>([])
   const [attendanceData, setAttendanceData] = React.useState<AttendanceData[]>([])
   const [isLoadingEnrollment, setIsLoadingEnrollment] = React.useState(true)
@@ -54,10 +56,20 @@ export default function StudentsDashboard() {
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <EnrollmentTrendsChart data={enrollmentData} isLoading={isLoadingEnrollment} />
-        <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingAttendance} />
-      </div>
+      <TileWrapper mode="grid" columns={12} gap={12}>
+        <EnrollmentTrendsChart
+          data={enrollmentData}
+          isLoading={isLoadingEnrollment}
+          tileWidth={isMobile ? 12 : 6}
+          tileLayoutMode="grid"
+        />
+        <AttendanceOverviewChart
+          data={attendanceData}
+          isLoading={isLoadingAttendance}
+          tileWidth={isMobile ? 12 : 6}
+          tileLayoutMode="grid"
+        />
+      </TileWrapper>
     </div>
   )
 }

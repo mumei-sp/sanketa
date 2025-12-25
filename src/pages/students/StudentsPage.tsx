@@ -2,17 +2,18 @@ import * as React from 'react'
 import { StudentsTable } from './StudentsTable'
 import { fetchStudents } from './student.service'
 import type { Student } from './student.types'
-import { Tile } from '@/components/tile'
+import { Tile, TileWrapper } from '@/components/tile'
 import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart'
 import { AttendanceOverviewChart } from '@/components/charts/AttendanceOverviewChart'
 import { fetchEnrollmentTrends, fetchAttendanceOverview } from '@/services/dashboardService'
-import type { EnrollmentData } from '@/data/enrollmentTrends'
-import type { AttendanceData } from '@/data/attendanceOverview'
+import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 /**
  * StudentsPage component that fetches and displays student data with charts
  */
 export function StudentsPage() {
+  const isMobile = useIsMobile()
   const [students, setStudents] = React.useState<Student[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [enrollmentData, setEnrollmentData] = React.useState<EnrollmentData[]>([])
@@ -58,27 +59,34 @@ export function StudentsPage() {
   }
 
   return (
-    <div className="flex gap-6">
-      {/* Table - 70% width */}
+    <TileWrapper mode="grid" columns={12} gap={12}>
+      {/* Table - 8/12 columns on desktop, full width on mobile */}
       <Tile
         id="students-table-tile"
-        layoutMode="block"
-        widthPx="70%"
+        layoutMode="grid"
+        width={isMobile ? 12 : 8}
         background="card"
         borderRadius="lg"
         shadowed={false}
         padding="p-6"
         overflow="auto"
-        className="ml-0"
       >
         <StudentsTable data={students} isLoading={isLoading} />
       </Tile>
 
-      {/* Charts - 30% width, stacked vertically */}
-      <div className="flex flex-col gap-6" style={{ width: '30%' }}>
-        <EnrollmentTrendsChart data={enrollmentData} isLoading={isLoadingEnrollment} />
-        <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingAttendance} />
-      </div>
-    </div>
+      {/* Charts - 4/12 columns on desktop, full width on mobile, stacked vertically */}
+      <Tile
+        id="charts-container-tile"
+        layoutMode="grid"
+        width={isMobile ? 12 : 4}
+        background="transparent"
+        padding={0}
+      >
+        <div className="flex flex-col gap-6">
+          <EnrollmentTrendsChart data={enrollmentData} isLoading={isLoadingEnrollment} />
+          <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingAttendance} />
+        </div>
+      </Tile>
+    </TileWrapper>
   )
 }

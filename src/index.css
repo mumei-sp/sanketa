@@ -384,4 +384,9 @@
     padding-top: 0.625rem; /* 10px at 14px base */
     padding-bottom: 0.625rem; /* 10px at 14px base */
   }
+
+  /* Chart scale utility - locally scales chart font size for better visual density */
+  .chart-scale {
+    font-size: 0.85em; /* Scales down from 14px base to ~12px effective */
+  }
 }
