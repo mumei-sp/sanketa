@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
-import type { Student } from './student-types'
+import type { Student } from '@/features/students/types'
 import { PerformanceBadge } from './PerformanceBadge'
 import { StatusBadge } from './StatusBadge'
 import { AttendanceIndicator } from './AttendanceIndicator'

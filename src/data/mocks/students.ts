@@ -1,4 +1,4 @@
-import type { Student } from '@/pages/students/student-types'
+import type { Student } from '@/features/students/types'
 
 /**
  * Mock student data for development and testing
@@ -8,61 +8,292 @@ export const studentsData: Student[] = [
   // Students from reference image
   {
     id: '1',
-    name: 'Michael Chen',
+    userId: 1001,
+    profileType: 0, // STUDENT
+    // Personal Information (from user_profiles)
+    firstName: 'Michael',
+    lastName: 'Chen',
+    fullName: 'Michael Chen',
+    displayName: 'Michael Chen',
+    preferredName: 'Mike',
+    dateOfBirth: '2010-03-15',
+    gender: 0, // MALE
+    // Contact Information
+    primaryPhone: '9876543210',
+    phoneCountryCode: '+1',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
+    address: '123 Oak Street, San Francisco, CA 94102, USA',
+    // Student-specific (from students table)
     studentId: 'S-2101',
+    admissionNumber: 'ADM-2023-001',
+    admissionDate: '2023-08-15',
+    rollNumber: '07A-15',
+    gradeLevel: '7',
+    section: 'A',
+    // Academic metrics
     class: '7A',
     gpa: 3.8,
     performance: 'Good',
     percentage: 95,
     status: 'Active',
-    avatarUrl: '',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
+    // Student info JSON (hobbies, medical info)
+    studentInfo: {
+      hobbies: 'Basketball, Reading, Coding',
+      specialNeedsSupport: false,
+      medicalConditionAlert: false,
+      medicalInfo: 'No known allergies',
+    },
+    // Guardian Information
+    guardians: {
+      father: {
+        name: 'David Chen',
+        phoneCountryCode: '+1',
+        phone: '9876543211',
+      },
+      mother: {
+        name: 'Sarah Chen',
+        phoneCountryCode: '+1',
+        phone: '9876543212',
+      },
+    },
+    // Sync metadata
+    syncedAt: '2024-01-15T10:30:00.000Z',
+    syncVersion: 1,
+    // Legacy field for backward compatibility
+    name: 'Michael Chen',
   },
   {
     id: '2',
-    name: 'Emma Williams',
+    userId: 1002,
+    profileType: 0,
+    // Personal Information
+    firstName: 'Emma',
+    middleName: 'Rose',
+    lastName: 'Williams',
+    fullName: 'Emma Rose Williams',
+    displayName: 'Emma Williams',
+    preferredName: 'Emma',
+    dateOfBirth: '2010-07-22',
+    gender: 1, // FEMALE
+    // Contact Information
+    primaryPhone: '8765432109',
+    phoneCountryCode: '+1',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
+    address: '456 Maple Avenue, New York, NY 10001, USA',
+    // Student-specific
     studentId: 'S-2102',
+    admissionNumber: 'ADM-2023-002',
+    admissionDate: '2023-08-15',
+    rollNumber: '07B-08',
+    gradeLevel: '7',
+    section: 'B',
+    // Academic metrics
     class: '7B',
     gpa: 2.9,
     performance: 'Needs Support',
     percentage: 87,
     status: 'Active',
-    avatarUrl: '',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
+    // Student info JSON
+    studentInfo: {
+      hobbies: 'Dancing, Art, Music',
+      specialNeedsSupport: true,
+      medicalConditionAlert: false,
+      medicalInfo: 'Mild dyslexia - requires extra reading support',
+    },
+    // Guardian Information
+    guardians: {
+      father: {
+        name: 'James Williams',
+        phoneCountryCode: '+1',
+        phone: '8765432110',
+      },
+      mother: {
+        name: 'Lisa Williams',
+        phoneCountryCode: '+1',
+        phone: '8765432111',
+      },
+    },
+    syncedAt: '2024-01-15T10:31:00.000Z',
+    syncVersion: 1,
+    name: 'Emma Williams',
   },
   {
     id: '3',
-    name: 'Rajesh Kumar',
+    userId: 1003,
+    profileType: 0,
+    // Personal Information (Indian naming style)
+    firstName: 'Rajesh',
+    lastName: 'Kumar',
+    fullName: 'Rajesh Kumar',
+    displayName: 'Rajesh Kumar',
+    dateOfBirth: '2010-11-08',
+    gender: 0, // MALE
+    // Contact Information
+    primaryPhone: '9876543210',
+    phoneCountryCode: '+91',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh',
+    address: '789 MG Road, Bangalore, Karnataka 560001, India',
+    // Student-specific
     studentId: 'S-2103',
+    admissionNumber: 'ADM-2023-003',
+    admissionDate: '2023-08-20',
+    rollNumber: '07C-22',
+    gradeLevel: '7',
+    section: 'C',
+    // Academic metrics
     class: '7C',
     gpa: 2.4,
     performance: 'At Risk',
     percentage: 72,
     status: 'On Leave',
-    avatarUrl: '',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh',
+    // Student info JSON
+    studentInfo: {
+      hobbies: 'Cricket, Mathematics',
+      specialNeedsSupport: false,
+      medicalConditionAlert: true,
+      medicalInfo: 'Asthma - inhaler required during physical activities',
+    },
+    // Guardian Information
+    guardians: {
+      father: {
+        name: 'Ramesh Kumar',
+        phoneCountryCode: '+91',
+        phone: '9876543211',
+      },
+      mother: {
+        name: 'Priya Kumar',
+        phoneCountryCode: '+91',
+        phone: '9876543212',
+      },
+      alternativeGuardian: {
+        name: 'Vikram Kumar',
+        relation: 'Uncle',
+        phoneCountryCode: '+91',
+        phone: '9876543213',
+      },
+    },
+    syncedAt: '2024-01-15T10:32:00.000Z',
+    syncVersion: 1,
+    name: 'Rajesh Kumar',
   },
   {
     id: '4',
-    name: 'Hannah Lee',
+    userId: 1004,
+    profileType: 0,
+    // Personal Information
+    firstName: 'Hannah',
+    lastName: 'Lee',
+    fullName: 'Hannah Lee',
+    displayName: 'Hannah Lee',
+    preferredName: 'Hannah',
+    dateOfBirth: '2009-05-12',
+    gender: 1, // FEMALE
+    // Contact Information
+    primaryPhone: '7654321098',
+    phoneCountryCode: '+1',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hannah',
+    address: '321 Pine Street, Seattle, WA 98101, USA',
+    // Student-specific
     studentId: 'S-2104',
+    admissionNumber: 'ADM-2022-045',
+    admissionDate: '2022-09-01',
+    rollNumber: '08A-12',
+    gradeLevel: '8',
+    section: 'A',
+    // Academic metrics
     class: '8A',
     gpa: 3.6,
     performance: 'Good',
     percentage: 93,
     status: 'Active',
-    avatarUrl: '',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hannah',
+    // Student info JSON
+    studentInfo: {
+      hobbies: 'Swimming, Science experiments, Photography',
+      specialNeedsSupport: false,
+      medicalConditionAlert: false,
+      medicalInfo: 'No known medical conditions',
+    },
+    // Guardian Information
+    guardians: {
+      father: {
+        name: 'Robert Lee',
+        phoneCountryCode: '+1',
+        phone: '7654321099',
+      },
+      mother: {
+        name: 'Jennifer Lee',
+        phoneCountryCode: '+1',
+        phone: '7654321100',
+      },
+    },
+    syncedAt: '2024-01-15T10:33:00.000Z',
+    syncVersion: 2,
+    name: 'Hannah Lee',
   },
   {
     id: '5',
-    name: 'Thomas Green',
+    userId: 1005,
+    profileType: 0,
+    // Personal Information
+    firstName: 'Thomas',
+    middleName: 'James',
+    lastName: 'Green',
+    fullName: 'Thomas James Green',
+    displayName: 'Thomas Green',
+    preferredName: 'Tom',
+    dateOfBirth: '2009-09-30',
+    gender: 0, // MALE
+    // Contact Information
+    primaryPhone: '6543210987',
+    phoneCountryCode: '+1',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas',
+    address: '654 Elm Drive, Boston, MA 02101, USA',
+    // Student-specific
     studentId: 'S-2105',
+    admissionNumber: 'ADM-2022-078',
+    admissionDate: '2022-09-01',
+    rollNumber: '08B-18',
+    gradeLevel: '8',
+    section: 'B',
+    // Academic metrics
     class: '8B',
     gpa: 2.7,
     performance: 'Needs Support',
     percentage: 81,
     status: 'Active',
-    avatarUrl: '',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas',
+    // Student info JSON
+    studentInfo: {
+      hobbies: 'Soccer, Video games, Robotics',
+      specialNeedsSupport: true,
+      medicalConditionAlert: false,
+      medicalInfo: 'ADHD - benefits from structured learning environment',
+    },
+    // Guardian Information
+    guardians: {
+      father: {
+        name: 'Michael Green',
+        phoneCountryCode: '+1',
+        phone: '6543210988',
+      },
+      mother: {
+        name: 'Patricia Green',
+        phoneCountryCode: '+1',
+        phone: '6543210989',
+      },
+    },
+    syncedAt: '2024-01-15T10:34:00.000Z',
+    syncVersion: 1,
+    name: 'Thomas Green',
   },
   {
     id: '6',
+    userId: 6,
+    profileType: 0,
     name: 'Isabella Rossi',
     studentId: 'S-2106',
     class: '8C',
@@ -71,9 +302,41 @@ export const studentsData: Student[] = [
     percentage: 97,
     status: 'Active',
     avatarUrl: '',
+    // Extended fields for profile card
+    firstName: 'Isabella',
+    lastName: 'Rossi',
+    fullName: 'Isabella Rossi',
+    displayName: 'Isabella Rossi',
+    dateOfBirth: '2022-05-18',
+    gender: 1, // Female
+    primaryPhone: '812 9988 7766',
+    phoneCountryCode: '+62',
+    address: '14 Via Milano, Rome, Italy',
+    gradeLevel: '8',
+    section: 'C',
+    guardians: {
+      father: {
+        name: 'Marco Rossi',
+        phoneCountryCode: '+39',
+        phone: '331 222 5566',
+      },
+      mother: {
+        name: 'Elena Rossi',
+        phoneCountryCode: '+39',
+        phone: '331 444 7788',
+      },
+      alternativeGuardian: {
+        name: 'Lucia Bianchi',
+        relation: 'Aunt',
+        phoneCountryCode: '+39',
+        phone: '331 555 6677',
+      },
+    },
   },
   {
     id: '7',
+    userId: 7,
+    profileType: 0,
     name: 'Ahmed Ali',
     studentId: 'S-2107',
     class: '9A',
@@ -85,6 +348,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '8',
+    userId: 8,
+    profileType: 0,
     name: 'Chloe Davis',
     studentId: 'S-2108',
     class: '9B',
@@ -97,6 +362,8 @@ export const studentsData: Student[] = [
   // Additional students to reach 40 total
   {
     id: '9',
+    userId: 9,
+    profileType: 0,
     name: 'James Wilson',
     studentId: 'S-2109',
     class: '7A',
@@ -108,6 +375,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '10',
+    userId: 10,
+    profileType: 0,
     name: 'Sophia Martinez',
     studentId: 'S-2110',
     class: '7B',
@@ -119,6 +388,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '11',
+    userId: 11,
+    profileType: 0,
     name: 'Oliver Brown',
     studentId: 'S-2111',
     class: '7C',
@@ -130,6 +401,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '12',
+    userId: 12,
+    profileType: 0,
     name: 'Mia Anderson',
     studentId: 'S-2112',
     class: '8A',
@@ -141,6 +414,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '13',
+    userId: 13,
+    profileType: 0,
     name: 'Lucas Taylor',
     studentId: 'S-2113',
     class: '8B',
@@ -152,6 +427,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '14',
+    userId: 14,
+    profileType: 0,
     name: 'Ava Thomas',
     studentId: 'S-2114',
     class: '8C',
@@ -163,6 +440,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '15',
+    userId: 15,
+    profileType: 0,
     name: 'Noah Jackson',
     studentId: 'S-2115',
     class: '9A',
@@ -174,6 +453,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '16',
+    userId: 16,
+    profileType: 0,
     name: 'Charlotte White',
     studentId: 'S-2116',
     class: '9B',
@@ -185,6 +466,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '17',
+    userId: 17,
+    profileType: 0,
     name: 'Ethan Harris',
     studentId: 'S-2117',
     class: '7A',
@@ -196,6 +479,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '18',
+    userId: 18,
+    profileType: 0,
     name: 'Amelia Martin',
     studentId: 'S-2118',
     class: '7B',
@@ -207,6 +492,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '19',
+    userId: 19,
+    profileType: 0,
     name: 'Liam Thompson',
     studentId: 'S-2119',
     class: '7C',
@@ -218,6 +505,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '20',
+    userId: 20,
+    profileType: 0,
     name: 'Harper Garcia',
     studentId: 'S-2120',
     class: '8A',
@@ -229,6 +518,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '21',
+    userId: 21,
+    profileType: 0,
     name: 'Alexander Martinez',
     studentId: 'S-2121',
     class: '8B',
@@ -240,6 +531,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '22',
+    userId: 22,
+    profileType: 0,
     name: 'Evelyn Robinson',
     studentId: 'S-2122',
     class: '8C',
@@ -251,6 +544,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '23',
+    userId: 23,
+    profileType: 0,
     name: 'Benjamin Clark',
     studentId: 'S-2123',
     class: '9A',
@@ -262,6 +557,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '24',
+    userId: 24,
+    profileType: 0,
     name: 'Abigail Rodriguez',
     studentId: 'S-2124',
     class: '9B',
@@ -273,6 +570,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '25',
+    userId: 25,
+    profileType: 0,
     name: 'Mason Lewis',
     studentId: 'S-2125',
     class: '7A',
@@ -284,6 +583,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '26',
+    userId: 26,
+    profileType: 0,
     name: 'Emily Walker',
     studentId: 'S-2126',
     class: '7B',
@@ -295,6 +596,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '27',
+    userId: 27,
+    profileType: 0,
     name: 'William Hall',
     studentId: 'S-2127',
     class: '7C',
@@ -306,6 +609,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '28',
+    userId: 28,
+    profileType: 0,
     name: 'Elizabeth Allen',
     studentId: 'S-2128',
     class: '8A',
@@ -317,6 +622,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '29',
+    userId: 29,
+    profileType: 0,
     name: 'Henry Young',
     studentId: 'S-2129',
     class: '8B',
@@ -328,6 +635,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '30',
+    userId: 30,
+    profileType: 0,
     name: 'Sofia Hernandez',
     studentId: 'S-2130',
     class: '8C',
@@ -339,6 +648,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '31',
+    userId: 31,
+    profileType: 0,
     name: 'Daniel King',
     studentId: 'S-2131',
     class: '9A',
@@ -350,6 +661,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '32',
+    userId: 32,
+    profileType: 0,
     name: 'Avery Wright',
     studentId: 'S-2132',
     class: '9B',
@@ -361,6 +674,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '33',
+    userId: 33,
+    profileType: 0,
     name: 'Matthew Lopez',
     studentId: 'S-2133',
     class: '7A',
@@ -372,6 +687,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '34',
+    userId: 34,
+    profileType: 0,
     name: 'Scarlett Hill',
     studentId: 'S-2134',
     class: '7B',
@@ -383,6 +700,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '35',
+    userId: 35,
+    profileType: 0,
     name: 'David Scott',
     studentId: 'S-2135',
     class: '7C',
@@ -394,6 +713,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '36',
+    userId: 36,
+    profileType: 0,
     name: 'Victoria Green',
     studentId: 'S-2136',
     class: '8A',
@@ -405,6 +726,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '37',
+    userId: 37,
+    profileType: 0,
     name: 'Joseph Adams',
     studentId: 'S-2137',
     class: '8B',
@@ -416,6 +739,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '38',
+    userId: 38,
+    profileType: 0,
     name: 'Grace Baker',
     studentId: 'S-2138',
     class: '8C',
@@ -427,6 +752,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '39',
+    userId: 39,
+    profileType: 0,
     name: 'Andrew Nelson',
     studentId: 'S-2139',
     class: '9A',
@@ -438,6 +765,8 @@ export const studentsData: Student[] = [
   },
   {
     id: '40',
+    userId: 40,
+    profileType: 0,
     name: 'Lily Carter',
     studentId: 'S-2140',
     class: '9B',
@@ -448,4 +777,3 @@ export const studentsData: Student[] = [
     avatarUrl: '',
   },
 ]
-

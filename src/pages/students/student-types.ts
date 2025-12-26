@@ -1,25 +1,14 @@
 /**
- * Student performance levels
+ * Re-export student types from features for convenience
+ * This maintains backward compatibility while using the centralized type definitions
  */
-export type StudentPerformance = 'Good' | 'Needs Support' | 'At Risk'
-
-/**
- * Student status options
- */
-export type StudentStatus = 'Active' | 'On Leave'
-
-/**
- * Student record for table display
- */
-export interface Student {
-  id: string
-  name: string
-  studentId: string
-  class: string
-  gpa: number
-  performance: StudentPerformance
-  percentage: number
-  status: StudentStatus
-  avatarUrl?: string
-}
-
+export type {
+  Student,
+  StudentPerformance,
+  StudentStatus,
+  GuardianInfo,
+  GuardiansInfo,
+  StudentFormValues,
+  UserProfile,
+  Gender,
+} from '@/features/students/types'

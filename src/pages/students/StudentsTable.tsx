@@ -1,10 +1,10 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Table as TanStackTable } from '@tanstack/react-table'
+import type { Table as TanStackTable, Row } from '@tanstack/react-table'
 import { Plus, Search } from 'lucide-react'
-import { DataTable, DataTableSearch } from '@/components/table'
+import { DataTable, DataTableSearch, DataTableCell } from '@/components/table'
 import { studentColumns } from './student-columns'
-import type { Student } from './student-types'
+import type { Student } from '@/features/students/types'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 
 interface StudentsTableProps {
@@ -188,6 +189,54 @@ export function StudentsTable({ data, isLoading }: StudentsTableProps) {
     )
   }, [])
 
+  // Custom row renderer with click handler for navigation
+  const renderRow = React.useCallback(
+    (row: Row<Student>, table: TanStackTable<Student>) => {
+      const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+        // Don't navigate if clicking directly on interactive elements
+        const target = e.target as HTMLElement
+        
+        // Only prevent navigation for actual form controls and buttons
+        if (
+          target.tagName === 'BUTTON' ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'SELECT' ||
+          target.tagName === 'A'
+        ) {
+          return
+        }
+        
+        // Navigate to student details page
+        const studentId = row.original.id
+        navigate(`/students/details/${studentId}`)
+      }
+
+      const handleKeyDown = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          e.stopPropagation()
+          navigate(`/students/details/${row.original.id}`)
+        }
+      }
+
+      return (
+        <TableRow
+          onClick={handleRowClick}
+          onKeyDown={handleKeyDown}
+          className="cursor-pointer hover:bg-muted/50 transition-colors"
+          role="button"
+          tabIndex={0}
+          style={{ pointerEvents: 'auto' }}
+        >
+          {row.getVisibleCells().map(cell => (
+            <DataTableCell key={cell.id} cell={cell} />
+          ))}
+        </TableRow>
+      )
+    },
+    [navigate],
+  )
+
   return (
     <DataTable
       columns={studentColumns}
@@ -199,6 +248,9 @@ export function StudentsTable({ data, isLoading }: StudentsTableProps) {
       showToolbar={true}
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
+      bodyProps={{
+        renderRow,
+      }}
       tableOptions={{
         initialState: {
           pagination: {

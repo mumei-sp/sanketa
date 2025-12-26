@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { StudentPerformance } from './student-types'
+import type { StudentPerformance } from '@/features/students/types'
 
 interface PerformanceBadgeProps {
   performance: StudentPerformance
