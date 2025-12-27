@@ -1,0 +1,43 @@
+import type { Teacher } from '@/features/teachers/types'
+import { teachersData } from '@/data/mocks/teachers'
+
+/**
+ * Mock API service for fetching teachers
+ * Simulates network delay and returns teacher data
+ *
+ * This can be easily replaced with a real API call later
+ *
+ * @returns Promise resolving to array of teachers
+ */
+export async function fetchTeachers(): Promise<Teacher[]> {
+  // Simulate network delay (300-800ms)
+  const delay = Math.floor(Math.random() * 500) + 300
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve([...teachersData])
+    }, delay)
+  })
+}
+
+/**
+ * Mock API service for fetching a single teacher by ID
+ * Simulates network delay and returns teacher data
+ *
+ * This can be easily replaced with a real API call later
+ *
+ * @param id - The teacher ID to fetch
+ * @returns Promise resolving to teacher data or undefined if not found
+ */
+export async function fetchTeacherById(id: string): Promise<Teacher | undefined> {
+  // Simulate network delay (200-500ms)
+  const delay = Math.floor(Math.random() * 300) + 200
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const teacher = teachersData.find(t => t.id === id)
+      resolve(teacher)
+    }, delay)
+  })
+}
+

@@ -6,5 +6,6 @@
  */
 
 export { studentsData } from './students'
+export { teachersData } from './teachers'
 export { attendanceOverviewData, enrollmentTrendsData } from './student-dashboard'
 

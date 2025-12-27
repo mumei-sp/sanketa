@@ -1,12 +1,256 @@
+import * as React from 'react'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { TileWrapper, Tile } from '@/components/tile'
+import { Search, Plus } from 'lucide-react'
+import { fetchTeachers } from '@/api/services/teacher-service'
+import type { Teacher } from '@/features/teachers/types'
+import { TeacherCard } from '@/features/teachers/components'
+import { getDisplayName } from '@/features/teachers/utils/formatting'
+import { GridPagination } from '@/components/pagination/GridPagination'
+import { primary, background, baseColors, accent, text } from '@/theme/colors'
 
+type SortOption = 'latest' | 'name-asc' | 'name-desc'
+
+/**
+ * Teachers page component
+ * Displays teachers in a grid layout with search, filter, sort, and pagination
+ */
 export default function Teachers() {
+  const navigate = useNavigate()
+  const [teachers, setTeachers] = React.useState<Teacher[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [searchQuery, setSearchQuery] = React.useState('')
+  const [sortOption, setSortOption] = React.useState<SortOption>('latest')
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const [pageSize, setPageSize] = React.useState(8)
+
+  // Fetch teachers on mount
+  React.useEffect(() => {
+    async function loadTeachers() {
+      try {
+        setIsLoading(true)
+        const data = await fetchTeachers()
+        setTeachers(data)
+      } catch (error) {
+        console.error('Failed to fetch teachers:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadTeachers()
+  }, [])
+
+  // Filter and sort teachers
+  const filteredAndSortedTeachers = React.useMemo(() => {
+    let filtered = teachers
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(teacher => {
+        const displayName = getDisplayName(teacher).toLowerCase()
+        const teacherId = teacher.teacherId.toLowerCase()
+        const subject = teacher.subject.toLowerCase()
+        const email = teacher.email.toLowerCase()
+
+        return (
+          displayName.includes(query) ||
+          teacherId.includes(query) ||
+          subject.includes(query) ||
+          email.includes(query)
+        )
+      })
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortOption) {
+        case 'name-asc':
+          return getDisplayName(a).localeCompare(getDisplayName(b))
+        case 'name-desc':
+          return getDisplayName(b).localeCompare(getDisplayName(a))
+        case 'latest':
+        default:
+          // Sort by ID descending (assuming higher ID = newer)
+          const aId = parseInt(a.teacherId.replace('T-', '')) || 0
+          const bId = parseInt(b.teacherId.replace('T-', '')) || 0
+          return bId - aId
+      }
+    })
+
+    return sorted
+  }, [teachers, searchQuery, sortOption])
+
+  // Paginate teachers
+  const paginatedTeachers = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    return filteredAndSortedTeachers.slice(startIndex, endIndex)
+  }, [filteredAndSortedTeachers, currentPage, pageSize])
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, sortOption])
+
+  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value)
+  }, [])
+
+  const handleSortChange = React.useCallback((value: string) => {
+    setSortOption(value as SortOption)
+  }, [])
+
+  const handlePageChange = React.useCallback((page: number) => {
+    setCurrentPage(page)
+  }, [])
+
+  const handlePageSizeChange = React.useCallback((size: number) => {
+    setPageSize(size)
+    setCurrentPage(1)
+  }, [])
+
+  const handleViewDetails = React.useCallback(
+    (teacher: Teacher) => {
+      // Navigate to teacher details page (if exists)
+      // For now, just log or navigate to a placeholder
+      console.log('View details for teacher:', teacher.id)
+      // navigate(`/teachers/details/${teacher.id}`)
+    },
+    [],
+  )
+
+  const handleAddTeacher = React.useCallback(() => {
+    // Navigate to add teacher page (if exists)
+    console.log('Add teacher')
+    // navigate('/teachers/add')
+  }, [])
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Teachers"
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Teachers' }]}
       />
+
+      {/* Toolbar */}
+      <Tile
+        id="teachers-toolbar"
+        layoutMode="block"
+        background="default"
+        borderRadius="lg"
+        padding={16}
+      >
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          {/* Teachers heading on the left */}
+          <h1 className="text-page-title text-heading">Teachers</h1>
+
+          {/* All controls on the right */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[200px] max-w-[300px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search teacher"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="h-8 w-full pl-10"
+              />
+            </div>
+
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
+              <Select value={sortOption} onValueChange={handleSortChange}>
+                <SelectTrigger
+                  className="h-8 w-[120px]"
+                  style={{
+                    backgroundColor: baseColors.blue,
+                    color: text.heading,
+                    borderColor: baseColors.blue,
+                  }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest</SelectItem>
+                  <SelectItem value="name-asc">Name A-Z</SelectItem>
+                  <SelectItem value="name-desc">Name Z-A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Add Teacher Button */}
+            <Button
+              onClick={handleAddTeacher}
+              className="h-8 bg-primary hover:bg-primary/90 text-foreground"
+            >
+              <Plus className="size-4" />
+              Add Teacher
+            </Button>
+          </div>
+        </div>
+      </Tile>
+
+      {/* Teachers Grid */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-muted-foreground">Loading teachers...</div>
+        </div>
+      ) : paginatedTeachers.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-muted-foreground">
+            {searchQuery ? 'No teachers found matching your search.' : 'No teachers available.'}
+          </div>
+        </div>
+      ) : (
+        <>
+          <TileWrapper columns={12} gap={12} mode="grid">
+            {paginatedTeachers.map(teacher => (
+              <Tile
+                key={teacher.id}
+                id={`teacher-tile-${teacher.id}`}
+                layoutMode="grid"
+                width={3}
+                nested
+              >
+                <TeacherCard teacher={teacher} onViewDetails={handleViewDetails} />
+              </Tile>
+            ))}
+          </TileWrapper>
+
+          {/* Pagination */}
+          {filteredAndSortedTeachers.length > 0 && (
+            <Tile
+              id="teachers-pagination"
+              layoutMode="block"
+              background="card"
+              borderRadius="lg"
+              padding={0}
+            >
+              <GridPagination
+                currentPage={currentPage}
+                totalItems={filteredAndSortedTeachers.length}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                pageSizeOptions={[8, 16, 24, 32]}
+              />
+            </Tile>
+          )}
+        </>
+      )}
     </div>
   )
 }
