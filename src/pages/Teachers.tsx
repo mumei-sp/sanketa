@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,12 +11,13 @@ import {
 } from '@/components/ui/select'
 import { TileWrapper, Tile } from '@/components/tile'
 import { Search, Plus } from 'lucide-react'
-import { fetchTeachers } from '@/api/services/teacher-service'
+import { fetchTeachers, fetchTeacherStatistics } from '@/api/services/teacher-service'
 import type { Teacher } from '@/features/teachers/types'
-import { TeacherCard } from '@/features/teachers/components'
+import type { TeacherStatistics } from '@/data/mocks/teacher-statistics'
+import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { primary, background, baseColors, accent, text } from '@/theme/colors'
+import { baseColors, text } from '@/theme/colors'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'
 
@@ -26,8 +26,8 @@ type SortOption = 'latest' | 'name-asc' | 'name-desc'
  * Displays teachers in a grid layout with search, filter, sort, and pagination
  */
 export default function Teachers() {
-  const navigate = useNavigate()
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
+  const [teacherStatistics, setTeacherStatistics] = React.useState<TeacherStatistics | null>(null)
   const [isLoading, setIsLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [sortOption, setSortOption] = React.useState<SortOption>('latest')
@@ -49,6 +49,20 @@ export default function Teachers() {
     }
 
     loadTeachers()
+  }, [])
+
+  // Fetch teacher statistics on mount
+  React.useEffect(() => {
+    async function loadStatistics() {
+      try {
+        const statistics = await fetchTeacherStatistics()
+        setTeacherStatistics(statistics)
+      } catch (error) {
+        console.error('Failed to fetch teacher statistics:', error)
+      }
+    }
+
+    loadStatistics()
   }, [])
 
   // Filter and sort teachers
@@ -143,6 +157,9 @@ export default function Teachers() {
         title="Teachers"
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Teachers' }]}
       />
+
+      {/* Teachers Dashboard Statistics */}
+      {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
 
       {/* Toolbar */}
       <Tile

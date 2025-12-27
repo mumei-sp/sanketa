@@ -7,5 +7,5 @@
 
 export { studentsData } from './students'
 export { teachersData } from './teachers'
+export { teacherStatisticsData, type TeacherStatistics } from './teacher-statistics'
 export { attendanceOverviewData, enrollmentTrendsData } from './student-dashboard'
-
