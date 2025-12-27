@@ -1,15 +1,13 @@
 import * as React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
-import { PerformanceBadge } from './PerformanceBadge'
-import { AttendanceIndicator } from './AttendanceIndicator'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TileWrapper, Tile } from '@/components/tile'
 import { Edit } from 'lucide-react'
 import { useStudentById } from '@/features/students/hooks/use-student-by-id'
 import { StudentProfileCard } from '@/features/students/components/StudentProfileCard'
 import { getDisplayName } from '@/features/students/utils/formatting'
+import { AcademicPerformance } from './AcademicPerformance'
 
 /**
  * StudentDetails page component
@@ -87,17 +85,18 @@ export default function StudentDetails() {
         showBackButton
       />
 
-      <TileWrapper columns={12} gap={24} mode="grid">
-        {/* Left Column: Student Profile Card (22rem width - 25% viewport) */}
+      <TileWrapper columns={12} gap={12} mode="grid">
+        {/* Left Column: Student Profile Card (25% - 3 columns) */}
         <Tile
           id="profile-card-wrapper"
-          widthPx="22rem"
+          width={3}
           layoutMode="grid"
           background="card"
-          borderRadius="1rem"
+          borderRadius="xl"
           shadowed
           nested
-          style={{ padding: '1rem', position: 'relative' }}
+          padding={16}
+          style={{ position: 'relative' }}
         >
           <Button
             variant="ghost"
@@ -116,43 +115,15 @@ export default function StudentDetails() {
           <StudentProfileCard student={student} />
         </Tile>
 
-        {/* Right Column: Other Content (75% width - 9 columns) */}
-        <Tile id="content-wrapper" width={9} layoutMode="grid">
-          <div className="space-y-6">
-            {/* Academic Information Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Academic Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">GPA</span>
-                    <span className="font-medium text-blue-600 dark:text-blue-400">
-                      {student.gpa.toFixed(1)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Performance</span>
-                    <PerformanceBadge performance={student.performance} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Attendance</span>
-                    <AttendanceIndicator value={student.percentage} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Middle Column: Academic Performance (50% - 6 columns) */}
+        <AcademicPerformance
+          averageScore={student.percentage}
+          studentName={getDisplayName(student)}
+          tileWidth={6}
+          tileLayoutMode="grid"
+        />
 
-            {/* Placeholder for Calendar, Scholarships, Health Records */}
-            <div className="text-center py-12 text-muted-foreground">
-              <p>
-                Additional content sections (Calendar, Scholarships, Health Records) will be added
-                here
-              </p>
-            </div>
-          </div>
-        </Tile>
+        {/* Right Column: Empty space (25% - 3 columns) */}
       </TileWrapper>
     </div>
   )

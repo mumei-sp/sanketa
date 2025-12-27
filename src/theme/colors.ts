@@ -168,7 +168,7 @@ function generateColorVariants(baseColor: string) {
   return {
     base: baseColor,
     soft: lighten(desaturate(baseColor, 30), 15), // Very light, low saturation
-    muted: lighten(desaturate(baseColor, 40), 20), // Even lighter and more desaturated
+    muted: '#F0F0F0', // Even lighter and more desaturated
     subtle: lighten(desaturate(baseColor, 50), 25), // Extremely subtle
     hover: lighten(baseColor, 5), // Slightly lighter on hover
     active: darken(baseColor, 5), // Slightly darker when active
@@ -194,7 +194,7 @@ export const accent = generateColorVariants(baseColors.blue)
 export const text = {
   heading: baseColors.heading, // #15446E
   body: '#262626', // neutral-800 equivalent
-  muted: '#737373', // neutral-500 equivalent
+  muted: '#00110B', // neutral-500 equivalent
 } as const
 
 // ============================================================================
@@ -241,10 +241,10 @@ function generateStatusColor(baseHue: number, baseSaturation: number, baseLightn
 }
 
 export const status = {
-  success: generateStatusColor(142, 0.5, 0.5), // Green - for "Active"
-  info: generateStatusColor(200, 0.4, 0.6), // Blue - for "On Leave"
-  warning: generateStatusColor(45, 0.5, 0.55), // Yellow/Amber
-  danger: generateStatusColor(0, 0.4, 0.6), // Soft red - for "At Risk"
+  success: generateStatusColor(164, 0.52, 0.518), // Green - for "Active" (#44C4A1)
+  info: generateStatusColor(205, 0.45, 0.6), // (#6FAFD6)
+  warning: generateStatusColor(38, 0.85, 0.56), // Amber - for "Warning" (#F2A93B)
+  danger: generateStatusColor(0, 0.965, 0.667), // Soft red - for "At Risk" (#FC5859)
 } as const
 
 // ============================================================================

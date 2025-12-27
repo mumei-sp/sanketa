@@ -56,3 +56,5 @@ export type { DataTableViewOptionsProps } from './toolbar/DataTableViewOptions'
 // Pagination components
 export { DataTablePagination } from './pagination/DataTablePagination'
 export type { DataTablePaginationProps } from './pagination/DataTablePagination'
+export { DataTablePaginationCustom } from './DataTablePaginationCustom'
+export type { DataTablePaginationCustomProps } from './DataTablePaginationCustom'
