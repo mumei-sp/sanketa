@@ -46,7 +46,7 @@ export function DataTableColumnHeader<TData, TValue>({
       : column.id);
 
   if (!column.getCanSort() || disableSortingUI) {
-    return <div className={cn(className)}>{displayTitle}</div>;
+    return <div className={cn('text-table-header', className)}>{displayTitle}</div>;
   }
 
   const sortDirection = column.getIsSorted();
@@ -98,7 +98,7 @@ export function DataTableColumnHeader<TData, TValue>({
               : "none"
         }
       >
-        <span>{displayTitle}</span>
+        <span className="text-table-header">{displayTitle}</span>
         <SortIcon />
       </Button>
     </div>

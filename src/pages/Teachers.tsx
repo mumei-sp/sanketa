@@ -17,7 +17,7 @@ import type { TeacherStatistics } from '@/data/mocks/teacher-statistics'
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { baseColors, text } from '@/theme/colors'
+import { baseColors, text, colors } from '@/theme/colors'
 import { TeacherAttendanceChart } from '@/components/charts/TeacherAttendanceChart'
 import { WorkloadDistributionChart } from '@/components/charts/WorkloadDistributionChart'
 import { fetchAttendanceOverview } from '@/services/dashboard-service'
@@ -264,7 +264,7 @@ export default function Teachers() {
           layoutMode="absolute"
           widthPx="calc(30% - 8px)"
           heightPx={344}
-          background="#FFFFFF"
+          background={colors.background.card}
           borderRadius="lg"
           onClick={handlePlaceholderClick}
           style={{

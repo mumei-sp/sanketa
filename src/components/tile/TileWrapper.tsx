@@ -1,11 +1,12 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { spacing, type SpacingKey } from '@/config/spacing'
 
 export interface TileWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Grid column count */
   columns?: number
-  /** Gap between tiles (number in px or string) */
-  gap?: number | string
+  /** Gap between tiles (number in px, spacing key string, or rem string) */
+  gap?: number | SpacingKey | string
   /** Wrapper layout mode */
   mode?: 'grid' | 'flex'
   /** Child tiles */
@@ -21,7 +22,19 @@ export function TileWrapper({
   children,
   ...props
 }: TileWrapperProps) {
-  const gapValue = typeof gap === 'number' ? `${gap}px` : gap
+  // Convert gap to appropriate value
+  // If it's a spacing key (string that exists in spacing config), use that value
+  // If it's a number, treat as pixels
+  // If it's already a string with units, use as-is
+  const gapValue = React.useMemo(() => {
+    if (typeof gap === 'number') {
+      return `${gap}px`
+    }
+    if (typeof gap === 'string' && gap in spacing) {
+      return spacing[gap as SpacingKey]
+    }
+    return gap
+  }, [gap])
 
   const wrapperStyle: React.CSSProperties = {
     ...style,

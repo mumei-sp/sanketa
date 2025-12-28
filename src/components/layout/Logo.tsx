@@ -19,8 +19,8 @@ export function Logo({ logoPath, className }: LogoProps) {
               className="h-8 w-auto object-contain"
             />
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded bg-gradient-to-br from-pink-200 to-blue-200 shrink-0">
-              <span className="text-lg font-bold text-gray-700">S</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded bg-gradient-to-br from-primary-soft to-accent-soft shrink-0">
+              <span className="text-lg font-bold text-foreground">S</span>
             </div>
           )}
           <h1 className="font-bold text-lg whitespace-nowrap">Sanketa</h1>

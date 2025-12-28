@@ -57,7 +57,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     const data = payload[0].payload
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-        <p className="text-xs font-semibold text-heading mb-1">{data.teacherName}</p>
+        <p className="text-badge text-heading mb-1">{data.teacherName}</p>
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">
             <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: baseColors.pink }} />
@@ -183,7 +183,7 @@ export function WorkloadDistributionChart({
       >
         <Card className="h-[320px] w-full pt-4 pb-0 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
-            <h3 className="text-lg font-semibold">Workload Distribution</h3>
+            <h3 className="text-section-title">Workload Distribution</h3>
             <CardAction>
               <div className="flex gap-2">
                 <Skeleton className="h-9 w-[110px]" />
@@ -212,11 +212,11 @@ export function WorkloadDistributionChart({
     >
       <Card className="h-[260px] w-full pt-4 pb-0 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
-          <h3 className="text-lg font-semibold">Workload Distribution</h3>
+          <h3 className="text-section-title">Workload Distribution</h3>
           <CardAction>
             <div className="flex gap-2">
               <Select value={subject} onValueChange={setSubject}>
-                <SelectTrigger className="w-[110px] bg-[#CDEAF0]">
+                <SelectTrigger className="w-[110px] bg-accent">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -226,7 +226,7 @@ export function WorkloadDistributionChart({
                 </SelectContent>
               </Select>
               <Select value={timePeriod} onValueChange={setTimePeriod}>
-                <SelectTrigger className="w-[110px] bg-[#CDEAF0]">
+                <SelectTrigger className="w-[110px] bg-accent">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

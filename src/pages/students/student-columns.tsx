@@ -31,7 +31,7 @@ export const studentColumns: ColumnDef<Student>[] = [
           </Avatar>
           <div className="flex flex-col">
             <span className="font-medium">{student.name}</span>
-            <span className="text-sm text-muted-foreground">{student.studentId}</span>
+            <span className="text-body-muted text-muted-foreground">{student.studentId}</span>
           </div>
         </div>
       )

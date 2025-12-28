@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Tile } from '@/components/tile'
 import { Phone, Mail } from 'lucide-react'
 import { textRoles, fontWeights } from '@/config/typography'
+import { spacing } from '@/config/spacing'
 import { primary, accent, text, background, baseColors } from '@/theme/colors'
 import type { Teacher } from '../types'
 import { getDisplayName, formatPhone } from '../utils/formatting'
@@ -56,7 +57,7 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
       style={{
         height: '180px',
         flexDirection: 'column',
-        gap: '0.75rem',
+        gap: spacing['3'],
       }}
     >
       {/* Profile Header */}
@@ -64,7 +65,7 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          gap: spacing['3'],
           flex: '0 0 auto',
         }}
       >
@@ -121,7 +122,7 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.25rem',
+            gap: spacing['1'],
             flex: 1,
             minWidth: 0,
           }}
@@ -167,7 +168,7 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
         style={{
           flex: '1 1 auto',
           flexDirection: 'column',
-          gap: '0.5rem',
+          gap: spacing['2'],
           minHeight: 0,
         }}
       >
@@ -175,13 +176,13 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
+            gap: spacing['2'],
           }}
         >
           <Phone
             style={{
-              width: '1rem',
-              height: '1rem',
+              width: spacing['4'],
+              height: spacing['4'],
               color: text.muted,
               flexShrink: 0,
             }}
@@ -204,13 +205,13 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
+            gap: spacing['2'],
           }}
         >
           <Mail
             style={{
-              width: '1rem',
-              height: '1rem',
+              width: spacing['4'],
+              height: spacing['4'],
               color: text.muted,
               flexShrink: 0,
             }}
@@ -247,8 +248,8 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
             fontSize: textRoles.body.fontSize,
             fontWeight: fontWeights.medium,
             height: '2rem',
-            padding: '0 0.75rem',
-            borderRadius: '0.375rem',
+            padding: `0 ${spacing['3']}`,
+            borderRadius: spacing['1.5'],
             flexShrink: 0,
           }}
           className="hover:opacity-90 border-0"

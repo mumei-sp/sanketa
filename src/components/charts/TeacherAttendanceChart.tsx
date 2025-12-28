@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { fontWeights } from '@/config/typography'
 import { Tile } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
 import { colors, baseColors } from '@/theme/colors'
@@ -77,7 +78,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-md border bg-white px-2 py-1.5 shadow-sm">
-        <p className="text-xs font-medium text-heading">
+        <p className="text-badge text-heading">
           {`${payload[0].payload.day}: ${payload[0].value.toLocaleString()}`}
         </p>
       </div>
@@ -127,10 +128,10 @@ const CustomActiveBar = (props: any) => {
       <text
         x={x + width / 2}
         y={labelY + 13}
-        fill="#FFFFFF"
+        fill={colors.background.card}
         textAnchor="middle"
         fontSize={11}
-        fontWeight={500}
+        fontWeight={fontWeights.medium}
       >
         {valueText}
       </text>
@@ -208,7 +209,7 @@ export function TeacherAttendanceChart({
       >
         <Card className="h-[260px] w-full pt-4 pb-0 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
-            <h3 className="text-lg font-semibold">Attendance Overview</h3>
+            <h3 className="text-section-title">Attendance Overview</h3>
             <CardAction>
               <Skeleton className="h-9 w-[110px]" />
             </CardAction>
@@ -232,10 +233,10 @@ export function TeacherAttendanceChart({
     >
       <Card className="h-[260px] w-full pt-4 pb-0 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
-          <h3 className="text-lg font-semibold">Attendance Overview</h3>
+          <h3 className="text-section-title">Attendance Overview</h3>
           <CardAction>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[110px] bg-[#CDEAF0]">
+              <SelectTrigger className="w-[110px] bg-accent">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

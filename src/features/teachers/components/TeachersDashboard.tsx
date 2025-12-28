@@ -1,6 +1,7 @@
 import { TileWrapper, Tile } from '@/components/tile'
 import { Users, Clock, RefreshCw } from 'lucide-react'
-import { baseColors, text } from '@/theme/colors'
+import { baseColors, text, colors } from '@/theme/colors'
+import { fontWeights } from '@/config/typography'
 
 interface TeacherStatistics {
   total: number
@@ -41,7 +42,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
               </h3>
               <span
                 className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: 950 }}
+                style={{ color: text.heading, fontWeight: fontWeights.bold }}
               >
                 {stats.total}
               </span>
@@ -54,7 +55,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
                 backgroundColor: baseColors.heading, // Dark blue
               }}
             >
-              <Users className="w-6 h-6" style={{ color: '#FFFFFF' }} />
+              <Users className="w-6 h-6" style={{ color: colors.background.card }} />
             </div>
           </div>
         </Tile>
@@ -77,7 +78,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
               </h3>
               <span
                 className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: 950 }}
+                style={{ color: text.heading, fontWeight: fontWeights.bold }}
               >
                 {stats.fullTime}
               </span>
@@ -113,7 +114,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
               </h3>
               <span
                 className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: 950 }}
+                style={{ color: text.heading, fontWeight: fontWeights.bold }}
               >
                 {stats.partTime}
               </span>
@@ -149,7 +150,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
               </h3>
               <span
                 className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: 950 }}
+                style={{ color: text.heading, fontWeight: fontWeights.bold }}
               >
                 {stats.substitute}
               </span>

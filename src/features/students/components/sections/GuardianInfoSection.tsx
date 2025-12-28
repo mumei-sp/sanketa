@@ -96,7 +96,7 @@ export function GuardianInfoSection({ control, width }: GuardianInfoSectionProps
       <GuardianCard
         title={
           <>
-            Alternative Guardian <span className="text-xs font-normal text-gray-500">(If Any)</span>
+            Alternative Guardian <span className="text-caption text-gray-500">(If Any)</span>
           </>
         }
       >

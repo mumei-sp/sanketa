@@ -20,7 +20,7 @@ export function StatusBadge({ status, className, style }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center justify-center rounded-full px-3 text-xs font-medium',
+        'inline-flex h-6 items-center justify-center rounded-full px-3 text-badge',
         variants[status],
         className,
       )}

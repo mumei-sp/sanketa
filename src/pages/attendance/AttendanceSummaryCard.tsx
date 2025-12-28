@@ -3,7 +3,7 @@ import { Tile } from '@/components/tile'
 import type { AttendanceRecordType } from './attendance-types'
 import type { AttendanceStatistics } from './utils/attendance-stats'
 import { AttendanceTrendIcon } from './AttendanceTrendIcon'
-import { baseColors, colors } from '@/theme/colors'
+import { baseColors, colors, withOpacity } from '@/theme/colors'
 
 interface AttendanceSummaryCardProps {
   type: AttendanceRecordType
@@ -20,21 +20,21 @@ function getCardConfig(type: AttendanceRecordType) {
         title: 'Students',
         backgroundColor: baseColors.pink, // #FECCFD
         textColor: 'text-foreground',
-        patternColor: 'rgba(254, 204, 253, 0.3)',
+        patternColor: withOpacity(colors.primary.base, 0.3),
       }
     case 'teacher':
       return {
         title: 'Teachers',
         backgroundColor: baseColors.blue, // #CDEAF0
         textColor: 'text-foreground',
-        patternColor: 'rgba(205, 234, 240, 0.3)',
+        patternColor: withOpacity(colors.accent.base, 0.3),
       }
     case 'staff':
       return {
         title: 'Staff',
         backgroundColor: baseColors.heading, // #15446E
         textColor: 'text-white',
-        patternColor: 'rgba(255, 255, 255, 0.1)',
+        patternColor: withOpacity(colors.background.card, 0.1),
       }
   }
 }

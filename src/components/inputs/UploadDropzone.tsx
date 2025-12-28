@@ -116,39 +116,39 @@ export const UploadDropzone = React.forwardRef<
     return (
       <div className={cn("w-full", width)}>
         {showPreview && currentFile ? (
-          <div className="relative rounded-xl border-2 border-gray-300 overflow-hidden">
+          <div className="relative rounded-xl border-2 border-default overflow-hidden">
             {preview && isImage ? (
               <div className="relative">
                 <img
                   src={preview}
                   alt={currentFile.name}
-                  className="w-full h-auto max-h-64 object-contain bg-gray-50"
+                  className="w-full h-auto max-h-64 object-contain bg-muted"
                 />
                 {onFileRemove && (
                   <button
                     type="button"
                     onClick={handleRemove}
-                    className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
+                    className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-md hover:bg-muted transition-colors"
                     aria-label="Remove file"
                   >
-                    <X className="w-4 h-4 text-gray-600" />
+                    <X className="w-4 h-4 text-muted-foreground" />
                   </button>
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-8 bg-gray-50">
-                <File className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-sm font-medium text-gray-700 truncate max-w-full px-4">
+              <div className="flex flex-col items-center justify-center p-8 bg-muted">
+                <File className="w-12 h-12 text-muted-foreground mb-2" />
+                <p className="text-sm font-medium text-foreground truncate max-w-full px-4">
                   {currentFile.name}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {(currentFile.size / 1024).toFixed(2)} KB
                 </p>
                 {onFileRemove && (
                   <button
                     type="button"
                     onClick={handleRemove}
-                    className="mt-4 px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    className="mt-4 px-4 py-2 text-sm text-status-danger-text hover:text-status-danger hover:bg-status-danger-soft rounded-lg transition-colors"
                     aria-label="Remove file"
                   >
                     Remove
@@ -169,20 +169,20 @@ export const UploadDropzone = React.forwardRef<
               "flex flex-col justify-center items-center",
               "rounded-xl border-2 border-dashed",
               "transition-all text-center px-4",
-              "bg-white border-gray-300",
+              "bg-white border-default",
               height,
-              "hover:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-              isDragActive && "border-blue-500 bg-blue-50",
-              isDragReject && "border-red-400 bg-red-50",
+              "hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+              isDragActive && "border-accent bg-accent-soft",
+              isDragReject && "border-status-danger bg-status-danger-soft",
               disabled && "opacity-50 cursor-not-allowed",
               !disabled && "cursor-pointer",
               className,
             )}
           >
             <input {...getInputProps()} aria-label="File upload input" />
-            <p className="font-medium text-blue-600">{label}</p>
+            <p className="font-medium text-accent">{label}</p>
             {description && (
-              <p className="text-xs text-gray-500 mt-1">{description}</p>
+              <p className="text-xs text-muted-foreground mt-1">{description}</p>
             )}
           </div>
         )}

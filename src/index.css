@@ -10,7 +10,10 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Typography: Font Family */
+  /* Typography: Font Family
+   * NOTE: These values must match src/config/typography.ts fontFamily configuration
+   * Source: @/config/typography fontFamily.sans and fontFamily.mono
+   */
   --font-family-sans:
     'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -18,92 +21,112 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
 
-  /* Typography: Font Weights (semantic names) */
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
+  /* Typography: Font Weights (semantic names)
+   * NOTE: These values must match src/config/typography.ts fontWeights configuration
+   * Source: @/config/typography fontWeights
+   */
+  --font-weight-regular: 400; /* fontWeights.regular */
+  --font-weight-medium: 500; /* fontWeights.medium */
+  --font-weight-semibold: 600; /* fontWeights.semibold */
+  --font-weight-bold: 700; /* fontWeights.bold */
 
   /* Map to Tailwind's default font-weight scale for compatibility */
   --font-weight-normal: 400;
   --font-weight-bold: 700;
 
-  /* Typography: Font Sizes with Line Heights (14px base) */
-  --font-size-xs: 0.857rem; /* 12px */
-  --font-size-xs--line-height: 1.029rem; /* 12px * 1.2 = 14.4px */
-  --font-size-sm: 0.929rem; /* 13px */
-  --font-size-sm--line-height: 1.207rem; /* 13px * 1.3 = 16.9px */
-  --font-size-base: 0.875rem; /* 14px - NEW BASE */
-  --font-size-base--line-height: 1.45rem; /* 14px * 1.45 = 20.3px */
-  --font-size-lg: 1.143rem; /* 16px */
-  --font-size-lg--line-height: 1.3rem; /* 16px * 1.3 = 20.8px */
-  --font-size-xl: 1.429rem; /* 20px */
-  --font-size-xl--line-height: 1.543rem; /* 20px * 1.35 = 27px */
-  --font-size-2xl: 1.714rem; /* 24px */
-  --font-size-2xl--line-height: 1.857rem; /* 24px * 1.3 = 31.2px */
-  --font-size-3xl: 2.143rem; /* 30px */
-  --font-size-3xl--line-height: 2.143rem; /* 30px * 1.2 = 36px */
-  --font-size-4xl: 2.571rem; /* 36px */
-  --font-size-4xl--line-height: 2.571rem; /* 36px * 1.11 = 40px */
+  /* Typography: Font Sizes with Line Heights (14px base)
+   * NOTE: These values must match src/config/typography.ts fontSizes and lineHeights configuration
+   * Source: @/config/typography fontSizes and lineHeights
+   */
+  --font-size-xs: 0.857rem; /* 12px - fontSizes.xs */
+  --font-size-xs--line-height: 1.029rem; /* 12px * 1.2 = 14.4px - lineHeights.xs */
+  --font-size-sm: 0.929rem; /* 13px - fontSizes.sm */
+  --font-size-sm--line-height: 1.207rem; /* 13px * 1.3 = 16.9px - lineHeights.sm */
+  --font-size-base: 0.875rem; /* 14px - fontSizes.base */
+  --font-size-base--line-height: 1.45rem; /* 14px * 1.45 = 20.3px - lineHeights.base */
+  --font-size-lg: 1.143rem; /* 16px - fontSizes.lg */
+  --font-size-lg--line-height: 1.3rem; /* 16px * 1.3 = 20.8px - lineHeights.lg */
+  --font-size-xl: 1.429rem; /* 20px - fontSizes.xl */
+  --font-size-xl--line-height: 1.543rem; /* 20px * 1.35 = 27px - lineHeights.xl */
+  --font-size-2xl: 1.714rem; /* 24px - fontSizes['2xl'] */
+  --font-size-2xl--line-height: 1.857rem; /* 24px * 1.3 = 31.2px - lineHeights['2xl'] */
+  --font-size-3xl: 2.143rem; /* 30px - fontSizes['3xl'] */
+  --font-size-3xl--line-height: 2.143rem; /* 30px * 1.2 = 36px - lineHeights['3xl'] */
+  --font-size-4xl: 2.571rem; /* 36px - fontSizes['4xl'] */
+  --font-size-4xl--line-height: 2.571rem; /* 36px * 1.11 = 40px - lineHeights['4xl'] */
 
-  /* Compact Spacing Scale Override (reduced by ~10-15%) */
-  --spacing-0: 0;
-  --spacing-0\.5: 0.125rem; /* 2px */
-  --spacing-1: 0.25rem; /* 4px */
-  --spacing-1\.5: 0.375rem; /* 6px */
-  --spacing-2: 0.5rem; /* 8px */
-  --spacing-2\.5: 0.625rem; /* 10px */
-  --spacing-3: 0.75rem; /* 12px */
-  --spacing-4: 1rem; /* 16px (was 1rem, now equivalent to old p-4) */
-  --spacing-5: 1.125rem; /* 18px (was 1.25rem) */
-  --spacing-6: 1.25rem; /* 20px (was 1.5rem, now equivalent to old p-5) */
-  --spacing-8: 1.5rem; /* 24px (was 2rem, now equivalent to old p-6) */
-  --spacing-10: 1.75rem; /* 28px (was 2.5rem) */
-  --spacing-12: 2rem; /* 32px (was 3rem, now equivalent to old p-8) */
-  --spacing-16: 2.5rem; /* 40px (was 4rem) */
-  --spacing-20: 3rem; /* 48px (was 5rem) */
-  --spacing-24: 3.5rem; /* 56px (was 6rem) */
-  --spacing-32: 4.5rem; /* 72px (was 8rem) */
-  --spacing-40: 5.5rem; /* 88px (was 10rem) */
-  --spacing-48: 6.5rem; /* 104px (was 12rem) */
-  --spacing-64: 8.5rem; /* 136px (was 16rem) */
+  /* ===================================================================
+   * COMPACT SPACING SCALE - UNIFORM SPACING CONFIGURATION
+   * ===================================================================
+   * 
+   * IMPORTANT: These CSS variables MUST match the values in src/config/spacing.ts
+   * This is the CSS representation of the TypeScript spacing configuration.
+   * 
+   * Single Source of Truth: src/config/spacing.ts
+   * 
+   * When updating spacing values:
+   * 1. Update src/config/spacing.ts first
+   * 2. Then update these CSS variables to match
+   * 3. Tailwind config automatically uses spacing.ts, so no changes needed there
+   * 
+   * Formula: Original Tailwind value * 0.875 (14px/16px base) * 0.9-0.95 (compact)
+   * 
+   * These values are used by Tailwind v4 spacing utilities (p-, m-, gap-, space-x-, etc.)
+   * =================================================================== */
+  
+  /* Pixel-based spacing */
+  --spacing-px: 1px; /* spacing.px */
 
-  /* Override Tailwind spacing scale with compact values */
-  /* Note: Tailwind v4 will use these values for spacing utilities (p-, m-, gap-, etc.) */
-  --spacing-px: 1px;
-  --spacing-0: 0;
-  --spacing-0\.5: 0.125rem;
-  --spacing-1: 0.25rem;
-  --spacing-1\.5: 0.375rem;
-  --spacing-2: 0.5rem;
-  --spacing-2\.5: 0.625rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  --spacing-5: 1.125rem;
-  --spacing-6: 1.25rem;
-  --spacing-7: 1.375rem;
-  --spacing-8: 1.5rem;
-  --spacing-9: 1.625rem;
-  --spacing-10: 1.75rem;
-  --spacing-11: 1.875rem;
-  --spacing-12: 2rem;
-  --spacing-14: 2.25rem;
-  --spacing-16: 2.5rem;
-  --spacing-20: 3rem;
-  --spacing-24: 3.5rem;
-  --spacing-28: 4rem;
-  --spacing-32: 4.5rem;
-  --spacing-36: 5rem;
-  --spacing-40: 5.5rem;
-  --spacing-44: 6rem;
-  --spacing-48: 6.5rem;
-  --spacing-52: 7rem;
-  --spacing-56: 7.5rem;
-  --spacing-60: 8rem;
-  --spacing-64: 8.5rem;
-  --spacing-72: 9.5rem;
-  --spacing-80: 10.5rem;
-  --spacing-96: 13rem;
+  /* Ultra compact (0-1) */
+  --spacing-0: 0; /* spacing['0'] */
+  --spacing-0\.5: 0.125rem; /* 2px - spacing['0.5'] */
+  --spacing-1: 0.25rem; /* 4px - spacing['1'] */
+
+  /* Small spacing (1.5-3) */
+  --spacing-1\.5: 0.375rem; /* 6px - spacing['1.5'] */
+  --spacing-2: 0.5rem; /* 8px - spacing['2'] */
+  --spacing-2\.5: 0.625rem; /* 10px - spacing['2.5'] */
+  --spacing-3: 0.75rem; /* 12px - spacing['3'] */
+
+  /* Medium spacing (4-6) */
+  --spacing-4: 1rem; /* 16px - spacing['4'] */
+  --spacing-5: 1.125rem; /* 18px - spacing['5'] */
+  --spacing-6: 1.25rem; /* 20px - spacing['6'] */
+
+  /* Extended medium spacing (7-11) */
+  --spacing-7: 1.375rem; /* 22px - spacing['7'] */
+  --spacing-9: 1.625rem; /* 26px - spacing['9'] */
+  --spacing-11: 1.875rem; /* 30px - spacing['11'] */
+
+  /* Large spacing (8-14) */
+  --spacing-8: 1.5rem; /* 24px - spacing['8'] */
+  --spacing-10: 1.75rem; /* 28px - spacing['10'] */
+  --spacing-12: 2rem; /* 32px - spacing['12'] */
+  --spacing-14: 2.25rem; /* 36px - spacing['14'] */
+
+  /* Extra large spacing (16-28) */
+  --spacing-16: 2.5rem; /* 40px - spacing['16'] */
+  --spacing-20: 3rem; /* 48px - spacing['20'] */
+  --spacing-24: 3.5rem; /* 56px - spacing['24'] */
+  --spacing-28: 4rem; /* 64px - spacing['28'] */
+
+  /* Huge spacing (32-48) */
+  --spacing-32: 4.5rem; /* 72px - spacing['32'] */
+  --spacing-36: 5rem; /* 80px - spacing['36'] */
+  --spacing-40: 5.5rem; /* 88px - spacing['40'] */
+  --spacing-44: 6rem; /* 96px - spacing['44'] */
+  --spacing-48: 6.5rem; /* 104px - spacing['48'] */
+
+  /* Extra huge spacing (52-64) */
+  --spacing-52: 7rem; /* 112px - spacing['52'] */
+  --spacing-56: 7.5rem; /* 120px - spacing['56'] */
+  --spacing-60: 8rem; /* 128px - spacing['60'] */
+  --spacing-64: 8.5rem; /* 136px - spacing['64'] */
+
+  /* Maximum spacing (72-96) */
+  --spacing-72: 9.5rem; /* 152px - spacing['72'] */
+  --spacing-80: 10.5rem; /* 168px - spacing['80'] */
+  --spacing-96: 13rem; /* 208px - spacing['96'] */
 
   /* Height scale overrides for components (independent of spacing) */
   /* These ensure buttons and other components maintain correct pixel sizes */

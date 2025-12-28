@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { fontWeights } from '@/config/typography'
 import { Tile } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
@@ -98,7 +99,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-md border bg-white px-2 py-1.5">
-        <p className="text-xs font-medium text-heading">
+        <p className="text-badge text-heading">
           {`${payload[0].payload.day}: ${payload[0].value.toLocaleString()}`}
         </p>
       </div>
@@ -121,7 +122,7 @@ const CustomLabel = ({ x, y, width, value }: any) => {
       fill={colors.text.heading}
       textAnchor="middle"
       fontSize={12}
-      fontWeight={500}
+      fontWeight={fontWeights.medium}
       dy={-8}
     >
       {value.toLocaleString()}
@@ -204,7 +205,7 @@ export function AttendanceOverviewChart({
       >
         <Card className="pt-6 pb-0">
           <CardHeader>
-            <h3 className="text-lg font-semibold">Attendance Overview</h3>
+            <h3 className="text-section-title">Attendance Overview</h3>
             <CardAction>
               <Skeleton className="h-9 w-[110px]" />
             </CardAction>
@@ -228,10 +229,10 @@ export function AttendanceOverviewChart({
     >
       <Card className="pt-6 pb-0">
         <CardHeader>
-          <h3 className="text-lg font-semibold">Attendance Overview</h3>
+          <h3 className="text-section-title">Attendance Overview</h3>
           <CardAction>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[110px] bg-[#CDEAF0]">
+              <SelectTrigger className="w-[110px] bg-accent">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

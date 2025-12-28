@@ -37,7 +37,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-md border bg-white px-2 py-1.5 shadow-sm">
-        <p className="text-xs font-medium text-heading">{`Year: ${payload[0].payload.year}`}</p>
+        <p className="text-badge text-heading">{`Year: ${payload[0].payload.year}`}</p>
         <p className="text-xs text-heading">{`Enrollment: ${payload[0].value.toLocaleString()}`}</p>
       </div>
     )
@@ -155,7 +155,7 @@ export function EnrollmentTrendsChart({
       >
         <Card className="pt-6 pb-0">
           <CardHeader>
-            <h3 className="text-lg font-semibold">Enrollment Trends</h3>
+            <h3 className="text-section-title">Enrollment Trends</h3>
             <CardAction>
               <Skeleton className="h-9 w-[110px]" />
             </CardAction>
@@ -179,10 +179,10 @@ export function EnrollmentTrendsChart({
     >
       <Card className="pt-6 pb-0">
         <CardHeader>
-          <h3 className="text-lg font-semibold">Enrollment Trends</h3>
+          <h3 className="text-section-title">Enrollment Trends</h3>
           <CardAction>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[110px] bg-[#CDEAF0]">
+              <SelectTrigger className="w-[110px] bg-accent">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

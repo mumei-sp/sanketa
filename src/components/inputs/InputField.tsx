@@ -95,14 +95,14 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           <label
             htmlFor={finalId}
             className={cn(
-              'text-sm font-medium text-gray-700',
+              'text-sm font-medium text-foreground',
               disabled && 'opacity-60',
               labelClassName,
             )}
           >
             {label}
             {requiredMark && (
-              <span className="text-red-500" aria-label="required">
+              <span className="text-status-danger" aria-label="required">
                 {' '}
                 *
               </span>
@@ -115,7 +115,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             <span
               className={cn(
                 'absolute left-3 pointer-events-none',
-                disabled ? 'text-gray-500' : 'text-gray-400',
+                disabled ? 'text-muted-foreground' : 'text-muted-foreground',
               )}
               aria-hidden="true"
             >
@@ -137,11 +137,11 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
               'h-11 rounded-xl border transition-all',
               'focus-visible:ring-2 focus-visible:ring-primary',
               disabled
-                ? 'bg-gray-100 border-gray-300 text-gray-600 cursor-not-allowed'
+                ? 'bg-muted border-default text-muted-foreground cursor-not-allowed'
                 : 'bg-white',
               !disabled && error
-                ? 'border-red-500 focus-visible:ring-red-500'
-                : !disabled && 'border-gray-300',
+                ? 'border-status-danger focus-visible:ring-status-danger'
+                : !disabled && 'border-default',
               leftIcon ? 'pl-10' : 'pl-3',
               rightIcon || (showClearButton && hasValue) ? 'pr-10' : 'pr-3',
               className,
@@ -153,7 +153,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Clear input"
             >
               <X className="w-4 h-4" />
@@ -164,7 +164,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             <span
               className={cn(
                 'absolute right-3',
-                disabled ? 'text-gray-500' : 'text-gray-400',
+                disabled ? 'text-muted-foreground' : 'text-muted-foreground',
                 !rightIconClickable && 'pointer-events-none',
               )}
               aria-hidden={!rightIconClickable}
@@ -178,7 +178,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           <p
             id={errorId}
             role="alert"
-            className={cn('text-xs text-red-500', disabled && 'opacity-60')}
+            className={cn('text-xs text-status-danger', disabled && 'opacity-60')}
           >
             {error}
           </p>
@@ -187,7 +187,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
         {subLabel && !error && !showCharCount && (
           <p
             id={subLabelId}
-            className={cn('text-xs text-gray-500', disabled && 'opacity-60', subLabelClassName)}
+            className={cn('text-xs text-muted-foreground', disabled && 'opacity-60', subLabelClassName)}
           >
             {subLabel}
           </p>
@@ -198,7 +198,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             {subLabel && (
               <p
                 id={subLabelId}
-                className={cn('text-xs text-gray-500', disabled && 'opacity-60', subLabelClassName)}
+                className={cn('text-xs text-muted-foreground', disabled && 'opacity-60', subLabelClassName)}
               >
                 {subLabel}
               </p>
@@ -206,7 +206,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             <p
               className={cn(
                 'text-xs ml-auto',
-                remainingChars < maxLength * 0.1 ? 'text-red-500' : 'text-gray-500',
+                remainingChars < maxLength * 0.1 ? 'text-status-danger' : 'text-muted-foreground',
                 disabled && 'opacity-60',
               )}
             >

@@ -1,16 +1,33 @@
 import type { Config } from 'tailwindcss'
 import { tailwindColors, colors } from './src/theme/colors'
+import {
+  fontFamily,
+  fontSizes,
+  fontWeights,
+  lineHeights,
+} from './src/config/typography'
+import { spacing } from './src/config/spacing'
 
 /**
  * Tailwind CSS Configuration
  *
  * Extends Tailwind v4 with semantic color tokens from the centralized theme system.
  * Colors are available as utilities: bg-primary-soft, text-heading, bg-status-success, etc.
+ * Typography values are sourced from the centralized typography config.
+ * Spacing values are sourced from the centralized spacing config for uniform spacing across the app.
  */
 const config: Config = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: fontFamily.sans,
+        mono: fontFamily.mono,
+      },
+      fontSize: fontSizes,
+      fontWeight: fontWeights,
+      lineHeight: lineHeights,
+      spacing: spacing,
       colors: {
         // Primary colors (pink-based)
         primary: {

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { spacing, type SpacingKey } from '@/config/spacing'
 
 export type LayoutMode = 'grid' | 'flex' | 'absolute' | 'block'
 export type OverflowMode = 'clip' | 'scroll' | 'auto' | 'hidden'
@@ -47,8 +48,8 @@ export interface TileProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'i
   interactable?: boolean
   /** Marks tile as containing nested tiles */
   nested?: boolean
-  /** Pixel padding or Tailwind classes */
-  padding?: number | string
+  /** Pixel padding, spacing key, or Tailwind classes */
+  padding?: number | SpacingKey | string
   /** Theme token or custom color */
   background?: string
   /** Theme token or CSS value */
@@ -116,11 +117,17 @@ function getPaddingClass(padding?: number | string): string {
   return padding
 }
 
-function getPaddingStyle(padding?: number | string): React.CSSProperties {
+function getPaddingStyle(padding?: number | SpacingKey | string): React.CSSProperties {
   if (!padding) return {}
   if (typeof padding === 'number') {
     return { padding: `${padding}px` }
   }
+  // If it's a spacing key (string that exists in spacing config), use that value
+  if (typeof padding === 'string' && padding in spacing) {
+    return { padding: spacing[padding as SpacingKey] }
+  }
+  // If it's already a string with units (like '1rem' or '16px'), return empty
+  // and let it be handled by className or style prop
   return {}
 }
 

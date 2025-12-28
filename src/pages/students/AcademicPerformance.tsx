@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { fontWeights } from '@/config/typography'
 import { Tile } from '@/components/tile'
 import { colors } from '@/theme/colors'
 
@@ -64,7 +65,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-md border bg-white px-2 py-1.5 shadow-sm dark:bg-gray-800">
-        <p className="text-xs font-medium text-heading">{`${payload[0].value}%`}</p>
+        <p className="text-badge text-heading">{`${payload[0].value}%`}</p>
       </div>
     )
   }
@@ -77,7 +78,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 const CustomBar = (props: any) => {
   const { x, y, width, height } = props
   // Use light pink color for bars (matching the theme)
-  const fillColor = '#FECCFD'
+  const fillColor = colors.primary.base
 
   return (
     <g>
@@ -98,7 +99,7 @@ const CustomLabel = (props: any) => {
       fill={colors.text.heading}
       textAnchor="middle"
       fontSize={11}
-      fontWeight={600}
+      fontWeight={fontWeights.semibold}
     >
       {value}
     </text>
@@ -123,8 +124,8 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
   const arcLength = circumference * percentage
 
   // Colors: dark blue for filled, light pink for unfilled
-  const filledColor = '#15446E' // Dark blue (heading color)
-  const unfilledColor = '#FECCFD' // Light pink
+  const filledColor = colors.text.heading // Dark blue (heading color)
+  const unfilledColor = colors.primary.base // Light pink
 
   // Start and end points for the semi-circle (from left to right, bottom)
   // The arc sits at the bottom of the gauge
@@ -180,8 +181,8 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
           y={textY}
           textAnchor="middle"
           fontSize={28}
-          fontWeight={700}
-          fill="#15446E"
+          fontWeight={fontWeights.bold}
+          fill={colors.text.heading}
           dominantBaseline="middle"
         >
           {value.toFixed(1)}/100
@@ -260,7 +261,7 @@ export function AcademicPerformance({
       >
         <Card className="pt-6 pb-0">
           <CardHeader>
-            <h3 className="text-lg font-semibold">Academic Performance</h3>
+            <h3 className="text-section-title">Academic Performance</h3>
             <CardAction>
               <Skeleton className="h-9 w-[140px]" />
             </CardAction>
@@ -284,10 +285,10 @@ export function AcademicPerformance({
     >
       <Card className="pt-6 pb-0">
         <CardHeader>
-          <h3 className="text-base font-semibold">Academic Performance</h3>
+          <h3 className="text-section-title">Academic Performance</h3>
           <CardAction>
             <Select value={timePeriod} onValueChange={setTimePeriod}>
-              <SelectTrigger className="w-[140px] bg-[#CDEAF0]">
+              <SelectTrigger className="w-[140px] bg-accent">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

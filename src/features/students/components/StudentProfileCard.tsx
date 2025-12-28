@@ -4,7 +4,8 @@ import { Separator } from '@/components/ui/separator'
 import { Tile } from '@/components/tile'
 import { StatusBadge } from '@/pages/students/StatusBadge'
 import { Cake, Phone, MapPin } from 'lucide-react'
-import { fontSizes } from '@/config/typography'
+import { fontSizes, fontWeights } from '@/config/typography'
+import { spacing, spacingRoles } from '@/config/spacing'
 import { primary, accent } from '@/theme/colors'
 import type { Student } from '../types'
 import {
@@ -53,9 +54,9 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
       : accent.base // Blue for male
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
       {/* Profile Picture and Name Section */}
-      <div className="flex flex-col items-center" style={{ gap: '0.75rem' }}>
+      <div className="flex flex-col items-center" style={{ gap: spacing['3'] }}>
         <Avatar
           className="rounded-lg"
           style={{
@@ -88,7 +89,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
             className="text-muted-foreground rounded-lg"
             style={{
               borderRadius: '1rem',
-              fontSize: '2.143rem',
+              fontSize: fontSizes['3xl'],
               backgroundColor: avatarBackground,
               position: 'absolute',
               top: 0,
@@ -106,21 +107,21 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
         </Avatar>
         <h2
           className="font-semibold text-center"
-          style={{ fontSize: fontSizes.xl, marginBottom: '0.75rem' }}
+          style={{ fontSize: fontSizes.xl, marginBottom: spacing['3'] }}
         >
           {displayName}
         </h2>
 
         {/* Tags Section */}
-        <div className="flex flex-wrap justify-center" style={{ gap: '0.5rem' }}>
+        <div className="flex flex-wrap justify-center" style={{ gap: spacing['2'] }}>
           <span
             className="bg-muted font-medium"
             style={{
-              height: '1.375rem',
-              paddingLeft: '0.75rem',
-              paddingRight: '0.75rem',
+              height: spacing['7'],
+              paddingLeft: spacing['3'],
+              paddingRight: spacing['3'],
               borderRadius: '999rem',
-              fontSize: '0.857rem',
+              fontSize: fontSizes.xs,
               display: 'inline-flex',
               alignItems: 'center',
             }}
@@ -130,11 +131,11 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
           <span
             className="bg-muted font-medium"
             style={{
-              height: '1.375rem',
-              paddingLeft: '0.75rem',
-              paddingRight: '0.75rem',
+              height: spacing['7'],
+              paddingLeft: spacing['3'],
+              paddingRight: spacing['3'],
               borderRadius: '999rem',
-              fontSize: '0.857rem',
+              fontSize: fontSizes.xs,
               display: 'inline-flex',
               alignItems: 'center',
             }}
@@ -145,10 +146,10 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
             status={student.status}
             className="font-medium"
             style={{
-              height: '1.375rem',
-              paddingLeft: '0.75rem',
-              paddingRight: '0.75rem',
-              fontSize: '0.857rem',
+              height: spacing['7'],
+              paddingLeft: spacing['3'],
+              paddingRight: spacing['3'],
+              fontSize: fontSizes.xs,
             }}
           />
         </div>
@@ -159,10 +160,10 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
         id="personal-info-section"
         layoutMode="block"
         background="muted"
-        borderRadius="0.75rem"
-        style={{ padding: '1.125rem' }}
+        borderRadius={spacing['3']}
+        style={{ padding: spacing['5'] }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
           <div
             style={{
               display: 'flex',
@@ -171,13 +172,13 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
               minHeight: '2.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
               <span
                 className="text-muted-foreground"
                 style={{
-                  fontSize: '1rem',
-                  width: '1rem',
-                  height: '1rem',
+                  fontSize: spacing['4'],
+                  width: spacing['4'],
+                  height: spacing['4'],
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -185,7 +186,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
               >
                 {getGenderIcon(student.gender)}
               </span>
-              <span className="text-muted-foreground" style={{ fontSize: '0.857rem' }}>
+              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
                 Gender
               </span>
             </div>
@@ -210,9 +211,9 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
               minHeight: '2.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Cake className="text-muted-foreground" style={{ width: '1rem', height: '1rem' }} />
-              <span className="text-muted-foreground" style={{ fontSize: '0.857rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
+              <Cake className="text-muted-foreground" style={{ width: spacing['4'], height: spacing['4'] }} />
+              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
                 Date of Birth
               </span>
             </div>
@@ -237,9 +238,9 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
               minHeight: '2.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Phone className="text-muted-foreground" style={{ width: '1rem', height: '1rem' }} />
-              <span className="text-muted-foreground" style={{ fontSize: '0.857rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
+              <Phone className="text-muted-foreground" style={{ width: spacing['4'], height: spacing['4'] }} />
+              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
                 Phone Number
               </span>
             </div>
@@ -264,9 +265,9 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
               minHeight: '2.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <MapPin className="text-muted-foreground" style={{ width: '1rem', height: '1rem' }} />
-              <span className="text-muted-foreground" style={{ fontSize: '0.857rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
+              <MapPin className="text-muted-foreground" style={{ width: spacing['4'], height: spacing['4'] }} />
+              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
                 Address
               </span>
             </div>
@@ -289,7 +290,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
       {(student.guardians?.father ||
         student.guardians?.mother ||
         student.guardians?.alternativeGuardian) && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
           <div>
             <h3 className="font-semibold" style={{ fontSize: fontSizes.lg }}>
               Parent/Guardian Info
@@ -300,8 +301,8 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
             id="guardian-info-section"
             layoutMode="block"
             background="muted"
-            borderRadius="1rem"
-            style={{ padding: '1rem' }}
+            borderRadius={spacing['4']}
+            style={{ padding: spacing['4'] }}
           >
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {student.guardians.father && student.guardians.father.name && (
@@ -316,7 +317,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                   >
                     <span
                       className="text-muted-foreground"
-                      style={{ fontSize: '0.857rem', fontWeight: 400 }}
+                      style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
                     >
                       Father
                     </span>
@@ -326,19 +327,19 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                         flexDirection: 'column',
                         alignItems: 'flex-end',
                         maxWidth: '60%',
-                        gap: '0.25rem',
+                        gap: spacing['1'],
                       }}
                     >
                       <p
                         className="font-semibold"
-                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: 600 }}
+                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
                       >
                         {student.guardians.father.name}
                       </p>
                       {student.guardians.father.phone && (
                         <p
                           className="text-muted-foreground"
-                          style={{ fontSize: '0.857rem', fontWeight: 400 }}
+                          style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
                         >
                           {formatPhone(
                             student.guardians.father.phone,
@@ -352,7 +353,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                     student.guardians.alternativeGuardian?.name) && (
                     <Separator
                       className="my-0.5"
-                      style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}
+                      style={{ marginTop: spacing['2'], marginBottom: spacing['2'] }}
                     />
                   )}
                 </>
@@ -370,7 +371,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                   >
                     <span
                       className="text-muted-foreground"
-                      style={{ fontSize: '0.857rem', fontWeight: 400 }}
+                      style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
                     >
                       Mother
                     </span>
@@ -380,19 +381,19 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                         flexDirection: 'column',
                         alignItems: 'flex-end',
                         maxWidth: '60%',
-                        gap: '0.25rem',
+                        gap: spacing['1'],
                       }}
                     >
                       <p
                         className="font-semibold"
-                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: 600 }}
+                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
                       >
                         {student.guardians.mother.name}
                       </p>
                       {student.guardians.mother.phone && (
                         <p
                           className="text-muted-foreground"
-                          style={{ fontSize: '0.857rem', fontWeight: 400 }}
+                          style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
                         >
                           {formatPhone(
                             student.guardians.mother.phone,
@@ -405,7 +406,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                   {student.guardians.alternativeGuardian?.name && (
                     <Separator
                       className="my-0.5"
-                      style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}
+                      style={{ marginTop: spacing['2'], marginBottom: spacing['2'] }}
                     />
                   )}
                 </>
@@ -423,7 +424,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                   >
                     <span
                       className="text-muted-foreground"
-                      style={{ fontSize: '0.857rem', fontWeight: 400 }}
+                      style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
                     >
                       Alternative Guardian
                       {student.guardians.alternativeGuardian.relation &&
@@ -435,19 +436,19 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
                         flexDirection: 'column',
                         alignItems: 'flex-end',
                         maxWidth: '60%',
-                        gap: '0.25rem',
+                        gap: spacing['1'],
                       }}
                     >
                       <p
                         className="font-semibold"
-                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: 600 }}
+                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
                       >
                         {student.guardians.alternativeGuardian.name}
                       </p>
                       {student.guardians.alternativeGuardian.phone && (
                         <p
                           className="text-muted-foreground"
-                          style={{ fontSize: '0.857rem', fontWeight: 400 }}
+                          style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
                         >
                           {formatPhone(
                             student.guardians.alternativeGuardian.phone,

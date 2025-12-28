@@ -55,7 +55,7 @@ export function StudentsTable({ data, isLoading }: StudentsTableProps) {
 
       return (
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <h2 className="text-xl font-semibold text-foreground">Students</h2>
+          <h2 className="text-page-title text-foreground">Students</h2>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative w-[250px] min-w-[150px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -63,7 +63,7 @@ export function StudentsTable({ data, isLoading }: StudentsTableProps) {
                 placeholder="Search for a student"
                 value={searchValue}
                 onChange={e => handleSearchChange(e.target.value)}
-                className="h-8 w-full pl-10 bg-white border-gray-300"
+                className="h-8 w-full pl-10 bg-white border-default"
               />
             </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>

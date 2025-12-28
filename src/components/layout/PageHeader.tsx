@@ -152,7 +152,7 @@ export default function PageHeader({
           )}
 
           <div className="flex flex-col gap-1 min-w-0">
-            <h1 className="text-2xl font-semibold text-foreground truncate">{title}</h1>
+            <h1 className="text-page-title text-foreground truncate">{title}</h1>
             {breadcrumbs && breadcrumbs.length > 0 && (
               <Breadcrumb>
                 <BreadcrumbList>

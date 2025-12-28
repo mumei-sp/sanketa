@@ -197,14 +197,14 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
           <label
             htmlFor={finalId}
             className={cn(
-              'text-sm font-medium text-gray-700',
+              'text-sm font-medium text-foreground',
               disabled && 'opacity-60',
               labelClassName,
             )}
           >
             {label}
             {requiredMark && (
-              <span className="text-red-500" aria-label="required">
+              <span className="text-status-danger" aria-label="required">
                 {' '}
                 *
               </span>
@@ -216,7 +216,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
           {/* +91 Prefix */}
           <span
             className={cn(
-              'absolute left-3 text-gray-600 font-medium pointer-events-none',
+              'absolute left-3 text-muted-foreground font-medium pointer-events-none',
               disabled && 'opacity-60',
             )}
             aria-hidden="true"
@@ -244,11 +244,11 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
               'pl-12', // Padding to accommodate +91 prefix
               showClearButton && hasValue ? 'pr-10' : 'pr-3',
               disabled
-                ? 'bg-gray-100 border-gray-300 text-gray-600 cursor-not-allowed'
+                ? 'bg-muted border-default text-muted-foreground cursor-not-allowed'
                 : 'bg-white',
               !disabled && error
-                ? 'border-red-500 focus-visible:ring-red-500'
-                : !disabled && 'border-gray-300',
+                ? 'border-status-danger focus-visible:ring-status-danger'
+                : !disabled && 'border-default',
               className,
             )}
             {...props}
@@ -258,7 +258,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
+              className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
               aria-label="Clear phone number"
               tabIndex={0}
             >
@@ -271,7 +271,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
           <p
             id={errorId}
             role="alert"
-            className={cn('text-xs text-red-500', disabled && 'opacity-60')}
+            className={cn('text-xs text-status-danger', disabled && 'opacity-60')}
           >
             {error}
           </p>
@@ -280,7 +280,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
         {subLabel && !error && (
           <p
             id={subLabelId}
-            className={cn('text-xs text-gray-500', disabled && 'opacity-60', subLabelClassName)}
+            className={cn('text-xs text-muted-foreground', disabled && 'opacity-60', subLabelClassName)}
           >
             {subLabel}
           </p>

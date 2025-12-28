@@ -156,7 +156,7 @@ function desaturate(hex: string, amount: number): string {
 /**
  * Adjust opacity of a color (returns rgba string)
  */
-function withOpacity(hex: string, opacity: number): string {
+export function withOpacity(hex: string, opacity: number): string {
   const rgb = hexToRgb(hex)
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`
 }
