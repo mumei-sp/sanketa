@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { primary, background } from '@/theme/colors'
+import { primary, accent, text, background, border } from '@/theme/colors'
 import { textRoles } from '@/config/typography'
 
 /**
@@ -82,20 +82,29 @@ export function GridPagination({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 py-3 px-4 overflow-x-auto min-w-0',
+        'flex items-center justify-between gap-4 py-3 px-4 overflow-x-auto min-w-0 bg-transparent',
         className,
       )}
     >
-      <div className="flex items-center gap-2 text-body-muted text-muted-foreground flex-shrink-0">
+      <div 
+        className="flex items-center gap-2 flex-shrink-0"
+        style={{
+          fontSize: textRoles.body.fontSize,
+          color: text.body,
+        }}
+      >
         <span>Show</span>
         <select
           value={pageSize}
           onChange={e => {
             onPageSizeChange(Number(e.target.value))
           }}
-          className="h-8 rounded-md border border-input bg-background px-2 text-body"
+          className="h-8 rounded-md border px-2 font-medium transition-colors"
           style={{
             fontSize: textRoles.body.fontSize,
+            backgroundColor: border.subtle,
+            color: text.body,
+            borderColor: border.default,
           }}
         >
           {pageSizeOptions.map(size => (
@@ -110,11 +119,13 @@ export function GridPagination({
         <button
           onClick={handlePrevious}
           disabled={currentPage === 1}
-          className={cn(
-            'flex h-8 min-w-10 items-center justify-center rounded-md border border-input bg-background px-3 text-body font-medium transition-colors',
-            'hover:bg-accent hover:text-accent-foreground',
-            'disabled:pointer-events-none disabled:opacity-50',
-          )}
+          className="flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
+          style={{
+            fontSize: textRoles.body.fontSize,
+            backgroundColor: currentPage === 1 ? border.subtle : accent.base,
+            color: text.body,
+            borderColor: border.default,
+          }}
           aria-label="Previous page"
         >
           <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
@@ -125,16 +136,12 @@ export function GridPagination({
             <button
               key={pageNum}
               onClick={() => handlePageClick(pageNum)}
-              className={cn(
-                'flex h-8 min-w-10 items-center justify-center rounded-md px-3 text-body font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-              )}
+              className="flex h-8 min-w-10 items-center justify-center rounded-md px-3 font-medium transition-colors"
               style={{
                 fontSize: textRoles.body.fontSize,
-                backgroundColor: isActive ? primary.base : undefined,
-                color: isActive ? background.card : undefined,
+                backgroundColor: isActive ? primary.base : accent.base,
+                color: isActive ? background.card : text.body,
+                border: isActive ? 'none' : `1px solid ${border.default}`,
               }}
               aria-label={`Go to page ${pageNum}`}
               aria-current={isActive ? 'page' : undefined}
@@ -146,11 +153,13 @@ export function GridPagination({
         <button
           onClick={handleNext}
           disabled={currentPage === totalPages}
-          className={cn(
-            'flex h-8 min-w-10 items-center justify-center rounded-md border border-input bg-background px-3 text-body font-medium transition-colors',
-            'hover:bg-accent hover:text-accent-foreground',
-            'disabled:pointer-events-none disabled:opacity-50',
-          )}
+          className="flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
+          style={{
+            fontSize: textRoles.body.fontSize,
+            backgroundColor: currentPage === totalPages ? border.subtle : accent.base,
+            color: text.body,
+            borderColor: border.default,
+          }}
           aria-label="Next page"
         >
           <ChevronRight style={{ width: '1rem', height: '1rem' }} />
@@ -159,4 +168,3 @@ export function GridPagination({
     </div>
   )
 }
-

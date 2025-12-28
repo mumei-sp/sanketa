@@ -18,6 +18,10 @@ import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { baseColors, text } from '@/theme/colors'
+import { TeacherAttendanceChart } from '@/components/charts/TeacherAttendanceChart'
+import { WorkloadDistributionChart } from '@/components/charts/WorkloadDistributionChart'
+import { fetchAttendanceOverview } from '@/services/dashboard-service'
+import type { AttendanceData } from '@/data/dashboard'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'
 
@@ -28,6 +32,8 @@ type SortOption = 'latest' | 'name-asc' | 'name-desc'
 export default function Teachers() {
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
   const [teacherStatistics, setTeacherStatistics] = React.useState<TeacherStatistics | null>(null)
+  const [attendanceData, setAttendanceData] = React.useState<AttendanceData[]>([])
+  const [isLoadingAttendance, setIsLoadingAttendance] = React.useState(true)
   const [isLoading, setIsLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [sortOption, setSortOption] = React.useState<SortOption>('latest')
@@ -63,6 +69,23 @@ export default function Teachers() {
     }
 
     loadStatistics()
+  }, [])
+
+  // Fetch attendance data on mount
+  React.useEffect(() => {
+    async function loadAttendance() {
+      try {
+        setIsLoadingAttendance(true)
+        const data = await fetchAttendanceOverview()
+        setAttendanceData(data)
+      } catch (error) {
+        console.error('Failed to fetch attendance data:', error)
+      } finally {
+        setIsLoadingAttendance(false)
+      }
+    }
+
+    loadAttendance()
   }, [])
 
   // Filter and sort teachers
@@ -151,6 +174,11 @@ export default function Teachers() {
     // navigate('/teachers/add')
   }, [])
 
+  // No-op handler for placeholder card
+  const handlePlaceholderClick = React.useCallback(() => {
+    // No-op for now
+  }, [])
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -158,17 +186,26 @@ export default function Teachers() {
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Teachers' }]}
       />
 
-      {/* Teachers Dashboard Statistics */}
-      {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
+      {/* Teachers Dashboard Statistics and Charts with Placeholder Card */}
+      <div className="relative space-y-4">
+        {/* Teachers Dashboard Statistics */}
+        {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
 
-      {/* Toolbar */}
-      <Tile
-        id="teachers-toolbar"
-        layoutMode="block"
-        background="default"
-        borderRadius="lg"
-        padding={16}
-      >
+        {/* Charts Section - Attendance Overview and Workload Distribution */}
+        <div className="space-y-1 w-full">
+          <TileWrapper mode="flex" gap={16} className="w-[70%]">
+            <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
+            <WorkloadDistributionChart isLoading={isLoadingAttendance} />
+          </TileWrapper>
+
+        {/* Toolbar */}
+        <Tile
+          id="teachers-toolbar"
+          layoutMode="block"
+          background="default"
+          borderRadius="lg"
+          padding={16}
+        >
         <div className="flex items-center justify-between gap-4 flex-wrap">
           {/* Teachers heading on the left */}
           <h1 className="text-page-title text-heading">Teachers</h1>
@@ -182,7 +219,7 @@ export default function Teachers() {
                 placeholder="Search teacher"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="h-8 w-full pl-10"
+                className="h-8 w-full pl-10 bg-white"
               />
             </div>
 
@@ -219,6 +256,25 @@ export default function Teachers() {
           </div>
         </div>
       </Tile>
+        </div>
+
+        {/* Placeholder Card - 30% width, same height as cards */}
+        <Tile
+          id="teachers-placeholder-card"
+          layoutMode="absolute"
+          widthPx="calc(30% - 8px)"
+          heightPx={344}
+          background="#FFFFFF"
+          borderRadius="lg"
+          onClick={handlePlaceholderClick}
+          style={{
+            left: 'calc(70% + 8px)',
+            top: 0,
+          }}
+        >
+          {/* Empty content - placeholder for future use */}
+        </Tile>
+      </div>
 
       {/* Teachers Grid */}
       {isLoading ? (
@@ -249,22 +305,14 @@ export default function Teachers() {
 
           {/* Pagination */}
           {filteredAndSortedTeachers.length > 0 && (
-            <Tile
-              id="teachers-pagination"
-              layoutMode="block"
-              background="card"
-              borderRadius="lg"
-              padding={0}
-            >
-              <GridPagination
-                currentPage={currentPage}
-                totalItems={filteredAndSortedTeachers.length}
-                pageSize={pageSize}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                pageSizeOptions={[8, 16, 24, 32]}
-              />
-            </Tile>
+            <GridPagination
+              currentPage={currentPage}
+              totalItems={filteredAndSortedTeachers.length}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              pageSizeOptions={[8, 16, 24, 32]}
+            />
           )}
         </>
       )}
