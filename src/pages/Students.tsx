@@ -1,6 +1,5 @@
 import PageHeader from '@/components/layout/PageHeader'
-
-import { StudentsPage } from './students/StudentsPage'
+import { StudentsPage } from '@/features/students/pages/StudentsPage'
 
 export default function Students() {
   return (

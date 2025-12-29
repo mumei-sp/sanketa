@@ -57,3 +57,4 @@ export function PerformanceBadge({ performance, className }: PerformanceBadgePro
     </div>
   )
 }
+

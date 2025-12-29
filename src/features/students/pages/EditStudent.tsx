@@ -1,21 +1,20 @@
 import * as React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import PageHeader from '@/components/layout/PageHeader'
 import { StudentForm } from '../components/StudentForm'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import type { StudentFormValues } from '../schemas/student-schema'
 import { studentToForm } from '../utils/transform'
 import { useStudentById } from '../hooks/use-student-by-id'
+import { StudentPageLayout } from '../components/StudentPageLayout'
+import { StudentFormActions } from '../components/StudentFormActions'
+import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
+import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
+import { STUDENT_MESSAGES, STUDENT_LABELS } from '../constants'
 
 export default function EditStudent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [formHandlers, setFormHandlers] = React.useState<{
-    handleSubmit: (callback: (data: StudentFormValues) => void | Promise<void>) => () => void
-    handleFormSubmit: () => void
-  } | null>(null)
   const { student, isLoading, error } = useStudentById(id)
+  const { handleHandlersReady, handleSaveClick } = useStudentFormHandlers()
 
   const onSubmit = React.useCallback(
     async (data: StudentFormValues) => {
@@ -38,98 +37,40 @@ export default function EditStudent() {
     }
   }, [navigate, id])
 
-  const handleSaveClick = React.useCallback(() => {
-    console.log('Save button clicked, formHandlers:', formHandlers)
-    if (formHandlers) {
-      console.log('Calling handleFormSubmit')
-      formHandlers.handleFormSubmit()
-    } else {
-      console.warn('Form handlers not ready yet')
-    }
-  }, [formHandlers])
+  const handleErrorAction = React.useCallback(() => {
+    navigate('/students')
+  }, [navigate])
 
-  const handleHandlersReady = React.useCallback(
-    (handlers: {
-      handleSubmit: (callback: (data: StudentFormValues) => void | Promise<void>) => () => void
-      handleFormSubmit: () => void
-    }) => {
-      setFormHandlers(handlers)
-    },
-    [],
-  )
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Edit Student"
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/' },
-            { label: 'Students', href: '/students' },
-            { label: 'Edit Student' },
-          ]}
-          showBackButton
-        />
-        <div className="flex items-center justify-center py-12">
-          <div className="text-muted-foreground">Loading student details...</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error || !student) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Edit Student"
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/' },
-            { label: 'Students', href: '/students' },
-            { label: 'Edit Student' },
-          ]}
-          showBackButton
-        />
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center space-y-4">
-            <p className="text-destructive">{error || 'Student not found'}</p>
-            <Button onClick={() => navigate('/students')} variant="outline">
-              Back to Students
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const defaultValues = studentToForm(student)
+  const breadcrumbs = React.useMemo(() => getStudentBreadcrumbs('edit'), [])
+  const defaultValues = student ? studentToForm(student) : undefined
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Edit Student"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Students', href: '/students' },
-          { label: 'Edit Student' },
-        ]}
-        showBackButton
-      />
-      <StudentForm
-        defaultValues={defaultValues}
-        onSubmit={onSubmit}
-        onHandlersReady={handleHandlersReady}
-      />
+    <StudentPageLayout
+      title="Edit Student"
+      breadcrumbs={breadcrumbs}
+      showBackButton
+      isLoading={isLoading}
+      error={error || (!student && !isLoading ? STUDENT_MESSAGES.NOT_FOUND : null)}
+      errorActionLabel={STUDENT_MESSAGES.BACK_TO_STUDENTS}
+      onErrorAction={handleErrorAction}
+      loadingMessage={STUDENT_MESSAGES.LOADING_DETAILS}
+    >
+      {defaultValues && (
+        <>
+          <StudentForm
+            defaultValues={defaultValues}
+            onSubmit={onSubmit}
+            onHandlersReady={handleHandlersReady}
+          />
 
-      <Separator />
-
-      <div className="flex items-center justify-end gap-3">
-        <Button type="button" variant="outline" onClick={handleCancel}>
-          Cancel
-        </Button>
-        <Button type="button" onClick={handleSaveClick}>
-          Save Changes
-        </Button>
-      </div>
-    </div>
+          <StudentFormActions
+            onCancel={handleCancel}
+            onSave={handleSaveClick}
+            saveLabel={STUDENT_LABELS.SAVE_CHANGES}
+            cancelLabel={STUDENT_LABELS.CANCEL}
+          />
+        </>
+      )}
+    </StudentPageLayout>
   )
 }

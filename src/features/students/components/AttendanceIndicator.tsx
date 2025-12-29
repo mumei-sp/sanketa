@@ -109,3 +109,4 @@ export function AttendanceIndicator({
     </div>
   )
 }
+

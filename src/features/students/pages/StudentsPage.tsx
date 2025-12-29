@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { StudentsTable } from './StudentsTable'
+import { StudentsTable } from '../components/StudentsTable'
 import { fetchStudents } from '@/api/services/student-service'
 import type { Student } from '@/features/students/types'
 import { Tile, TileWrapper } from '@/components/tile'
@@ -90,3 +90,4 @@ export function StudentsPage() {
     </TileWrapper>
   )
 }
+

@@ -30,3 +30,4 @@ export function StatusBadge({ status, className, style }: StatusBadgeProps) {
     </span>
   )
 }
+
