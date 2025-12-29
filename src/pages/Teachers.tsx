@@ -20,7 +20,7 @@ import { GridPagination } from '@/components/pagination/GridPagination'
 import { baseColors, text, colors } from '@/theme/colors'
 import { TeacherAttendanceChart } from '@/components/charts/TeacherAttendanceChart'
 import { WorkloadDistributionChart } from '@/components/charts/WorkloadDistributionChart'
-import { fetchAttendanceOverview } from '@/services/dashboard-service'
+import { fetchAttendanceOverview } from '@/api/services/student-service'
 import type { AttendanceData } from '@/data/dashboard'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'

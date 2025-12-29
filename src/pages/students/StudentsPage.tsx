@@ -5,7 +5,7 @@ import type { Student } from '@/features/students/types'
 import { Tile, TileWrapper } from '@/components/tile'
 import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart'
 import { AttendanceOverviewChart } from '@/components/charts/AttendanceOverviewChart'
-import { fetchEnrollmentTrends, fetchAttendanceOverview } from '@/services/dashboard-service'
+import { fetchEnrollmentTrends, fetchAttendanceOverview } from '@/api/services/student-service'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import { useIsMobile } from '@/hooks/use-mobile'
 
