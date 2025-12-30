@@ -2,7 +2,7 @@ import * as React from 'react'
 import type { Table as TanStackTable } from '@tanstack/react-table'
 import { DataTable } from '@/components/table'
 import { generateAttendanceColumns } from './attendance-columns'
-import type { AttendanceTableData, AttendanceRecordType, DateRange } from './attendance-types'
+import type { AttendanceTableData, AttendanceRecordType, DateRange } from '../types'
 import {
   Select,
   SelectContent,
@@ -13,7 +13,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DateRangeSelector } from './DateRangeSelector'
 import { DataTablePaginationCustom } from '@/components/table/DataTablePaginationCustom'
-import { useAttendanceFilters } from './hooks/use-attendance-filters'
+import { useAttendanceFilters } from '../hooks/use-attendance-filters'
 
 interface AttendanceTableProps {
   data: AttendanceTableData[]
@@ -106,7 +106,7 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
         </div>
       )
     },
-    [typeFilter, classFilter, dateRangeFilter, uniqueClasses],
+    [typeFilter, classFilter, dateRangeFilter, uniqueClasses, setTypeFilter, setClassFilter, setDateRangeFilter],
   )
 
   // Custom pagination using shared component
@@ -140,3 +140,4 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
     />
   )
 }
+

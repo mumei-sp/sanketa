@@ -17,8 +17,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Calendar } from 'lucide-react'
-import type { AttendanceRecord } from './attendance-types'
-import { getAllAttendanceStatistics } from './utils/attendance-stats'
+import type { AttendanceRecord } from '../types'
+import { getAllAttendanceStatistics } from '../utils/attendance-stats'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { formatDateForDisplay } from '@/utils/date'
 
@@ -236,3 +236,4 @@ export function AttendanceSummary({ data }: AttendanceSummaryProps) {
     </div>
   )
 }
+

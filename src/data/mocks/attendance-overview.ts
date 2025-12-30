@@ -1,4 +1,4 @@
-import type { AttendanceOverviewData } from '@/pages/attendance/attendance-types'
+import type { AttendanceOverviewData } from '@/features/attendance/types'
 
 /**
  * Mock attendance overview data for 6 months (Jan-Jun)

@@ -63,3 +63,4 @@ export interface AttendanceOverviewData {
   /** Staff attendance percentage (0-100) */
   staff: number
 }
+

@@ -1,4 +1,4 @@
-import type { AttendanceRecord, AttendanceRecordType, AttendanceStatus } from '../attendance-types'
+import type { AttendanceRecord, AttendanceRecordType, AttendanceStatus } from '../types'
 
 /**
  * Statistics for a single attendance type (student/teacher/staff)
@@ -115,3 +115,4 @@ export function getAllAttendanceStatistics(
     staff: calculateAttendanceStatistics(records, 'staff', date),
   }
 }
+

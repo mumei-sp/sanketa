@@ -1,4 +1,4 @@
-import type { DateRange, DateRangePreset } from '@/pages/attendance/attendance-types'
+import type { DateRange, DateRangePreset } from '@/features/attendance/types'
 
 /**
  * Day name abbreviations for date formatting

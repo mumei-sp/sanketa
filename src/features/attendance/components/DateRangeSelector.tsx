@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Calendar } from 'lucide-react'
-import type { DateRange, DateRangePreset } from './attendance-types'
+import type { DateRange, DateRangePreset } from '../types'
 import { formatDateForDisplay, calculateDateRange } from '@/utils/date'
 
 /**
@@ -214,3 +214,4 @@ export function DateRangeSelector({ value, onChange }: DateRangeSelectorProps) {
     </div>
   )
 }
+

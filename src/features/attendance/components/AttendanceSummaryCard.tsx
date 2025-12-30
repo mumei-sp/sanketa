@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { Tile } from '@/components/tile'
-import type { AttendanceRecordType } from './attendance-types'
-import type { AttendanceStatistics } from './utils/attendance-stats'
+import type { AttendanceRecordType } from '../types'
+import type { AttendanceStatistics } from '../utils/attendance-stats'
 import { AttendanceTrendIcon } from './AttendanceTrendIcon'
 import { baseColors, colors, withOpacity } from '@/theme/colors'
 

@@ -1,6 +1,6 @@
 import { Check, X, Clock, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { AttendanceStatus } from './attendance-types'
+import type { AttendanceStatus } from '../types'
 
 interface AttendanceStatusIconProps {
   status: AttendanceStatus
@@ -50,3 +50,4 @@ export function AttendanceStatusIcon({ status, className }: AttendanceStatusIcon
       return null
   }
 }
+

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import type { AttendanceTableData, AttendanceRecordType, DateRange } from '../attendance-types'
+import type { AttendanceTableData, AttendanceRecordType, DateRange } from '../types'
 import { isDateInRange, getDefaultDateRange } from '@/utils/date'
 
 /**

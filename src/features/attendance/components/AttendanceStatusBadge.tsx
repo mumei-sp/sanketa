@@ -1,6 +1,6 @@
 import { Check, X, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { AttendanceStatus } from './attendance-types'
+import type { AttendanceStatus } from '../types'
 import { colors } from '@/theme/colors'
 
 interface AttendanceStatusBadgeProps {
@@ -62,3 +62,4 @@ export function AttendanceStatusBadge({ status, className }: AttendanceStatusBad
       return null
   }
 }
+

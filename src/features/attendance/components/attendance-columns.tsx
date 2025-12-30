@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
-import type { AttendanceTableData } from './attendance-types'
+import type { AttendanceTableData } from '../types'
 import { AttendanceStatusBadge } from './AttendanceStatusBadge'
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { formatDateHeader } from '@/utils/date'
@@ -90,3 +90,4 @@ export function generateAttendanceColumns(
 
   return columns
 }
+

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import type { DateRange } from '../attendance-types'
+import type { DateRange } from '../types'
 import { getDefaultDateRange } from '@/utils/date'
 
 /**
@@ -15,3 +15,4 @@ export function useDateRange(initialRange?: DateRange) {
     setDateRange,
   }
 }
+

@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { AttendanceOverviewData } from '@/pages/attendance/attendance-types'
+import type { AttendanceOverviewData } from '@/features/attendance/types'
 import { baseColors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
 import { colors } from '@/theme/colors'

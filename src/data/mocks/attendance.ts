@@ -1,4 +1,4 @@
-import type { AttendanceRecord, AttendanceStatus } from '@/pages/attendance/attendance-types'
+import type { AttendanceRecord, AttendanceStatus } from '@/features/attendance/types'
 
 /**
  * Generate date strings for the last N calendar days

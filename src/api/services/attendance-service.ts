@@ -1,4 +1,4 @@
-import type { AttendanceRecord } from '@/pages/attendance/attendance-types'
+import type { AttendanceRecord } from '@/features/attendance/types'
 import { generateMockAttendanceData } from '@/data/mocks/attendance'
 
 /**

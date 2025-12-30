@@ -20,3 +20,4 @@ export function AttendanceTrendIcon({ className, size = 12 }: AttendanceTrendIco
     />
   )
 }
+
