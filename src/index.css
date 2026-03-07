@@ -279,6 +279,22 @@
   svg {
     stroke-width: 1.5;
   }
+
+  /* Sidebar collapsed mode — icon sizing to match figma tablet reference.
+     Must be in @layer base so !important beats Tailwind's @layer utilities !important. */
+  [data-collapsible="icon"] [data-sidebar="menu-button"] {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+  [data-collapsible="icon"] [data-sidebar="menu-button"] > svg:first-child {
+    width: 1.714rem !important; /* 24px */
+    height: 1.714rem !important; /* 24px */
+  }
+  [data-collapsible="icon"] [data-sidebar="menu"] {
+    align-items: center;
+  }
 }
 
 @layer utilities {
@@ -437,9 +453,6 @@
 
 /* Menu buttons become square icon-only buttons */
 [data-collapsible="icon"] [data-sidebar="menu-button"] {
-  width: 2rem !important;
-  height: 2rem !important;
-  padding: 0.5rem !important;
   overflow: hidden;
 }
 
@@ -485,10 +498,9 @@
   display: none;
 }
 
-/* Reset icon size in collapsed mode (override the enlarged icons) */
-[data-collapsible="icon"] [data-sidebar="menu-button"] > svg:first-child {
-  width: 1.143rem !important; /* 16px */
-  height: 1.143rem !important; /* 16px */
+/* More vertical spacing between nav items in icon-only mode */
+[data-collapsible="icon"] [data-sidebar="menu"] {
+  gap: 0.5rem; /* 8px between items */
 }
 
 /* ===================================================================
@@ -529,4 +541,23 @@
   gap: 0.143rem;
   padding-top: 0.214rem;
   padding-bottom: 0.214rem;
+}
+
+/* Thin scrollbar utility for compact scroll areas */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-muted-foreground);
 }
