@@ -99,14 +99,14 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
                 </Select>
               ) : null}
 
-              {/* Date range selector */}
-              <DateRangeSelector value={dateRangeFilter} onChange={handleDateRangeChange} />
+              {/* Month selector */}
+              <DateRangeSelector value={dateRangeFilter} onChange={handleDateRangeChange} records={data} />
             </div>
           </div>
         </div>
       )
     },
-    [typeFilter, classFilter, dateRangeFilter, uniqueClasses, setTypeFilter, setClassFilter, setDateRangeFilter],
+    [typeFilter, classFilter, dateRangeFilter, uniqueClasses, setTypeFilter, setClassFilter, setDateRangeFilter, data],
   )
 
   // Custom pagination using shared component

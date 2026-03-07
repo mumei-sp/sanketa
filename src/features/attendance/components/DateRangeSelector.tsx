@@ -1,10 +1,4 @@
 import * as React from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
@@ -12,206 +6,122 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Calendar } from 'lucide-react'
-import type { DateRange, DateRangePreset } from '../types'
-import { formatDateForDisplay, calculateDateRange } from '@/utils/date'
+import type { DateRange, AttendanceTableData } from '../types'
+import { MONTH_NAMES } from '@/utils/date'
 
-/**
- * Props for DateRangeSelector component
- */
 export interface DateRangeSelectorProps {
-  /** Current date range value */
   value: DateRange
-  /** Callback when date range changes */
   onChange: (range: DateRange) => void
-  /** Optional: available dates to limit selection (not implemented yet) */
-  availableDates?: string[]
+  /** All attendance records to derive available months */
+  records: AttendanceTableData[]
+}
+
+interface MonthOption {
+  value: string
+  label: string
 }
 
 /**
- * Get display text for custom range trigger
+ * Derive unique months from attendance records, sorted newest first
  */
-function getCustomRangeDisplayText(range: DateRange): string {
-  if (range.preset === 'custom' && range.startDate && range.endDate) {
-    const start = formatDateForDisplay(range.startDate)
-    const end = formatDateForDisplay(range.endDate)
-    if (start === end) {
-      return start
-    }
-    return `${start} - ${end}`
+function getAvailableMonths(records: AttendanceTableData[]): MonthOption[] {
+  const monthSet = new Set<string>()
+  if (!records || records.length === 0) return []
+
+  records.forEach(record => {
+    Object.keys(record.attendance).forEach(dateStr => {
+      // Parse YYYY-MM-DD directly to avoid timezone issues
+      const parts = dateStr.split('-')
+      if (parts.length === 3) {
+        const key = `${parts[0]}-${parts[1]}`
+        monthSet.add(key)
+      }
+    })
+  })
+
+  return Array.from(monthSet)
+    .sort()
+    .reverse()
+    .map(key => {
+      const [year, month] = key.split('-')
+      const monthIndex = parseInt(month, 10) - 1
+      return {
+        value: key,
+        label: `${MONTH_NAMES[monthIndex]} ${year}`,
+      }
+    })
+}
+
+/**
+ * Convert month key ("YYYY-MM") to a DateRange
+ */
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function monthKeyToDateRange(key: string): DateRange {
+  const [year, month] = key.split('-').map(Number)
+  const startDate = new Date(year, month - 1, 1)
+  const endDate = new Date(year, month, 0)
+
+  return {
+    startDate: formatLocalDate(startDate),
+    endDate: formatLocalDate(endDate),
+    preset: 'this-month',
   }
-  return 'Custom Range'
 }
 
 /**
- * DateRangeSelector - Component for selecting date ranges with presets and custom range
+ * Get the month key from a DateRange
  */
-export function DateRangeSelector({ value, onChange }: DateRangeSelectorProps) {
-  const [customStartDate, setCustomStartDate] = React.useState<string>(value.startDate || '')
-  const [customEndDate, setCustomEndDate] = React.useState<string>(value.endDate || '')
-  const [isCustomOpen, setIsCustomOpen] = React.useState(false)
+function dateRangeToMonthKey(range: DateRange): string {
+  if (range.startDate) {
+    // Parse YYYY-MM-DD directly to avoid timezone issues
+    const parts = range.startDate.split('-')
+    if (parts.length >= 2) return `${parts[0]}-${parts[1]}`
+  }
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
 
-  // Update local state when value changes externally
-  React.useEffect(() => {
-    if (value.preset === 'custom') {
-      // Initialize custom dates from value
-      if (value.startDate && value.endDate) {
-        setCustomStartDate(value.startDate)
-        setCustomEndDate(value.endDate)
-      }
-    }
-  }, [value])
+/**
+ * Month/Year selector for the attendance table
+ */
+export function DateRangeSelector({ value, onChange, records }: DateRangeSelectorProps) {
+  const months = React.useMemo(() => getAvailableMonths(records), [records])
+  const currentKey = dateRangeToMonthKey(value)
 
-  /**
-   * Handle preset selection
-   */
-  const handlePresetSelect = React.useCallback(
-    (preset: DateRangePreset) => {
-      if (preset === 'custom') {
-        // Set preset to custom immediately so the button appears
-        // Use current custom dates if they exist, otherwise use default range (last 14 days)
-        const defaultRange = calculateDateRange('last-14-days')
-
-        onChange({
-          startDate: customStartDate || defaultRange.startDate,
-          endDate: customEndDate || defaultRange.endDate,
-          preset: 'custom',
-        })
-        // Open the custom range picker
-        setIsCustomOpen(true)
-        return
-      }
-
-      const range = calculateDateRange(preset)
-      onChange(range)
+  const handleChange = React.useCallback(
+    (key: string) => {
+      onChange(monthKeyToDateRange(key))
     },
-    [onChange, customStartDate, customEndDate],
+    [onChange],
   )
 
-  /**
-   * Handle custom range apply
-   */
-  const handleCustomRangeApply = React.useCallback(() => {
-    if (!customStartDate || !customEndDate) {
-      return
+  // Auto-select the most recent month if current selection doesn't match available months
+  React.useEffect(() => {
+    if (months.length > 0 && !months.some(m => m.value === currentKey)) {
+      onChange(monthKeyToDateRange(months[0].value))
     }
+  }, [months, currentKey, onChange])
 
-    // Validate dates
-    const start = new Date(customStartDate)
-    const end = new Date(customEndDate)
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return
-    }
-
-    // Ensure start is before end
-    if (start > end) {
-      // Swap if needed
-      onChange({
-        startDate: customEndDate,
-        endDate: customStartDate,
-        preset: 'custom',
-      })
-    } else {
-      onChange({
-        startDate: customStartDate,
-        endDate: customEndDate,
-        preset: 'custom',
-      })
-    }
-
-    setIsCustomOpen(false)
-  }, [customStartDate, customEndDate, onChange])
-
-  // Get current preset value for Select
-  // When custom is selected, we still show "custom" in the dropdown
-  // but display the actual date range in a separate button
-  const currentPreset = value.preset || 'last-14-days'
+  if (months.length === 0) return null
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Preset dropdown */}
-      <Select
-        value={currentPreset}
-        onValueChange={val => handlePresetSelect(val as DateRangePreset)}
-      >
-        <SelectTrigger className="h-8 w-[140px] bg-accent text-foreground border-0 hover:bg-accent/80">
-          <SelectValue placeholder="Select range" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="last-14-days">Last 14 Days</SelectItem>
-          <SelectItem value="last-30-days">Last 30 Days</SelectItem>
-          <SelectItem value="this-month">This Month</SelectItem>
-          <SelectItem value="last-month">Last Month</SelectItem>
-          <SelectItem value="custom">Custom Range</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Custom range dropdown - only show when custom is selected */}
-      {value.preset === 'custom' && (
-        <DropdownMenu open={isCustomOpen} onOpenChange={setIsCustomOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 rounded-md bg-accent text-foreground border-0 hover:bg-accent/80"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              {getCustomRangeDisplayText(value)}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[280px] p-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="start-date" className="text-body">
-                  Start Date
-                </Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={customStartDate}
-                  onChange={e => setCustomStartDate(e.target.value)}
-                  className="h-8"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end-date" className="text-body">
-                  End Date
-                </Label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={customEndDate}
-                  onChange={e => setCustomEndDate(e.target.value)}
-                  className="h-8"
-                />
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsCustomOpen(false)}
-                  className="h-8"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleCustomRangeApply}
-                  disabled={!customStartDate || !customEndDate}
-                  className="h-8"
-                >
-                  Apply
-                </Button>
-              </div>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
+    <Select value={currentKey} onValueChange={handleChange}>
+      <SelectTrigger className="h-8 w-[130px] bg-accent text-foreground border-0 hover:bg-accent/80">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {months.map(month => (
+          <SelectItem key={month.value} value={month.value}>
+            {month.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
-
