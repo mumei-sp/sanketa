@@ -23,7 +23,7 @@ export function Logo({ logoPath, className }: LogoProps) {
               <span className="text-lg font-bold text-foreground">S</span>
             </div>
           )}
-          <h1 className="font-bold text-lg whitespace-nowrap">Sanketa</h1>
+          <h1 className="font-bold text-lg whitespace-nowrap group-data-[collapsible=icon]:hidden">Sanketa</h1>
         </Link>
       </Button>
     </div>

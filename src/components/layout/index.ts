@@ -1,4 +1,4 @@
-export { AppLayout } from "./AppLayout"
+export { AppLayout, useTopActions } from "./AppLayout"
 export { AppSidebar } from "./AppSidebar"
 export { Logo } from "./Logo"
 export { default as PageHeader } from "./PageHeader"
