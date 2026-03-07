@@ -101,8 +101,8 @@ export function AttendancePage() {
         </TileWrapper>
       )}
 
-      {/* Attendance Table Section */}
-      <TileWrapper mode="grid" columns={12} gap={12}>
+      {/* Attendance Table Section. responsive = stack vertically on mobile; min-w-0 w-full = no horizontal page scroll. */}
+      <TileWrapper mode="grid" columns={12} gap={12} responsive className="min-w-0 w-full">
         <Tile
           id="attendance-table-tile"
           layoutMode="grid"

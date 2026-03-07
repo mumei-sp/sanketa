@@ -22,8 +22,9 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
   const stats: TeacherStatistics = statistics
 
   return (
-    <div className="w-[70%]">
-      <TileWrapper mode="grid" columns={12} gap={12}>
+    <div className="w-full md:w-[70%] min-w-0">
+      {/* w-full on mobile so stats use full width; md:w-[70%] on desktop. min-w-0 allows shrink. responsive: stat cards stack in one column on mobile. */}
+      <TileWrapper mode="grid" columns={12} gap={12} responsive>
         {/* Total Teachers Card */}
         <Tile
           id="teachers-total"

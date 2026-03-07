@@ -47,8 +47,9 @@ export default function StudentDetails() {
       onErrorAction={handleBack}
       loadingMessage={STUDENT_MESSAGES.LOADING_DETAILS}
     >
-      <TileWrapper columns={12} gap={12} mode="grid">
-        {/* Left Column: Student Profile Card (25% - 3 columns) */}
+      {/* responsive: profile card and Academic Performance stack on mobile (1 col) instead of 3-column layout; min-w-0 w-full prevents horizontal page scroll. */}
+      <TileWrapper columns={12} gap={12} mode="grid" responsive className="min-w-0 w-full">
+        {/* Left Column: Student Profile Card (25% - 3 columns on desktop); full width on mobile when responsive=true */}
         <Tile
           id="profile-card-wrapper"
           width={3}

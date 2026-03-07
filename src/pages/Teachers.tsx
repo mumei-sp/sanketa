@@ -289,7 +289,8 @@ export default function Teachers() {
         </div>
       ) : (
         <>
-          <TileWrapper columns={12} gap={12} mode="grid">
+          {/* responsive: teacher cards stack vertically on mobile; min-w-0 w-full avoids horizontal overflow. */}
+          <TileWrapper columns={12} gap={12} mode="grid" responsive className="min-w-0 w-full">
             {paginatedTeachers.map(teacher => (
               <Tile
                 key={teacher.id}
