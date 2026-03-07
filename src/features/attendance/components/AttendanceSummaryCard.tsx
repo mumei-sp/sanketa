@@ -68,7 +68,7 @@ function ColoredSection({
       className={cn(
         'relative flex flex-col',
         isDark ? 'text-white' : 'text-foreground',
-        isMobile ? 'p-3.5 rounded-xl justify-center h-full' : 'p-4 flex-[2.2] -mb-3 min-h-0',
+        isMobile ? 'p-3.5 rounded-xl justify-center h-full' : 'p-4 pb-6 flex-[2.5] -mb-3 min-h-0',
       )}
       style={{
         backgroundColor: config.backgroundColor,
@@ -226,7 +226,7 @@ export function AttendanceSummaryCard({
       <svg width="0" height="0" className="absolute">
         <defs>
           <clipPath id={clipPathId} clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.07 Q 0,0 0.035,0 L 0.965,0 Q 1,0 1,0.07 L 1,0.72 C 1,0.82 0,0.82 0,0.72 Z" />
+            <path d="M 0,0.07 Q 0,0 0.035,0 L 0.965,0 Q 1,0 1,0.07 L 1,0.80 C 1,0.90 0,0.90 0,0.80 Z" />
           </clipPath>
         </defs>
       </svg>
