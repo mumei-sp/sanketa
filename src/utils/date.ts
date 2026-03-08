@@ -24,6 +24,16 @@ export const MONTH_NAMES = [
 ] as const
 
 /**
+ * Format a Date object to YYYY-MM-DD using local timezone (avoids UTC shift from toISOString)
+ */
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/**
  * Format date string to display format for table column headers (e.g., "Thu, Mar 1")
  */
 export function formatDateHeader(dateStr: string): string {
@@ -133,8 +143,8 @@ export function calculateDateRange(preset: DateRangePreset): DateRange {
     }
   }
 
-  const startDateStr = startDate.toISOString().split('T')[0]
-  const endDateStr = endDate.toISOString().split('T')[0]
+  const startDateStr = formatLocalDate(startDate)
+  const endDateStr = formatLocalDate(endDate)
 
   return {
     startDate: startDateStr,

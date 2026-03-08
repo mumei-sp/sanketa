@@ -1,6 +1,11 @@
 import type { Teacher } from '@/features/teachers/types'
 import { teachersData } from '@/data/mocks/teachers'
-import { teacherStatisticsData, type TeacherStatistics } from '@/data/mocks/teacher-statistics'
+import {
+  teacherStatisticsData,
+  departmentDistributionData,
+  type TeacherStatistics,
+  type DepartmentData,
+} from '@/data/mocks/teacher-statistics'
 
 /**
  * Mock API service for fetching teachers
@@ -57,6 +62,19 @@ export async function fetchTeacherStatistics(): Promise<TeacherStatistics> {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve({ ...teacherStatisticsData })
+    }, delay)
+  })
+}
+
+/**
+ * Mock API service for fetching department distribution
+ */
+export async function fetchDepartmentDistribution(): Promise<DepartmentData[]> {
+  const delay = Math.floor(Math.random() * 300) + 200
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve([...departmentDistributionData])
     }, delay)
   })
 }

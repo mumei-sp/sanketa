@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { navigationItems } from '@/config/navigation'
 import { cn } from '@/lib/utils'
+import { useTopActions } from './AppLayout'
 
 /**
  * Breadcrumb item structure for PageHeader
@@ -127,6 +128,9 @@ export default function PageHeader({
     }
   }, [onBack, navigate])
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const topActions = useTopActions()
+
   return (
     <Tile
       id="page-header"
@@ -137,7 +141,7 @@ export default function PageHeader({
       className={cn(className)}
     >
       <div className="flex items-center justify-between gap-4">
-        {/* Left Section */}
+        {/* Left Section — Title + Breadcrumbs */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {shouldShowBackButton && (
             <Button
@@ -181,8 +185,11 @@ export default function PageHeader({
           </div>
         </div>
 
-        {/* Right Section - Actions */}
-        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+        {/* Right Section — Global top actions (search, settings, avatar) + page actions */}
+        <div className="flex items-center gap-3 shrink-0">
+          {topActions}
+          {actions}
+        </div>
       </div>
     </Tile>
   )

@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { TileWrapper, Tile } from '@/components/tile'
 import { AttendanceSummaryCard } from './AttendanceSummaryCard'
 import {
   Select,
@@ -193,45 +192,11 @@ export function AttendanceSummary({ data }: AttendanceSummaryProps) {
         </div>
       </div>
 
-      {/* Cards Grid - Fixed height of 204px to match chart height */}
-      <div style={{ height: '204px' }}>
-        <TileWrapper mode="grid" columns={12} gap={12} className="h-full">
-          {/* Students Card */}
-          <Tile
-            id="attendance-summary-students"
-            layoutMode="grid"
-            width={isMobile ? 12 : 4}
-            background="transparent"
-            padding={0}
-            heightPx="100%"
-          >
-            <AttendanceSummaryCard type="student" statistics={statistics.students} />
-          </Tile>
-
-          {/* Teachers Card */}
-          <Tile
-            id="attendance-summary-teachers"
-            layoutMode="grid"
-            width={isMobile ? 12 : 4}
-            background="transparent"
-            padding={0}
-            heightPx="100%"
-          >
-            <AttendanceSummaryCard type="teacher" statistics={statistics.teachers} />
-          </Tile>
-
-          {/* Staff Card */}
-          <Tile
-            id="attendance-summary-staff"
-            layoutMode="grid"
-            width={isMobile ? 12 : 4}
-            background="transparent"
-            padding={0}
-            heightPx="100%"
-          >
-            <AttendanceSummaryCard type="staff" statistics={statistics.staff} />
-          </Tile>
-        </TileWrapper>
+      {/* Cards Grid - 3 columns on tablet/desktop, stacked on mobile */}
+      <div className={isMobile ? 'flex flex-col gap-3' : 'grid grid-cols-3 gap-3'}>
+        <AttendanceSummaryCard type="student" statistics={statistics.students} isMobile={isMobile} />
+        <AttendanceSummaryCard type="teacher" statistics={statistics.teachers} isMobile={isMobile} />
+        <AttendanceSummaryCard type="staff" statistics={statistics.staff} isMobile={isMobile} />
       </div>
     </div>
   )

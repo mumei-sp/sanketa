@@ -1,23 +1,20 @@
 import * as React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Tile } from '@/components/tile'
-import { Phone, Mail } from 'lucide-react'
-import { textRoles, fontWeights } from '@/config/typography'
-import { spacing } from '@/config/spacing'
-import { primary, accent, text, background, baseColors } from '@/theme/colors'
+import { Phone, Mail, MessageCircle } from 'lucide-react'
+import { primary, text, baseColors } from '@/theme/colors'
 import type { Teacher } from '../types'
 import { getDisplayName, formatPhone } from '../utils/formatting'
 
-/**
- * TeacherCard component
- * Displays teacher profile information in a compact card format
- */
 interface TeacherCardProps {
   teacher: Teacher
   onViewDetails?: (teacher: Teacher) => void
 }
 
+/**
+ * TeacherCard component
+ * Displays teacher profile information matching Figma design
+ */
 export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
   const displayName = getDisplayName(teacher)
   const initials = displayName
@@ -29,10 +26,6 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
 
   const profilePictureUrl = teacher.profilePictureUrl || teacher.avatarUrl
 
-  // Light purple background for avatar
-  const avatarBackground = primary.soft
-
-  // Detect avatar type: photo vs illustration
   const isPhoto =
     profilePictureUrl &&
     (profilePictureUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) ||
@@ -47,217 +40,84 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
   }, [onViewDetails, teacher])
 
   return (
-    <Tile
-      id={`teacher-card-${teacher.id}`}
-      layoutMode="flex"
-      background="card"
-      borderRadius="lg"
-      shadowed
-      padding={16}
-      style={{
-        height: '180px',
-        flexDirection: 'column',
-        gap: spacing['3'],
-      }}
-    >
+    <div className="bg-card rounded-lg shadow-xs p-4 flex flex-col gap-3 h-full">
       {/* Profile Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing['3'],
-          flex: '0 0 auto',
-        }}
-      >
-        {/* Avatar */}
+      <div className="flex items-center gap-3">
         <Avatar
-          style={{
-            width: '3rem',
-            height: '3rem',
-            borderRadius: '50%',
-            backgroundColor: avatarBackground,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            position: 'relative',
-          }}
+          className="w-12 h-12 shrink-0"
+          style={{ backgroundColor: primary.soft }}
         >
           <AvatarImage
             src={profilePictureUrl}
             alt={displayName}
+            className="rounded-full"
             style={{
-              borderRadius: '50%',
               width: isPhoto ? '90%' : '60%',
               height: isPhoto ? '90%' : '60%',
               objectFit: isPhoto ? 'cover' : 'contain',
-              position: 'relative',
-              zIndex: 1,
             }}
           />
           <AvatarFallback
-            style={{
-              borderRadius: '50%',
-              fontSize: textRoles.sectionTitle.fontSize,
-              fontWeight: textRoles.sectionTitle.fontWeight,
-              backgroundColor: avatarBackground,
-              color: text.heading,
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 0,
-            }}
+            className="text-sm font-semibold"
+            style={{ backgroundColor: primary.soft, color: text.heading }}
           >
             {initials}
           </AvatarFallback>
         </Avatar>
 
-        {/* Name, ID, Subject */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: spacing['1'],
-            flex: 1,
-            minWidth: 0,
-          }}
-        >
-          <h3
-            style={{
-              fontSize: textRoles.sectionTitle.fontSize,
-              fontWeight: textRoles.sectionTitle.fontWeight,
-              lineHeight: textRoles.sectionTitle.lineHeight,
-              color: text.heading,
-              margin: 0,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
+        <div className="flex flex-col min-w-0">
+          <h3 className="text-sm font-semibold truncate" style={{ color: text.heading }}>
             {displayName}
           </h3>
-          <p
-            style={{
-              fontSize: textRoles.bodyMuted.fontSize,
-              fontWeight: textRoles.bodyMuted.fontWeight,
-              lineHeight: textRoles.bodyMuted.lineHeight,
-              color: text.muted,
-              margin: 0,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
+          <p className="text-xs text-muted-foreground truncate">
             {teacher.teacherId} · {teacher.subject}
           </p>
         </div>
       </div>
 
-      {/* Contact Info Box */}
-      <Tile
-        id={`teacher-contact-${teacher.id}`}
-        layoutMode="flex"
-        background="muted"
-        borderRadius="md"
-        padding={12}
-        style={{
-          flex: '1 1 auto',
-          flexDirection: 'column',
-          gap: spacing['2'],
-          minHeight: 0,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing['2'],
-          }}
-        >
-          <Phone
-            style={{
-              width: spacing['4'],
-              height: spacing['4'],
-              color: text.muted,
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: textRoles.body.fontSize,
-              fontWeight: textRoles.body.fontWeight,
-              lineHeight: textRoles.body.lineHeight,
-              color: text.body,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
+      {/* Contact Info */}
+      <div className="flex flex-col gap-2 flex-1">
+        <div className="flex items-center gap-2">
+          <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span className="text-xs text-foreground truncate">
             {formatPhone(teacher.primaryPhone)}
           </span>
         </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing['2'],
-          }}
-        >
-          <Mail
-            style={{
-              width: spacing['4'],
-              height: spacing['4'],
-              color: text.muted,
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: textRoles.body.fontSize,
-              fontWeight: textRoles.body.fontWeight,
-              lineHeight: textRoles.body.lineHeight,
-              color: text.body,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
+        <div className="flex items-center gap-2">
+          <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span className="text-xs text-foreground truncate">
             {teacher.email}
           </span>
         </div>
-      </Tile>
+      </div>
 
-      {/* View Details Button - Bottom right */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          flex: '0 0 auto',
-        }}
-      >
+      {/* Bottom: Social icons + Message button */}
+      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+        <div className="flex items-center gap-2">
+          <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
+            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+          <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
+            <svg className="w-3.5 h-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          </button>
+          <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
+            <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </div>
         <Button
           onClick={handleViewDetails}
+          size="sm"
+          className="h-7 text-xs px-3 hover:opacity-90 border-0"
           style={{
             backgroundColor: baseColors.blue,
             color: text.heading,
-            fontSize: textRoles.body.fontSize,
-            fontWeight: fontWeights.medium,
-            height: '2rem',
-            padding: `0 ${spacing['3']}`,
-            borderRadius: spacing['1.5'],
-            flexShrink: 0,
           }}
-          className="hover:opacity-90 border-0"
         >
-          View Details
+          Message
         </Button>
       </div>
-    </Tile>
+    </div>
   )
 }
-

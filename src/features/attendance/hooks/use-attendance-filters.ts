@@ -1,6 +1,6 @@
 import * as React from 'react'
 import type { AttendanceTableData, AttendanceRecordType, DateRange } from '../types'
-import { isDateInRange, getDefaultDateRange } from '@/utils/date'
+import { isDateInRange, calculateDateRange } from '@/utils/date'
 
 /**
  * Get unique classes from student records
@@ -22,7 +22,7 @@ export function useAttendanceFilters(data: AttendanceTableData[]) {
   const [typeFilter, setTypeFilter] = React.useState<AttendanceRecordType>('student')
   const [classFilter, setClassFilter] = React.useState<string>('all')
   const [dateRangeFilter, setDateRangeFilter] = React.useState<DateRange>(() =>
-    getDefaultDateRange(),
+    calculateDateRange('this-month'),
   )
 
   // Filter data based on type, class, and date range

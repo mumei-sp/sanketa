@@ -9,19 +9,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { TileWrapper, Tile } from '@/components/tile'
 import { Search, Plus } from 'lucide-react'
-import { fetchTeachers, fetchTeacherStatistics } from '@/api/services/teacher-service'
+import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution } from '@/api/services/teacher-service'
 import type { Teacher } from '@/features/teachers/types'
-import type { TeacherStatistics } from '@/data/mocks/teacher-statistics'
+import type { TeacherStatistics, DepartmentData } from '@/data/mocks/teacher-statistics'
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { baseColors, text, colors } from '@/theme/colors'
+import { baseColors, text } from '@/theme/colors'
 import { TeacherAttendanceChart } from '@/components/charts/TeacherAttendanceChart'
 import { WorkloadDistributionChart } from '@/components/charts/WorkloadDistributionChart'
+import { DepartmentChart } from '@/components/charts/DepartmentChart'
 import { fetchAttendanceOverview } from '@/api/services/student-service'
 import type { AttendanceData } from '@/data/dashboard'
+import { useIsDesktop, useIsMobile } from '@/hooks/use-mobile'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'
 
@@ -30,8 +31,11 @@ type SortOption = 'latest' | 'name-asc' | 'name-desc'
  * Displays teachers in a grid layout with search, filter, sort, and pagination
  */
 export default function Teachers() {
+  const isDesktop = useIsDesktop()
+  const isMobile = useIsMobile()
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
   const [teacherStatistics, setTeacherStatistics] = React.useState<TeacherStatistics | null>(null)
+  const [departmentData, setDepartmentData] = React.useState<DepartmentData[]>([])
   const [attendanceData, setAttendanceData] = React.useState<AttendanceData[]>([])
   const [isLoadingAttendance, setIsLoadingAttendance] = React.useState(true)
   const [isLoading, setIsLoading] = React.useState(true)
@@ -71,6 +75,20 @@ export default function Teachers() {
     loadStatistics()
   }, [])
 
+  // Fetch department distribution on mount
+  React.useEffect(() => {
+    async function loadDepartments() {
+      try {
+        const data = await fetchDepartmentDistribution()
+        setDepartmentData(data)
+      } catch (error) {
+        console.error('Failed to fetch department data:', error)
+      }
+    }
+
+    loadDepartments()
+  }, [])
+
   // Fetch attendance data on mount
   React.useEffect(() => {
     async function loadAttendance() {
@@ -92,7 +110,6 @@ export default function Teachers() {
   const filteredAndSortedTeachers = React.useMemo(() => {
     let filtered = teachers
 
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(teacher => {
@@ -110,7 +127,6 @@ export default function Teachers() {
       })
     }
 
-    // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       switch (sortOption) {
         case 'name-asc':
@@ -119,7 +135,6 @@ export default function Teachers() {
           return getDisplayName(b).localeCompare(getDisplayName(a))
         case 'latest':
         default:
-          // Sort by ID descending (assuming higher ID = newer)
           const aId = parseInt(a.teacherId.replace('T-', '')) || 0
           const bId = parseInt(b.teacherId.replace('T-', '')) || 0
           return bId - aId
@@ -160,120 +175,119 @@ export default function Teachers() {
 
   const handleViewDetails = React.useCallback(
     (teacher: Teacher) => {
-      // Navigate to teacher details page (if exists)
-      // For now, just log or navigate to a placeholder
       console.log('View details for teacher:', teacher.id)
-      // navigate(`/teachers/details/${teacher.id}`)
     },
     [],
   )
 
   const handleAddTeacher = React.useCallback(() => {
-    // Navigate to add teacher page (if exists)
     console.log('Add teacher')
-    // navigate('/teachers/add')
   }, [])
 
-  // No-op handler for placeholder card
-  const handlePlaceholderClick = React.useCallback(() => {
-    // No-op for now
-  }, [])
+  const totalTeachers = teacherStatistics?.total ?? 86
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Teachers"
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Teachers' }]}
       />
 
-      {/* Teachers Dashboard Statistics and Charts with Placeholder Card */}
-      <div className="relative space-y-4">
-        {/* Teachers Dashboard Statistics */}
-        {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
-
-        {/* Charts Section - Attendance Overview and Workload Distribution */}
-        <div className="space-y-1 w-full">
-          <TileWrapper mode="flex" gap={16} className="w-[70%]">
-            <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
-            <WorkloadDistributionChart isLoading={isLoadingAttendance} />
-          </TileWrapper>
-
-        {/* Toolbar */}
-        <Tile
-          id="teachers-toolbar"
-          layoutMode="block"
-          background="default"
-          borderRadius="lg"
-          padding={16}
-        >
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          {/* Teachers heading on the left */}
-          <h1 className="text-page-title text-heading">Teachers</h1>
-
-          {/* All controls on the right */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Search */}
-            <div className="relative min-w-[200px] max-w-[300px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search teacher"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="h-8 w-full pl-10 bg-white"
-              />
+      {/* Top Section: Stats + Charts + Department Chart */}
+      {isDesktop ? (
+        /* Desktop: Left 70% (stats + charts) | Right 30% (department) */
+        <div className="flex gap-3 items-stretch">
+          <div className="w-[70%] shrink-0 space-y-3">
+            {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
+            <div className="flex gap-3">
+              <div className="flex-1 min-w-0">
+                <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <WorkloadDistributionChart isLoading={isLoadingAttendance} />
+              </div>
             </div>
-
-            {/* Sort */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
-              <Select value={sortOption} onValueChange={handleSortChange}>
-                <SelectTrigger
-                  className="h-8 w-[120px]"
-                  style={{
-                    backgroundColor: baseColors.blue,
-                    color: text.heading,
-                    borderColor: baseColors.blue,
-                  }}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest</SelectItem>
-                  <SelectItem value="name-asc">Name A-Z</SelectItem>
-                  <SelectItem value="name-desc">Name Z-A</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Add Teacher Button */}
-            <Button
-              onClick={handleAddTeacher}
-              className="h-8 bg-primary hover:bg-primary/90 text-foreground"
-            >
-              <Plus className="size-4" />
-              Add Teacher
-            </Button>
+          </div>
+          <div className="flex-1 min-w-0">
+            <DepartmentChart data={departmentData} total={totalTeachers} />
           </div>
         </div>
-      </Tile>
+      ) : (
+        /* Tablet/Mobile: Stacked layout */
+        <div className="space-y-3">
+          {/* Stats + Department side by side on tablet, stacked on mobile */}
+          {isMobile ? (
+            <>
+              {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
+              <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
+              <WorkloadDistributionChart isLoading={isLoadingAttendance} />
+              <DepartmentChart data={departmentData} total={totalTeachers} />
+            </>
+          ) : (
+            <>
+              {/* Tablet: stats + department side by side */}
+              <div className="flex gap-3 items-stretch">
+                <div className="w-[55%] shrink-0">
+                  {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <DepartmentChart data={departmentData} total={totalTeachers} />
+                </div>
+              </div>
+              <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
+              <WorkloadDistributionChart isLoading={isLoadingAttendance} />
+            </>
+          )}
         </div>
+      )}
 
-        {/* Placeholder Card - 30% width, same height as cards */}
-        <Tile
-          id="teachers-placeholder-card"
-          layoutMode="absolute"
-          widthPx="calc(30% - 8px)"
-          heightPx={344}
-          background={colors.background.card}
-          borderRadius="lg"
-          onClick={handlePlaceholderClick}
-          style={{
-            left: 'calc(70% + 8px)',
-            top: 0,
-          }}
-        >
-          {/* Empty content - placeholder for future use */}
-        </Tile>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-4 flex-wrap bg-background rounded-lg p-4">
+        <h2 className="text-page-title text-heading">Teachers</h2>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search */}
+          <div className="relative min-w-[160px] max-w-[300px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search teacher"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="h-8 w-full pl-10 bg-white"
+            />
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
+            <Select value={sortOption} onValueChange={handleSortChange}>
+              <SelectTrigger
+                className="h-8 w-[120px]"
+                style={{
+                  backgroundColor: baseColors.blue,
+                  color: text.heading,
+                  borderColor: baseColors.blue,
+                }}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="latest">Latest</SelectItem>
+                <SelectItem value="name-asc">Name A-Z</SelectItem>
+                <SelectItem value="name-desc">Name Z-A</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Add Teacher Button */}
+          <Button
+            onClick={handleAddTeacher}
+            className="h-8 bg-primary hover:bg-primary/90 text-foreground"
+          >
+            <Plus className="size-4" />
+            Add Teacher
+          </Button>
+        </div>
       </div>
 
       {/* Teachers Grid */}
@@ -289,19 +303,21 @@ export default function Teachers() {
         </div>
       ) : (
         <>
-          <TileWrapper columns={12} gap={12} mode="grid">
+          <div className={
+            isDesktop
+              ? 'grid grid-cols-4 gap-3'
+              : isMobile
+                ? 'grid grid-cols-1 gap-3'
+                : 'grid grid-cols-2 gap-3'
+          }>
             {paginatedTeachers.map(teacher => (
-              <Tile
+              <TeacherCard
                 key={teacher.id}
-                id={`teacher-tile-${teacher.id}`}
-                layoutMode="grid"
-                width={3}
-                nested
-              >
-                <TeacherCard teacher={teacher} onViewDetails={handleViewDetails} />
-              </Tile>
+                teacher={teacher}
+                onViewDetails={handleViewDetails}
+              />
             ))}
-          </TileWrapper>
+          </div>
 
           {/* Pagination */}
           {filteredAndSortedTeachers.length > 0 && (
