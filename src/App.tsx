@@ -3,6 +3,7 @@ import { AppLayout } from './components/layout'
 import { generateRoutesFromNavigation } from './config/routes'
 import AddStudent from './features/students/pages/AddStudent'
 import EditStudent from './features/students/pages/EditStudent'
+import EditExtracurricular from './features/students/pages/EditExtracurricular'
 import StudentDetails from './features/students/pages/StudentDetails'
 
 const router = createBrowserRouter([
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
       {
         path: 'students/details/:id',
         element: <StudentDetails />,
+      },
+      {
+        path: 'students/details/:id/extracurricular/edit',
+        element: <EditExtracurricular />,
       },
     ],
   },

@@ -7,6 +7,7 @@ import { useStudentById } from '@/features/students/hooks/use-student-by-id'
 import { StudentProfileCard } from '@/features/students/components/StudentProfileCard'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { AcademicPerformance } from '../components/AcademicPerformance'
+import { ExtracurricularActivities } from '../components/ExtracurricularActivities'
 import { StudentPageLayout } from '../components/StudentPageLayout'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { STUDENT_MESSAGES } from '../constants'
@@ -24,9 +25,17 @@ export default function StudentDetails() {
     navigate('/students')
   }, [navigate])
 
+  /** Navigate to general student edit page (profile, etc.) */
   const handleEdit = React.useCallback(() => {
     if (id) {
       navigate(`/students/edit/${id}`)
+    }
+  }, [navigate, id])
+
+  /** Navigate to the dedicated extracurricular activities edit page */
+  const handleEditExtracurricular = React.useCallback(() => {
+    if (id) {
+      navigate(`/students/details/${id}/extracurricular/edit`)
     }
   }, [navigate, id])
 
@@ -88,6 +97,16 @@ export default function StudentDetails() {
         )}
 
         {/* Right Column: Empty space (25% - 3 columns) */}
+
+        {/* Extracurricular: full row below (6 columns under Academic) */}
+        {student && (
+          <ExtracurricularActivities
+            activities={student.extracurricularActivities ?? []}
+            tileWidth={6}
+            tileLayoutMode="grid"
+            onEdit={handleEditExtracurricular}
+          />
+        )}
       </TileWrapper>
     </StudentPageLayout>
   )

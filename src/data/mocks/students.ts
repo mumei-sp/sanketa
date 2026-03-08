@@ -1,4 +1,5 @@
 import type { Student } from '@/features/students/types'
+import { getDefaultExtracurricular } from '@/features/students/data/default-extracurricular'
 
 /**
  * Mock student data for development and testing
@@ -62,6 +63,7 @@ export const studentsData: Student[] = [
     syncVersion: 1,
     // Legacy field for backward compatibility
     name: 'Michael Chen',
+    extracurricularActivities: getDefaultExtracurricular(0),
   },
   {
     id: '2',
@@ -118,6 +120,7 @@ export const studentsData: Student[] = [
     syncedAt: '2024-01-15T10:31:00.000Z',
     syncVersion: 1,
     name: 'Emma Williams',
+    extracurricularActivities: getDefaultExtracurricular(1),
   },
   {
     id: '3',
@@ -178,6 +181,7 @@ export const studentsData: Student[] = [
     syncedAt: '2024-01-15T10:32:00.000Z',
     syncVersion: 1,
     name: 'Rajesh Kumar',
+    extracurricularActivities: getDefaultExtracurricular(2),
   },
   {
     id: '4',
@@ -233,6 +237,7 @@ export const studentsData: Student[] = [
     syncedAt: '2024-01-15T10:33:00.000Z',
     syncVersion: 2,
     name: 'Hannah Lee',
+    extracurricularActivities: getDefaultExtracurricular(3),
   },
   {
     id: '5',
@@ -289,6 +294,7 @@ export const studentsData: Student[] = [
     syncedAt: '2024-01-15T10:34:00.000Z',
     syncVersion: 1,
     name: 'Thomas Green',
+    extracurricularActivities: getDefaultExtracurricular(4),
   },
   {
     id: '6',
@@ -332,6 +338,32 @@ export const studentsData: Student[] = [
         phone: '331 555 6677',
       },
     },
+    extracurricularActivities: [
+      {
+        club: 'Swimming',
+        role: 'Team Member',
+        achievements: 'Won 2 Silver Medals (City Meet)',
+        duration: '2029 - Present',
+        advisor: 'Coach Andrea V.',
+        iconKey: 'swimming',
+      },
+      {
+        club: 'Dance',
+        role: 'Lead Performer',
+        achievements: 'Performed at National Festival',
+        duration: '2030 - Present',
+        advisor: 'Ms. Clara F.',
+        iconKey: 'dance',
+      },
+      {
+        club: 'Robotics',
+        role: 'Programmer',
+        achievements: '1st Place in School Robotics Fair',
+        duration: '2033 - Present',
+        advisor: 'Mr. Daniel K.',
+        iconKey: 'robotics',
+      },
+    ],
   },
   {
     id: '7',
@@ -345,6 +377,7 @@ export const studentsData: Student[] = [
     percentage: 68,
     status: 'On Leave',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(6),
   },
   {
     id: '8',
@@ -358,6 +391,7 @@ export const studentsData: Student[] = [
     percentage: 91,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(7),
   },
   // Additional students to reach 40 total
   {
@@ -372,6 +406,7 @@ export const studentsData: Student[] = [
     percentage: 94,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(8),
   },
   {
     id: '10',
@@ -385,6 +420,7 @@ export const studentsData: Student[] = [
     percentage: 89,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(9),
   },
   {
     id: '11',
@@ -398,6 +434,7 @@ export const studentsData: Student[] = [
     percentage: 78,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(10),
   },
   {
     id: '12',
@@ -411,6 +448,7 @@ export const studentsData: Student[] = [
     percentage: 92,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(11),
   },
   {
     id: '13',
@@ -424,6 +462,7 @@ export const studentsData: Student[] = [
     percentage: 75,
     status: 'On Leave',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(12),
   },
   {
     id: '14',
@@ -437,6 +476,7 @@ export const studentsData: Student[] = [
     percentage: 96,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(13),
   },
   {
     id: '15',
@@ -450,6 +490,7 @@ export const studentsData: Student[] = [
     percentage: 88,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(14),
   },
   {
     id: '16',
@@ -463,6 +504,7 @@ export const studentsData: Student[] = [
     percentage: 83,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(15),
   },
   {
     id: '17',
@@ -476,6 +518,7 @@ export const studentsData: Student[] = [
     percentage: 95,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(16),
   },
   {
     id: '18',
@@ -489,6 +532,7 @@ export const studentsData: Student[] = [
     percentage: 70,
     status: 'On Leave',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(17),
   },
   {
     id: '19',
@@ -502,6 +546,7 @@ export const studentsData: Student[] = [
     percentage: 90,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(18),
   },
   {
     id: '20',
@@ -515,6 +560,7 @@ export const studentsData: Student[] = [
     percentage: 85,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(19),
   },
   {
     id: '21',
@@ -528,6 +574,7 @@ export const studentsData: Student[] = [
     percentage: 93,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(20),
   },
   {
     id: '22',
@@ -541,6 +588,7 @@ export const studentsData: Student[] = [
     percentage: 79,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(21),
   },
   {
     id: '23',
@@ -554,6 +602,7 @@ export const studentsData: Student[] = [
     percentage: 91,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(22),
   },
   {
     id: '24',
@@ -567,6 +616,7 @@ export const studentsData: Student[] = [
     percentage: 69,
     status: 'On Leave',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(23),
   },
   {
     id: '25',
@@ -580,6 +630,7 @@ export const studentsData: Student[] = [
     percentage: 98,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(24),
   },
   {
     id: '26',
@@ -593,6 +644,7 @@ export const studentsData: Student[] = [
     percentage: 86,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(25),
   },
   {
     id: '27',
@@ -606,6 +658,7 @@ export const studentsData: Student[] = [
     percentage: 82,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(26),
   },
   {
     id: '28',
@@ -619,6 +672,7 @@ export const studentsData: Student[] = [
     percentage: 94,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(27),
   },
   {
     id: '29',
@@ -632,6 +686,7 @@ export const studentsData: Student[] = [
     percentage: 73,
     status: 'On Leave',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(28),
   },
   {
     id: '30',
@@ -645,6 +700,7 @@ export const studentsData: Student[] = [
     percentage: 92,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(29),
   },
   {
     id: '31',
@@ -658,6 +714,7 @@ export const studentsData: Student[] = [
     percentage: 89,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(30),
   },
   {
     id: '32',
@@ -671,6 +728,7 @@ export const studentsData: Student[] = [
     percentage: 84,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(31),
   },
   {
     id: '33',
@@ -684,6 +742,7 @@ export const studentsData: Student[] = [
     percentage: 96,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(32),
   },
   {
     id: '34',
@@ -697,6 +756,7 @@ export const studentsData: Student[] = [
     percentage: 71,
     status: 'On Leave',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(33),
   },
   {
     id: '35',
@@ -710,6 +770,7 @@ export const studentsData: Student[] = [
     percentage: 90,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(34),
   },
   {
     id: '36',
@@ -723,6 +784,7 @@ export const studentsData: Student[] = [
     percentage: 87,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(35),
   },
   {
     id: '37',
@@ -736,6 +798,7 @@ export const studentsData: Student[] = [
     percentage: 95,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(36),
   },
   {
     id: '38',
@@ -749,6 +812,7 @@ export const studentsData: Student[] = [
     percentage: 80,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(37),
   },
   {
     id: '39',
@@ -762,6 +826,7 @@ export const studentsData: Student[] = [
     percentage: 93,
     status: 'Active',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(38),
   },
   {
     id: '40',
@@ -775,5 +840,6 @@ export const studentsData: Student[] = [
     percentage: 66,
     status: 'On Leave',
     avatarUrl: '',
+    extracurricularActivities: getDefaultExtracurricular(39),
   },
 ]
