@@ -2,6 +2,7 @@ import { Users, Clock, RefreshCw } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { baseColors, text, colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
+import { TileWrapper, Tile } from '@/components/tile'
 
 interface TeacherStatistics {
   total: number
@@ -15,6 +16,7 @@ interface TeachersDashboardProps {
 }
 
 interface StatCardProps {
+  id: string
   label: string
   value: number
   icon: LucideIcon
@@ -22,9 +24,16 @@ interface StatCardProps {
   iconColor: string
 }
 
-function StatCard({ label, value, icon: Icon, iconBg, iconColor }: StatCardProps) {
+function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardProps) {
   return (
-    <div className="bg-card rounded-lg shadow-xs p-3 flex items-center justify-between">
+    <Tile
+      id={id}
+      background="card"
+      borderRadius="lg"
+      shadowed
+      padding={12}
+      className="flex items-center justify-between"
+    >
       <div className="flex flex-col gap-1">
         <h3 className="text-body-muted font-medium" style={{ color: text.heading }}>
           {label}
@@ -37,12 +46,12 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor }: StatCardProps
         </span>
       </div>
       <div
-        className="flex items-center justify-center rounded-full w-12 h-12 shrink-0"
-        style={{ backgroundColor: iconBg }}
+        className="flex items-center justify-center rounded-full shrink-0"
+        style={{ backgroundColor: iconBg, width: 44, height: 44, minWidth: 44, minHeight: 44 }}
       >
-        <Icon className="w-6 h-6" style={{ color: iconColor }} />
+        <Icon className="w-5 h-5" style={{ color: iconColor }} />
       </div>
-    </div>
+    </Tile>
   )
 }
 
@@ -53,8 +62,9 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor }: StatCardProps
  */
 export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
       <StatCard
+        id="stat-total-teachers"
         label="Total Teachers"
         value={statistics.total}
         icon={Users}
@@ -62,6 +72,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
         iconColor={colors.background.card}
       />
       <StatCard
+        id="stat-full-time"
         label="Full-Time Teacher"
         value={statistics.fullTime}
         icon={Clock}
@@ -69,6 +80,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
         iconColor={text.heading}
       />
       <StatCard
+        id="stat-part-time"
         label="Part-Time Teacher"
         value={statistics.partTime}
         icon={Clock}
@@ -76,12 +88,13 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
         iconColor={text.heading}
       />
       <StatCard
+        id="stat-substitute"
         label="Substitute Teacher"
         value={statistics.substitute}
         icon={RefreshCw}
         iconBg={baseColors.pink}
         iconColor={text.heading}
       />
-    </div>
+    </TileWrapper>
   )
 }
