@@ -4,7 +4,7 @@ import { AttendanceSummary } from '../components/AttendanceSummary'
 import { AttendanceOverviewAreaChart } from '@/components/charts/AttendanceOverviewAreaChart'
 import { fetchAttendanceRecords } from '@/api/services/attendance-service'
 import type { AttendanceRecord } from '../types'
-import { Tile, TileWrapper } from '@/components/tile'
+import { Tile } from '@/components/tile'
 import { useIsDesktop } from '@/hooks/use-mobile'
 import { attendanceOverviewMonthlyData } from '@/data/mocks/attendance-overview'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
@@ -68,21 +68,19 @@ export function AttendancePage() {
         </div>
       </div>
 
-      {/* Attendance Table Section. responsive = stack vertically on mobile; min-w-0 w-full = no horizontal page scroll. */}
-      <TileWrapper mode="grid" columns={12} gap={12} responsive className="min-w-0 w-full">
-        <Tile
-          id="attendance-table-tile"
-          layoutMode="grid"
-          width={12}
-          background="card"
-          borderRadius="lg"
-          shadowed={false}
-          padding="p-6"
-          overflow="auto"
-        >
-          <AttendanceTable data={attendanceData} isLoading={isLoading} />
-        </Tile>
-      </TileWrapper>
+      {/* Attendance Table Section - base layout; AppLayout overflow-x-hidden handles page scroll */}
+      <Tile
+        id="attendance-table-tile"
+        layoutMode="block"
+        widthPx="100%"
+        background="card"
+        borderRadius="lg"
+        shadowed={false}
+        padding="p-6"
+        overflow="auto"
+      >
+        <AttendanceTable data={attendanceData} isLoading={isLoading} />
+      </Tile>
     </AttendancePageLayout>
   )
 }

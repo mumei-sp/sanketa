@@ -53,8 +53,7 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor }: StatCardProps
  */
 export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
   return (
-    <div className="w-full md:w-[70%] min-w-0">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <StatCard
         label="Total Teachers"
         value={statistics.total}
@@ -83,7 +82,6 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
         iconBg={baseColors.pink}
         iconColor={text.heading}
       />
-      </div>
     </div>
   )
 }

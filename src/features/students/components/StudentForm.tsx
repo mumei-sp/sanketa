@@ -89,8 +89,8 @@ export function StudentForm({
 
   return (
     <form className={cn('w-full', className)} onSubmit={handleFormSubmit}>
-      {/* responsive: form sections stack on mobile instead of side-by-side; min-w-0 w-full avoids horizontal overflow. */}
-      <TileWrapper columns={12} gap={16} mode="grid" responsive className="min-w-0 w-full">
+      {/* col-span-12 lg:col-span-7/5 already stacks on mobile; min-w-0 w-full avoids overflow */}
+      <TileWrapper columns={12} gap={16} mode="grid" className="min-w-0 w-full">
         {/* Section 1: Left Column - Personal, Contact, Guardian Info (60%) */}
         <div className="col-span-12 lg:col-span-7 space-y-4">
           <PersonalInfoSection control={control} width={sectionWidth} />
