@@ -243,27 +243,38 @@ export default function Teachers() {
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Teachers' }]}
       />
 
-      {/* Top Section: Stats + Charts + Department (responsive 12-col grid) */}
-      <TileWrapper columns={12} gap={12}>
-        {/* Stats: 12 cols mobile → 7 cols tablet → 9 cols desktop */}
-        <Tile id="teacher-stats" width={{ default: 12, md: 7, lg: 9 }}>
+      {/* Top Section: Stats + Charts + Department Chart
+          - Mobile: all stacked (DOM order)
+          - Tablet: Stats (7) + Dept (5) side by side, charts stacked below
+          - Desktop: Stats (8) top-left, 2 charts (4+4) below, Dept (4) right spanning 2 rows
+      */}
+      <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
+        <Tile id="teacher-stats" layoutMode="block" width={{ default: 1, md: 7, lg: 8 }}>
           {teacherStatistics ? <TeachersDashboard statistics={teacherStatistics} /> : <StatsSkeleton />}
         </Tile>
 
-        {/* Department: 12 cols mobile (last) → 5 cols tablet → 3 cols desktop (spans 2 rows) */}
-        <Tile
-          id="teacher-department"
-          width={{ default: 12, md: 5, lg: 3 }}
-          height={{ default: 1, lg: 2 }}
-          className="order-last md:order-none"
-        >
-          <DepartmentChart data={departmentData} total={totalTeachers} />
+        <Tile id="teacher-attendance-chart" layoutMode="block" width={{ default: 1, md: 12, lg: 4 }}>
+          <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
         </Tile>
 
-        {/* Charts: 12 cols mobile/tablet → 9 cols desktop, flex row on desktop */}
-        <Tile id="teacher-charts" width={{ default: 12, lg: 9 }} className="flex flex-col lg:flex-row gap-3">
-          <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
+        <Tile
+          id="teacher-workload-chart"
+          layoutMode="block"
+          width={{ default: 1, md: 12, lg: 4 }}
+          colStart={{ lg: 5 }}
+        >
           <WorkloadDistributionChart isLoading={isLoadingAttendance} />
+        </Tile>
+
+        <Tile
+          id="teacher-department-chart"
+          layoutMode="block"
+          width={{ default: 1, md: 5, lg: 4 }}
+          colStart={{ md: 8, lg: 9 }}
+          rowStart={{ md: 1 }}
+          rowEnd={{ lg: 3 }}
+        >
+          <DepartmentChart data={departmentData} total={totalTeachers} />
         </Tile>
       </TileWrapper>
 

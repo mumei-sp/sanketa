@@ -6,6 +6,10 @@ import {
   resolveResponsiveClasses,
   responsiveColSpanMaps,
   responsiveRowSpanMaps,
+  responsiveColStartMaps,
+  responsiveColEndMaps,
+  responsiveRowStartMaps,
+  responsiveRowEndMaps,
 } from './tile-class-maps'
 
 export type LayoutMode = 'grid' | 'block'
@@ -28,6 +32,14 @@ export interface TileProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'i
   width?: ResponsiveValue<number>
   /** Grid row span. Supports responsive: { default: 1, lg: 2 } */
   height?: ResponsiveValue<number>
+  /** Grid column start position. Supports responsive: { lg: 9 } */
+  colStart?: ResponsiveValue<number>
+  /** Grid column end position. Supports responsive: { lg: 13 } */
+  colEnd?: ResponsiveValue<number>
+  /** Grid row start position. Supports responsive: { lg: 1 } */
+  rowStart?: ResponsiveValue<number>
+  /** Grid row end position. Supports responsive: { lg: 3 } */
+  rowEnd?: ResponsiveValue<number>
   /** Explicit width (string like '100%' or number in px) */
   widthPx?: string | number
   /** Explicit height (string like '100%' or number in px) */
@@ -135,6 +147,10 @@ export function Tile({
   layoutMode = 'grid',
   width,
   height,
+  colStart,
+  colEnd,
+  rowStart,
+  rowEnd,
   widthPx,
   heightPx,
   minWidthPx,
@@ -156,14 +172,16 @@ export function Tile({
 }: TileProps) {
   const computedStyle: React.CSSProperties = { ...style }
 
-  // ── Grid mode: width/height → Tailwind col-span/row-span classes ──
-  let gridClasses = ''
-  if (layoutMode === 'grid') {
-    gridClasses = cn(
-      resolveResponsiveClasses(width, responsiveColSpanMaps),
-      resolveResponsiveClasses(height, responsiveRowSpanMaps),
-    )
-  }
+  // ── Grid-child classes: col-span/row-span/placement ──
+  // Applied regardless of layoutMode since Tile can be a grid child in any mode
+  const gridClasses = cn(
+    resolveResponsiveClasses(width, responsiveColSpanMaps),
+    resolveResponsiveClasses(height, responsiveRowSpanMaps),
+    resolveResponsiveClasses(colStart, responsiveColStartMaps),
+    resolveResponsiveClasses(colEnd, responsiveColEndMaps),
+    resolveResponsiveClasses(rowStart, responsiveRowStartMaps),
+    resolveResponsiveClasses(rowEnd, responsiveRowEndMaps),
+  )
 
   // ── Explicit pixel sizing (works for both modes) ──
   if (widthPx !== undefined) computedStyle.width = toPx(widthPx)

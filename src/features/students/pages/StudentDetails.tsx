@@ -51,7 +51,7 @@ export default function StudentDetails() {
         {/* Left Column: Student Profile Card (25% - 3 columns) */}
         <Tile
           id="profile-card-wrapper"
-          width={3}
+          width={{ default: 12, lg: 3 }}
           layoutMode="grid"
           background="card"
           borderRadius="xl"
@@ -82,7 +82,7 @@ export default function StudentDetails() {
           <AcademicPerformance
             averageScore={student.percentage}
             studentName={getDisplayName(student)}
-            tileWidth={6}
+            tileWidth={{ default: 12, lg: 6 }}
             tileLayoutMode="grid"
           />
         )}
