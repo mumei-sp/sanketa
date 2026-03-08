@@ -3,18 +3,20 @@ import type { PageHeaderBreadcrumbItem } from '@/components/layout/PageHeader'
 /**
  * Student page types for breadcrumb generation
  */
-export type StudentPageType = 'list' | 'add' | 'edit' | 'details'
+export type StudentPageType = 'list' | 'add' | 'edit' | 'details' | 'extracurricular-edit'
 
 /**
- * Generates standardized breadcrumbs for student pages
- * 
+ * Generates standardized breadcrumbs for student pages.
+ *
  * @param page - The type of student page
- * @param studentName - Optional student name for details/edit pages
- * @returns Array of breadcrumb items
+ * @param studentName - Optional student name for details / edit / extracurricular-edit pages
+ * @param studentId - Optional student id; required for 'extracurricular-edit' to build the details link
+ * @returns Array of breadcrumb items for PageHeader
  */
 export function getStudentBreadcrumbs(
   page: StudentPageType,
   studentName?: string,
+  studentId?: string,
 ): PageHeaderBreadcrumbItem[] {
   const baseBreadcrumbs: PageHeaderBreadcrumbItem[] = [
     { label: 'Dashboard', href: '/' },
@@ -30,6 +32,15 @@ export function getStudentBreadcrumbs(
       return [...baseBreadcrumbs, { label: 'Edit Student' }]
     case 'details':
       return [...baseBreadcrumbs, { label: studentName || 'Student Details' }]
+    case 'extracurricular-edit':
+      return [
+        ...baseBreadcrumbs,
+        {
+          label: studentName || 'Student Details',
+          href: studentId ? `/students/details/${studentId}` : undefined,
+        },
+        { label: 'Edit Extracurricular' },
+      ]
     default:
       return baseBreadcrumbs
   }

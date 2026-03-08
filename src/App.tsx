@@ -4,6 +4,7 @@ import { generateRoutesFromNavigation } from './config/routes'
 import { AuthGuard, GuestGuard } from './features/auth/components/RouteGuards'
 import AddStudent from './features/students/pages/AddStudent'
 import EditStudent from './features/students/pages/EditStudent'
+import EditExtracurricular from './features/students/pages/EditExtracurricular'
 import StudentDetails from './features/students/pages/StudentDetails'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
       {
         path: '/register',
         element: <Register />,
+      },
+      {
+        path: 'students/details/:id/extracurricular/edit',
+        element: <EditExtracurricular />,
       },
     ],
   },

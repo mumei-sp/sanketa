@@ -1,4 +1,4 @@
-import type { Student } from '@/features/students/types'
+import type { Student, ExtracurricularActivity } from '@/features/students/types'
 import { studentsData } from '@/data/mocks/students'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/data/mocks/student-dashboard'
@@ -41,6 +41,25 @@ export async function fetchStudentById(id: string): Promise<Student | undefined>
       resolve(student)
     }, delay)
   })
+}
+
+/**
+ * Updates a student's extracurricular activities in the mock data.
+ * Used when saving from the Edit Extracurricular page so changes are visible on Student Details.
+ * In a real app this would be an API call (e.g. PATCH /students/:id/extracurricular).
+ *
+ * @param id - Student ID to update
+ * @param activities - New list of extracurricular activities
+ * @returns true if student was found and updated, false otherwise
+ */
+export function updateStudentExtracurricular(
+  id: string,
+  activities: ExtracurricularActivity[],
+): boolean {
+  const student = studentsData.find(s => s.id === id)
+  if (!student) return false
+  student.extracurricularActivities = activities
+  return true
 }
 
 /**

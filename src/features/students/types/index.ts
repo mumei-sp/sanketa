@@ -31,6 +31,24 @@ export interface GuardiansInfo {
 }
 
 /**
+ * Extracurricular activity entry (club, role, achievements, duration, advisor)
+ */
+export interface ExtracurricularActivity {
+  /** Club or activity name (e.g. Swimming, Dance, Robotics) */
+  club: string
+  /** Role in the club (e.g. Team Member, Lead Performer, Programmer) */
+  role?: string
+  /** Achievements or description (e.g. Won 2 Silver Medals, Performed at National Festival) */
+  achievements?: string
+  /** Duration (e.g. "2029 - Present") */
+  duration: string
+  /** Advisor name (e.g. Coach Andrea V., Ms. Clara F.) */
+  advisor: string
+  /** Optional icon/key for display (e.g. swimming, dance, robotics) */
+  iconKey?: 'swimming' | 'dance' | 'robotics' | 'music' | 'art' | 'sports' | 'other'
+}
+
+/**
  * Student interface based on UserProfile
  * Matches database schema structure from user_profiles and students tables
  * 
@@ -69,6 +87,9 @@ export interface Student extends Omit<UserProfile, 'userId' | 'profileType'> {
 
   /** Guardian Information */
   guardians?: GuardiansInfo
+
+  /** Extracurricular activities (clubs, achievements, duration, advisor) */
+  extracurricularActivities?: ExtracurricularActivity[]
 
   /** Legacy/compatibility fields for backward compatibility */
   name?: string
