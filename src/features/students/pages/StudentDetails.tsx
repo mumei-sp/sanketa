@@ -11,10 +11,46 @@ import { AttendanceCalendar } from '../components/AttendanceCalendar'
 import { StudentPageLayout } from '../components/StudentPageLayout'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { STUDENT_MESSAGES } from '../constants'
+import type { Student } from '@/features/students/types'
+
+/**
+ * Order of content sections beside the profile.
+ * Change this array to control which section appears where (first = left of profile, last = right).
+ * Each entry: { id, width (grid columns), render }
+ */
+const DETAIL_CONTENT_SECTIONS: Array<{
+  id: string
+  width: number
+  render: (student: Student) => React.ReactNode
+}> = [
+  {
+    id: 'calendar',
+    width: 3,
+    render: student => (
+      <AttendanceCalendar
+        attendanceByDate={student.attendanceByDate}
+        tileWidth={3}
+        tileLayoutMode="grid"
+      />
+    ),
+  },
+  {
+    id: 'academic',
+    width: 6,
+    render: student => (
+      <AcademicPerformance
+        averageScore={student.percentage}
+        studentName={getDisplayName(student)}
+        tileWidth={6}
+        tileLayoutMode="grid"
+      />
+    ),
+  },
+]
 
 /**
  * StudentDetails page component
- * Displays detailed information about a specific student
+ * Layout: Profile (left) | Content sections in DETAIL_CONTENT_SECTIONS order (calendar, then academic by default)
  */
 export default function StudentDetails() {
   const { id } = useParams<{ id: string }>()
@@ -49,7 +85,7 @@ export default function StudentDetails() {
       loadingMessage={STUDENT_MESSAGES.LOADING_DETAILS}
     >
       <TileWrapper columns={12} gap={12} mode="grid">
-        {/* Left Column: Student Profile Card (25% - 3 columns) */}
+        {/* Left: Student Profile (fixed) */}
         <Tile
           id="profile-card-wrapper"
           width={3}
@@ -78,24 +114,13 @@ export default function StudentDetails() {
           {student && <StudentProfileCard student={student} />}
         </Tile>
 
-        {/* Middle Column: Academic Performance (50% - 6 columns) */}
-        {student && (
-          <AcademicPerformance
-            averageScore={student.percentage}
-            studentName={getDisplayName(student)}
-            tileWidth={6}
-            tileLayoutMode="grid"
-          />
-        )}
-
-        {/* Right Column: Attendance calendar (25% - 3 columns) */}
-        {student && (
-          <AttendanceCalendar
-            attendanceByDate={student.attendanceByDate}
-            tileWidth={3}
-            tileLayoutMode="grid"
-          />
-        )}
+        {/* Content sections: order and width from DETAIL_CONTENT_SECTIONS (e.g. calendar, then academic) */}
+        {student &&
+          DETAIL_CONTENT_SECTIONS.map(section => (
+            <React.Fragment key={section.id}>
+              {section.render(student)}
+            </React.Fragment>
+          ))}
       </TileWrapper>
     </StudentPageLayout>
   )

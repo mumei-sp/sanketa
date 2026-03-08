@@ -57,7 +57,10 @@ export function AttendanceCalendar({
   tileWidth = 3,
   tileLayoutMode = 'grid',
 }: AttendanceCalendarProps) {
-  const [viewDate, setViewDate] = React.useState(() => new Date(2035, 2, 1)) // March 2035
+  const [viewDate, setViewDate] = React.useState(() => {
+    const d = new Date()
+    return new Date(d.getFullYear(), d.getMonth(), 1)
+  })
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
 
