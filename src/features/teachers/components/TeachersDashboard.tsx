@@ -1,5 +1,5 @@
-import { TileWrapper, Tile } from '@/components/tile'
 import { Users, Clock, RefreshCw } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { baseColors, text, colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
 
@@ -14,161 +14,76 @@ interface TeachersDashboardProps {
   statistics: TeacherStatistics
 }
 
+interface StatCardProps {
+  label: string
+  value: number
+  icon: LucideIcon
+  iconBg: string
+  iconColor: string
+}
+
+function StatCard({ label, value, icon: Icon, iconBg, iconColor }: StatCardProps) {
+  return (
+    <div className="bg-card rounded-lg shadow-xs p-3 flex items-center justify-between">
+      <div className="flex flex-col gap-1">
+        <h3 className="text-body-muted font-medium" style={{ color: text.heading }}>
+          {label}
+        </h3>
+        <span
+          className="text-numeric text-2xl"
+          style={{ color: text.heading, fontWeight: fontWeights.bold }}
+        >
+          {value}
+        </span>
+      </div>
+      <div
+        className="flex items-center justify-center rounded-full w-12 h-12 shrink-0"
+        style={{ backgroundColor: iconBg }}
+      >
+        <Icon className="w-6 h-6" style={{ color: iconColor }} />
+      </div>
+    </div>
+  )
+}
+
 /**
  * Teachers Dashboard Component
- * Displays teacher statistics in a grid of tiles
+ * Displays teacher statistics in a responsive grid
+ * Desktop: 4 cols in a row | Tablet/Mobile: 2×2 grid
  */
 export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
-  const stats: TeacherStatistics = statistics
-
   return (
     <div className="w-full md:w-[70%] min-w-0">
-      {/* w-full on mobile so stats use full width; md:w-[70%] on desktop. min-w-0 allows shrink. responsive: stat cards stack in one column on mobile. */}
-      <TileWrapper mode="grid" columns={12} gap={12} responsive>
-        {/* Total Teachers Card */}
-        <Tile
-          id="teachers-total"
-          layoutMode="grid"
-          width={3}
-          heightPx={70}
-          background="card"
-          borderRadius="lg"
-          shadowed
-          padding="p-3"
-        >
-          <div className="flex items-center justify-between h-full">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-body-muted font-medium" style={{ color: text.heading }}>
-                Total Teachers
-              </h3>
-              <span
-                className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: fontWeights.bold }}
-              >
-                {stats.total}
-              </span>
-            </div>
-            <div
-              className="flex items-center justify-center rounded-full"
-              style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: baseColors.heading, // Dark blue
-              }}
-            >
-              <Users className="w-6 h-6" style={{ color: colors.background.card }} />
-            </div>
-          </div>
-        </Tile>
-
-        {/* Full-Time Teacher Card */}
-        <Tile
-          id="teachers-fulltime"
-          layoutMode="grid"
-          width={3}
-          heightPx={70}
-          background="card"
-          borderRadius="lg"
-          shadowed
-          padding="p-3"
-        >
-          <div className="flex items-center justify-between h-full">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-body-muted font-medium" style={{ color: text.heading }}>
-                Full-Time Teacher
-              </h3>
-              <span
-                className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: fontWeights.bold }}
-              >
-                {stats.fullTime}
-              </span>
-            </div>
-            <div
-              className="flex items-center justify-center rounded-full"
-              style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: baseColors.pink, // Light pink
-              }}
-            >
-              <Clock className="w-6 h-6" style={{ color: text.heading }} />
-            </div>
-          </div>
-        </Tile>
-
-        {/* Part-Time Teacher Card */}
-        <Tile
-          id="teachers-parttime"
-          layoutMode="grid"
-          width={3}
-          heightPx={70}
-          background="card"
-          borderRadius="lg"
-          shadowed
-          padding="p-3"
-        >
-          <div className="flex items-center justify-between h-full">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-body-muted font-medium" style={{ color: text.heading }}>
-                Part-Time Teacher
-              </h3>
-              <span
-                className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: fontWeights.bold }}
-              >
-                {stats.partTime}
-              </span>
-            </div>
-            <div
-              className="flex items-center justify-center rounded-full"
-              style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: baseColors.blue, // Light blue
-              }}
-            >
-              <Clock className="w-6 h-6" style={{ color: text.heading }} />
-            </div>
-          </div>
-        </Tile>
-
-        {/* Substitute Teacher Card */}
-        <Tile
-          id="teachers-substitute"
-          layoutMode="grid"
-          width={3}
-          heightPx={70}
-          background="card"
-          borderRadius="lg"
-          shadowed
-          padding="p-3"
-        >
-          <div className="flex items-center justify-between h-full">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-body-muted font-medium" style={{ color: text.heading }}>
-                Substitute Teacher
-              </h3>
-              <span
-                className="text-numeric text-2xl font-black"
-                style={{ color: text.heading, fontWeight: fontWeights.bold }}
-              >
-                {stats.substitute}
-              </span>
-            </div>
-            <div
-              className="flex items-center justify-center rounded-full"
-              style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: baseColors.pink, // Light pink
-              }}
-            >
-              <RefreshCw className="w-6 h-6" style={{ color: text.heading }} />
-            </div>
-          </div>
-        </Tile>
-      </TileWrapper>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <StatCard
+        label="Total Teachers"
+        value={statistics.total}
+        icon={Users}
+        iconBg={baseColors.heading}
+        iconColor={colors.background.card}
+      />
+      <StatCard
+        label="Full-Time Teacher"
+        value={statistics.fullTime}
+        icon={Clock}
+        iconBg={baseColors.pink}
+        iconColor={text.heading}
+      />
+      <StatCard
+        label="Part-Time Teacher"
+        value={statistics.partTime}
+        icon={Clock}
+        iconBg={baseColors.blue}
+        iconColor={text.heading}
+      />
+      <StatCard
+        label="Substitute Teacher"
+        value={statistics.substitute}
+        icon={RefreshCw}
+        iconBg={baseColors.pink}
+        iconColor={text.heading}
+      />
+      </div>
     </div>
   )
 }

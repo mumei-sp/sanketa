@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -80,7 +82,7 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
   }, [location.pathname])
 
   return (
-    <Sidebar collapsible="none">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <Logo logoPath={logoPath} />
       </SidebarHeader>
@@ -99,6 +101,8 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
                       <>
                         <SidebarMenuButton
                           isActive={active}
+                          tooltip={item.title}
+                          size="lg"
                           onClick={() => handleParentClick(item)}
                         >
                           <item.icon />
@@ -126,7 +130,7 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
                         )}
                       </>
                     ) : (
-                      <SidebarMenuButton asChild isActive={active}>
+                      <SidebarMenuButton asChild isActive={active} tooltip={item.title} size="lg">
                         <Link to={item.path}>
                           <item.icon />
                           <span>{item.title}</span>
@@ -140,6 +144,22 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Logout footer */}
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Logout"
+              size="lg"
+              onClick={e => e.preventDefault()}
+            >
+              <LogOut />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }

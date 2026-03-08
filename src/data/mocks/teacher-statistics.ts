@@ -10,6 +10,12 @@ export interface TeacherStatistics {
   substitute: number
 }
 
+export interface DepartmentData {
+  name: string
+  count: number
+  percentage: number
+}
+
 /**
  * Mock teacher statistics
  * This represents aggregated statistics about teachers
@@ -20,3 +26,16 @@ export const teacherStatisticsData: TeacherStatistics = {
   partTime: 18,
   substitute: 6,
 }
+
+/**
+ * Mock department distribution data
+ * Shows teacher counts by department/subject area
+ */
+export const departmentDistributionData: DepartmentData[] = [
+  { name: 'Science', count: 19, percentage: 22 },
+  { name: 'Mathematics', count: 17, percentage: 20 },
+  { name: 'Language', count: 14, percentage: 16 },
+  { name: 'Social', count: 13, percentage: 15 },
+  { name: 'Arts', count: 11, percentage: 13 },
+  { name: 'Physical Education', count: 12, percentage: 12 },
+]
