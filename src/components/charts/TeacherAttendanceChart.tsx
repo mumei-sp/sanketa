@@ -201,7 +201,7 @@ export function TeacherAttendanceChart({
     return (
       <Tile
         id="teacher-attendance-chart-tile"
-        layoutMode="flex"
+        layoutMode="block"
         style={{ flex: '1 1 0%', minWidth: 0 }}
         background="transparent"
         padding={0}
@@ -225,7 +225,7 @@ export function TeacherAttendanceChart({
   return (
     <Tile
       id="teacher-attendance-chart-tile"
-      layoutMode="flex"
+      layoutMode="block"
       style={{ flex: '1 1 0%', minWidth: 0 }}
       background="transparent"
       padding={0}
