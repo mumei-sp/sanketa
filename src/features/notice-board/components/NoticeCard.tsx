@@ -25,7 +25,7 @@ export function NoticeCard({ notice, isSelected, onClick }: NoticeCardProps) {
       type="button"
       onClick={() => onClick(notice)}
       className={cn(
-        'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50',
+        'w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50',
         isSelected && 'ring-2 ring-[#FECCFD] bg-[#FDFAFE]',
       )}
     >
@@ -33,13 +33,13 @@ export function NoticeCard({ notice, isSelected, onClick }: NoticeCardProps) {
       <img
         src={notice.thumbnail}
         alt=""
-        className="size-12 rounded-lg object-cover flex-shrink-0"
+        className="size-36 rounded-lg object-cover flex-shrink-0"
       />
 
       {/* Main info */}
       <div className="flex-1 min-w-0 space-y-0.5">
-        {/* Tags */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        {/* Tags — limit to 1 visible row */}
+        <div className="flex items-center gap-1.5 flex-wrap overflow-hidden max-h-6">
           {notice.tags.map(tag => (
             <span
               key={tag.label}
@@ -66,24 +66,31 @@ export function NoticeCard({ notice, isSelected, onClick }: NoticeCardProps) {
         </div>
       </div>
 
-      {/* Dates + Created By */}
-      <div className="hidden md:flex items-center gap-4 flex-shrink-0 text-caption text-muted-foreground">
-        <span className="flex items-center gap-1 whitespace-nowrap">
-          <Calendar className="size-3" />
-          {notice.postDate}
+      {/* Dates - stacked vertically with labels */}
+      <div className="hidden md:flex flex-col gap-1.5 flex-shrink-0 text-caption text-muted-foreground w-[180px]">
+        <span className="flex items-center gap-1.5 whitespace-nowrap">
+          <Calendar className="size-3 flex-shrink-0" />
+          <span className="w-[52px]">Post Date</span>
+          <span className="font-medium" style={{ color: baseColors.heading }}>{notice.postDate}</span>
         </span>
-        <span className="flex items-center gap-1 whitespace-nowrap">
-          <Calendar className="size-3" />
-          {notice.expiryDate}
+        <span className="flex items-center gap-1.5 whitespace-nowrap">
+          <Calendar className="size-3 flex-shrink-0" />
+          <span className="w-[52px]">Exp. Date</span>
+          <span className="font-medium" style={{ color: baseColors.heading }}>{notice.expiryDate}</span>
         </span>
-        <span className="whitespace-nowrap w-[120px] truncate">
+      </div>
+
+      {/* Created By - stacked with label */}
+      <div className="hidden md:flex flex-col gap-0.5 flex-shrink-0 text-caption text-muted-foreground w-[120px]">
+        <span>Created By</span>
+        <span className="font-medium truncate" style={{ color: baseColors.heading }}>
           {notice.createdBy}
         </span>
       </div>
 
       {/* Status badge */}
       <span
-        className="text-badge px-2.5 py-1 rounded-full flex-shrink-0"
+        className="text-badge py-1 rounded-full flex-shrink-0 w-[85px] text-center truncate"
         style={{ backgroundColor: status.bg, color: status.text }}
       >
         {notice.status}

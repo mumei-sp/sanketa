@@ -1,5 +1,7 @@
+import * as React from 'react'
 import { X, FileText, Eye, Pencil, Trash2, Share2, Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tile } from '@/components/tile'
 import { baseColors } from '@/theme/colors'
 import type { NoticeBoardEntry, NoticeStatus } from '../types'
 
@@ -11,6 +13,8 @@ const statusStyles: Record<NoticeStatus, { bg: string; text: string }> = {
   Cancelled: { bg: '#FFF3CD', text: '#856404' },
 }
 
+const CONTENT_LINE_CLAMP = 4
+
 interface NoticeDetailBoardProps {
   notice: NoticeBoardEntry
   onClose: () => void
@@ -19,9 +23,23 @@ interface NoticeDetailBoardProps {
 
 export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeDetailBoardProps) {
   const status = statusStyles[notice.status]
+  const [isContentExpanded, setIsContentExpanded] = React.useState(false)
+
+  // Reset expanded state when notice changes
+  React.useEffect(() => {
+    setIsContentExpanded(false)
+  }, [notice.id])
 
   return (
-    <div className="bg-white rounded-xl border shadow-sm flex flex-col max-h-[calc(100vh-2rem)]">
+    <Tile
+      id="notice-detail-board"
+      layoutMode="block"
+      background="card"
+      borderRadius="xl"
+      shadowed
+      padding={0}
+      className="border flex flex-col max-h-[calc(100vh-2rem)]"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b">
         <h3 className="text-section-title" style={{ color: baseColors.heading }}>
@@ -40,7 +58,7 @@ export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeD
 
       {/* Content - scrollable */}
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
-        {/* Image - larger */}
+        {/* Image */}
         <img
           src={notice.thumbnail.replace('w=120&h=120', 'w=600&h=300')}
           alt=""
@@ -61,13 +79,16 @@ export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeD
           </span>
         </div>
 
-        {/* Title */}
-        <h4 className="text-body font-semibold leading-snug" style={{ color: baseColors.heading }}>
+        {/* Title — max 2 lines */}
+        <h4
+          className="text-body font-semibold leading-snug line-clamp-2"
+          style={{ color: baseColors.heading }}
+        >
           {notice.title}
         </h4>
 
-        {/* Creator */}
-        <p className="text-body-muted text-muted-foreground">
+        {/* Creator — truncate */}
+        <p className="text-body-muted text-muted-foreground truncate">
           By {notice.createdBy}
         </p>
 
@@ -78,7 +99,7 @@ export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeD
           <DetailRow label="Exp Date" value={`${notice.expiryDate} - 01:00 PM`} />
         </div>
 
-        {/* Content */}
+        {/* Content — clamped with show more/less */}
         <div className="pt-1">
           <p
             className="text-body-muted font-medium mb-1.5"
@@ -86,22 +107,35 @@ export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeD
           >
             Content
           </p>
-          <p className="text-caption text-muted-foreground leading-relaxed">
+          <p
+            className="text-caption text-muted-foreground leading-relaxed"
+            style={!isContentExpanded ? { WebkitLineClamp: CONTENT_LINE_CLAMP, display: '-webkit-box', WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' } : undefined}
+          >
             {notice.content}
           </p>
+          {notice.content.length > 150 && (
+            <button
+              type="button"
+              onClick={() => setIsContentExpanded(prev => !prev)}
+              className="text-caption font-medium mt-1 hover:underline"
+              style={{ color: baseColors.heading }}
+            >
+              {isContentExpanded ? 'Show less' : 'Show more'}
+            </button>
+          )}
         </div>
 
-        {/* Attachments */}
+        {/* Attachments — limit visible count */}
         {notice.attachments.length > 0 && (
           <div className="pt-1">
             <p
               className="text-body-muted font-medium mb-2"
               style={{ color: baseColors.heading }}
             >
-              Attachment
+              Attachment{notice.attachments.length > 1 ? `s (${notice.attachments.length})` : ''}
             </p>
             <div className="space-y-2">
-              {notice.attachments.map(att => (
+              {notice.attachments.slice(0, 3).map(att => (
                 <div
                   key={att.name}
                   className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-50 border"
@@ -117,6 +151,11 @@ export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeD
                   </div>
                 </div>
               ))}
+              {notice.attachments.length > 3 && (
+                <p className="text-caption text-muted-foreground">
+                  +{notice.attachments.length - 3} more attachment{notice.attachments.length - 3 > 1 ? 's' : ''}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -141,7 +180,7 @@ export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeD
           Archive
         </Button>
       </div>
-    </div>
+    </Tile>
   )
 }
 
@@ -149,7 +188,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <span className="text-body-muted text-muted-foreground w-[72px] flex-shrink-0">{label}</span>
-      <span className="text-body-muted font-medium" style={{ color: baseColors.heading }}>
+      <span className="text-body-muted font-medium min-w-0 truncate" style={{ color: baseColors.heading }}>
         {value}
       </span>
     </div>

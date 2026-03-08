@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
+import { Tile } from '@/components/tile'
 import { baseColors, text } from '@/theme/colors'
 import { useIsDesktop } from '@/hooks/use-mobile'
 import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
@@ -129,37 +130,22 @@ export default function NoticeBoard() {
           {/* Left column: toolbar + notice list */}
           <div className={isDesktop ? 'flex-1 min-w-0 space-y-3' : 'space-y-3'}>
             {/* Toolbar - sits above the list only */}
-            <div className="flex items-center justify-between gap-3 flex-wrap bg-background rounded-lg p-3">
-              <h2 className="text-section-title" style={{ color: text.heading }}>
-                Notice Board
-              </h2>
-              <div className="flex items-center gap-3 flex-wrap">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger
-                    className="h-8 w-[140px]"
-                    style={{
-                      backgroundColor: baseColors.blue,
-                      color: text.heading,
-                      borderColor: baseColors.blue,
-                    }}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {CATEGORIES.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by</span>
-                  <Select value={sortOption} onValueChange={v => setSortOption(v as SortOption)}>
+            <Tile
+              id="notice-board-toolbar"
+              layoutMode="block"
+              background="default"
+              borderRadius="lg"
+              shadowed={false}
+              padding="p-3"
+            >
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-section-title" style={{ color: text.heading }}>
+                  Notice Board
+                </h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger
-                      className="h-8 w-[100px]"
+                      className="h-8 w-[140px]"
                       style={{
                         backgroundColor: baseColors.blue,
                         color: text.heading,
@@ -169,19 +155,50 @@ export default function NoticeBoard() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="latest">Latest</SelectItem>
-                      <SelectItem value="oldest">Oldest</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {CATEGORIES.map(cat => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by</span>
+                    <Select value={sortOption} onValueChange={v => setSortOption(v as SortOption)}>
+                      <SelectTrigger
+                        className="h-8 w-[100px]"
+                        style={{
+                          backgroundColor: baseColors.blue,
+                          color: text.heading,
+                          borderColor: baseColors.blue,
+                        }}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="latest">Latest</SelectItem>
+                        <SelectItem value="oldest">Oldest</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Tile>
 
             {/* Notice cards */}
             {paginatedNotices.length === 0 ? (
-              <div className="flex items-center justify-center py-12 bg-white rounded-lg border">
+              <Tile
+                id="notice-board-empty"
+                layoutMode="block"
+                background="card"
+                borderRadius="lg"
+                shadowed={false}
+                className="flex items-center justify-center py-12 border"
+              >
                 <span className="text-muted-foreground">No notices found.</span>
-              </div>
+              </Tile>
             ) : (
               paginatedNotices.map(notice => (
                 <NoticeCard
