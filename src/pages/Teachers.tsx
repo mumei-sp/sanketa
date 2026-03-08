@@ -303,16 +303,13 @@ export default function Teachers() {
         </div>
       ) : (
         <>
-          {/* responsive: 1 col mobile, 2 tablet, 4 desktop; min-w-0 w-full avoids horizontal overflow. */}
-          <div
-            className={
-              isDesktop
-                ? 'grid grid-cols-4 gap-3 min-w-0 w-full'
-                : isMobile
-                  ? 'grid grid-cols-1 gap-3 min-w-0 w-full'
-                  : 'grid grid-cols-2 gap-3 min-w-0 w-full'
-            }
-          >
+          <div className={
+            isDesktop
+              ? 'grid grid-cols-4 gap-3'
+              : isMobile
+                ? 'grid grid-cols-1 gap-3'
+                : 'grid grid-cols-2 gap-3'
+          }>
             {paginatedTeachers.map(teacher => (
               <TeacherCard
                 key={teacher.id}

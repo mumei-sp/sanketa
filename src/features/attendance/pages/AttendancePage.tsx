@@ -68,7 +68,7 @@ export function AttendancePage() {
         </div>
       </div>
 
-      {/* Attendance Table Section - base layout; AppLayout overflow-x-hidden handles page scroll */}
+      {/* Attendance Table Section */}
       <Tile
         id="attendance-table-tile"
         layoutMode="block"
