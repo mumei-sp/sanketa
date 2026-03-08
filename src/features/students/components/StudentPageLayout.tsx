@@ -95,9 +95,9 @@ export function StudentPageLayout({
     )
   }
 
-  // Main content
+  // Main content: min-w-0 so grid/flex children don't force horizontal scroll; overflow-x-hidden so page doesn't scroll horizontally (only inner modules like wide tables can); w-full for correct width.
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 overflow-x-hidden w-full">
       {renderPageHeader()}
       {children}
     </div>

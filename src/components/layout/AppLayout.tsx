@@ -1,3 +1,7 @@
+/**
+ * Root layout: sidebar + main content area. Renders once per app; Outlet shows the current route's page.
+ * No feature-specific logic; overflow/min-width so all pages benefit from non-scrolling shell on mobile.
+ */
 import { createContext, useContext, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import {
@@ -101,7 +105,7 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
   return (
     <>
       <AppSidebar logoPath={logoPath} />
-      <SidebarInset className="overflow-hidden">
+      <SidebarInset className="overflow-hidden min-w-0">
         {/* ── Mobile top bar (< md) ── */}
         <header className="flex md:hidden items-center justify-between px-4 h-12 border-b bg-background">
           <Logo logoPath={logoPath} className="px-0 py-0" />
@@ -118,7 +122,7 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
         {/* No separate desktop header — TopActions render inside PageHeader via context */}
         <TopActionsContext.Provider value={<TopActions />}>
-          <main className="flex flex-1 flex-col gap-4 p-4 overflow-auto min-h-0">
+          <main className="flex flex-1 flex-col gap-4 p-4 overflow-auto min-h-0 min-w-0 overflow-x-hidden">
             <Outlet />
           </main>
         </TopActionsContext.Provider>

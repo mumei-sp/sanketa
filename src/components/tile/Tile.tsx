@@ -164,8 +164,10 @@ export function Tile({
     ...style,
   }
 
-  // Layout mode styles
+  // Layout mode styles (Tile is shared; used by any feature with TileWrapper)
   if (layoutMode === 'grid') {
+    // minWidth: 0 so grid items can shrink and don't force horizontal overflow when column is narrow (e.g. mobile single column). Useful when TileWrapper has responsive=true.
+    computedStyle.minWidth = 0
     if (width !== undefined) {
       computedStyle.gridColumn = `span ${width}`
     }

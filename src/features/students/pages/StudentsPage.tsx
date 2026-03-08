@@ -59,8 +59,8 @@ export function StudentsPage() {
   }
 
   return (
-    <TileWrapper mode="grid" columns={12} gap={12}>
-      {/* Table - 8/12 columns on desktop, full width on mobile */}
+    <TileWrapper mode="grid" columns={12} gap={12} responsive className="min-w-0 w-full">
+      {/* responsive + min-w-0 w-full: table and charts stack on mobile and don't force horizontal scroll. Table - 8/12 columns on desktop, full width on mobile */}
       <Tile
         id="students-table-tile"
         layoutMode="grid"

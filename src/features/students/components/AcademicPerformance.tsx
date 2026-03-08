@@ -1,3 +1,8 @@
+/**
+ * Academic Performance card: gauge (average score), motivational text, and monthly score bar chart.
+ * Comments explain what each block does and, where we changed behavior, why the old approach was
+ * removed or updated and why the new one was added (e.g. 12 months data, responsive gauge, thinner bars).
+ */
 import * as React from 'react'
 import {
   BarChart,
@@ -21,34 +26,46 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fontWeights } from '@/config/typography'
 import { Tile } from '@/components/tile'
 import { colors } from '@/theme/colors'
+import { useIsMobile } from '@/hooks/use-mobile'
 
+/** One month's score for the bar chart. month = label (e.g. "Jan"), score = 0–100. */
 export interface MonthlyPerformance {
   month: string
   score: number
 }
 
+/**
+ * Props for the Academic Performance card.
+ * averageScore drives the gauge and fallback mock data; monthlyData overrides mock when provided.
+ */
 export interface AcademicPerformanceProps {
-  averageScore: number // Score out of 100
-  monthlyData?: MonthlyPerformance[]
-  studentName?: string
-  isLoading?: boolean
-  tileWidth?: number
-  tileLayoutMode?: 'grid' | 'block'
+  averageScore: number // Score out of 100; used for gauge and for generateMonthlyData when monthlyData is absent
+  monthlyData?: MonthlyPerformance[] // If provided, used as-is; otherwise generateMonthlyData(averageScore) is used
+  studentName?: string // Used in motivational message text
+  isLoading?: boolean // When true, shows skeleton instead of charts
+  tileWidth?: number // Grid column span when inside a TileWrapper (e.g. 6 for half width)
+  tileLayoutMode?: 'grid' | 'block' // How the Tile lays out (grid = span columns, block = flow)
 }
 
 /**
- * Generate mock monthly performance data if not provided
+ * Generate mock monthly performance data if not provided.
+ * Why 12 months: Previously only 6 months (Jan–Jun) were generated, so "Last 12 Months" showed
+ * only 6 bars. We now generate 12 months (Jan–Dec) so all three dropdown options have correct data.
  */
 function generateMonthlyData(baseScore: number): MonthlyPerformance[] {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-  const variation = 5 // Allow ±5 points variation
+  // Full 12 months so "Last 12 Months" filter can show a full year; kept from previous fix.
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ]
+  const variation = 5 // Allow ±5 points variation per month so scores look realistic
   const data: MonthlyPerformance[] = []
 
   for (let i = 0; i < months.length; i++) {
-    // Create a slight upward trend with some variation
-    const trend = (i / months.length) * 2 // Small upward trend
-    const randomVariation = (Math.random() - 0.5) * variation
-    const score = Math.max(0, Math.min(100, baseScore + trend + randomVariation))
+    // Create a slight upward trend with some variation (original logic kept)
+    const trend = (i / months.length) * 2 // Small upward trend over the year
+    const randomVariation = (Math.random() - 0.5) * variation // Random ±variation
+    const score = Math.max(0, Math.min(100, baseScore + trend + randomVariation)) // Clamp to 0–100
     data.push({
       month: months[i],
       score: Math.round(score),
@@ -59,7 +76,8 @@ function generateMonthlyData(baseScore: number): MonthlyPerformance[] {
 }
 
 /**
- * Custom tooltip for bar chart
+ * Custom tooltip for bar chart. Shows the bar's score value when hovering.
+ * active = tooltip is visible; payload = array of series data (we use first item's value).
  */
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -73,29 +91,30 @@ const CustomTooltip = ({ active, payload }: any) => {
 }
 
 /**
- * Custom bar component with rounded top corners
+ * Custom bar component with rounded top corners. Recharts passes x, y, width, height from the chart layout.
  */
 const CustomBar = (props: any) => {
-  const { x, y, width, height } = props
-  // Use light pink color for bars (matching the theme)
+  const { x, y, width, height } = props // Recharts-provided position and size in SVG space
+  // Use light pink color for bars (matching the theme); original comment kept.
   const fillColor = colors.primary.base
 
   return (
     <g>
+      {/* rx/ry=4 gives rounded corners; keeps bars visually consistent with design */}
       <rect x={x} y={y} width={width} height={height} fill={fillColor} rx={4} ry={4} />
     </g>
   )
 }
 
 /**
- * Custom label component to show score above bars
+ * Custom label component to show score above each bar. Recharts passes x, y, width, value.
  */
 const CustomLabel = (props: any) => {
   const { x, y, width, value } = props
   return (
     <text
-      x={x + width / 2}
-      y={y - 4}
+      x={x + width / 2}   // Center text horizontally on the bar
+      y={y - 4}           // Place slightly above the bar top so it doesn't overlap
       fill={colors.text.heading}
       textAnchor="middle"
       fontSize={11}
@@ -107,55 +126,56 @@ const CustomLabel = (props: any) => {
 }
 
 /**
- * Semi-circular gauge chart component
+ * Semi-circular gauge chart. Why changed from old implementation: previously the gauge used
+ * fixed pixel size (220) and strokeWidth 24, which (1) didn't scale with page size and (2) caused
+ * the score text to overlap the arc. New: fixed viewBox so SVG scales with container; stroke 16 so
+ * text has clear space; text positioned lower (0.62 of radius) so it sits inside the bowl and doesn't overlap.
  */
-function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: number }) {
-  const size = 220 // Horizontal span of the gauge
-  const strokeWidth = 24 // Arc thickness for better visibility
-  // Use larger radius for a proper semi-circle (approximately half the width minus padding)
-  const radius = (size - strokeWidth) * 0.48 // Creates a proper semi-circle arc
-  const circumference = Math.PI * radius // Half circle circumference
+const GAUGE_VIEWBOX_WIDTH = 200 // Design-time width; actual size comes from CSS (width: 100%)
 
-  // Normalize value to 0-100
+function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: number }) {
+  const size = GAUGE_VIEWBOX_WIDTH
+  // Thinner arc (16 not 24): so score text has clear space and doesn't overlap the blue bar; original overlap fix.
+  const strokeWidth = 16
+  const radius = (size - strokeWidth) * 0.48 // Semi-circle radius; 0.48 keeps arc within viewBox
+  const circumference = Math.PI * radius // Half circle length for dasharray calculation
+
   const normalizedValue = Math.max(0, Math.min(100, (value / maxValue) * 100))
   const percentage = normalizedValue / 100
+  const arcLength = circumference * percentage // Filled portion length for strokeDasharray
 
-  // Calculate arc length for filled portion
-  const arcLength = circumference * percentage
+  const filledColor = colors.text.heading   // Dark blue for the filled part
+  const unfilledColor = colors.primary.base // Light pink for the unfilled part
 
-  // Colors: dark blue for filled, light pink for unfilled
-  const filledColor = colors.text.heading // Dark blue (heading color)
-  const unfilledColor = colors.primary.base // Light pink
-
-  // Start and end points for the semi-circle (from left to right, bottom)
-  // The arc sits at the bottom of the gauge
   const centerX = size / 2
-  const arcBottomY = size * 0.52 // Position arc near bottom for proper semi-circle appearance
-  const startX = strokeWidth / 2
+  const arcBottomY = size * 0.52  // Y position of the flat bottom of the semi-circle
+  const startX = strokeWidth / 2  // Arc start (left end)
   const startY = arcBottomY
   const endX = size - strokeWidth / 2
   const endY = arcBottomY
 
-  // Calculate text position - center it in the space above the arc
   const textCenterX = centerX
-  // The center of the semi-circle space (where text should be positioned)
-  // Arc top is at (arcBottomY - radius), so center is halfway between top and bottom
-  const arcTopY = arcBottomY - radius
-  const textY = arcTopY + radius * 0.5 // Center of the semi-circle space
-  const labelY = textY + 20 // Position label below score with proper spacing
+  const arcTopY = arcBottomY - radius // Top of the arc (curved part)
+  // Position score well inside the semicircle (0.62 = lower than center 0.5) so it doesn't overlap the arc; why: old 0.5 caused overlap.
+  const textY = arcTopY + radius * 0.62
+  const labelY = textY + size * 0.11 // "Average Score" label below the score number
 
-  // SVG height to accommodate the full semi-circle
-  const svgHeight = arcBottomY + strokeWidth / 2 + 8 // Extra space for stroke and padding
+  const svgHeight = Math.round(arcBottomY + strokeWidth / 2 + 8) // Enough height for arc + padding
+
+  const scoreFontSize = 22  // Fixed size in viewBox units; scales with SVG
+  const labelFontSize = 11
 
   return (
-    <div className="flex flex-col items-center">
+    // Wrapper: allows gauge to scale with parent width; min-w-0 prevents flex/grid overflow on small screens.
+    <div className="flex flex-col items-center w-full min-w-0 max-w-full">
+      {/* No fixed width/height: viewBox + w-full h-auto makes gauge responsive to container (and thus page size). */}
       <svg
-        width={size}
-        height={svgHeight}
         viewBox={`0 0 ${size} ${svgHeight}`}
-        className="overflow-visible"
+        className="w-full h-auto overflow-visible"
+        preserveAspectRatio="xMidYMid meet"
+        style={{ width: '100%', height: 'auto', minHeight: 0 }}
       >
-        {/* Background arc (unfilled) - semi-circle from left to right */}
+        {/* Background arc (unfilled) - semi-circle from left to right; original comment kept. */}
         <path
           d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY}`}
           fill="none"
@@ -164,7 +184,7 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Filled arc - drawn with dasharray to show percentage */}
+        {/* Filled arc - same path, strokeDasharray shows only first arcLength; rest is gap. Original comment kept. */}
         <path
           d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY}`}
           fill="none"
@@ -175,24 +195,24 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
           strokeDasharray={`${arcLength} ${circumference}`}
           strokeDashoffset="0"
         />
-        {/* Score text - positioned in center of semi-circle space */}
+        {/* Score text - positioned in center of semi-circle space; original comment kept. */}
         <text
           x={textCenterX}
           y={textY}
           textAnchor="middle"
-          fontSize={28}
+          fontSize={scoreFontSize}
           fontWeight={fontWeights.bold}
           fill={colors.text.heading}
           dominantBaseline="middle"
         >
           {value.toFixed(1)}/100
         </text>
-        {/* Subtitle text - directly below score */}
+        {/* Subtitle text - directly below score; original comment kept. */}
         <text
           x={textCenterX}
           y={labelY}
           textAnchor="middle"
-          fontSize={11}
+          fontSize={labelFontSize}
           fill={colors.text.muted}
           dominantBaseline="middle"
         >
@@ -216,27 +236,33 @@ export function AcademicPerformance({
   tileWidth,
   tileLayoutMode = 'block',
 }: AcademicPerformanceProps) {
-  const [timePeriod, setTimePeriod] = React.useState('6months')
-  const data = monthlyData || generateMonthlyData(averageScore)
+  const isMobile = useIsMobile() // Used for bar width and barCategoryGap so chart fits narrow screens
+  const [timePeriod, setTimePeriod] = React.useState('6months') // Dropdown: 3months | 6months | 12months
+  const data = monthlyData || generateMonthlyData(averageScore) // Use prop if provided, else 12-month mock
+  // Thinner bars on mobile (12px) so they don't dominate; 18px on desktop. Why: old fixed 32px was too chunky.
+  const barWidth = isMobile ? 12 : 18
 
-  // Filter data based on selected time period
+  /**
+   * Filter data by selected time period. slice(-n) = last n months (most recent).
+   * Why 12months uses slice(-12): previously we returned `data` as-is; but data was only 6 months so
+   * "Last 12 Months" still showed 6. Now data has 12 months and we return data.slice(-12) so all 12 show.
+   */
   const filteredData = React.useMemo(() => {
     if (!data || data.length === 0) return []
 
     switch (timePeriod) {
       case '3months':
-        return data.slice(-3)
+        return data.slice(-3)   // Last 3 (e.g. Oct, Nov, Dec when data has 12 months)
       case '6months':
-        return data.slice(-6)
+        return data.slice(-6)   // Last 6 (e.g. Jul–Dec)
       case '12months':
-        // If we have less than 12 months, return all available
-        return data
+        return data.slice(-12)  // Last 12 = all months when data has 12; if fewer, returns all available
       default:
         return data.slice(-6)
     }
   }, [data, timePeriod])
 
-  // Generate motivational message based on score
+  // Generate motivational message based on score; original comment kept.
   const getMotivationalMessage = (score: number): string => {
     if (score >= 90) {
       return `${studentName} shows consistent excellence in studies and leadership in group projects. Keep aiming high!`
@@ -249,6 +275,7 @@ export function AcademicPerformance({
     }
   }
 
+  // Loading state: show skeleton in same layout as real content so no layout shift.
   if (isLoading) {
     return (
       <Tile
@@ -263,11 +290,11 @@ export function AcademicPerformance({
           <CardHeader>
             <h3 className="text-section-title">Academic Performance</h3>
             <CardAction>
-              <Skeleton className="h-9 w-[140px]" />
+              <Skeleton className="h-9 w-[140px]" /> {/* Placeholder for time-period dropdown */}
             </CardAction>
           </CardHeader>
           <CardContent className="pt-2 pb-4">
-            <Skeleton className="h-[204px] w-full" />
+            <Skeleton className="h-[204px] w-full" /> {/* Placeholder for gauge + chart area */}
           </CardContent>
         </Card>
       </Tile>
@@ -287,6 +314,7 @@ export function AcademicPerformance({
         <CardHeader>
           <h3 className="text-section-title">Academic Performance</h3>
           <CardAction>
+            {/* Time range dropdown; value drives filteredData (3/6/12 months). */}
             <Select value={timePeriod} onValueChange={setTimePeriod}>
               <SelectTrigger className="w-[140px] bg-accent">
                 <SelectValue />
@@ -299,25 +327,47 @@ export function AcademicPerformance({
             </Select>
           </CardAction>
         </CardHeader>
-        <CardContent className="px-6 pt-0 pb-4">
+        {/* px-4 on mobile, px-6 from sm up: tighter padding on small screens to use space better. */}
+        <CardContent className="px-4 sm:px-6 pt-0 pb-4">
           <div className="chart-scale">
-            <div className="grid grid-cols-2 gap-8" style={{ height: '220px' }}>
-              {/* Left side: Gauge Chart */}
-              <div className="flex flex-col items-center justify-center">
-                <GaugeChart value={averageScore} />
-                <p className="mt-8 text-xs text-muted-foreground text-left max-w-[200px] leading-relaxed">
+            {/* Row and gap scale with viewport (clamp) so layout stays proportional on all page sizes; not fixed px. */}
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 gap-[clamp(1rem,2.5vw,2rem)] md:gap-[clamp(1.25rem,3vw,2rem)] items-stretch"
+              style={{ minHeight: 'clamp(200px, 28vw, 320px)' }}
+            >
+              {/* Left column: Gauge + motivational text. Full width on mobile (grid-cols-1), half on md+. */}
+              <div className="flex flex-col items-center justify-center min-w-0 w-full">
+                {/* max-w-[min(100%,26vw)]: gauge grows with viewport up to 26vw so it's not tiny on big screens. */}
+                <div className="w-full max-w-[min(100%,26vw)]">
+                  <GaugeChart value={averageScore} />
+                </div>
+                {/* Margin below gauge uses clamp(0.75rem, 2vw, 1.5rem) so spacing scales with viewport. */}
+                <p className="mt-[clamp(0.75rem,2vw,1.5rem)] text-xs text-muted-foreground text-left max-w-[200px] leading-relaxed">
                   {getMotivationalMessage(averageScore)}
                 </p>
               </div>
 
-              {/* Right side: Bar Chart */}
-              <div className="flex flex-col">
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart
-                    data={filteredData}
-                    margin={{ top: 24, right: 0, left: 4, bottom: 12 }}
-                    barCategoryGap="35%"
-                  >
+              {/* Right column: Bar chart. Horizontal scroll when 12 months so bars stay readable (each bar gets min width). */}
+              <div
+                className="flex flex-col min-w-0 overflow-x-auto overflow-y-hidden"
+                style={{ height: 'clamp(180px, 24vw, 280px)' }}
+              >
+                {/* Inner wrapper: min-width so 12 bars have enough space; scroll container above allows horizontal slide. */}
+                <div
+                  className="h-full shrink-0"
+                  style={{
+                    minWidth: `${Math.max(filteredData.length * 48, 200)}px`,
+                    width: filteredData.length > 6 ? `${filteredData.length * 48}px` : '100%',
+                  }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={filteredData}
+                      margin={{ top: 24, right: 8, left: 4, bottom: 12 }}
+                      barCategoryGap={isMobile ? '25%' : '40%'}
+                      barGap={4}
+                    >
+                    {/* Horizontal grid lines only; vertical=false avoids clutter. */}
                     <CartesianGrid
                       strokeDasharray="3 3"
                       stroke={colors.border.default}
@@ -325,14 +375,16 @@ export function AcademicPerformance({
                       vertical={false}
                       horizontal={true}
                     />
+                    {/* Month labels; padding 4 so first/last labels don't get clipped. */}
                     <XAxis
                       dataKey="month"
-                      padding={{ left: 0, right: 0 }}
+                      padding={{ left: 4, right: 4 }}
                       stroke={colors.text.muted}
                       fontSize={11}
                       tickLine={false}
                       axisLine={false}
                     />
+                    {/* Y axis hidden but domain [0,100] still sets scale for bar heights. */}
                     <YAxis
                       width={36}
                       stroke={colors.text.muted}
@@ -344,11 +396,13 @@ export function AcademicPerformance({
                       hide={true}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={false} />
-                    <Bar dataKey="score" shape={CustomBar} activeBar={false} barSize={32}>
+                    {/* barSize=barWidth (12 mobile, 18 desktop) so bars are thinner than old fixed 32. */}
+                    <Bar dataKey="score" shape={CustomBar} activeBar={false} barSize={barWidth}>
                       <LabelList content={<CustomLabel />} />
                     </Bar>
                   </BarChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           </div>
