@@ -7,6 +7,7 @@ import { useStudentById } from '@/features/students/hooks/use-student-by-id'
 import { StudentProfileCard } from '@/features/students/components/StudentProfileCard'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { AcademicPerformance } from '../components/AcademicPerformance'
+import { AttendanceCalendar } from '../components/AttendanceCalendar'
 import { StudentPageLayout } from '../components/StudentPageLayout'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { STUDENT_MESSAGES } from '../constants'
@@ -87,7 +88,14 @@ export default function StudentDetails() {
           />
         )}
 
-        {/* Right Column: Empty space (25% - 3 columns) */}
+        {/* Right Column: Attendance calendar (25% - 3 columns) */}
+        {student && (
+          <AttendanceCalendar
+            attendanceByDate={student.attendanceByDate}
+            tileWidth={3}
+            tileLayoutMode="grid"
+          />
+        )}
       </TileWrapper>
     </StudentPageLayout>
   )

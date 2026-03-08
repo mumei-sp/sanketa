@@ -12,6 +12,12 @@ export type StudentPerformance = 'Good' | 'Needs Support' | 'At Risk'
 export type StudentStatus = 'Active' | 'On Leave'
 
 /**
+ * Attendance status for student details calendar (per-day).
+ * Keys are date strings in YYYY-MM-DD format.
+ */
+export type StudentAttendanceStatus = 'present' | 'late' | 'sick' | 'absent'
+
+/**
  * Guardian information structure
  */
 export interface GuardianInfo {
@@ -74,6 +80,9 @@ export interface Student extends Omit<UserProfile, 'userId' | 'profileType'> {
   name?: string
   class?: string
   avatarUrl?: string
+
+  /** Per-day attendance for calendar (key: YYYY-MM-DD) */
+  attendanceByDate?: Record<string, StudentAttendanceStatus>
 }
 
 // Re-export types for convenience
