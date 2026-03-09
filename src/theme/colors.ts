@@ -134,7 +134,7 @@ function lighten(hex: string, amount: number): string {
 /**
  * Darken a color by a percentage
  */
-function darken(hex: string, amount: number): string {
+export function darken(hex: string, amount: number): string {
   const rgb = hexToRgb(hex)
   const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
   const newL = Math.max(0, hsl.l - amount / 100)

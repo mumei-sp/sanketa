@@ -1,0 +1,256 @@
+/* ============================================================================
+ * FullCalendar Theme Overrides
+ * Matches the Sanketa UI pastel pink/blue design system
+ * ============================================================================ */
+
+.fc {
+  /* Core color variables */
+  --fc-border-color: #E5E5E5;
+  --fc-page-bg-color: #FFFFFF;
+  --fc-neutral-bg-color: #FFFFFF;
+  --fc-today-bg-color: rgba(205, 234, 240, 0.15);
+  --fc-event-border-color: transparent;
+  --fc-now-indicator-color: #15446E;
+
+  /* Ensure calendar fits within flex container */
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+
+  /* Typography */
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  font-size: 0.875rem;
+}
+
+/* ── Toolbar ── */
+.fc .fc-toolbar {
+  margin-bottom: 0.75rem !important;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #15446E;
+}
+
+/* Hide default toolbar - we use our own custom toolbar */
+.fc .fc-header-toolbar {
+  display: none !important;
+}
+
+/* ── Day Header Cells (Sun, Mon, ...) ── */
+.fc .fc-col-header-cell {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.fc .fc-col-header-cell-cushion {
+  padding: 0.5rem 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #15446E;
+  text-decoration: none;
+  text-transform: capitalize;
+}
+
+/* Sunday header */
+.fc .fc-day-sun .fc-col-header-cell-cushion {
+  color: #FC5859;
+}
+
+/* ── Day Number ── */
+.fc .fc-daygrid-day-number {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #15446E;
+  text-decoration: none;
+}
+
+/* Sunday day number */
+.fc .fc-day-sun .fc-daygrid-day-number {
+  color: #FC5859;
+}
+
+/* Today's day number */
+.fc .fc-day-today .fc-daygrid-day-number {
+  background-color: #15446E;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  width: 1.625rem;
+  height: 1.625rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.25rem;
+  padding: 0;
+}
+
+/* ── Day Cells ── */
+.fc .fc-daygrid-day {
+  min-height: 5.5rem;
+}
+
+.fc .fc-daygrid-day-frame {
+  min-height: 100%;
+}
+
+/* Other month days – shaded background */
+.fc .fc-day-other {
+  background-color: #F8F8F8;
+}
+
+.fc .fc-day-other .fc-daygrid-day-number {
+  opacity: 0.35;
+}
+
+/* ── Event Blocks ── */
+.fc .fc-daygrid-event {
+  border-radius: 0.375rem;
+  padding: 0.1875rem 0.375rem;
+  margin: 0.125rem 0.25rem;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  border-left-width: 3px;
+  border-left-style: solid;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.fc .fc-daygrid-event:hover {
+  opacity: 0.8;
+}
+
+/* Allow event content to wrap for title + time */
+.fc .fc-daygrid-event .fc-event-main {
+  overflow: hidden;
+}
+
+.fc .fc-daygrid-event .fc-event-title {
+  font-weight: 500;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.fc .fc-daygrid-event .fc-event-time {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* Dot-style events */
+.fc .fc-daygrid-dot-event {
+  padding: 0.125rem 0.25rem;
+}
+
+/* ── More link (+N more) ── */
+.fc .fc-daygrid-more-link {
+  font-size: 0.6875rem;
+  color: #15446E;
+  font-weight: 500;
+  padding: 0.125rem 0.375rem;
+}
+
+/* ── Time Grid (Week/Day views) ── */
+.fc .fc-timegrid-slot {
+  height: 3rem;
+}
+
+.fc .fc-timegrid-slot-label-cushion {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.fc .fc-timegrid-event {
+  border-radius: 0.25rem;
+  border-left-width: 3px;
+  border-left-style: solid;
+  font-size: 0.75rem;
+}
+
+.fc .fc-timegrid-event .fc-event-title {
+  font-weight: 500;
+}
+
+.fc .fc-timegrid-event .fc-event-time {
+  font-size: 0.6875rem;
+}
+
+/* ── Scrollbar ── */
+.fc .fc-scroller::-webkit-scrollbar {
+  width: 4px;
+}
+
+.fc .fc-scroller::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 2px;
+}
+
+/* ── Table layout ── */
+.fc .fc-scrollgrid {
+  width: 100% !important;
+  table-layout: fixed;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.fc .fc-scrollgrid table {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+.fc .fc-view-harness {
+  overflow: hidden;
+}
+
+.fc .fc-daygrid-body {
+  width: 100% !important;
+}
+
+.fc .fc-col-header {
+  width: 100% !important;
+}
+
+/* ── Grid Lines ── */
+.fc td,
+.fc th {
+  border-color: #E5E5E5;
+}
+
+/* ── Max events popover ── */
+.fc .fc-popover {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E5E5E5;
+}
+
+.fc .fc-popover-header {
+  background-color: #F8F8F8;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #15446E;
+}
+
+/* ── Responsive: Mobile ── */
+@media (max-width: 767px) {
+  .fc .fc-daygrid-day {
+    min-height: 3.5rem;
+  }
+
+  .fc .fc-daygrid-event {
+    font-size: 0.5625rem;
+    padding: 0.0625rem 0.1875rem;
+    margin: 0.0625rem 0.125rem;
+  }
+
+  .fc .fc-daygrid-day-number {
+    font-size: 0.75rem;
+    padding: 0.25rem;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.6875rem;
+    padding: 0.375rem 0;
+  }
+}
