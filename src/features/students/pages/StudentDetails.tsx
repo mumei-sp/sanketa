@@ -7,6 +7,7 @@ import { useStudentById } from '@/features/students/hooks/use-student-by-id'
 import { StudentProfileCard } from '@/features/students/components/StudentProfileCard'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { AcademicPerformance } from '../components/AcademicPerformance'
+import { BehaviorDisciplineLog } from '../components/BehaviorDisciplineLog'
 import { StudentPageLayout } from '../components/StudentPageLayout'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { STUDENT_MESSAGES } from '../constants'
@@ -77,17 +78,21 @@ export default function StudentDetails() {
           {student && <StudentProfileCard student={student} />}
         </Tile>
 
-        {/* Middle Column: Academic Performance (50% - 6 columns) */}
+        {/* Middle Column: Academic Performance + Behavior & Discipline Log (50% - 6 columns), stacked vertically */}
         {student && (
-          <AcademicPerformance
-            averageScore={student.percentage}
-            studentName={getDisplayName(student)}
-            tileWidth={{ default: 12, lg: 6 }}
-            tileLayoutMode="grid"
-          />
+          <div className="col-span-6 flex flex-col gap-6">
+            <AcademicPerformance
+              averageScore={student.percentage}
+              studentName={getDisplayName(student)}
+              tileWidth={6}
+              tileLayoutMode="grid"
+            />
+            <BehaviorDisciplineLog
+              studentId={student.studentId}
+              isLoading={isLoading}
+            />
+          </div>
         )}
-
-        {/* Right Column: Empty space (25% - 3 columns) */}
       </TileWrapper>
     </StudentPageLayout>
   )

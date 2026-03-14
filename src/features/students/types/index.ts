@@ -79,3 +79,8 @@ export interface Student extends Omit<UserProfile, 'userId' | 'profileType'> {
 // Re-export types for convenience
 export type { StudentFormValues } from '../schemas/student-schema'
 export type { UserProfile, Gender, ProfileType } from '@/types/user-profile'
+export type {
+  BehaviorDisciplineRecord,
+  BehaviorRecordType,
+  BehaviorStatus,
+} from './behavior-discipline'

@@ -31,7 +31,7 @@ export const reimbursementsData: Reimbursement[] = [
     department: 'Mathematics',
     amount: 1200,
     description: 'Book Purchase',
-    dateSubmitted: 'Mar 2, 2035',
+    dateSubmitted: 'Mar 2, 2025',
     proofUrl: '#',
     status: 'Approved',
   },
@@ -41,7 +41,7 @@ export const reimbursementsData: Reimbursement[] = [
     department: 'Science',
     amount: 2500,
     description: 'Lab Equipment',
-    dateSubmitted: 'Mar 3, 2035',
+    dateSubmitted: 'Mar 3, 2025',
     proofUrl: '#',
     status: 'Declined',
   },
@@ -51,7 +51,7 @@ export const reimbursementsData: Reimbursement[] = [
     department: 'Physical Ed',
     amount: 1800,
     description: 'Sports Supplies',
-    dateSubmitted: 'Mar 5, 2035',
+    dateSubmitted: 'Mar 5, 2025',
     proofUrl: '#',
     status: 'Approved',
   },
@@ -61,7 +61,7 @@ export const reimbursementsData: Reimbursement[] = [
     department: 'Social Studies',
     amount: 3000,
     description: 'Seminar Travel',
-    dateSubmitted: 'Mar 6, 2035',
+    dateSubmitted: 'Mar 6, 2025',
     proofUrl: '#',
     status: 'Pending',
   },
@@ -71,7 +71,7 @@ export const reimbursementsData: Reimbursement[] = [
     department: 'Arts',
     amount: 550,
     description: 'Art Materials',
-    dateSubmitted: 'Mar 4, 2035',
+    dateSubmitted: 'Mar 4, 2025',
     proofUrl: '#',
     status: 'Pending',
   },
@@ -80,7 +80,7 @@ export const reimbursementsData: Reimbursement[] = [
 export const expensesData: Expense[] = [
   {
     expenseId: 'EX-5001',
-    date: 'Mar 1, 2035',
+    date: 'Mar 1, 2025',
     department: 'Mathematics',
     category: 'Supplies',
     description: 'Graphing calculators',
@@ -89,7 +89,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5002',
-    date: 'Mar 1, 2035',
+    date: 'Mar 1, 2025',
     department: 'Science',
     category: 'Maintenance',
     description: 'Lab equipment servicing',
@@ -98,7 +98,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5003',
-    date: 'Mar 2, 2035',
+    date: 'Mar 2, 2025',
     department: 'Language',
     category: 'Supplies',
     description: 'English literature textbooks',
@@ -107,7 +107,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5004',
-    date: 'Mar 3, 2035',
+    date: 'Mar 3, 2025',
     department: 'Social',
     category: 'Events',
     description: 'Field trip bus rental',
@@ -116,7 +116,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5005',
-    date: 'Mar 3, 2035',
+    date: 'Mar 3, 2025',
     department: 'Arts',
     category: 'Supplies',
     description: 'Paint sets & brushes',
@@ -125,7 +125,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5006',
-    date: 'Mar 4, 2035',
+    date: 'Mar 4, 2025',
     department: 'Physical Education',
     category: 'Maintenance',
     description: 'Gym floor repairs',
@@ -134,7 +134,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5007',
-    date: 'Mar 5, 2035',
+    date: 'Mar 5, 2025',
     department: 'Mathematics',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -143,7 +143,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5008',
-    date: 'Mar 5, 2035',
+    date: 'Mar 5, 2025',
     department: 'Science',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -152,7 +152,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5009',
-    date: 'Mar 6, 2035',
+    date: 'Mar 6, 2025',
     department: 'Language',
     category: 'Events',
     description: 'Poetry competition prizes',
@@ -161,7 +161,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5010',
-    date: 'Mar 6, 2035',
+    date: 'Mar 6, 2025',
     department: 'Social',
     category: 'Supplies',
     description: 'Maps and globes',
@@ -170,7 +170,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5011',
-    date: 'Mar 7, 2035',
+    date: 'Mar 7, 2025',
     department: 'Arts',
     category: 'Maintenance',
     description: 'Kiln maintenance',
@@ -179,7 +179,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5012',
-    date: 'Mar 7, 2035',
+    date: 'Mar 7, 2025',
     department: 'Physical Education',
     category: 'Supplies',
     description: 'Sports equipment',
@@ -188,7 +188,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5013',
-    date: 'Mar 8, 2035',
+    date: 'Mar 8, 2025',
     department: 'Mathematics',
     category: 'Others',
     description: 'Software licenses',
@@ -197,7 +197,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5014',
-    date: 'Mar 8, 2035',
+    date: 'Mar 8, 2025',
     department: 'Science',
     category: 'Supplies',
     description: 'Chemical reagents',
@@ -206,7 +206,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5015',
-    date: 'Mar 9, 2035',
+    date: 'Mar 9, 2025',
     department: 'Language',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -215,7 +215,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5016',
-    date: 'Mar 9, 2035',
+    date: 'Mar 9, 2025',
     department: 'Social',
     category: 'Events',
     description: 'Guest speaker honorarium',
@@ -224,7 +224,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5017',
-    date: 'Mar 10, 2035',
+    date: 'Mar 10, 2025',
     department: 'Arts',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -233,7 +233,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5018',
-    date: 'Mar 10, 2035',
+    date: 'Mar 10, 2025',
     department: 'Physical Education',
     category: 'Events',
     description: 'Annual sports day setup',
@@ -242,7 +242,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5019',
-    date: 'Mar 11, 2035',
+    date: 'Mar 11, 2025',
     department: 'Mathematics',
     category: 'Maintenance',
     description: 'Projector bulb replacement',
@@ -251,7 +251,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5020',
-    date: 'Mar 11, 2035',
+    date: 'Mar 11, 2025',
     department: 'Science',
     category: 'Others',
     description: 'Research journal subscription',
@@ -260,7 +260,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5021',
-    date: 'Mar 12, 2035',
+    date: 'Mar 12, 2025',
     department: 'Language',
     category: 'Supplies',
     description: 'Workbooks and notebooks',
@@ -269,7 +269,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5022',
-    date: 'Mar 12, 2035',
+    date: 'Mar 12, 2025',
     department: 'Social',
     category: 'Maintenance',
     description: 'Classroom furniture repair',
@@ -278,7 +278,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5023',
-    date: 'Mar 13, 2035',
+    date: 'Mar 13, 2025',
     department: 'Arts',
     category: 'Others',
     description: 'Exhibition display materials',
@@ -287,7 +287,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5024',
-    date: 'Mar 13, 2035',
+    date: 'Mar 13, 2025',
     department: 'Physical Education',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -296,7 +296,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5025',
-    date: 'Mar 14, 2035',
+    date: 'Mar 14, 2025',
     department: 'Mathematics',
     category: 'Supplies',
     description: 'Whiteboard markers',
@@ -305,7 +305,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5026',
-    date: 'Mar 14, 2035',
+    date: 'Mar 14, 2025',
     department: 'Science',
     category: 'Events',
     description: 'Science fair materials',
@@ -314,7 +314,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5027',
-    date: 'Mar 15, 2035',
+    date: 'Mar 15, 2025',
     department: 'Language',
     category: 'Others',
     description: 'Translation services',
@@ -323,7 +323,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5028',
-    date: 'Mar 15, 2035',
+    date: 'Mar 15, 2025',
     department: 'Social',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -332,7 +332,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5029',
-    date: 'Mar 16, 2035',
+    date: 'Mar 16, 2025',
     department: 'Arts',
     category: 'Supplies',
     description: 'Canvas and easels',
@@ -341,7 +341,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5030',
-    date: 'Mar 16, 2035',
+    date: 'Mar 16, 2025',
     department: 'Physical Education',
     category: 'Maintenance',
     description: 'Swimming pool cleaning',
@@ -350,7 +350,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5031',
-    date: 'Mar 17, 2035',
+    date: 'Mar 17, 2025',
     department: 'Mathematics',
     category: 'Events',
     description: 'Math olympiad registration',
@@ -359,7 +359,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5032',
-    date: 'Mar 17, 2035',
+    date: 'Mar 17, 2025',
     department: 'Science',
     category: 'Maintenance',
     description: 'Fume hood servicing',
@@ -368,7 +368,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5033',
-    date: 'Mar 18, 2035',
+    date: 'Mar 18, 2025',
     department: 'Language',
     category: 'Supplies',
     description: 'Audio learning materials',
@@ -377,7 +377,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5034',
-    date: 'Mar 18, 2035',
+    date: 'Mar 18, 2025',
     department: 'Social',
     category: 'Others',
     description: 'Field trip insurance',
@@ -386,7 +386,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5035',
-    date: 'Mar 19, 2035',
+    date: 'Mar 19, 2025',
     department: 'Arts',
     category: 'Events',
     description: 'Art gallery visit',
@@ -395,7 +395,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5036',
-    date: 'Mar 19, 2035',
+    date: 'Mar 19, 2025',
     department: 'Physical Education',
     category: 'Supplies',
     description: 'First aid supplies',
@@ -404,7 +404,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5037',
-    date: 'Mar 20, 2035',
+    date: 'Mar 20, 2025',
     department: 'Mathematics',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -413,7 +413,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5038',
-    date: 'Mar 20, 2035',
+    date: 'Mar 20, 2025',
     department: 'Science',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -422,7 +422,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5039',
-    date: 'Mar 21, 2035',
+    date: 'Mar 21, 2025',
     department: 'Language',
     category: 'Maintenance',
     description: 'Language lab repairs',
@@ -431,7 +431,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5040',
-    date: 'Mar 21, 2035',
+    date: 'Mar 21, 2025',
     department: 'Social',
     category: 'Supplies',
     description: 'Documentary DVDs',
@@ -440,7 +440,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5041',
-    date: 'Mar 22, 2035',
+    date: 'Mar 22, 2025',
     department: 'Arts',
     category: 'Salaries',
     description: 'Monthly teacher salary',
@@ -449,7 +449,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5042',
-    date: 'Mar 22, 2035',
+    date: 'Mar 22, 2025',
     department: 'Physical Education',
     category: 'Others',
     description: 'Trophy and medal order',
@@ -458,7 +458,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5043',
-    date: 'Mar 23, 2035',
+    date: 'Mar 23, 2025',
     department: 'Mathematics',
     category: 'Others',
     description: 'Printer cartridges',
@@ -467,7 +467,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5044',
-    date: 'Mar 23, 2035',
+    date: 'Mar 23, 2025',
     department: 'Science',
     category: 'Supplies',
     description: 'Microscope slides',
@@ -476,7 +476,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5045',
-    date: 'Mar 24, 2035',
+    date: 'Mar 24, 2025',
     department: 'Language',
     category: 'Events',
     description: 'Debate competition venue',
@@ -485,7 +485,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5046',
-    date: 'Mar 24, 2035',
+    date: 'Mar 24, 2025',
     department: 'Social',
     category: 'Events',
     description: 'Community service trip',
@@ -494,7 +494,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5047',
-    date: 'Mar 25, 2035',
+    date: 'Mar 25, 2025',
     department: 'Arts',
     category: 'Maintenance',
     description: 'Music room soundproofing',
@@ -503,7 +503,7 @@ export const expensesData: Expense[] = [
   },
   {
     expenseId: 'EX-5048',
-    date: 'Mar 25, 2035',
+    date: 'Mar 25, 2025',
     department: 'Physical Education',
     category: 'Salaries',
     description: 'Monthly teacher salary',
