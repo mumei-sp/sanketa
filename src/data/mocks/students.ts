@@ -1,4 +1,29 @@
-import type { Student } from '@/features/students/types'
+import type { Student, StudentAttendanceStatus } from '@/features/students/types'
+
+/**
+ * Default attendance for a month (mix of Present, Late, Sick, Absent) so the calendar shows sample data.
+ * Used for the current month so opening the calendar shows non-zero counts.
+ */
+function getDefaultAttendanceForMonth(year: number, month: number): Record<string, StudentAttendanceStatus> {
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const y = String(year)
+  const m = pad(month + 1)
+  const result: Record<string, StudentAttendanceStatus> = {}
+  // Spread: mostly present, a few late, 2 sick, 1 absent (same pattern as March 2035 reference)
+  const statuses: StudentAttendanceStatus[] = [
+    'present', 'sick', 'present', 'present', 'late', 'present', 'present', 'present', 'present', 'present',
+    'absent', 'late', 'present', 'sick', 'present', 'present', 'present', 'present', 'late', 'present',
+    'present', 'present',
+  ]
+  for (let day = 1; day <= Math.min(daysInMonth, statuses.length); day++) {
+    result[`${y}-${m}-${pad(day)}`] = statuses[day - 1]
+  }
+  return result
+}
+
+const now = new Date()
+const defaultAttendanceCurrentMonth = getDefaultAttendanceForMonth(now.getFullYear(), now.getMonth())
 
 /**
  * Mock student data for development and testing
@@ -62,6 +87,30 @@ export const studentsData: Student[] = [
     syncVersion: 1,
     // Legacy field for backward compatibility
     name: 'Michael Chen',
+    // Attendance: defaults for current month (so calendar shows Present/Late/Sick/Absent) + March 2035 sample
+    attendanceByDate: {
+      ...defaultAttendanceCurrentMonth,
+      '2035-03-01': 'present',
+      '2035-03-02': 'sick',
+      '2035-03-03': 'present',
+      '2035-03-04': 'present',
+      '2035-03-05': 'late',
+      '2035-03-06': 'present',
+      '2035-03-07': 'present',
+      '2035-03-08': 'present',
+      '2035-03-09': 'present',
+      '2035-03-10': 'present',
+      '2035-03-11': 'absent',
+      '2035-03-12': 'late',
+      '2035-03-13': 'present',
+      '2035-03-14': 'sick',
+      '2035-03-15': 'present',
+      '2035-03-19': 'present',
+      '2035-03-20': 'present',
+      '2035-03-21': 'present',
+      '2035-03-22': 'late',
+      '2035-03-23': 'present',
+    },
   },
   {
     id: '2',
@@ -118,6 +167,7 @@ export const studentsData: Student[] = [
     syncedAt: '2024-01-15T10:31:00.000Z',
     syncVersion: 1,
     name: 'Emma Williams',
+    attendanceByDate: { ...defaultAttendanceCurrentMonth },
   },
   {
     id: '3',
@@ -178,6 +228,7 @@ export const studentsData: Student[] = [
     syncedAt: '2024-01-15T10:32:00.000Z',
     syncVersion: 1,
     name: 'Rajesh Kumar',
+    attendanceByDate: { ...defaultAttendanceCurrentMonth },
   },
   {
     id: '4',
