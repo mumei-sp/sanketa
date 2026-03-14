@@ -4,8 +4,7 @@ import { AttendanceSummary } from '../components/AttendanceSummary'
 import { AttendanceOverviewAreaChart } from '@/components/charts/AttendanceOverviewAreaChart'
 import { fetchAttendanceRecords } from '@/api/services/attendance-service'
 import type { AttendanceRecord } from '../types'
-import { Tile } from '@/components/tile'
-import { useIsDesktop } from '@/hooks/use-mobile'
+import { TileWrapper, Tile } from '@/components/tile'
 import { attendanceOverviewMonthlyData } from '@/data/mocks/attendance-overview'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
 import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
@@ -15,7 +14,6 @@ import { ATTENDANCE_MESSAGES } from '../constants'
  * AttendancePage component that fetches and displays attendance data
  */
 export function AttendancePage() {
-  const isDesktop = useIsDesktop()
   const [attendanceData, setAttendanceData] = React.useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
 
@@ -45,28 +43,28 @@ export function AttendancePage() {
       loadingMessage={ATTENDANCE_MESSAGES.LOADING}
     >
       {/* Attendance Summary and Chart Section - Side by side on desktop (lg+) */}
-      <div className={isDesktop ? 'flex flex-row gap-3 items-stretch' : 'space-y-4'}>
-        {/* Attendance Summary - ~60% on desktop, full width otherwise */}
-        <div className={isDesktop ? 'w-[60%] shrink-0' : 'w-full'}>
+      <TileWrapper columns={{ default: 1, lg: 12 }} gap={12}>
+        <Tile
+          id="attendance-summary"
+          layoutMode="block"
+          width={{ default: 1, lg: 7 }}
+        >
           <AttendanceSummary data={attendanceData} />
-        </div>
+        </Tile>
 
-        {/* Attendance Overview Chart - ~40% on desktop, full width otherwise */}
-        <div className={isDesktop ? 'flex-1 min-w-0' : 'w-full'}>
-          <Tile
-            id="attendance-overview-chart"
-            layoutMode="block"
-            widthPx="100%"
-            heightPx={isDesktop ? '100%' : 280}
-            background="card"
-            borderRadius="lg"
-            shadowed={true}
-            padding="p-4"
-          >
-            <AttendanceOverviewAreaChart data={attendanceOverviewMonthlyData} isLoading={false} />
-          </Tile>
-        </div>
-      </div>
+        <Tile
+          id="attendance-overview-chart"
+          layoutMode="block"
+          width={{ default: 1, lg: 5 }}
+          className="h-[280px] lg:h-full"
+          background="card"
+          borderRadius="lg"
+          shadowed={true}
+          padding="p-4"
+        >
+          <AttendanceOverviewAreaChart data={attendanceOverviewMonthlyData} isLoading={false} />
+        </Tile>
+      </TileWrapper>
 
       {/* Attendance Table Section */}
       <Tile

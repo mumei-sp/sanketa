@@ -84,6 +84,7 @@ export function ExpenseBreakdownChart({
                     dataKey="amount"
                     strokeWidth={2}
                     stroke="#fff"
+                    isAnimationActive={false}
                   >
                     {data.map((entry) => (
                       <Cell

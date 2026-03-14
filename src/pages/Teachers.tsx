@@ -22,17 +22,67 @@ import { WorkloadDistributionChart } from '@/components/charts/WorkloadDistribut
 import { DepartmentChart } from '@/components/charts/DepartmentChart'
 import { fetchAttendanceOverview } from '@/api/services/student-service'
 import type { AttendanceData } from '@/data/dashboard'
-import { useIsDesktop, useIsMobile } from '@/hooks/use-mobile'
+import { Skeleton } from '@/components/ui/skeleton'
+import { TileWrapper, Tile } from '@/components/tile'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'
+
+/** Skeleton for the 4 stat cards */
+function StatsSkeleton() {
+  return (
+    <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Tile key={i} id={`stat-skeleton-${i}`} background="card" borderRadius="lg" shadowed padding={12} className="flex items-center justify-between">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-3.5 w-24 rounded" />
+            <Skeleton className="h-6 w-12 rounded" />
+          </div>
+          <Skeleton className="w-11 h-11 rounded-full shrink-0" />
+        </Tile>
+      ))}
+    </TileWrapper>
+  )
+}
+
+/** Skeleton for a single teacher card */
+function TeacherCardSkeleton() {
+  return (
+    <Tile id="teacher-card-skeleton" background="card" borderRadius="lg" shadowed padding={16} className="flex flex-col gap-3">
+      {/* Avatar + name */}
+      <div className="flex items-center gap-3">
+        <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+          <Skeleton className="h-4 w-28 rounded" />
+          <Skeleton className="h-3 w-36 rounded" />
+        </div>
+      </div>
+      {/* Contact lines */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-3.5 h-3.5 rounded shrink-0" />
+          <Skeleton className="h-3 w-32 rounded" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-3.5 h-3.5 rounded shrink-0" />
+          <Skeleton className="h-3 w-44 rounded" />
+        </div>
+      </div>
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-7 h-7 rounded-full" />
+        </div>
+        <Skeleton className="h-7 w-20 rounded-md" />
+      </div>
+    </Tile>
+  )
+}
 
 /**
  * Teachers page component
  * Displays teachers in a grid layout with search, filter, sort, and pagination
  */
 export default function Teachers() {
-  const isDesktop = useIsDesktop()
-  const isMobile = useIsMobile()
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
   const [teacherStatistics, setTeacherStatistics] = React.useState<TeacherStatistics | null>(null)
   const [departmentData, setDepartmentData] = React.useState<DepartmentData[]>([])
@@ -193,56 +243,50 @@ export default function Teachers() {
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Teachers' }]}
       />
 
-      {/* Top Section: Stats + Charts + Department Chart */}
-      {isDesktop ? (
-        /* Desktop: Left 70% (stats + charts) | Right 30% (department) */
-        <div className="flex gap-3 items-stretch">
-          <div className="w-[70%] shrink-0 space-y-3">
-            {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
-            <div className="flex gap-3">
-              <div className="flex-1 min-w-0">
-                <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <WorkloadDistributionChart isLoading={isLoadingAttendance} />
-              </div>
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <DepartmentChart data={departmentData} total={totalTeachers} />
-          </div>
-        </div>
-      ) : (
-        /* Tablet/Mobile: Stacked layout */
-        <div className="space-y-3">
-          {/* Stats + Department side by side on tablet, stacked on mobile */}
-          {isMobile ? (
-            <>
-              {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
-              <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
-              <WorkloadDistributionChart isLoading={isLoadingAttendance} />
-              <DepartmentChart data={departmentData} total={totalTeachers} />
-            </>
-          ) : (
-            <>
-              {/* Tablet: stats + department side by side */}
-              <div className="flex gap-3 items-stretch">
-                <div className="w-[55%] shrink-0">
-                  {teacherStatistics && <TeachersDashboard statistics={teacherStatistics} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <DepartmentChart data={departmentData} total={totalTeachers} />
-                </div>
-              </div>
-              <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
-              <WorkloadDistributionChart isLoading={isLoadingAttendance} />
-            </>
-          )}
-        </div>
-      )}
+      {/* Top Section: Stats + Charts + Department Chart
+          - Mobile: all stacked (DOM order)
+          - Tablet: Stats (7) + Dept (5) side by side, charts stacked below
+          - Desktop: Stats (8) top-left, 2 charts (4+4) below, Dept (4) right spanning 2 rows
+      */}
+      <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
+        <Tile id="teacher-stats" layoutMode="block" width={{ default: 1, md: 7, lg: 8 }}>
+          {teacherStatistics ? <TeachersDashboard statistics={teacherStatistics} /> : <StatsSkeleton />}
+        </Tile>
+
+        <Tile id="teacher-attendance-chart" layoutMode="block" width={{ default: 1, md: 12, lg: 4 }}>
+          <TeacherAttendanceChart data={attendanceData} isLoading={isLoadingAttendance} />
+        </Tile>
+
+        <Tile
+          id="teacher-workload-chart"
+          layoutMode="block"
+          width={{ default: 1, md: 12, lg: 4 }}
+          colStart={{ lg: 5 }}
+        >
+          <WorkloadDistributionChart isLoading={isLoadingAttendance} />
+        </Tile>
+
+        <Tile
+          id="teacher-department-chart"
+          layoutMode="block"
+          width={{ default: 1, md: 5, lg: 4 }}
+          colStart={{ md: 8, lg: 9 }}
+          rowStart={{ md: 1 }}
+          rowEnd={{ lg: 3 }}
+        >
+          <DepartmentChart data={departmentData} total={totalTeachers} />
+        </Tile>
+      </TileWrapper>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 flex-wrap bg-background rounded-lg p-4">
+      <Tile
+        id="teacher-toolbar"
+        layoutMode="block"
+        background="default"
+        borderRadius="lg"
+        padding="p-4"
+        className="flex items-center justify-between gap-4 flex-wrap"
+      >
         <h2 className="text-page-title text-heading">Teachers</h2>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -288,13 +332,15 @@ export default function Teachers() {
             Add Teacher
           </Button>
         </div>
-      </div>
+      </Tile>
 
       {/* Teachers Grid */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-muted-foreground">Loading teachers...</div>
-        </div>
+        <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
+          {Array.from({ length: pageSize }).map((_, i) => (
+            <TeacherCardSkeleton key={i} />
+          ))}
+        </TileWrapper>
       ) : paginatedTeachers.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-muted-foreground">
@@ -303,13 +349,7 @@ export default function Teachers() {
         </div>
       ) : (
         <>
-          <div className={
-            isDesktop
-              ? 'grid grid-cols-4 gap-3'
-              : isMobile
-                ? 'grid grid-cols-1 gap-3'
-                : 'grid grid-cols-2 gap-3'
-          }>
+          <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
             {paginatedTeachers.map(teacher => (
               <TeacherCard
                 key={teacher.id}
@@ -317,7 +357,7 @@ export default function Teachers() {
                 onViewDetails={handleViewDetails}
               />
             ))}
-          </div>
+          </TileWrapper>
 
           {/* Pagination */}
           {filteredAndSortedTeachers.length > 0 && (

@@ -5,6 +5,7 @@ import {
   BookOpen,
   Users,
   UserCheck,
+  ClipboardList,
   DollarSign,
   FileText,
   ChevronDown,
@@ -70,6 +71,11 @@ export const navigationItems: NavItem[] = [
     title: "Attendance",
     icon: UserCheck,
     path: "/attendance",
+  },
+  {
+    title: "Assignments",
+    icon: ClipboardList,
+    path: "/assignments",
   },
   {
     title: "Finance",

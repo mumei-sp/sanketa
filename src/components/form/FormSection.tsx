@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Tile } from '@/components/tile'
+import { Tile, type ResponsiveValue } from '@/components/tile'
 import { cn } from '@/lib/utils'
 
 /**
@@ -12,8 +12,8 @@ export interface FormSectionProps {
   description?: string
   /** Section content */
   children: React.ReactNode
-  /** Grid column span (for use in TileWrapper grid) */
-  width?: number
+  /** Grid column span (for use in TileWrapper grid). Supports responsive: { default: 12, md: 6 } */
+  width?: ResponsiveValue<number>
   /** Additional className */
   className?: string
 }

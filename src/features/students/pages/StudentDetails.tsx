@@ -52,7 +52,7 @@ export default function StudentDetails() {
         {/* Left Column: Student Profile Card (25% - 3 columns) */}
         <Tile
           id="profile-card-wrapper"
-          width={3}
+          width={{ default: 12, lg: 3 }}
           layoutMode="grid"
           background="card"
           borderRadius="xl"

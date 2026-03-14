@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tile } from '@/components/tile'
+import { Tile, type ResponsiveValue } from '@/components/tile'
 import type { EnrollmentData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
@@ -26,7 +26,7 @@ import { ChartGradient } from '@/theme/ChartGradient'
 interface EnrollmentTrendsChartProps {
   data: EnrollmentData[]
   isLoading?: boolean
-  tileWidth?: number
+  tileWidth?: ResponsiveValue<number>
   tileLayoutMode?: 'grid' | 'block'
 }
 

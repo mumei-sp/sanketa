@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fontWeights } from '@/config/typography'
-import { Tile } from '@/components/tile'
+import { Tile, type ResponsiveValue } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
@@ -27,7 +27,7 @@ import { ChartGradient } from '@/theme/ChartGradient'
 interface AttendanceOverviewChartProps {
   data: AttendanceData[]
   isLoading?: boolean
-  tileWidth?: number
+  tileWidth?: ResponsiveValue<number>
   tileLayoutMode?: 'grid' | 'block'
 }
 

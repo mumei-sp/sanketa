@@ -7,4 +7,5 @@ export {
   type BackgroundToken,
   type BorderRadiusToken,
 } from "./Tile"
+export { type ResponsiveValue, type Breakpoint } from "./tile-class-maps"
 
