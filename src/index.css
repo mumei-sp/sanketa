@@ -269,14 +269,10 @@
     line-height: 1.45; /* Compact line height for body text */
   }
 
-  /* Global icon defaults for compact density */
-  svg:not([class*='size-']):not([width]):not([height]) {
+  /* Lucide icon defaults for compact density */
+  svg.lucide {
     width: 1rem; /* 16px (size-4) */
     height: 1rem; /* 16px (size-4) */
-  }
-
-  /* Icon stroke width default */
-  svg {
     stroke-width: 1.5;
   }
 

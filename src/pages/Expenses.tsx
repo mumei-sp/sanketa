@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
-import { Tile } from '@/components/tile'
+import { TileWrapper, Tile } from '@/components/tile'
 import {
   ExpenseTrendChart,
   ExpenseBreakdownChart,
@@ -74,27 +74,38 @@ export default function Expenses() {
         - Tablet:   row 1: Trend (5) + Breakdown (7)  |  row 2: Reimbursements (12)
         - Desktop:  Trend (5, r1) + Breakdown (5, r2) left  |  Reimbursements (7, r1–r2) right
       */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-        {/* Expense Trend — 40% on desktop */}
-        <div className="md:col-span-5">
+      <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
+        <Tile
+          id="expense-trend"
+          layoutMode="block"
+          width={{ default: 1, md: 5 }}
+        >
           <ExpenseTrendChart data={trendData} isLoading={isLoading} />
-        </div>
+        </Tile>
 
-        {/* Expense Breakdown */}
-        {/* Tablet: sits next to Trend (7 cols).  Desktop: drops below Trend (5 cols) */}
-        <div className="md:col-span-7 lg:col-span-5 lg:row-start-2">
+        <Tile
+          id="expense-breakdown"
+          layoutMode="block"
+          width={{ default: 1, md: 7, lg: 5 }}
+          rowStart={{ lg: 2 }}
+        >
           <ExpenseBreakdownChart
             data={breakdownData}
             total={breakdownTotal}
             isLoading={isLoading}
           />
-        </div>
+        </Tile>
 
-        {/* Reimbursements Tracking — 60% on desktop, spans both rows */}
-        <div className="md:col-span-12 lg:col-span-7 lg:row-start-1 lg:row-end-3">
+        <Tile
+          id="reimbursements-tracking"
+          layoutMode="block"
+          width={{ default: 1, md: 12, lg: 7 }}
+          rowStart={{ lg: 1 }}
+          rowEnd={{ lg: 3 }}
+        >
           <ReimbursementsTracking data={reimbursements} isLoading={isLoading} />
-        </div>
-      </div>
+        </Tile>
+      </TileWrapper>
 
       {/* Expenses Table (full width) */}
       <Tile

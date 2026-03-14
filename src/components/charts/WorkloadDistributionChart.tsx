@@ -175,7 +175,7 @@ export function WorkloadDistributionChart({
     return (
       <Tile
         id="workload-distribution-tile"
-        layoutMode="flex"
+        layoutMode="block"
         style={{ flex: '1.33 1 0%', minWidth: 0 }}
         background="transparent"
         padding={0}
@@ -204,7 +204,7 @@ export function WorkloadDistributionChart({
   return (
     <Tile
       id="workload-distribution-tile"
-      layoutMode="flex"
+      layoutMode="block"
       style={{ flex: '1.33 1 0%', minWidth: 0 }}
       background="transparent"
       padding={0}

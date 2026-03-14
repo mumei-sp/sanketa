@@ -7,6 +7,7 @@ import Calendar from '../pages/Calendar'
 import Teachers from '../pages/Teachers'
 import Students from '../pages/Students'
 import Attendance from '../pages/Attendance'
+import Assignments from '../pages/Assignments'
 import FeesCollection from '../pages/FeesCollection'
 import Expenses from '../pages/Expenses'
 import NoticeBoard from '../pages/NoticeBoard'
@@ -24,6 +25,7 @@ const routeConfig: Record<LeafPaths<typeof navigationItems>, React.ComponentType
   '/teachers': Teachers,
   '/students': Students,
   '/attendance': Attendance,
+  '/assignments': Assignments,
   '/finance/fees-collection': FeesCollection,
   '/finance/expenses': Expenses,
   '/notice-board': NoticeBoard,

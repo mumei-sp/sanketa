@@ -1,8 +1,18 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { spacing, type SpacingKey } from '@/config/spacing'
+import {
+  type ResponsiveValue,
+  resolveResponsiveClasses,
+  responsiveColSpanMaps,
+  responsiveRowSpanMaps,
+  responsiveColStartMaps,
+  responsiveColEndMaps,
+  responsiveRowStartMaps,
+  responsiveRowEndMaps,
+} from './tile-class-maps'
 
-export type LayoutMode = 'grid' | 'flex' | 'absolute' | 'block'
+export type LayoutMode = 'grid' | 'block'
 export type OverflowMode = 'clip' | 'scroll' | 'auto' | 'hidden'
 export type BackgroundToken =
   | 'default'
@@ -18,26 +28,26 @@ export interface TileProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'i
   id: string
   /** Layout type */
   layoutMode?: LayoutMode
-  /** Grid columns (or px fallback) */
-  width?: number
-  /** Grid rows (or px fallback) */
-  height?: number
-  /** Explicit width for non-grid modes */
+  /** Grid column span. Supports responsive: { default: 12, md: 8, lg: 6 } */
+  width?: ResponsiveValue<number>
+  /** Grid row span. Supports responsive: { default: 1, lg: 2 } */
+  height?: ResponsiveValue<number>
+  /** Grid column start position. Supports responsive: { lg: 9 } */
+  colStart?: ResponsiveValue<number>
+  /** Grid column end position. Supports responsive: { lg: 13 } */
+  colEnd?: ResponsiveValue<number>
+  /** Grid row start position. Supports responsive: { lg: 1 } */
+  rowStart?: ResponsiveValue<number>
+  /** Grid row end position. Supports responsive: { lg: 3 } */
+  rowEnd?: ResponsiveValue<number>
+  /** Explicit width (string like '100%' or number in px) */
   widthPx?: string | number
-  /** Explicit height for non-grid modes */
+  /** Explicit height (string like '100%' or number in px) */
   heightPx?: string | number
-  /** Grid min width constraint */
-  minWidth?: number
-  /** Grid max width constraint */
-  maxWidth?: number
   /** Pixel min width constraint */
   minWidthPx?: string | number
   /** Pixel max width constraint */
   maxWidthPx?: string | number
-  /** Grid min height constraint */
-  minHeight?: number
-  /** Grid max height constraint */
-  maxHeight?: number
   /** Pixel min height constraint */
   minHeightPx?: string | number
   /** Pixel max height constraint */
@@ -122,13 +132,14 @@ function getPaddingStyle(padding?: number | SpacingKey | string): React.CSSPrope
   if (typeof padding === 'number') {
     return { padding: `${padding}px` }
   }
-  // If it's a spacing key (string that exists in spacing config), use that value
   if (typeof padding === 'string' && padding in spacing) {
     return { padding: spacing[padding as SpacingKey] }
   }
-  // If it's already a string with units (like '1rem' or '16px'), return empty
-  // and let it be handled by className or style prop
   return {}
+}
+
+function toPx(value: string | number): string {
+  return typeof value === 'number' ? `${value}px` : value
 }
 
 export function Tile({
@@ -136,14 +147,14 @@ export function Tile({
   layoutMode = 'grid',
   width,
   height,
+  colStart,
+  colEnd,
+  rowStart,
+  rowEnd,
   widthPx,
   heightPx,
-  minWidth,
-  maxWidth,
   minWidthPx,
   maxWidthPx,
-  minHeight,
-  maxHeight,
   minHeightPx,
   maxHeightPx,
   disabled = false,
@@ -159,147 +170,44 @@ export function Tile({
   children,
   ...props
 }: TileProps) {
-  // User styles applied first, computed styles will override
-  const computedStyle: React.CSSProperties = {
-    ...style,
-  }
+  const computedStyle: React.CSSProperties = { ...style }
 
-  // Layout mode styles
-  if (layoutMode === 'grid') {
-    if (width !== undefined) {
-      computedStyle.gridColumn = `span ${width}`
-    }
-    if (height !== undefined) {
-      computedStyle.gridRow = `span ${height}`
-    }
-    // In grid mode, pixel constraints take precedence over grid constraints
-    // Only apply grid constraints if pixel constraints are not provided
-    if (minWidth !== undefined && minWidthPx === undefined) {
-      computedStyle.minWidth = `${minWidth}fr`
-    }
-    if (maxWidth !== undefined && maxWidthPx === undefined) {
-      computedStyle.maxWidth = `${maxWidth}fr`
-    }
-    if (minHeight !== undefined && minHeightPx === undefined) {
-      computedStyle.minHeight = `${minHeight}fr`
-    }
-    if (maxHeight !== undefined && maxHeightPx === undefined) {
-      computedStyle.maxHeight = `${maxHeight}fr`
-    }
-  } else if (layoutMode === 'flex') {
-    computedStyle.display = 'flex'
-    // In non-grid modes, width/height act as px fallback
-    if (width !== undefined && widthPx === undefined) {
-      computedStyle.width = `${width}px`
-    }
-    if (height !== undefined && heightPx === undefined) {
-      computedStyle.height = `${height}px`
-    }
-    // Constraints also act as px in non-grid modes
-    if (minWidth !== undefined && minWidthPx === undefined) {
-      computedStyle.minWidth = `${minWidth}px`
-    }
-    if (maxWidth !== undefined && maxWidthPx === undefined) {
-      computedStyle.maxWidth = `${maxWidth}px`
-    }
-    if (minHeight !== undefined && minHeightPx === undefined) {
-      computedStyle.minHeight = `${minHeight}px`
-    }
-    if (maxHeight !== undefined && maxHeightPx === undefined) {
-      computedStyle.maxHeight = `${maxHeight}px`
-    }
-  } else if (layoutMode === 'absolute') {
-    computedStyle.position = 'absolute'
-    // In non-grid modes, width/height act as px fallback
-    if (width !== undefined && widthPx === undefined) {
-      computedStyle.width = `${width}px`
-    }
-    if (height !== undefined && heightPx === undefined) {
-      computedStyle.height = `${height}px`
-    }
-    // Constraints also act as px in non-grid modes
-    if (minWidth !== undefined && minWidthPx === undefined) {
-      computedStyle.minWidth = `${minWidth}px`
-    }
-    if (maxWidth !== undefined && maxWidthPx === undefined) {
-      computedStyle.maxWidth = `${maxWidth}px`
-    }
-    if (minHeight !== undefined && minHeightPx === undefined) {
-      computedStyle.minHeight = `${minHeight}px`
-    }
-    if (maxHeight !== undefined && maxHeightPx === undefined) {
-      computedStyle.maxHeight = `${maxHeight}px`
-    }
-  } else if (layoutMode === 'block') {
-    computedStyle.display = 'block'
-    // In non-grid modes, width/height act as px fallback
-    if (width !== undefined && widthPx === undefined) {
-      computedStyle.width = `${width}px`
-    }
-    if (height !== undefined && heightPx === undefined) {
-      computedStyle.height = `${height}px`
-    }
-    // Constraints also act as px in non-grid modes
-    if (minWidth !== undefined && minWidthPx === undefined) {
-      computedStyle.minWidth = `${minWidth}px`
-    }
-    if (maxWidth !== undefined && maxWidthPx === undefined) {
-      computedStyle.maxWidth = `${maxWidth}px`
-    }
-    if (minHeight !== undefined && minHeightPx === undefined) {
-      computedStyle.minHeight = `${minHeight}px`
-    }
-    if (maxHeight !== undefined && maxHeightPx === undefined) {
-      computedStyle.maxHeight = `${maxHeight}px`
-    }
-  }
+  // ── Grid-child classes: col-span/row-span/placement ──
+  // Applied regardless of layoutMode since Tile can be a grid child in any mode
+  const gridClasses = cn(
+    resolveResponsiveClasses(width, responsiveColSpanMaps),
+    resolveResponsiveClasses(height, responsiveRowSpanMaps),
+    resolveResponsiveClasses(colStart, responsiveColStartMaps),
+    resolveResponsiveClasses(colEnd, responsiveColEndMaps),
+    resolveResponsiveClasses(rowStart, responsiveRowStartMaps),
+    resolveResponsiveClasses(rowEnd, responsiveRowEndMaps),
+  )
 
-  // Pixel sizing (explicit sizing takes precedence)
-  if (widthPx !== undefined) {
-    computedStyle.width = typeof widthPx === 'number' ? `${widthPx}px` : widthPx
-  }
-  if (heightPx !== undefined) {
-    computedStyle.height = typeof heightPx === 'number' ? `${heightPx}px` : heightPx
-  }
+  // ── Explicit pixel sizing (works for both modes) ──
+  if (widthPx !== undefined) computedStyle.width = toPx(widthPx)
+  if (heightPx !== undefined) computedStyle.height = toPx(heightPx)
+  if (minWidthPx !== undefined) computedStyle.minWidth = toPx(minWidthPx)
+  if (maxWidthPx !== undefined) computedStyle.maxWidth = toPx(maxWidthPx)
+  if (minHeightPx !== undefined) computedStyle.minHeight = toPx(minHeightPx)
+  if (maxHeightPx !== undefined) computedStyle.maxHeight = toPx(maxHeightPx)
 
-  // Pixel constraints (applied after grid constraints, so they override)
-  if (minWidthPx !== undefined) {
-    computedStyle.minWidth = typeof minWidthPx === 'number' ? `${minWidthPx}px` : minWidthPx
-  }
-  if (maxWidthPx !== undefined) {
-    computedStyle.maxWidth = typeof maxWidthPx === 'number' ? `${maxWidthPx}px` : maxWidthPx
-  }
-  if (minHeightPx !== undefined) {
-    computedStyle.minHeight = typeof minHeightPx === 'number' ? `${minHeightPx}px` : minHeightPx
-  }
-  if (maxHeightPx !== undefined) {
-    computedStyle.maxHeight = typeof maxHeightPx === 'number' ? `${maxHeightPx}px` : maxHeightPx
-  }
-
-  // Background (custom colors use inline styles)
+  // ── Visual props ──
   const backgroundClass = getBackgroundClass(background)
   if (background && !isBackgroundToken(background)) {
     computedStyle.backgroundColor = background
   }
 
-  // Border radius (custom values use inline styles)
   const borderRadiusClass = getBorderRadiusClass(borderRadius)
   if (borderRadius && !isBorderRadiusToken(borderRadius)) {
     computedStyle.borderRadius = borderRadius
   }
 
-  // Padding
   const paddingClass = getPaddingClass(padding)
   const paddingStyle = getPaddingStyle(padding)
 
-  // Shadow (using shadow-xs to match project style)
   const shadowClass = shadowed ? 'shadow-xs' : ''
-
-  // Overflow
   const overflowClass = overflow ? overflowMap[overflow] : ''
 
-  // Disabled and interactable states
-  // Optimize: combine pointer-events logic to avoid duplicate classes
   const pointerEventsDisabled = disabled || !interactable
   const disabledClass = disabled ? 'opacity-50' : ''
   const interactableClass = pointerEventsDisabled ? 'pointer-events-none' : ''
@@ -308,6 +216,7 @@ export function Tile({
     <div
       id={id}
       className={cn(
+        gridClasses,
         backgroundClass,
         borderRadiusClass,
         paddingClass,

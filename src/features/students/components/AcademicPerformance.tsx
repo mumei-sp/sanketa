@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fontWeights } from '@/config/typography'
-import { Tile } from '@/components/tile'
+import { Tile, type ResponsiveValue } from '@/components/tile'
 import { colors } from '@/theme/colors'
 
 export interface MonthlyPerformance {
@@ -32,7 +32,7 @@ export interface AcademicPerformanceProps {
   monthlyData?: MonthlyPerformance[]
   studentName?: string
   isLoading?: boolean
-  tileWidth?: number
+  tileWidth?: ResponsiveValue<number>
   tileLayoutMode?: 'grid' | 'block'
 }
 

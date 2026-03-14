@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
+import { authUtils } from '@/api/utils/auth'
 import {
   Sidebar,
   SidebarContent,
@@ -152,7 +153,10 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
             <SidebarMenuButton
               tooltip="Logout"
               size="lg"
-              onClick={e => e.preventDefault()}
+              onClick={() => {
+                authUtils.removeToken()
+                navigate('/login', { replace: true })
+              }}
             >
               <LogOut />
               <span>Logout</span>

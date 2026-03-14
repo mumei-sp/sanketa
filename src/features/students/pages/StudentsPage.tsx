@@ -7,13 +7,11 @@ import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart
 import { AttendanceOverviewChart } from '@/components/charts/AttendanceOverviewChart'
 import { fetchEnrollmentTrends, fetchAttendanceOverview } from '@/api/services/student-service'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
-import { useIsMobile } from '@/hooks/use-mobile'
 
 /**
  * StudentsPage component that fetches and displays student data with charts
  */
 export function StudentsPage() {
-  const isMobile = useIsMobile()
   const [students, setStudents] = React.useState<Student[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [enrollmentData, setEnrollmentData] = React.useState<EnrollmentData[]>([])
@@ -59,12 +57,12 @@ export function StudentsPage() {
   }
 
   return (
-    <TileWrapper mode="grid" columns={12} gap={12}>
+    <TileWrapper columns={12} gap={12}>
       {/* Table - 8/12 columns on desktop, full width on mobile */}
       <Tile
         id="students-table-tile"
         layoutMode="grid"
-        width={isMobile ? 12 : 8}
+        width={{ default: 12, md: 8 }}
         background="card"
         borderRadius="lg"
         shadowed={false}
@@ -78,7 +76,7 @@ export function StudentsPage() {
       <Tile
         id="charts-container-tile"
         layoutMode="grid"
-        width={isMobile ? 12 : 4}
+        width={{ default: 12, md: 4 }}
         background="transparent"
         padding={0}
       >

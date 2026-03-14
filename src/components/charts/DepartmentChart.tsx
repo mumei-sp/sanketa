@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tile } from '@/components/tile'
 import { baseColors } from '@/theme/colors'
 import type { DepartmentData } from '@/data/mocks/teacher-statistics'
 
@@ -25,15 +26,31 @@ export function DepartmentChart({
 }: DepartmentChartProps) {
   if (isLoading) {
     return (
-      <div className="bg-card rounded-lg shadow-xs p-4 h-full flex flex-col">
+      <Tile
+        id="department-chart-tile"
+        layoutMode="block"
+        background="card"
+        borderRadius="lg"
+        shadowed
+        padding={16}
+        className="h-full flex flex-col"
+      >
         <h3 className="text-section-title text-heading mb-3">Department</h3>
         <Skeleton className="h-full w-full flex-1" />
-      </div>
+      </Tile>
     )
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-xs p-4 h-full flex flex-col">
+    <Tile
+      id="department-chart-tile"
+      layoutMode="block"
+      background="card"
+      borderRadius="lg"
+      shadowed
+      padding={16}
+      className="h-full flex flex-col"
+    >
       <h3 className="text-section-title text-heading mb-3">Department</h3>
 
       <div className="flex-1 min-h-0 flex flex-col items-center gap-4">
@@ -50,6 +67,7 @@ export function DepartmentChart({
                 dataKey="count"
                 strokeWidth={2}
                 stroke="#fff"
+                isAnimationActive={false}
               >
                 {data.map(entry => (
                   <Cell
@@ -69,29 +87,31 @@ export function DepartmentChart({
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="w-full flex flex-col gap-2">
-          {data.map(item => (
-            <div key={item.name} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <div
-                  className="w-2.5 h-2.5 rounded-sm shrink-0"
-                  style={{ backgroundColor: DEPARTMENT_COLORS[item.name] || '#E0E0E0' }}
-                />
-                <span className="text-xs text-muted-foreground truncate">{item.name}</span>
+        {/* Legend — scrollable when items overflow */}
+        <div className="w-full min-h-0 flex-1 overflow-y-auto scrollbar-thin pr-1">
+          <div className="flex flex-col gap-2">
+            {data.map(item => (
+              <div key={item.name} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className="w-2.5 h-2.5 rounded-sm shrink-0"
+                    style={{ backgroundColor: DEPARTMENT_COLORS[item.name] || '#E0E0E0' }}
+                  />
+                  <span className="text-xs text-muted-foreground truncate">{item.name}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+                    {item.count}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground w-8 text-right">
+                    {item.percentage}%
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-semibold" style={{ color: baseColors.heading }}>
-                  {item.count}
-                </span>
-                <span className="text-[11px] text-muted-foreground w-8 text-right">
-                  {item.percentage}%
-                </span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </Tile>
   )
 }
