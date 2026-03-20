@@ -4,7 +4,7 @@ import { StudentForm } from '../components/StudentForm'
 import type { StudentFormValues } from '../schemas/student-schema'
 import { studentToForm } from '../utils/transform'
 import { useStudentById } from '../hooks/use-student-by-id'
-import { StudentPageLayout } from '../components/StudentPageLayout'
+import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { StudentFormActions } from '../components/StudentFormActions'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
@@ -45,7 +45,7 @@ export default function EditStudent() {
   const defaultValues = student ? studentToForm(student) : undefined
 
   return (
-    <StudentPageLayout
+    <DetailPageLayout
       title="Edit Student"
       breadcrumbs={breadcrumbs}
       showBackButton
@@ -71,6 +71,6 @@ export default function EditStudent() {
           />
         </>
       )}
-    </StudentPageLayout>
+    </DetailPageLayout>
   )
 }

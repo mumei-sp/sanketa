@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { StudentForm } from '../components/StudentForm'
 import type { StudentFormValues } from '../schemas/student-schema'
-import { StudentPageLayout } from '../components/StudentPageLayout'
+import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { StudentFormActions } from '../components/StudentFormActions'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
@@ -26,7 +26,7 @@ export default function AddStudent() {
   const breadcrumbs = React.useMemo(() => getStudentBreadcrumbs('add'), [])
 
   return (
-    <StudentPageLayout
+    <DetailPageLayout
       title="Add New Student"
       breadcrumbs={breadcrumbs}
       showBackButton
@@ -39,6 +39,6 @@ export default function AddStudent() {
         saveLabel={STUDENT_LABELS.SAVE_AND_ADD}
         cancelLabel={STUDENT_LABELS.CANCEL}
       />
-    </StudentPageLayout>
+    </DetailPageLayout>
   )
 }

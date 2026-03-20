@@ -56,7 +56,8 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
       borderRadius="lg"
       shadowed
       padding={16}
-      className="flex flex-col gap-3 h-full"
+      className="flex flex-col gap-3 h-full cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleViewDetails}
     >
       {/* Profile Header */}
       <div className="flex items-center gap-3">
@@ -112,18 +113,18 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
       <div className="flex items-center justify-between pt-3 border-t border-border/50">
         <div className="flex items-center gap-2">
           {/* Phone & MessageCircle: visible on tablet/mobile, hidden on desktop */}
-          <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
+          <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
             <Phone className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
-          <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
+          <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
             <WhatsAppIcon className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
-          <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
+          <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
             <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
         </div>
         <Button
-          onClick={handleViewDetails}
+          onClick={e => e.stopPropagation()}
           size="sm"
           className="h-7 text-xs px-3 hover:opacity-90 border-0"
           style={{

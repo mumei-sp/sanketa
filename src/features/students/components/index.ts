@@ -1,6 +1,5 @@
 export { StudentForm, type StudentFormProps } from './StudentForm'
 export * from './sections'
-export { StudentPageLayout, type StudentPageLayoutProps } from './StudentPageLayout'
 export { StudentFormActions, type StudentFormActionsProps } from './StudentFormActions'
 export { StudentsTable } from './StudentsTable'
 export { studentColumns } from './student-columns'

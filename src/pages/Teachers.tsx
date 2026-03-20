@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -83,6 +84,7 @@ function TeacherCardSkeleton() {
  * Displays teachers in a grid layout with search, filter, sort, and pagination
  */
 export default function Teachers() {
+  const navigate = useNavigate()
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
   const [teacherStatistics, setTeacherStatistics] = React.useState<TeacherStatistics | null>(null)
   const [departmentData, setDepartmentData] = React.useState<DepartmentData[]>([])
@@ -225,9 +227,9 @@ export default function Teachers() {
 
   const handleViewDetails = React.useCallback(
     (teacher: Teacher) => {
-      console.log('View details for teacher:', teacher.id)
+      navigate(`/teachers/details/${teacher.id}`)
     },
-    [],
+    [navigate],
   )
 
   const handleAddTeacher = React.useCallback(() => {

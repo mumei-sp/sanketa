@@ -1,12 +1,11 @@
-import * as React from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { Tile } from '@/components/tile'
+import { ProfileCard } from '@/components/ui/profile-card'
+import { InfoRow } from '@/components/ui/info-row'
 import { StatusBadge } from './StatusBadge'
 import { Cake, Phone, MapPin } from 'lucide-react'
 import { fontSizes, fontWeights } from '@/config/typography'
-import { spacing, spacingRoles } from '@/config/spacing'
-import { primary, accent } from '@/theme/colors'
+import { spacing } from '@/config/spacing'
 import type { Student } from '../types'
 import {
   getDisplayName,
@@ -17,142 +16,44 @@ import {
   getClassLabel,
 } from '../utils/formatting'
 
-/**
- * StudentProfileCard component
- * Displays student profile information using Tile components
- */
 interface StudentProfileCardProps {
   student: Student
 }
 
+/**
+ * StudentProfileCard component
+ * Uses shared ProfileCard for avatar/name/badges, with student-specific
+ * personal info and guardian sections as children.
+ */
 export function StudentProfileCard({ student }: StudentProfileCardProps) {
   const displayName = getDisplayName(student)
-  const initials = displayName
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-
   const profilePictureUrl = student.profilePictureUrl || student.avatarUrl
   const classLabel = getClassLabel(student.gradeLevel, student.section) || student.class || 'N/A'
 
-  // Detect avatar type: photo vs illustration
-  // Photos typically have image extensions, illustrations might be emoji URLs or data URIs
-  const isPhoto =
-    profilePictureUrl &&
-    (profilePictureUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) ||
-      profilePictureUrl.startsWith('data:image/') ||
-      profilePictureUrl.startsWith('http') ||
-      profilePictureUrl.startsWith('/'))
-
-  // Background color based on gender
-  // Pink for female, Blue for male
-  const avatarBackground =
-    student.gender === 1 // Female
-      ? primary.base // Pink for female
-      : accent.base // Blue for male
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
-      {/* Profile Picture and Name Section */}
-      <div className="flex flex-col items-center" style={{ gap: spacing['3'] }}>
-        <Avatar
-          className="rounded-lg"
+    <ProfileCard
+      name={displayName}
+      avatarUrl={profilePictureUrl}
+      avatarSize="8rem"
+      gender={student.gender}
+      wrapped={false}
+      badges={[
+        { label: student.studentId, variant: 'muted' },
+        { label: classLabel, variant: 'muted' },
+      ]}
+    >
+      {/* Status badge — rendered separately since it uses a custom component */}
+      <div className="flex justify-center" style={{ marginTop: `-${spacing['2']}` }}>
+        <StatusBadge
+          status={student.status}
+          className="font-medium"
           style={{
-            width: '8rem',
-            height: '8rem',
-            borderRadius: '1rem',
-            marginTop: '1rem',
-            marginBottom: '1rem',
-            backgroundColor: avatarBackground,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
+            height: spacing['7'],
+            paddingLeft: spacing['3'],
+            paddingRight: spacing['3'],
+            fontSize: fontSizes.xs,
           }}
-        >
-          <AvatarImage
-            src={profilePictureUrl}
-            alt={displayName}
-            className="rounded-lg !h-auto !w-auto"
-            style={{
-              borderRadius: '1rem',
-              width: isPhoto ? '90%' : '60%',
-              height: isPhoto ? '90%' : '60%',
-              objectFit: isPhoto ? 'cover' : 'contain',
-              position: 'relative',
-              zIndex: 1,
-            }}
-          />
-          <AvatarFallback
-            className="text-muted-foreground rounded-lg"
-            style={{
-              borderRadius: '1rem',
-              fontSize: fontSizes['3xl'],
-              backgroundColor: avatarBackground,
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 0,
-            }}
-          >
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <h2
-          className="font-semibold text-center"
-          style={{ fontSize: fontSizes.xl, marginBottom: spacing['3'] }}
-        >
-          {displayName}
-        </h2>
-
-        {/* Tags Section */}
-        <div className="flex flex-wrap justify-center" style={{ gap: spacing['2'] }}>
-          <span
-            className="bg-muted font-medium"
-            style={{
-              height: spacing['7'],
-              paddingLeft: spacing['3'],
-              paddingRight: spacing['3'],
-              borderRadius: '999rem',
-              fontSize: fontSizes.xs,
-              display: 'inline-flex',
-              alignItems: 'center',
-            }}
-          >
-            {student.studentId}
-          </span>
-          <span
-            className="bg-muted font-medium"
-            style={{
-              height: spacing['7'],
-              paddingLeft: spacing['3'],
-              paddingRight: spacing['3'],
-              borderRadius: '999rem',
-              fontSize: fontSizes.xs,
-              display: 'inline-flex',
-              alignItems: 'center',
-            }}
-          >
-            {classLabel}
-          </span>
-          <StatusBadge
-            status={student.status}
-            className="font-medium"
-            style={{
-              height: spacing['7'],
-              paddingLeft: spacing['3'],
-              paddingRight: spacing['3'],
-              fontSize: fontSizes.xs,
-            }}
-          />
-        </div>
+        />
       </div>
 
       {/* Personal Information Section */}
@@ -164,125 +65,26 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
         style={{ padding: spacing['5'] }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              minHeight: '2.25rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
-              <span
-                className="text-muted-foreground"
-                style={{
-                  fontSize: spacing['4'],
-                  width: spacing['4'],
-                  height: spacing['4'],
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {getGenderIcon(student.gender)}
-              </span>
-              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
-                Gender
-              </span>
-            </div>
-            <p
-              className="font-medium"
-              style={{
-                fontSize: fontSizes.sm,
-                textAlign: 'right',
-                maxWidth: '60%',
-                lineHeight: '1.4',
-              }}
-            >
-              {getGenderLabel(student.gender)}
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              minHeight: '2.25rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
-              <Cake className="text-muted-foreground" style={{ width: spacing['4'], height: spacing['4'] }} />
-              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
-                Date of Birth
-              </span>
-            </div>
-            <p
-              className="font-medium"
-              style={{
-                fontSize: fontSizes.sm,
-                textAlign: 'right',
-                maxWidth: '60%',
-                lineHeight: '1.4',
-              }}
-            >
-              {formatDate(student.dateOfBirth)}
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              minHeight: '2.25rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
-              <Phone className="text-muted-foreground" style={{ width: spacing['4'], height: spacing['4'] }} />
-              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
-                Phone Number
-              </span>
-            </div>
-            <p
-              className="font-medium"
-              style={{
-                fontSize: fontSizes.sm,
-                textAlign: 'right',
-                maxWidth: '60%',
-                lineHeight: '1.4',
-              }}
-            >
-              {formatPhone(student.primaryPhone, student.phoneCountryCode)}
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              minHeight: '2.25rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
-              <MapPin className="text-muted-foreground" style={{ width: spacing['4'], height: spacing['4'] }} />
-              <span className="text-muted-foreground" style={{ fontSize: fontSizes.xs }}>
-                Address
-              </span>
-            </div>
-            <p
-              className="font-medium"
-              style={{
-                fontSize: fontSizes.sm,
-                textAlign: 'right',
-                maxWidth: '60%',
-                lineHeight: '1.4',
-              }}
-            >
-              {student.address || 'N/A'}
-            </p>
-          </div>
+          <InfoRow
+            icon={<span>{getGenderIcon(student.gender)}</span>}
+            label="Gender"
+            value={getGenderLabel(student.gender)}
+          />
+          <InfoRow
+            icon={<Cake className="w-4 h-4 text-muted-foreground" />}
+            label="Date of Birth"
+            value={formatDate(student.dateOfBirth)}
+          />
+          <InfoRow
+            icon={<Phone className="w-4 h-4 text-muted-foreground" />}
+            label="Phone Number"
+            value={formatPhone(student.primaryPhone, student.phoneCountryCode)}
+          />
+          <InfoRow
+            icon={<MapPin className="w-4 h-4 text-muted-foreground" />}
+            label="Address"
+            value={student.address || 'N/A'}
+          />
         </div>
       </Tile>
 
@@ -307,48 +109,12 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {student.guardians.father && student.guardians.father.name && (
                 <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      minHeight: '2.75rem',
-                    }}
-                  >
-                    <span
-                      className="text-muted-foreground"
-                      style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-                    >
-                      Father
-                    </span>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        maxWidth: '60%',
-                        gap: spacing['1'],
-                      }}
-                    >
-                      <p
-                        className="font-semibold"
-                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
-                      >
-                        {student.guardians.father.name}
-                      </p>
-                      {student.guardians.father.phone && (
-                        <p
-                          className="text-muted-foreground"
-                          style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-                        >
-                          {formatPhone(
-                            student.guardians.father.phone,
-                            student.guardians.father.phoneCountryCode,
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <GuardianRow
+                    label="Father"
+                    name={student.guardians.father.name}
+                    phone={student.guardians.father.phone}
+                    phoneCountryCode={student.guardians.father.phoneCountryCode}
+                  />
                   {(student.guardians.mother?.name ||
                     student.guardians.alternativeGuardian?.name) && (
                     <Separator
@@ -361,48 +127,12 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
 
               {student.guardians.mother && student.guardians.mother.name && (
                 <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      minHeight: '2.75rem',
-                    }}
-                  >
-                    <span
-                      className="text-muted-foreground"
-                      style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-                    >
-                      Mother
-                    </span>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        maxWidth: '60%',
-                        gap: spacing['1'],
-                      }}
-                    >
-                      <p
-                        className="font-semibold"
-                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
-                      >
-                        {student.guardians.mother.name}
-                      </p>
-                      {student.guardians.mother.phone && (
-                        <p
-                          className="text-muted-foreground"
-                          style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-                        >
-                          {formatPhone(
-                            student.guardians.mother.phone,
-                            student.guardians.mother.phoneCountryCode,
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <GuardianRow
+                    label="Mother"
+                    name={student.guardians.mother.name}
+                    phone={student.guardians.mother.phone}
+                    phoneCountryCode={student.guardians.mother.phoneCountryCode}
+                  />
                   {student.guardians.alternativeGuardian?.name && (
                     <Separator
                       className="my-0.5"
@@ -414,55 +144,76 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
 
               {student.guardians.alternativeGuardian &&
                 student.guardians.alternativeGuardian.name && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      minHeight: '2.75rem',
-                    }}
-                  >
-                    <span
-                      className="text-muted-foreground"
-                      style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-                    >
-                      Alternative Guardian
-                      {student.guardians.alternativeGuardian.relation &&
-                        ` (${student.guardians.alternativeGuardian.relation})`}
-                    </span>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        maxWidth: '60%',
-                        gap: spacing['1'],
-                      }}
-                    >
-                      <p
-                        className="font-semibold"
-                        style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
-                      >
-                        {student.guardians.alternativeGuardian.name}
-                      </p>
-                      {student.guardians.alternativeGuardian.phone && (
-                        <p
-                          className="text-muted-foreground"
-                          style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-                        >
-                          {formatPhone(
-                            student.guardians.alternativeGuardian.phone,
-                            student.guardians.alternativeGuardian.phoneCountryCode,
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <GuardianRow
+                    label={`Alternative Guardian${
+                      student.guardians.alternativeGuardian.relation
+                        ? ` (${student.guardians.alternativeGuardian.relation})`
+                        : ''
+                    }`}
+                    name={student.guardians.alternativeGuardian.name}
+                    phone={student.guardians.alternativeGuardian.phone}
+                    phoneCountryCode={student.guardians.alternativeGuardian.phoneCountryCode}
+                  />
                 )}
             </div>
           </Tile>
         </div>
       )}
+    </ProfileCard>
+  )
+}
+
+/** Helper for rendering a single guardian row */
+function GuardianRow({
+  label,
+  name,
+  phone,
+  phoneCountryCode,
+}: {
+  label: string
+  name: string
+  phone?: string
+  phoneCountryCode?: string
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        minHeight: '2.75rem',
+      }}
+    >
+      <span
+        className="text-muted-foreground"
+        style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
+      >
+        {label}
+      </span>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          maxWidth: '60%',
+          gap: spacing['1'],
+        }}
+      >
+        <p
+          className="font-semibold"
+          style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
+        >
+          {name}
+        </p>
+        {phone && (
+          <p
+            className="text-muted-foreground"
+            style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
+          >
+            {formatPhone(phone, phoneCountryCode)}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

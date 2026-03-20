@@ -2,12 +2,12 @@ import * as React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { TileWrapper, Tile } from '@/components/tile'
+import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { Edit } from 'lucide-react'
 import { useStudentById } from '@/features/students/hooks/use-student-by-id'
 import { StudentProfileCard } from '@/features/students/components/StudentProfileCard'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { AcademicPerformance } from '../components/AcademicPerformance'
-import { StudentPageLayout } from '../components/StudentPageLayout'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { STUDENT_MESSAGES } from '../constants'
 
@@ -37,7 +37,7 @@ export default function StudentDetails() {
   )
 
   return (
-    <StudentPageLayout
+    <DetailPageLayout
       title="Student Details"
       breadcrumbs={breadcrumbs}
       showBackButton
@@ -89,7 +89,6 @@ export default function StudentDetails() {
 
         {/* Right Column: Empty space (25% - 3 columns) */}
       </TileWrapper>
-    </StudentPageLayout>
+    </DetailPageLayout>
   )
 }
-
