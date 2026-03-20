@@ -26,6 +26,8 @@ export interface TextareaFieldProps<T extends FieldValues> {
   className?: string
   /** Additional className for the textarea element */
   textareaClassName?: string
+  /** Show required asterisk next to label */
+  required?: boolean
 }
 
 /**
@@ -42,6 +44,7 @@ export function TextareaField<T extends FieldValues>({
   placeholder,
   className,
   textareaClassName,
+  required,
 }: TextareaFieldProps<T>) {
   const fieldId = React.useId()
 
@@ -53,7 +56,7 @@ export function TextareaField<T extends FieldValues>({
         <div className={cn('space-y-2', className)}>
           {label && (
             <Label htmlFor={fieldId} className={disabled ? 'opacity-60' : ''}>
-              {label}
+              {label}{required && <span className="text-destructive ml-0.5">*</span>}
             </Label>
           )}
           <Textarea

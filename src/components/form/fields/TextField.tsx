@@ -24,6 +24,8 @@ export interface TextFieldProps<T extends FieldValues> {
   placeholder?: string
   /** Additional className for the wrapper */
   className?: string
+  /** Show required asterisk next to label */
+  required?: boolean
 }
 
 /**
@@ -39,6 +41,7 @@ export function TextField<T extends FieldValues>({
   type = 'text',
   placeholder,
   className,
+  required,
 }: TextFieldProps<T>) {
   const fieldId = React.useId()
 
@@ -50,7 +53,7 @@ export function TextField<T extends FieldValues>({
         <div className={cn('space-y-2', className)}>
           {label && (
             <Label htmlFor={fieldId} className={disabled ? 'opacity-60' : ''}>
-              {label}
+              {label}{required && <span className="text-destructive ml-0.5">*</span>}
             </Label>
           )}
           <Input

@@ -23,6 +23,8 @@ export interface NoticeBoardEntry {
   audience: string
   postDate: string
   expiryDate: string
+  dateLabel?: string
+  dateEndValue?: string
   createdBy: string
   status: NoticeStatus
   thumbnail: string

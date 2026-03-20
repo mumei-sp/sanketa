@@ -20,6 +20,8 @@ export interface DateFieldProps<T extends FieldValues> {
   disabled?: boolean
   /** Additional className for the wrapper */
   className?: string
+  /** Show required asterisk next to label */
+  required?: boolean
 }
 
 /**
@@ -34,6 +36,7 @@ export function DateField<T extends FieldValues>({
   description,
   disabled,
   className,
+  required,
 }: DateFieldProps<T>) {
   const fieldId = React.useId()
 
@@ -60,7 +63,7 @@ export function DateField<T extends FieldValues>({
           <div className={cn('space-y-2', className)}>
             {label && (
               <Label htmlFor={fieldId} className={disabled ? 'opacity-60' : ''}>
-                {label}
+                {label}{required && <span className="text-destructive ml-0.5">*</span>}
               </Label>
             )}
             <Input

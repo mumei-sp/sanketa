@@ -12,10 +12,13 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Tile } from '@/components/tile'
 import { baseColors, text } from '@/theme/colors'
 import { useIsDesktop } from '@/hooks/use-mobile'
-import { ClipboardList } from 'lucide-react'
-import { fetchNoticeBoardEntries, deleteNoticeBoardEntry } from '@/api/services/notice-board-service'
+import { ClipboardList, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { fetchNoticeBoardEntries, deleteNoticeBoardEntry, createNoticeBoardEntry, updateNoticeBoardEntry, incrementNoticeViews } from '@/api/services/notice-board-service'
 import { EmptyState } from '@/components/ui/empty-state'
-import { NoticeCard, NoticeDetailBoard } from '@/features/notice-board/components'
+import { NoticeCard, NoticeDetailBoard, CreateNoticeForm } from '@/features/notice-board/components'
+import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import type { NoticeBoardEntry, NoticeCategory } from '@/features/notice-board/types'
 
@@ -32,6 +35,29 @@ const CATEGORIES: NoticeCategory[] = [
   'Announcement',
 ]
 
+function parseDisplayDate(dateStr: string): string {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return ''
+  return date.toISOString().split('T')[0]
+}
+
+function entryToFormValues(entry: NoticeBoardEntry): NoticeFormValues & { id: string } {
+  return {
+    id: entry.id,
+    title: entry.title,
+    content: entry.content,
+    category: entry.tags[0]?.label || '',
+    audience: entry.audience,
+    status: entry.status,
+    postDate: parseDisplayDate(entry.postDate) || new Date().toISOString(),
+    dateLabel: entry.dateLabel || 'Due Date',
+    dateValue: parseDisplayDate(entry.expiryDate),
+    dateEndValue: parseDisplayDate(entry.dateEndValue || ''),
+    thumbnail: entry.thumbnail,
+  }
+}
+
 export default function NoticeBoard() {
   const isDesktop = useIsDesktop()
 
@@ -42,6 +68,8 @@ export default function NoticeBoard() {
   const [sortOption, setSortOption] = React.useState<SortOption>('latest')
   const [currentPage, setCurrentPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(9)
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false)
+  const [editingNotice, setEditingNotice] = React.useState<NoticeBoardEntry | null>(null)
 
   React.useEffect(() => {
     async function load() {
@@ -93,13 +121,17 @@ export default function NoticeBoard() {
 
   // Auto-select first notice on desktop once data is loaded
   React.useEffect(() => {
-    if (isDesktop && filteredAndSorted.length > 0 && !selectedNotice) {
+    if (isDesktop && filteredAndSorted.length > 0 && !selectedNotice && !isCreateOpen && !editingNotice) {
       setSelectedNotice(filteredAndSorted[0])
     }
-  }, [isDesktop, filteredAndSorted, selectedNotice])
+  }, [isDesktop, filteredAndSorted, selectedNotice, isCreateOpen, editingNotice])
 
   const handleNoticeClick = React.useCallback((notice: NoticeBoardEntry) => {
     setSelectedNotice(notice)
+    incrementNoticeViews(notice.id).then(newCount => {
+      setNotices(prev => prev.map(n => n.id === notice.id ? { ...n, views: newCount } : n))
+      setSelectedNotice(prev => prev && prev.id === notice.id ? { ...prev, views: newCount } : prev)
+    })
   }, [])
 
   const handleCloseDetail = React.useCallback(() => {
@@ -111,6 +143,26 @@ export default function NoticeBoard() {
     setNotices(prev => prev.filter(n => n.id !== id))
     setSelectedNotice(null)
   }, [])
+
+  const handleCreateNotice = React.useCallback(async (data: NoticeFormValues) => {
+    const newEntry = await createNoticeBoardEntry(data)
+    setNotices(prev => [newEntry, ...prev])
+    setIsCreateOpen(false)
+    setSelectedNotice(newEntry)
+  }, [])
+
+  const handleEditNotice = React.useCallback((notice: NoticeBoardEntry) => {
+    setSelectedNotice(null)
+    setEditingNotice(notice)
+  }, [])
+
+  const handleUpdateNotice = React.useCallback(async (data: NoticeFormValues) => {
+    if (!editingNotice) return
+    const updated = await updateNoticeBoardEntry(editingNotice.id, data)
+    setNotices(prev => prev.map(n => n.id === updated.id ? updated : n))
+    setEditingNotice(null)
+    setSelectedNotice(updated)
+  }, [editingNotice])
 
   const handlePageChange = React.useCallback((page: number) => {
     setCurrentPage(page)
@@ -196,6 +248,11 @@ export default function NoticeBoard() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <Button size="sm" className="gap-1.5 ml-2 h-8 px-4 font-semibold text-sm" onClick={() => { setSelectedNotice(null); setIsCreateOpen(true) }}>
+                    <Plus className="size-4" />
+                    Create
+                  </Button>
                 </div>
               </div>
             </Tile>
@@ -217,6 +274,14 @@ export default function NoticeBoard() {
                     notices.length === 0
                       ? 'There are no notices to display. Create one to get started.'
                       : 'No notices match the selected category. Try changing the filter.'
+                  }
+                  action={
+                    notices.length === 0 ? (
+                      <Button size="sm" className="gap-1.5" onClick={() => { setSelectedNotice(null); setIsCreateOpen(true) }}>
+                        <Plus className="size-3.5" />
+                        Create Notice
+                      </Button>
+                    ) : undefined
                   }
                 />
               </Tile>
@@ -251,6 +316,7 @@ export default function NoticeBoard() {
                 notice={selectedNotice}
                 onClose={handleCloseDetail}
                 onDelete={handleDeleteNotice}
+                onEdit={handleEditNotice}
                 showClose={false}
               />
             </div>
@@ -270,11 +336,41 @@ export default function NoticeBoard() {
                 notice={selectedNotice}
                 onClose={handleCloseDetail}
                 onDelete={handleDeleteNotice}
+                onEdit={handleEditNotice}
               />
             )}
           </SheetContent>
         </Sheet>
       )}
+      {/* Create Notice - Sheet up to sidebar edge */}
+      <Sheet open={isCreateOpen} onOpenChange={open => { if (!open) setIsCreateOpen(false) }}>
+        <SheetContent side="right" size="full" className="p-0 w-full md:w-[calc(100vw-16rem)] [&>button]:hidden">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Create Notice</SheetTitle>
+          </SheetHeader>
+          <CreateNoticeForm
+            onSubmit={handleCreateNotice}
+            onCancel={() => setIsCreateOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+
+      {/* Edit Notice - Sheet up to sidebar edge */}
+      <Sheet open={!!editingNotice} onOpenChange={open => { if (!open) setEditingNotice(null) }}>
+        <SheetContent side="right" size="full" className="p-0 w-full md:w-[calc(100vw-16rem)] [&>button]:hidden">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Edit Notice</SheetTitle>
+          </SheetHeader>
+          {editingNotice && (
+            <CreateNoticeForm
+              key={editingNotice.id}
+              onSubmit={handleUpdateNotice}
+              onCancel={() => setEditingNotice(null)}
+              initialData={entryToFormValues(editingNotice)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

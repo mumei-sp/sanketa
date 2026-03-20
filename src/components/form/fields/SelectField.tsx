@@ -38,6 +38,8 @@ export interface SelectFieldProps<T extends FieldValues> {
   placeholder?: string
   /** Additional className for the wrapper */
   className?: string
+  /** Show required asterisk next to label */
+  required?: boolean
 }
 
 /**
@@ -53,6 +55,7 @@ export function SelectField<T extends FieldValues>({
   options,
   placeholder = 'Select an option',
   className,
+  required,
 }: SelectFieldProps<T>) {
   const fieldId = React.useId()
 
@@ -64,7 +67,7 @@ export function SelectField<T extends FieldValues>({
         <div className={cn('w-full space-y-2', className)}>
           {label && (
             <Label htmlFor={fieldId} className={disabled ? 'opacity-60' : ''}>
-              {label}
+              {label}{required && <span className="text-destructive ml-0.5">*</span>}
             </Label>
           )}
           <Select

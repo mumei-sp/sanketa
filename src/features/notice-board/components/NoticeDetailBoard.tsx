@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { X, FileText, Eye, Pencil, Trash2, Share2, Archive } from 'lucide-react'
+import { X, FileText, Eye, Pencil, Trash2, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -30,10 +30,11 @@ interface NoticeDetailBoardProps {
   notice: NoticeBoardEntry
   onClose: () => void
   onDelete?: (id: string) => void
+  onEdit?: (notice: NoticeBoardEntry) => void
   showClose?: boolean
 }
 
-export function NoticeDetailBoard({ notice, onClose, onDelete, showClose = true }: NoticeDetailBoardProps) {
+export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, showClose = true }: NoticeDetailBoardProps) {
   const status = statusStyles[notice.status]
   const [isContentExpanded, setIsContentExpanded] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
@@ -108,8 +109,17 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, showClose = true 
         {/* Details grid */}
         <div className="space-y-3 pt-1">
           <DetailRow label="Audience" value={notice.audience} />
-          <DetailRow label="Post Date" value={`${notice.postDate} - 08:00 AM`} />
-          <DetailRow label="Exp Date" value={`${notice.expiryDate} - 01:00 PM`} />
+          <DetailRow label="Post Date" value={notice.dateLabel ? notice.postDate : `${notice.postDate} - 08:00 AM`} />
+          <DetailRow
+            label={notice.dateLabel || 'Exp Date'}
+            value={
+              notice.dateEndValue
+                ? `${notice.expiryDate} – ${notice.dateEndValue}`
+                : notice.dateLabel
+                  ? notice.expiryDate
+                  : `${notice.expiryDate} - 01:00 PM`
+            }
+          />
         </div>
 
         {/* Content — clamped with show more/less */}
@@ -176,13 +186,13 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, showClose = true 
 
       {/* Action buttons */}
       <div className="flex items-center gap-2 px-5 py-4 border-t">
-        <Button variant="outline" size="sm" className="gap-1.5">
+        <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => onEdit?.(notice)}>
           <Pencil className="size-3.5" />
           Edit
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50">
+            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-red-600 border-red-200 hover:bg-red-50">
               <Trash2 className="size-3.5" />
               Delete
             </Button>
@@ -214,13 +224,9 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, showClose = true 
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <Button variant="outline" size="sm" className="gap-1.5">
+        <Button variant="outline" size="sm" className="flex-1 gap-1.5">
           <Share2 className="size-3.5" />
           Share
-        </Button>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Archive className="size-3.5" />
-          Archive
         </Button>
       </div>
     </Tile>
@@ -230,7 +236,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, showClose = true 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="text-body-muted text-muted-foreground w-[72px] flex-shrink-0">{label}</span>
+      <span className="text-body-muted text-muted-foreground w-[90px] flex-shrink-0">{label}</span>
       <span className="text-body-muted font-medium min-w-0 truncate" style={{ color: baseColors.heading }}>
         {value}
       </span>

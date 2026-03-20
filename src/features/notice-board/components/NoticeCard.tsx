@@ -67,16 +67,20 @@ export function NoticeCard({ notice, isSelected, onClick }: NoticeCardProps) {
       </div>
 
       {/* Dates - stacked vertically with labels */}
-      <div className="hidden md:flex flex-col gap-1.5 flex-shrink-0 text-caption text-muted-foreground w-[180px]">
+      <div className="hidden md:flex flex-col gap-1.5 flex-shrink-0 text-caption text-muted-foreground w-[260px]">
         <span className="flex items-center gap-1.5 whitespace-nowrap">
           <Calendar className="size-3 flex-shrink-0" />
-          <span className="w-[52px]">Post Date</span>
-          <span className="font-medium" style={{ color: baseColors.heading }}>{notice.postDate}</span>
+          <span className="w-[80px] flex-shrink-0 truncate">{notice.dateLabel || 'Exp. Date'}</span>
+          <span className="font-medium truncate" style={{ color: baseColors.heading }}>
+            {notice.dateEndValue
+              ? `${notice.expiryDate} – ${notice.dateEndValue}`
+              : notice.expiryDate}
+          </span>
         </span>
         <span className="flex items-center gap-1.5 whitespace-nowrap">
           <Calendar className="size-3 flex-shrink-0" />
-          <span className="w-[52px]">Exp. Date</span>
-          <span className="font-medium" style={{ color: baseColors.heading }}>{notice.expiryDate}</span>
+          <span className="w-[80px] flex-shrink-0">Post Date</span>
+          <span className="font-medium" style={{ color: baseColors.heading }}>{notice.postDate}</span>
         </span>
       </div>
 
