@@ -63,7 +63,7 @@ export default function TeacherDetails() {
     >
       {teacher && (
         <div
-          className="grid grid-cols-1 md:grid-cols-[25%_1fr] lg:grid-cols-[25%_1fr_25%]"
+          className="grid grid-cols-1 md:grid-cols-[280px_1fr] xl:grid-cols-[25%_1fr_25%]"
           style={{ gap: spacing['4'] }}
         >
           {/* ═══ LEFT COLUMN ═══ */}
@@ -89,7 +89,7 @@ export default function TeacherDetails() {
           </div>
 
           {/* ═══ RIGHT COLUMN ═══ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
+          <div className="md:col-span-2 xl:col-span-1" style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
             {/* Calendar with attendance summary */}
             <MiniCalendar
               year={2035}
@@ -109,7 +109,8 @@ export default function TeacherDetails() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: spacing['8'],
+                      gap: spacing['4'],
+                      flexWrap: 'wrap',
                     }}
                   >
                     {[
@@ -117,11 +118,11 @@ export default function TeacherDetails() {
                       { label: 'Late', value: attendanceSummary.late, color: primary.base },
                       { label: 'On Leave', value: attendanceSummary.onLeave, color: text.heading },
                     ].map(item => (
-                      <div key={item.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing['2'] }}>
-                        <div style={{ width: '64px', height: '5px', borderRadius: '3px', backgroundColor: item.color }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing['2'] }}>
-                          <span style={{ fontSize: fontSizes.sm, fontWeight: 500, color: text.body }}>{item.label}</span>
-                          <span style={{ fontSize: fontSizes.lg, fontWeight: 800, color: text.heading }}>{item.value}</span>
+                      <div key={item.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing['1'] }}>
+                        <div style={{ width: '48px', height: '4px', borderRadius: '3px', backgroundColor: item.color }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing['1'], whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: fontSizes.xs, fontWeight: 500, color: text.body }}>{item.label}</span>
+                          <span style={{ fontSize: fontSizes.base, fontWeight: 800, color: text.heading }}>{item.value}</span>
                         </div>
                       </div>
                     ))}
