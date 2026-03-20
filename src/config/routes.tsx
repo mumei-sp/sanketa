@@ -2,7 +2,6 @@ import { Navigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import { navigationItems, type NavItem, type LeafPaths } from './navigation'
 import Dashboard from '../pages/Dashboard'
-import Inbox from '../pages/Inbox'
 import Calendar from '../pages/Calendar'
 import Teachers from '../pages/Teachers'
 import Students from '../pages/Students'
@@ -20,7 +19,6 @@ import NoticeBoard from '../pages/NoticeBoard'
  */
 const routeConfig: Record<LeafPaths<typeof navigationItems>, React.ComponentType> = {
   '/': Dashboard,
-  '/inbox': Inbox,
   '/calendar': Calendar,
   '/teachers': Teachers,
   '/students': Students,

@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  Inbox,
   Calendar,
   BookOpen,
   Users,
@@ -46,11 +45,6 @@ export const navigationItems: NavItem[] = [
     title: "Dashboard",
     icon: LayoutDashboard,
     path: "/",
-  },
-  {
-    title: "Inbox",
-    icon: Inbox,
-    path: "/inbox",
   },
   {
     title: "Calendar",
