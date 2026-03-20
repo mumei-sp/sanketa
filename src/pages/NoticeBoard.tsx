@@ -12,7 +12,9 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Tile } from '@/components/tile'
 import { baseColors, text } from '@/theme/colors'
 import { useIsDesktop } from '@/hooks/use-mobile'
+import { ClipboardList } from 'lucide-react'
 import { fetchNoticeBoardEntries, deleteNoticeBoardEntry } from '@/api/services/notice-board-service'
+import { EmptyState } from '@/components/ui/empty-state'
 import { NoticeCard, NoticeDetailBoard } from '@/features/notice-board/components'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import type { NoticeBoardEntry, NoticeCategory } from '@/features/notice-board/types'
@@ -82,6 +84,11 @@ export default function NoticeBoard() {
 
   React.useEffect(() => {
     setCurrentPage(1)
+    if (isDesktop && filteredAndSorted.length > 0) {
+      setSelectedNotice(filteredAndSorted[0])
+    } else if (filteredAndSorted.length === 0) {
+      setSelectedNotice(null)
+    }
   }, [categoryFilter, sortOption])
 
   // Auto-select first notice on desktop once data is loaded
@@ -201,9 +208,17 @@ export default function NoticeBoard() {
                 background="card"
                 borderRadius="lg"
                 shadowed={false}
-                className="flex items-center justify-center py-12 border"
+                className="border"
               >
-                <span className="text-muted-foreground">No notices found.</span>
+                <EmptyState
+                  icon={<ClipboardList />}
+                  title={notices.length === 0 ? 'No Notices Yet' : 'No Notices Found'}
+                  description={
+                    notices.length === 0
+                      ? 'There are no notices to display. Create one to get started.'
+                      : 'No notices match the selected category. Try changing the filter.'
+                  }
+                />
               </Tile>
             ) : (
               paginatedNotices.map(notice => (
