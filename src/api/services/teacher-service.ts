@@ -67,6 +67,27 @@ export async function fetchTeacherStatistics(): Promise<TeacherStatistics> {
 }
 
 /**
+ * Mock API service for deleting a teacher by ID
+ * Simulates network delay and removes teacher from mock data
+ *
+ * @param id - The teacher ID to delete
+ */
+export async function deleteTeacher(id: string): Promise<void> {
+  // Simulate network delay (200-500ms)
+  const delay = Math.floor(Math.random() * 300) + 200
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const index = teachersData.findIndex(t => t.id === id)
+      if (index !== -1) {
+        teachersData.splice(index, 1)
+      }
+      resolve()
+    }, delay)
+  })
+}
+
+/**
  * Mock API service for fetching department distribution
  */
 export async function fetchDepartmentDistribution(): Promise<DepartmentData[]> {

@@ -1,8 +1,19 @@
 import * as React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Phone, Mail, MessageCircle } from 'lucide-react'
-import { primary, text, baseColors } from '@/theme/colors'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Phone, Mail, MessageCircle, Pencil, Trash2 } from 'lucide-react'
+import { primary, accent, text, baseColors, status } from '@/theme/colors'
 import { Tile } from '@/components/tile'
 import type { Teacher } from '../types'
 import { getDisplayName, formatPhone } from '../utils/formatting'
@@ -18,13 +29,15 @@ function WhatsAppIcon({ className }: { className?: string }) {
 interface TeacherCardProps {
   teacher: Teacher
   onViewDetails?: (teacher: Teacher) => void
+  onEdit?: (teacher: Teacher) => void
+  onDelete?: (id: string) => Promise<void>
 }
 
 /**
  * TeacherCard component
  * Displays teacher profile information matching Figma design
  */
-export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
+export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: TeacherCardProps) {
   const displayName = getDisplayName(teacher)
   const initials = displayName
     .split(' ')
@@ -42,6 +55,8 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
       profilePictureUrl.startsWith('http') ||
       profilePictureUrl.startsWith('/'))
 
+  const [isDeleting, setIsDeleting] = React.useState(false)
+
   const handleViewDetails = React.useCallback(() => {
     if (onViewDetails) {
       onViewDetails(teacher)
@@ -56,9 +71,69 @@ export function TeacherCard({ teacher, onViewDetails }: TeacherCardProps) {
       borderRadius="lg"
       shadowed
       padding={16}
-      className="flex flex-col gap-3 h-full cursor-pointer hover:shadow-md transition-shadow"
+      className="relative flex flex-col gap-3 h-full cursor-pointer hover:shadow-md transition-shadow"
       onClick={handleViewDetails}
     >
+      {/* Top-right action icons */}
+      {(onEdit || onDelete) && (
+        <div className="absolute top-3 right-3 flex items-center gap-0.5">
+          {onEdit && (
+            <button
+              onClick={e => { e.stopPropagation(); onEdit(teacher) }}
+              className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+              style={{ backgroundColor: accent.soft }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = accent.base }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
+              aria-label="Edit teacher"
+            >
+              <Pencil className="w-3.5 h-3.5" style={{ color: text.heading }} />
+            </button>
+          )}
+          {onDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  onClick={e => e.stopPropagation()}
+                  className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+                  style={{ backgroundColor: status.danger.muted }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = status.danger.muted }}
+                  aria-label="Delete teacher"
+                >
+                  <Trash2 className="w-3.5 h-3.5" style={{ color: status.danger.text }} />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={e => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle style={{ color: text.heading }}>Delete Teacher</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete &ldquo;{displayName}&rdquo;? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    disabled={isDeleting}
+                    onClick={async (e) => {
+                      e.preventDefault()
+                      setIsDeleting(true)
+                      try {
+                        await onDelete?.(teacher.id as string)
+                      } finally {
+                        setIsDeleting(false)
+                      }
+                    }}
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
+      )}
+
       {/* Profile Header */}
       <div className="flex items-center gap-3">
         <Avatar

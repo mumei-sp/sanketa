@@ -6,6 +6,8 @@ import AddStudent from './features/students/pages/AddStudent'
 import EditStudent from './features/students/pages/EditStudent'
 import StudentDetails from './features/students/pages/StudentDetails'
 import TeacherDetails from './features/teachers/pages/TeacherDetails'
+import AddTeacher from './features/teachers/pages/AddTeacher'
+import EditTeacher from './features/teachers/pages/EditTeacher'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -45,6 +47,14 @@ const router = createBrowserRouter([
           {
             path: 'students/details/:id',
             element: <StudentDetails />,
+          },
+          {
+            path: 'teachers/add',
+            element: <AddTeacher />,
+          },
+          {
+            path: 'teachers/edit/:id',
+            element: <EditTeacher />,
           },
           {
             path: 'teachers/details/:id',

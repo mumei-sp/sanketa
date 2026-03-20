@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Search, Plus } from 'lucide-react'
-import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution } from '@/api/services/teacher-service'
+import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution, deleteTeacher } from '@/api/services/teacher-service'
 import type { Teacher } from '@/features/teachers/types'
 import type { TeacherStatistics, DepartmentData } from '@/data/mocks/teacher-statistics'
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
@@ -232,9 +232,24 @@ export default function Teachers() {
     [navigate],
   )
 
+  const handleEditTeacher = React.useCallback(
+    (teacher: Teacher) => {
+      navigate(`/teachers/edit/${teacher.id}`)
+    },
+    [navigate],
+  )
+
+  const handleDeleteTeacher = React.useCallback(
+    async (id: string) => {
+      await deleteTeacher(id)
+      setTeachers(prev => prev.filter(t => t.id !== id))
+    },
+    [],
+  )
+
   const handleAddTeacher = React.useCallback(() => {
-    console.log('Add teacher')
-  }, [])
+    navigate('/teachers/add')
+  }, [navigate])
 
   const totalTeachers = teacherStatistics?.total ?? 86
 
@@ -357,6 +372,8 @@ export default function Teachers() {
                 key={teacher.id}
                 teacher={teacher}
                 onViewDetails={handleViewDetails}
+                onEdit={handleEditTeacher}
+                onDelete={handleDeleteTeacher}
               />
             ))}
           </TileWrapper>
