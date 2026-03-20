@@ -10,3 +10,13 @@ export async function fetchNoticeBoardEntries(): Promise<NoticeBoardEntry[]> {
   await randomDelay()
   return [...noticeBoardEntries]
 }
+
+export async function deleteNoticeBoardEntry(id: string): Promise<void> {
+  await randomDelay()
+  // TODO: Replace with actual API call, e.g.:
+  // await api.delete(`/notices/${id}`)
+  const index = noticeBoardEntries.findIndex(n => n.id === id)
+  if (index !== -1) {
+    noticeBoardEntries.splice(index, 1)
+  }
+}

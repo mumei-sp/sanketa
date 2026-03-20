@@ -12,7 +12,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Tile } from '@/components/tile'
 import { baseColors, text } from '@/theme/colors'
 import { useIsDesktop } from '@/hooks/use-mobile'
-import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
+import { fetchNoticeBoardEntries, deleteNoticeBoardEntry } from '@/api/services/notice-board-service'
 import { NoticeCard, NoticeDetailBoard } from '@/features/notice-board/components'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import type { NoticeBoardEntry, NoticeCategory } from '@/features/notice-board/types'
@@ -96,6 +96,12 @@ export default function NoticeBoard() {
   }, [])
 
   const handleCloseDetail = React.useCallback(() => {
+    setSelectedNotice(null)
+  }, [])
+
+  const handleDeleteNotice = React.useCallback(async (id: string) => {
+    await deleteNoticeBoardEntry(id)
+    setNotices(prev => prev.filter(n => n.id !== id))
     setSelectedNotice(null)
   }, [])
 
@@ -229,6 +235,7 @@ export default function NoticeBoard() {
               <NoticeDetailBoard
                 notice={selectedNotice}
                 onClose={handleCloseDetail}
+                onDelete={handleDeleteNotice}
                 showClose={false}
               />
             </div>
@@ -247,6 +254,7 @@ export default function NoticeBoard() {
               <NoticeDetailBoard
                 notice={selectedNotice}
                 onClose={handleCloseDetail}
+                onDelete={handleDeleteNotice}
               />
             )}
           </SheetContent>

@@ -1,6 +1,17 @@
 import * as React from 'react'
 import { X, FileText, Eye, Pencil, Trash2, Share2, Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Tile } from '@/components/tile'
 import { baseColors } from '@/theme/colors'
 import type { NoticeBoardEntry, NoticeStatus } from '../types'
@@ -18,12 +29,14 @@ const CONTENT_LINE_CLAMP = 4
 interface NoticeDetailBoardProps {
   notice: NoticeBoardEntry
   onClose: () => void
+  onDelete?: (id: string) => void
   showClose?: boolean
 }
 
-export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeDetailBoardProps) {
+export function NoticeDetailBoard({ notice, onClose, onDelete, showClose = true }: NoticeDetailBoardProps) {
   const status = statusStyles[notice.status]
   const [isContentExpanded, setIsContentExpanded] = React.useState(false)
+  const [isDeleting, setIsDeleting] = React.useState(false)
 
   // Reset expanded state when notice changes
   React.useEffect(() => {
@@ -167,10 +180,40 @@ export function NoticeDetailBoard({ notice, onClose, showClose = true }: NoticeD
           <Pencil className="size-3.5" />
           Edit
         </Button>
-        <Button variant="outline" size="sm" className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50">
-          <Trash2 className="size-3.5" />
-          Delete
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50">
+              <Trash2 className="size-3.5" />
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Notice</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{notice.title}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={async (e) => {
+                  e.preventDefault()
+                  setIsDeleting(true)
+                  try {
+                    await onDelete?.(notice.id)
+                  } finally {
+                    setIsDeleting(false)
+                  }
+                }}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Button variant="outline" size="sm" className="gap-1.5">
           <Share2 className="size-3.5" />
           Share
