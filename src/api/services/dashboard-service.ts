@@ -63,3 +63,34 @@ export async function fetchRecentActivity(): Promise<RecentActivityItem[]> {
   await randomDelay()
   return [...recentActivityItems]
 }
+
+export async function createTodoItem(data: { text: string; date: string }): Promise<TodoItem> {
+  await randomDelay()
+  const newItem: TodoItem = {
+    id: `todo-${Date.now()}`,
+    text: data.text,
+    date: data.date,
+    completed: false,
+  }
+  todoItems.push(newItem)
+  return { ...newItem }
+}
+
+export async function updateTodoItem(
+  id: string,
+  data: Partial<Pick<TodoItem, 'text' | 'date' | 'completed'>>,
+): Promise<TodoItem> {
+  await randomDelay()
+  const item = todoItems.find(t => t.id === id)
+  if (!item) throw new Error(`Todo item not found: ${id}`)
+  if (data.text !== undefined) item.text = data.text
+  if (data.date !== undefined) item.date = data.date
+  if (data.completed !== undefined) item.completed = data.completed
+  return { ...item }
+}
+
+export async function deleteTodoItem(id: string): Promise<void> {
+  await randomDelay()
+  const index = todoItems.findIndex(t => t.id === id)
+  if (index !== -1) todoItems.splice(index, 1)
+}

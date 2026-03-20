@@ -193,6 +193,11 @@
   --accent-foreground: #15446e; /* text.heading for contrast */
   /* Status colors */
   --destructive: #f87171; /* status.danger.base - soft red for "At Risk" */
+  /* Delete action colors (unified) */
+  --delete-action-bg: #D64445; /* status.danger.text - rich but not harsh */
+  --delete-action-bg-hover: #B53A3B; /* darken(status.danger.text, 5) */
+  --delete-action-text: #D64445; /* same as bg for text usage */
+  --delete-action-soft: #FADCDC; /* status.danger.soft */
   /* Border colors */
   --border: #e5e5e5; /* border.default */
   --input: #e5e5e5; /* border.default */

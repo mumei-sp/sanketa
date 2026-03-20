@@ -248,6 +248,27 @@ export const status = {
 } as const
 
 // ============================================================================
+// Delete / Destructive Action Colors
+// ============================================================================
+
+/**
+ * Unified delete-action palette used for delete buttons, confirmation dialogs,
+ * and dropdown menu items. Softer than raw red, consistent with the pastel theme.
+ */
+export const deleteAction = {
+  /** Button / badge background */
+  bg: status.danger.text, // #D64445 – rich but not screaming red
+  /** Hover state for buttons */
+  bgHover: darken(status.danger.text, 5), // slightly darker on hover
+  /** Text color for inline delete labels & dropdown items */
+  text: status.danger.text, // #D64445
+  /** Soft tinted background for outlined/ghost delete buttons */
+  soft: status.danger.soft, // very light red bg
+  /** Muted background (icon containers, subtle highlights) */
+  muted: status.danger.muted, // even lighter
+} as const
+
+// ============================================================================
 // Complete Color System Export
 // ============================================================================
 
