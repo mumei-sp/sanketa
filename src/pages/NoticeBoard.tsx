@@ -242,7 +242,7 @@ export default function NoticeBoard() {
           open={!!selectedNotice}
           onOpenChange={open => { if (!open) handleCloseDetail() }}
         >
-          <SheetContent side="right" className="p-0 [&>button]:hidden w-full sm:max-w-md">
+          <SheetContent side="right" size="md" className="p-0 [&>button]:hidden">
             {selectedNotice && (
               <NoticeDetailBoard
                 notice={selectedNotice}
