@@ -1,17 +1,40 @@
-import { Calendar, Clock, MapPin, FileText } from 'lucide-react'
+import * as React from 'react'
+import { Calendar, Clock, MapPin, FileText, Link2, Users, Flag, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { baseColors } from '@/theme/colors'
 import { categoryConfig } from '../utils/category-config'
 import type { CalendarEventExtendedProps } from '../types'
 
+const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
+  low: { label: 'Low', color: '#22c55e' },
+  medium: { label: 'Medium', color: '#f59e0b' },
+  high: { label: 'High', color: '#ef4444' },
+}
+
 interface ScheduleDetailCardProps {
+  id: string
   title: string
   start: Date | string
   extendedProps: CalendarEventExtendedProps
+  onEdit?: (id: string) => void
+  onDelete?: (id: string) => void
 }
 
-export function ScheduleDetailCard({ title, start, extendedProps }: ScheduleDetailCardProps) {
-  const { category, location, notes, startTimeDisplay, endTimeDisplay } = extendedProps
+export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, onDelete }: ScheduleDetailCardProps) {
+  const { category, location, notes, startTimeDisplay, endTimeDisplay, description, link, attendees, priority } = extendedProps
   const config = categoryConfig[category]
+  const [isDeleting, setIsDeleting] = React.useState(false)
 
   const dateObj = typeof start === 'string' ? new Date(start) : start
   const formattedDate = dateObj.toLocaleDateString('en-US', {
@@ -24,18 +47,83 @@ export function ScheduleDetailCard({ title, start, extendedProps }: ScheduleDeta
     ? `${startTimeDisplay} – ${endTimeDisplay}`
     : startTimeDisplay
 
+  const priorityInfo = priority ? PRIORITY_LABELS[priority] : null
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await onDelete?.(id)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div
       className="rounded-xl p-4 space-y-3"
       style={{ backgroundColor: config.backgroundColor }}
     >
-      {/* Category badge */}
-      <span
-        className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/70"
-        style={{ color: config.borderColor }}
-      >
-        {category}
-      </span>
+      {/* Header: Category badge + actions */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/70"
+            style={{ color: config.borderColor }}
+          >
+            {category}
+          </span>
+          {priorityInfo && (
+            <span
+              className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/70"
+              style={{ color: priorityInfo.color }}
+            >
+              <Flag className="w-2.5 h-2.5 inline mr-0.5" style={{ verticalAlign: '-1px' }} />
+              {priorityInfo.label}
+            </span>
+          )}
+        </div>
+        {(onEdit || onDelete) && (
+          <div className="flex items-center gap-0.5 -mt-0.5 -mr-1">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => onEdit(id)}
+              >
+                <Pencil className="h-3.5 w-3.5" style={{ color: baseColors.heading }} />
+              </Button>
+            )}
+            {onDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{title}"? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      disabled={isDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={handleDelete}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Title */}
       <h4
@@ -44,6 +132,13 @@ export function ScheduleDetailCard({ title, start, extendedProps }: ScheduleDeta
       >
         {title}
       </h4>
+
+      {/* Description */}
+      {description && (
+        <p className="text-xs leading-relaxed" style={{ color: baseColors.heading, opacity: 0.7 }}>
+          {description}
+        </p>
+      )}
 
       {/* Details */}
       <div className="space-y-2">
@@ -61,6 +156,28 @@ export function ScheduleDetailCard({ title, start, extendedProps }: ScheduleDeta
           <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
             <MapPin className="w-3.5 h-3.5 shrink-0 opacity-60" />
             <span>{location}</span>
+          </div>
+        )}
+
+        {attendees && (
+          <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
+            <Users className="w-3.5 h-3.5 shrink-0 opacity-60" />
+            <span>{attendees}</span>
+          </div>
+        )}
+
+        {link && (
+          <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
+            <Link2 className="w-3.5 h-3.5 shrink-0 opacity-60" />
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:opacity-80 flex items-center gap-1 truncate"
+            >
+              {link.replace(/^https?:\/\//, '').split('/')[0]}
+              <ExternalLink className="w-3 h-3 shrink-0" />
+            </a>
           </div>
         )}
       </div>

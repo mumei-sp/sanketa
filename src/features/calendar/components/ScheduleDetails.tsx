@@ -9,6 +9,8 @@ interface ScheduleDetailsProps {
   events: CalendarEvent[]
   selectedDate: Date | null
   onClose: () => void
+  onEdit?: (id: string) => void
+  onDelete?: (id: string) => void
   className?: string
   inline?: boolean
 }
@@ -17,6 +19,8 @@ export function ScheduleDetails({
   events,
   selectedDate,
   onClose,
+  onEdit,
+  onDelete,
   className,
   inline,
 }: ScheduleDetailsProps) {
@@ -30,9 +34,12 @@ export function ScheduleDetails({
     events.map(event => (
       <ScheduleDetailCard
         key={event.id}
+        id={event.id}
         title={event.title}
         start={event.start}
         extendedProps={event.extendedProps}
+        onEdit={onEdit}
+        onDelete={onDelete}
       />
     ))
   )

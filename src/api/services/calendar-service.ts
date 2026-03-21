@@ -8,7 +8,9 @@
  */
 import { mockCalendarEvents } from '@/features/calendar/mocks'
 import { categoryConfig } from '@/features/calendar/utils/category-config'
+import { baseColors, background } from '@/theme/colors'
 import type { CalendarEvent, EventCategory } from '@/features/calendar/types'
+import type { EventFormValues } from '@/features/calendar/schemas/event-schema'
 
 function randomDelay(): Promise<void> {
   const delay = Math.floor(Math.random() * 300) + 200
@@ -110,4 +112,122 @@ function convertTo24h(time12h: string): string {
   if (modifier === 'PM' && hours !== 12) hours += 12
   if (modifier === 'AM' && hours === 12) hours = 0
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`
+}
+
+function convertTo12h(time24h: string): string {
+  const [h, m] = time24h.split(':').map(Number)
+  const modifier = h >= 12 ? 'PM' : 'AM'
+  const hours12 = h === 0 ? 12 : h > 12 ? h - 12 : h
+  return `${hours12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${modifier}`
+}
+
+let nextId = 16
+
+function formValuesToCalendarEvent(data: EventFormValues, id?: string): CalendarEvent {
+  const category = data.category as EventCategory
+  const config = categoryConfig[category]
+  const eventId = id || `evt-${String(nextId++).padStart(2, '0')}`
+
+  if (data.isAllDay) {
+    return {
+      id: eventId,
+      title: data.title,
+      start: data.date,
+      end: data.date,
+      allDay: true,
+      backgroundColor: baseColors.heading,
+      borderColor: baseColors.heading,
+      textColor: background.card,
+      extendedProps: {
+        category,
+        location: data.location || undefined,
+        notes: data.notes || undefined,
+        description: data.description || undefined,
+        link: data.link || undefined,
+        isAllDay: true,
+        attendees: data.attendees || undefined,
+        priority: data.priority,
+        reminder: data.reminder,
+        startTimeDisplay: 'All Day',
+        endTimeDisplay: '',
+      },
+    }
+  }
+
+  const startTime = data.startTime || '09:00'
+  const endTime = data.endTime || startTime
+  const startDisplay = convertTo12h(startTime)
+  const endDisplay = data.endTime ? convertTo12h(endTime) : ''
+
+  return {
+    id: eventId,
+    title: data.title,
+    start: `${data.date}T${startTime}:00`,
+    end: `${data.date}T${endTime}:00`,
+    backgroundColor: config.backgroundColor,
+    borderColor: config.borderColor,
+    textColor: config.textColor,
+    extendedProps: {
+      category,
+      location: data.location || undefined,
+      notes: data.notes || undefined,
+      description: data.description || undefined,
+      link: data.link || undefined,
+      isAllDay: false,
+      attendees: data.attendees || undefined,
+      priority: data.priority,
+      reminder: data.reminder,
+      startTimeDisplay: startDisplay,
+      endTimeDisplay: endDisplay,
+    },
+  }
+}
+
+export async function createCalendarEvent(data: EventFormValues): Promise<CalendarEvent> {
+  await randomDelay()
+  return formValuesToCalendarEvent(data)
+}
+
+export async function updateCalendarEvent(id: string, data: EventFormValues): Promise<CalendarEvent> {
+  await randomDelay()
+  return formValuesToCalendarEvent(data, id)
+}
+
+export async function deleteCalendarEvent(_id: string): Promise<void> {
+  await randomDelay()
+}
+
+export function calendarEventToFormValues(event: CalendarEvent): EventFormValues {
+  const { extendedProps } = event
+  const isAllDay = !!extendedProps.isAllDay || !!event.allDay
+
+  let date = ''
+  let startTime = ''
+  let endTime = ''
+
+  if (isAllDay) {
+    date = typeof event.start === 'string' ? event.start.split('T')[0] : event.start
+  } else {
+    const startStr = typeof event.start === 'string' ? event.start : ''
+    const endStr = typeof event.end === 'string' ? event.end : ''
+    date = startStr.split('T')[0]
+    startTime = startStr.includes('T') ? startStr.split('T')[1].substring(0, 5) : ''
+    endTime = endStr.includes('T') ? endStr.split('T')[1].substring(0, 5) : ''
+  }
+
+  return {
+    title: event.title,
+    description: extendedProps.description || '',
+    date,
+    isAllDay,
+    startTime,
+    endTime,
+    category: extendedProps.category,
+    location: extendedProps.location || '',
+    link: extendedProps.link || '',
+    attendees: extendedProps.attendees || '',
+    priority: extendedProps.priority || 'medium',
+    reminder: extendedProps.reminder || 'none',
+    notes: extendedProps.notes || '',
+  }
 }

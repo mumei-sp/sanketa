@@ -12,12 +12,21 @@ export interface CategoryConfig {
   iconName: string
 }
 
+export type EventPriority = 'low' | 'medium' | 'high'
+export type EventReminder = 'none' | '5min' | '15min' | '30min' | '1hr' | '1day'
+
 export interface CalendarEventExtendedProps {
   category: EventCategory
   location?: string
   notes?: string
   startTimeDisplay: string
   endTimeDisplay: string
+  description?: string
+  link?: string
+  isAllDay?: boolean
+  attendees?: string
+  priority?: EventPriority
+  reminder?: EventReminder
 }
 
 export type CalendarEvent = EventInput & {

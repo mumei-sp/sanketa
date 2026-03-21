@@ -6,6 +6,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import type { EventClickArg, DateClickArg, EventContentArg, DatesSetArg } from '@fullcalendar/core'
 import { ChevronLeft, ChevronRight, ChevronDown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { baseColors, text } from '@/theme/colors'
 import { cn } from '@/lib/utils'
 import type { CalendarEvent, CalendarViewType } from '../types'
@@ -16,6 +17,7 @@ interface CalendarViewProps {
   onEventClick: (event: CalendarEvent) => void
   onDateClick: (date: Date) => void
   onDatesChange?: (start: Date, end: Date) => void
+  onAddAgenda?: () => void
   className?: string
 }
 
@@ -67,11 +69,14 @@ export function CalendarView({
   onEventClick,
   onDateClick,
   onDatesChange,
+  onAddAgenda,
   className,
 }: CalendarViewProps) {
   const calendarRef = React.useRef<FullCalendar>(null)
   const [currentView, setCurrentView] = React.useState<CalendarViewType>('dayGridMonth')
   const [currentTitle, setCurrentTitle] = React.useState('')
+  const [monthPickerOpen, setMonthPickerOpen] = React.useState(false)
+  const [pickerYear, setPickerYear] = React.useState(2035)
 
   const updateTitle = React.useCallback(() => {
     const api = calendarRef.current?.getApi()
@@ -109,6 +114,20 @@ export function CalendarView({
     updateTitle()
   }
 
+  const handleMonthSelect = (monthIndex: number) => {
+    const api = calendarRef.current?.getApi()
+    if (!api) return
+    api.gotoDate(new Date(pickerYear, monthIndex, 1))
+    updateTitle()
+    setMonthPickerOpen(false)
+  }
+
+  const handlePickerOpen = () => {
+    // Sync picker year with the calendar's current date
+    const api = calendarRef.current?.getApi()
+    if (api) setPickerYear(api.getDate().getFullYear())
+  }
+
   const handleEventClick = (info: EventClickArg) => {
     const event = info.event
     onEventClick({
@@ -138,13 +157,68 @@ export function CalendarView({
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         {/* Left: Month/Year navigation */}
         <div className="flex items-center gap-2">
-          <h2
-            className="text-base font-semibold flex items-center gap-1"
-            style={{ color: baseColors.heading }}
-          >
-            {currentTitle}
-            <ChevronDown className="w-4 h-4" />
-          </h2>
+          <Popover open={monthPickerOpen} onOpenChange={open => { setMonthPickerOpen(open); if (open) handlePickerOpen() }}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="text-base font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
+                style={{ color: baseColors.heading }}
+              >
+                {currentTitle}
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" style={{ width: '20rem' }} className="p-4">
+              {/* Year navigation */}
+              <div className="flex items-center justify-between mb-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setPickerYear(y => y - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-bold" style={{ color: baseColors.heading }}>
+                  {pickerYear}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setPickerYear(y => y + 1)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              {/* Month grid (3x4) */}
+              <div className="grid grid-cols-3 gap-2">
+                {MONTH_NAMES.map((name, i) => {
+                  const api = calendarRef.current?.getApi()
+                  const currentDate = api?.getDate()
+                  const isActive = currentDate
+                    && currentDate.getMonth() === i
+                    && currentDate.getFullYear() === pickerYear
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => handleMonthSelect(i)}
+                      className={cn(
+                        'h-9 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer',
+                        isActive
+                          ? 'text-white shadow-sm'
+                          : 'hover:bg-accent hover:text-accent-foreground active:scale-95',
+                      )}
+                      style={isActive ? { backgroundColor: baseColors.heading, color: '#fff' } : { color: baseColors.heading }}
+                    >
+                      {name.slice(0, 3)}
+                    </button>
+                  )
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
           <div className="flex items-center gap-0.5">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrev}>
               <ChevronLeft className="h-4 w-4" />
@@ -186,6 +260,7 @@ export function CalendarView({
               borderColor: baseColors.pink,
               color: baseColors.heading,
             }}
+            onClick={onAddAgenda}
           >
             <Plus className="h-3.5 w-3.5" />
             <span className="hidden md:inline">Add Agenda</span>
