@@ -5,7 +5,7 @@ import { baseColors, status, darken } from '@/theme/colors'
 
 const STATUS_STYLES: Record<FeeStatus, { color: string; bg: string; border?: string }> = {
   Paid: { color: '#fff', bg: status.success.base },
-  Pending: { color: darken(baseColors.pink, 35), bg: baseColors.pink, border: darken(baseColors.pink, 20) },
+  Pending: { color: baseColors.heading, bg: baseColors.pink, border: darken(baseColors.pink, 20) },
   'Partially Paid': { color: baseColors.heading, bg: baseColors.blue, border: darken(baseColors.blue, 15) },
   Overdue: { color: '#fff', bg: status.danger.base },
 }
