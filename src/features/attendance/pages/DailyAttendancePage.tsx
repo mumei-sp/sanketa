@@ -264,9 +264,9 @@ export function DailyAttendancePage() {
             className="rounded-lg border flex items-center gap-2 text-sm"
             style={{
               padding: `${spacing['2.5']} ${spacing['3']}`,
-              borderColor: existingSubmission ? colors.status.success.base : colors.status.warning.base,
-              backgroundColor: existingSubmission ? colors.status.success.soft : colors.status.warning.soft,
-              color: existingSubmission ? colors.status.success.text : colors.status.warning.text,
+              borderColor: existingSubmission ? darken(baseColors.blue, 10) : darken(baseColors.pink, 15),
+              backgroundColor: existingSubmission ? colors.accent.base : colors.primary.base,
+              color: colors.text.heading,
             }}
           >
             {existingSubmission ? (
