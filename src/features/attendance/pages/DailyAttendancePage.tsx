@@ -265,7 +265,7 @@ export function DailyAttendancePage() {
             style={{
               padding: `${spacing['2.5']} ${spacing['3']}`,
               borderColor: existingSubmission ? darken(baseColors.blue, 10) : darken(baseColors.pink, 15),
-              backgroundColor: existingSubmission ? colors.accent.base : colors.primary.base,
+              backgroundColor: existingSubmission ? colors.accent.base : colors.primary.soft,
               color: colors.text.heading,
             }}
           >
