@@ -48,28 +48,21 @@ export function AttendanceDailySummaryBar({
 
   return (
     <div
-      className="sticky bottom-0 z-10 border-t flex items-center justify-between flex-wrap gap-3"
-      style={{
-        backgroundColor: colors.background.card,
-        borderColor: colors.border.default,
-        padding: `${spacing['3']} ${spacing['4']}`,
-      }}
+      className="sticky bottom-0 z-10 border-t flex items-center justify-between flex-wrap gap-3 bg-bg-card border-border-default"
+      style={{ padding: `${spacing['3']} ${spacing['4']}` }}
     >
       {/* Summary counts */}
       <div className="flex items-center gap-4 flex-wrap">
         {stats.map(s => (
           <div key={s.label} className="flex items-center gap-1.5 text-sm">
             <s.icon className="w-4 h-4" style={{ color: s.color }} />
-            <span style={{ color: colors.text.muted }}>{s.label}:</span>
-            <span className="font-semibold" style={{ color: colors.text.heading }}>
+            <span className="text-text-muted">{s.label}:</span>
+            <span className="font-semibold text-text-heading">
               {s.count}
             </span>
           </div>
         ))}
-        <div
-          className="text-xs"
-          style={{ color: colors.text.muted }}
-        >
+        <div className="text-xs text-text-muted">
           {totalStudents - counts.unmarked}/{totalStudents} marked
         </div>
       </div>
@@ -79,9 +72,10 @@ export function AttendanceDailySummaryBar({
         type="button"
         onClick={onSave}
         disabled={!allMarked || isSaving}
-        className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-opacity"
+        className="px-5 py-2 rounded-lg text-sm font-semibold transition-opacity"
         style={{
           backgroundColor: allMarked ? colors.text.heading : colors.border.default,
+          color: colors.background.card,
           opacity: !allMarked || isSaving ? 0.6 : 1,
           cursor: !allMarked || isSaving ? 'not-allowed' : 'pointer',
         }}

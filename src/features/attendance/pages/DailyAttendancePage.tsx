@@ -236,8 +236,8 @@ export function DailyAttendancePage() {
               onClick={() => setViewMode('mark')}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
               style={{
-                backgroundColor: viewMode === 'mark' ? colors.text.heading : 'transparent',
-                color: viewMode === 'mark' ? '#fff' : colors.text.muted,
+                backgroundColor: viewMode === 'mark' ? colors.text.heading : colors.background.card,
+                color: viewMode === 'mark' ? colors.background.card : colors.text.muted,
               }}
             >
               <UserCheck className="w-3.5 h-3.5" />
@@ -248,8 +248,8 @@ export function DailyAttendancePage() {
               onClick={() => setViewMode('history')}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
               style={{
-                backgroundColor: viewMode === 'history' ? colors.text.heading : 'transparent',
-                color: viewMode === 'history' ? '#fff' : colors.text.muted,
+                backgroundColor: viewMode === 'history' ? colors.text.heading : colors.background.card,
+                color: viewMode === 'history' ? colors.background.card : colors.text.muted,
               }}
             >
               <History className="w-3.5 h-3.5" />
@@ -298,11 +298,11 @@ export function DailyAttendancePage() {
           <>
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
-                <span className="text-sm" style={{ color: colors.text.muted }}>Loading roster...</span>
+                <span className="text-sm text-text-muted">Loading roster...</span>
               </div>
             ) : error ? (
               <div className="flex items-center justify-center py-16">
-                <span className="text-sm" style={{ color: colors.status.danger.base }}>{error}</span>
+                <span className="text-sm text-status-danger">{error}</span>
               </div>
             ) : (
               <>
