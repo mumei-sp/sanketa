@@ -142,8 +142,8 @@ export function createHistoryColumns(
             className="flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
             style={{
               color: colors.text.heading,
-              backgroundColor: colors.primary.soft,
-              border: `1px solid ${darken(baseColors.pink, 15)}`,
+              backgroundColor: colors.accent.base,
+              border: `1px solid ${darken(baseColors.blue, 10)}`,
             }}
           >
             <AlertTriangle className="w-3 h-3" />
