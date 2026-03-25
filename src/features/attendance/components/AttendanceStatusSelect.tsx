@@ -1,5 +1,5 @@
 import { Check, Clock, X } from 'lucide-react'
-import { colors } from '@/theme/colors'
+import { colors, baseColors, darken } from '@/theme/colors'
 import type { MarkableAttendanceStatus } from '../types'
 
 interface AttendanceStatusSelectProps {
@@ -11,42 +11,53 @@ interface AttendanceStatusSelectProps {
   disabled?: boolean
 }
 
+/**
+ * Brand color mapping for attendance statuses.
+ * Uses the project's brand palette (blue, pink, dark navy)
+ * consistent with the student detail calendar colors.
+ */
 const statusOptions: {
   value: MarkableAttendanceStatus
   label: string
   shortLabel: string
   icon: React.ReactNode
+  /** Border & text color when selected */
   color: string
+  /** Background fill when selected */
   bgColor: string
+  /** Text color override when selected (for dark backgrounds) */
+  textColor?: string
 }[] = [
   {
     value: 'present',
     label: 'Present',
     shortLabel: 'P',
     icon: <Check className="w-3.5 h-3.5" />,
-    color: colors.status.success.base,
-    bgColor: colors.status.success.soft,
+    color: darken(baseColors.blue, 15),
+    bgColor: colors.accent.base,
   },
   {
     value: 'late',
     label: 'Late',
     shortLabel: 'L',
     icon: <Clock className="w-3.5 h-3.5" />,
-    color: colors.status.warning.base,
-    bgColor: colors.status.warning.soft,
+    color: darken(baseColors.pink, 20),
+    bgColor: colors.primary.base,
   },
   {
     value: 'absent',
     label: 'Absent',
     shortLabel: 'A',
     icon: <X className="w-3.5 h-3.5" />,
-    color: colors.status.danger.base,
-    bgColor: colors.status.danger.soft,
+    color: colors.text.heading,
+    bgColor: colors.text.heading,
+    textColor: colors.background.card,
   },
 ]
 
 /**
  * Reusable attendance status selector — renders 3 toggle buttons (P / L / A).
+ * Uses brand colors: blue (present), pink (late), dark navy (absent).
  * Used in both the desktop table rows and mobile card view.
  */
 export function AttendanceStatusSelect({
@@ -66,9 +77,9 @@ export function AttendanceStatusSelect({
             onClick={() => onChange(opt.value)}
             className="flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all border"
             style={{
-              backgroundColor: isSelected ? opt.bgColor : 'transparent',
+              backgroundColor: isSelected ? opt.bgColor : colors.background.card,
               borderColor: isSelected ? opt.color : colors.border.default,
-              color: isSelected ? opt.color : colors.text.muted,
+              color: isSelected ? (opt.textColor ?? opt.color) : colors.text.muted,
               opacity: disabled ? 0.5 : 1,
               cursor: disabled ? 'not-allowed' : 'pointer',
             }}

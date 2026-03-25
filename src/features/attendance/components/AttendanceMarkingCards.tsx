@@ -1,4 +1,4 @@
-import { colors } from '@/theme/colors'
+import { colors, darken, baseColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { AttendanceStatusSelect } from './AttendanceStatusSelect'
 import type { ClassRosterStudent, MarkableAttendanceStatus } from '../types'
@@ -36,18 +36,18 @@ export function AttendanceMarkingCards({
         const note = entry?.note ?? ''
         const showNote = status === 'late' || status === 'absent'
 
-        // Border color based on status
+        // Border & background using brand colors: blue (present), pink (late), navy (absent)
         let borderColor = colors.border.default
         let bgColor = colors.background.card
         if (status === 'present') {
-          borderColor = colors.status.success.base
-          bgColor = colors.status.success.soft
+          borderColor = darken(baseColors.blue, 15)
+          bgColor = colors.accent.soft
         } else if (status === 'late') {
-          borderColor = colors.status.warning.base
-          bgColor = colors.status.warning.soft
+          borderColor = darken(baseColors.pink, 20)
+          bgColor = colors.primary.soft
         } else if (status === 'absent') {
-          borderColor = colors.status.danger.base
-          bgColor = colors.status.danger.soft
+          borderColor = colors.text.heading
+          bgColor = colors.accent.muted
         }
 
         return (

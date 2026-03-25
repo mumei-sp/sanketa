@@ -1,5 +1,5 @@
 import { Check, Clock, X, AlertCircle } from 'lucide-react'
-import { colors } from '@/theme/colors'
+import { colors, darken, baseColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import type { MarkableAttendanceStatus } from '../types'
 
@@ -40,9 +40,9 @@ export function AttendanceDailySummaryBar({
   counts.unmarked += totalStudents - Object.keys(entries).length
 
   const stats = [
-    { label: 'Present', count: counts.present, icon: Check, color: colors.status.success.base },
-    { label: 'Late', count: counts.late, icon: Clock, color: colors.status.warning.base },
-    { label: 'Absent', count: counts.absent, icon: X, color: colors.status.danger.base },
+    { label: 'Present', count: counts.present, icon: Check, color: darken(baseColors.blue, 15) },
+    { label: 'Late', count: counts.late, icon: Clock, color: darken(baseColors.pink, 20) },
+    { label: 'Absent', count: counts.absent, icon: X, color: colors.text.heading },
     { label: 'Unmarked', count: counts.unmarked, icon: AlertCircle, color: colors.text.muted },
   ]
 

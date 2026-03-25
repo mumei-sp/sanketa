@@ -46,12 +46,12 @@ export function AttendanceMarkingTable({
     [onStatusChange, onNoteChange, disabled],
   )
 
-  // Row tinting based on attendance status
+  // Row tinting using brand colors: blue (present), pink (late), navy-soft (absent)
   const rowClassName = React.useCallback((row: Row<MarkingRowData>) => {
     const { status } = row.original
-    if (status === 'present') return 'bg-status-success-soft'
-    if (status === 'late') return 'bg-status-warning-soft'
-    if (status === 'absent') return 'bg-status-danger-soft'
+    if (status === 'present') return 'bg-accent-soft'
+    if (status === 'late') return 'bg-primary-soft'
+    if (status === 'absent') return 'bg-accent-muted'
     return ''
   }, [])
 

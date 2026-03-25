@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, UserCheck, History } from 'lucide-react'
-import { colors } from '@/theme/colors'
+import { colors, darken, baseColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
 import { useAttendanceHistory } from '../hooks/use-attendance-history'
@@ -215,9 +215,9 @@ export function DailyAttendancePage() {
                 onClick={handleMarkAllPresent}
                 className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
                 style={{
-                  backgroundColor: colors.status.success.soft,
-                  color: colors.status.success.base,
-                  border: `1px solid ${colors.status.success.base}`,
+                  backgroundColor: colors.accent.soft,
+                  color: darken(baseColors.blue, 15),
+                  border: `1px solid ${darken(baseColors.blue, 15)}`,
                 }}
               >
                 <UserCheck className="w-3.5 h-3.5" />
