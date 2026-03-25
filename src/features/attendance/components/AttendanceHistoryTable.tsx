@@ -2,6 +2,7 @@ import * as React from 'react'
 import type { Row } from '@tanstack/react-table'
 import { DataTable } from '@/components/table'
 import { createHistoryColumns } from './attendance-history-columns'
+import { DailyAttendanceHistorySkeleton } from './DailyAttendanceSkeleton'
 import type { AttendanceHistoryRow } from '../types'
 
 interface AttendanceHistoryTableProps {
@@ -37,11 +38,7 @@ export function AttendanceHistoryTable({
   }, [])
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-sm text-text-muted">Loading history...</span>
-      </div>
-    )
+    return <DailyAttendanceHistorySkeleton />
   }
 
   if (rows.length === 0) {

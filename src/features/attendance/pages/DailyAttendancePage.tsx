@@ -10,6 +10,7 @@ import { AttendanceMarkingTable } from '../components/AttendanceMarkingTable'
 import { AttendanceMarkingCards } from '../components/AttendanceMarkingCards'
 import { AttendanceDailySummaryBar } from '../components/AttendanceDailySummaryBar'
 import { AttendanceHistoryTable } from '../components/AttendanceHistoryTable'
+import { DailyAttendanceSkeleton, DailyAttendanceHistorySkeleton } from '../components/DailyAttendanceSkeleton'
 import { Tile } from '@/components/tile'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
 import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
@@ -298,9 +299,7 @@ export function DailyAttendancePage() {
         {viewMode === 'mark' ? (
           <>
             {isLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <span className="text-sm text-text-muted">Loading roster...</span>
-              </div>
+              <DailyAttendanceSkeleton />
             ) : error ? (
               <div className="flex items-center justify-center py-16">
                 <span className="text-sm text-status-danger">{error}</span>
