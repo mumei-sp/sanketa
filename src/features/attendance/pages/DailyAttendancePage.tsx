@@ -336,18 +336,18 @@ export function DailyAttendancePage() {
                     disabled={isSaving}
                   />
                 </div>
-
-                {/* Summary bar */}
-                {roster.length > 0 && (
-                  <AttendanceDailySummaryBar
-                    entries={entriesForSummary}
-                    totalStudents={roster.length}
-                    isSaving={isSaving}
-                    onSave={handleSave}
-                    allMarked={allMarked}
-                  />
-                )}
               </Tile>
+
+              {/* Summary bar — outside Tile so sticky works against viewport */}
+              {roster.length > 0 && (
+                <AttendanceDailySummaryBar
+                  entries={entriesForSummary}
+                  totalStudents={roster.length}
+                  isSaving={isSaving}
+                  onSave={handleSave}
+                  allMarked={allMarked}
+                />
+              )}
             )}
           </>
         ) : (
