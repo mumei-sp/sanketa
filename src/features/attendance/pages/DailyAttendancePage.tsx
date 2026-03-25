@@ -10,6 +10,7 @@ import { AttendanceMarkingTable } from '../components/AttendanceMarkingTable'
 import { AttendanceMarkingCards } from '../components/AttendanceMarkingCards'
 import { AttendanceDailySummaryBar } from '../components/AttendanceDailySummaryBar'
 import { AttendanceHistoryTable } from '../components/AttendanceHistoryTable'
+import { Tile } from '@/components/tile'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
 import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
 import type { MarkableAttendanceStatus, AttendanceEntry } from '../types'
@@ -305,7 +306,15 @@ export function DailyAttendancePage() {
                 <span className="text-sm text-status-danger">{error}</span>
               </div>
             ) : (
-              <>
+              <Tile
+                id="attendance-marking-tile"
+                layoutMode="block"
+                background="card"
+                borderRadius="lg"
+                shadowed={false}
+                padding="p-6"
+                overflow="auto"
+              >
                 {/* Desktop: table (hidden on mobile) */}
                 <div className="hidden lg:block">
                   <AttendanceMarkingTable
@@ -338,17 +347,27 @@ export function DailyAttendancePage() {
                     allMarked={allMarked}
                   />
                 )}
-              </>
+              </Tile>
             )}
           </>
         ) : (
           /* ═══ HISTORY VIEW ═══ */
-          <AttendanceHistoryTable
-            rows={historyRows}
-            isLoading={historyLoading}
-            onEdit={handleHistoryEdit}
-            onMark={handleHistoryEdit}
-          />
+          <Tile
+            id="attendance-history-tile"
+            layoutMode="block"
+            background="card"
+            borderRadius="lg"
+            shadowed={false}
+            padding="p-6"
+            overflow="auto"
+          >
+            <AttendanceHistoryTable
+              rows={historyRows}
+              isLoading={historyLoading}
+              onEdit={handleHistoryEdit}
+              onMark={handleHistoryEdit}
+            />
+          </Tile>
         )}
       </div>
     </AttendancePageLayout>
