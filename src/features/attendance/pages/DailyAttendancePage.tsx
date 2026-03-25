@@ -215,9 +215,9 @@ export function DailyAttendancePage() {
                 onClick={handleMarkAllPresent}
                 className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
                 style={{
-                  backgroundColor: colors.accent.base,
+                  backgroundColor: withOpacity(baseColors.pink, 0.4),
                   color: colors.text.heading,
-                  border: `1px solid ${darken(baseColors.blue, 10)}`,
+                  border: `1px solid ${darken(baseColors.pink, 15)}`,
                 }}
               >
                 <UserCheck className="w-3.5 h-3.5" />
@@ -265,7 +265,7 @@ export function DailyAttendancePage() {
             style={{
               padding: `${spacing['2.5']} ${spacing['3']}`,
               borderColor: existingSubmission ? darken(baseColors.blue, 10) : darken(baseColors.pink, 15),
-              backgroundColor: existingSubmission ? colors.accent.base : withOpacity(baseColors.pink, 0.4),
+              backgroundColor: existingSubmission ? colors.accent.base : colors.accent.base,
               color: colors.text.heading,
             }}
           >
