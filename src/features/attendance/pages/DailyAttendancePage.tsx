@@ -306,48 +306,50 @@ export function DailyAttendancePage() {
                 <span className="text-sm text-status-danger">{error}</span>
               </div>
             ) : (
-              <Tile
-                id="attendance-marking-tile"
-                layoutMode="block"
-                background="card"
-                borderRadius="lg"
-                shadowed={false}
-                padding="p-6"
-                overflow="auto"
-              >
-                {/* Desktop: table (hidden on mobile) */}
-                <div className="hidden lg:block">
-                  <AttendanceMarkingTable
-                    roster={roster}
-                    entries={entries}
-                    onStatusChange={handleStatusChange}
-                    onNoteChange={handleNoteChange}
-                    disabled={isSaving}
-                  />
-                </div>
+              <>
+                <Tile
+                  id="attendance-marking-tile"
+                  layoutMode="block"
+                  background="card"
+                  borderRadius="lg"
+                  shadowed={false}
+                  padding="p-6"
+                  overflow="auto"
+                >
+                  {/* Desktop: table (hidden on mobile) */}
+                  <div className="hidden lg:block">
+                    <AttendanceMarkingTable
+                      roster={roster}
+                      entries={entries}
+                      onStatusChange={handleStatusChange}
+                      onNoteChange={handleNoteChange}
+                      disabled={isSaving}
+                    />
+                  </div>
 
-                {/* Mobile/Tablet: cards (hidden on desktop) */}
-                <div className="block lg:hidden">
-                  <AttendanceMarkingCards
-                    roster={roster}
-                    entries={entries}
-                    onStatusChange={handleStatusChange}
-                    onNoteChange={handleNoteChange}
-                    disabled={isSaving}
-                  />
-                </div>
-              </Tile>
+                  {/* Mobile/Tablet: cards (hidden on desktop) */}
+                  <div className="block lg:hidden">
+                    <AttendanceMarkingCards
+                      roster={roster}
+                      entries={entries}
+                      onStatusChange={handleStatusChange}
+                      onNoteChange={handleNoteChange}
+                      disabled={isSaving}
+                    />
+                  </div>
+                </Tile>
 
-              {/* Summary bar — outside Tile so sticky works against viewport */}
-              {roster.length > 0 && (
-                <AttendanceDailySummaryBar
-                  entries={entriesForSummary}
-                  totalStudents={roster.length}
-                  isSaving={isSaving}
-                  onSave={handleSave}
-                  allMarked={allMarked}
-                />
-              )}
+                {/* Summary bar — outside Tile so sticky works against viewport */}
+                {roster.length > 0 && (
+                  <AttendanceDailySummaryBar
+                    entries={entriesForSummary}
+                    totalStudents={roster.length}
+                    isSaving={isSaving}
+                    onSave={handleSave}
+                    allMarked={allMarked}
+                  />
+                )}
+              </>
             )}
           </>
         ) : (
