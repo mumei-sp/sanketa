@@ -33,7 +33,7 @@ export function AttendanceHistoryTable({
 
   // Highlight unsubmitted rows
   const rowClassName = React.useCallback((row: Row<AttendanceHistoryRow>) => {
-    return row.original.isSubmitted ? '' : 'bg-status-warning-soft'
+    return row.original.isSubmitted ? '' : 'bg-primary-soft'
   }, [])
 
   if (isLoading) {

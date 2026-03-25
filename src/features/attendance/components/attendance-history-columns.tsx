@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Pencil, AlertTriangle } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
-import { colors } from '@/theme/colors'
+import { colors, darken, baseColors } from '@/theme/colors'
 import type { AttendanceHistoryRow } from '../types'
 
 /** Format a YYYY-MM-DD date for display */
@@ -53,7 +53,7 @@ export function createHistoryColumns(
       ),
       cell: ({ row }) =>
         row.original.isSubmitted ? (
-          <span className="text-sm" style={{ color: colors.status.success.base }}>
+          <span className="text-sm font-medium" style={{ color: darken(baseColors.blue, 15) }}>
             {row.original.present}
           </span>
         ) : (
@@ -69,7 +69,7 @@ export function createHistoryColumns(
       ),
       cell: ({ row }) =>
         row.original.isSubmitted ? (
-          <span className="text-sm" style={{ color: colors.status.warning.base }}>
+          <span className="text-sm font-medium" style={{ color: darken(baseColors.pink, 20) }}>
             {row.original.late}
           </span>
         ) : (
@@ -85,7 +85,7 @@ export function createHistoryColumns(
       ),
       cell: ({ row }) =>
         row.original.isSubmitted ? (
-          <span className="text-sm" style={{ color: colors.status.danger.base }}>
+          <span className="text-sm font-medium text-text-heading">
             {row.original.absent}
           </span>
         ) : (
@@ -141,9 +141,9 @@ export function createHistoryColumns(
             onClick={() => callbacks.onMark(date)}
             className="flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
             style={{
-              color: colors.status.warning.text,
-              backgroundColor: colors.status.warning.soft,
-              border: `1px solid ${colors.status.warning.base}`,
+              color: colors.text.heading,
+              backgroundColor: colors.primary.soft,
+              border: `1px solid ${darken(baseColors.pink, 15)}`,
             }}
           >
             <AlertTriangle className="w-3 h-3" />
