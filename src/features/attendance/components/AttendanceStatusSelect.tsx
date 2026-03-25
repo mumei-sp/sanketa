@@ -79,7 +79,7 @@ export function AttendanceStatusSelect({
             style={{
               backgroundColor: isSelected ? opt.bgColor : colors.background.card,
               borderColor: isSelected ? opt.color : colors.border.default,
-              color: isSelected ? (opt.textColor ?? opt.color) : colors.text.muted,
+              color: isSelected ? (opt.textColor ?? opt.color) : colors.text.heading,
               opacity: disabled ? 0.5 : 1,
               cursor: disabled ? 'not-allowed' : 'pointer',
             }}
