@@ -48,8 +48,11 @@ export function AttendanceDailySummaryBar({
 
   return (
     <div
-      className="sticky bottom-0 z-10 border-t flex items-center justify-between flex-wrap gap-3 bg-bg-card border-border-default"
-      style={{ padding: `${spacing['3']} ${spacing['4']}` }}
+      className="sticky bottom-0 z-10 border-t flex items-center justify-between flex-wrap gap-3 border-border-default shadow-sm"
+      style={{
+        padding: `${spacing['3']} ${spacing['4']}`,
+        backgroundColor: colors.background.card,
+      }}
     >
       {/* Summary counts */}
       <div className="flex items-center gap-4 flex-wrap">
