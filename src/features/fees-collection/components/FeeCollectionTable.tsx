@@ -5,6 +5,8 @@ import { GridPagination } from '@/components/pagination/GridPagination'
 import { Skeleton } from '@/components/ui/skeleton'
 import { createFeeCollectionColumns } from './fee-collection-columns'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
+import { Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -59,6 +61,15 @@ export function FeeCollectionTable({ data, isLoading = false }: FeeCollectionTab
 
   const renderToolbar = React.useCallback(
     (table: TanStackTable<FeeCollectionRecord>) => {
+      const studentColumn = table.getColumn('studentName')
+      const searchValue = (studentColumn?.getFilterValue() as string) || ''
+
+      const handleSearchChange = (value: string) => {
+        if (studentColumn) {
+          studentColumn.setFilterValue(value || undefined)
+        }
+      }
+
       const handleClassChange = (value: string) => {
         setClassFilter(value)
         const classColumn = table.getColumn('class')
@@ -79,6 +90,15 @@ export function FeeCollectionTable({ data, isLoading = false }: FeeCollectionTab
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h2 className="text-page-title text-foreground">Fees Collection</h2>
           <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative w-[250px] min-w-[150px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search by name or ID"
+                value={searchValue}
+                onChange={e => handleSearchChange(e.target.value)}
+                className="h-8 w-full pl-10 bg-white border-default"
+              />
+            </div>
             <Select value={classFilter} onValueChange={handleClassChange}>
               <SelectTrigger className="h-8 w-[140px] bg-accent text-foreground border-0 hover:bg-accent/80">
                 <SelectValue placeholder="All Classes" />

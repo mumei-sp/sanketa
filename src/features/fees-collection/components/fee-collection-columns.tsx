@@ -86,6 +86,14 @@ export function createFeeCollectionColumns(
       },
       sortingFn: makeGroupSortFn(firstRecords, 'studentName'),
       enableSorting: true,
+      filterFn: (row, _id, value) => {
+        if (!value) return true
+        const search = (value as string).toLowerCase()
+        return (
+          row.original.studentName.toLowerCase().includes(search) ||
+          row.original.studentId.toLowerCase().includes(search)
+        )
+      },
     },
     {
       accessorKey: 'class',
