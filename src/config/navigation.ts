@@ -10,6 +10,8 @@ import {
   ChevronDown,
   Receipt,
   TrendingUp,
+  BarChart3,
+  CalendarCheck,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -65,6 +67,18 @@ export const navigationItems: NavItem[] = [
     title: "Attendance",
     icon: UserCheck,
     path: "/attendance",
+    children: [
+      {
+        title: "Overview",
+        icon: BarChart3,
+        path: "/attendance/overview",
+      },
+      {
+        title: "Daily",
+        icon: CalendarCheck,
+        path: "/attendance/daily",
+      },
+    ],
   },
   {
     title: "Assignments",

@@ -64,3 +64,72 @@ export interface AttendanceOverviewData {
   staff: number
 }
 
+// ============================================================================
+// Daily Attendance Marking Types
+// ============================================================================
+
+/** Markable attendance status (excludes 'na' which is only for weekends) */
+export type MarkableAttendanceStatus = 'present' | 'late' | 'absent'
+
+/** A single student's attendance entry for one day */
+export interface AttendanceEntry {
+  /** Student ID */
+  studentId: string
+  /** Attendance status */
+  status: MarkableAttendanceStatus
+  /** Optional note/reason (e.g., "Late bus", "Sick leave") */
+  note?: string
+}
+
+/** A submitted attendance record for a class on a date */
+export interface AttendanceSubmission {
+  /** Unique submission ID */
+  id: string
+  /** Class identifier (e.g., '9A') */
+  classId: string
+  /** Date in YYYY-MM-DD format */
+  date: string
+  /** Per-student attendance entries */
+  entries: AttendanceEntry[]
+  /** Name of the teacher/admin who submitted */
+  submittedBy: string
+  /** ISO timestamp of submission */
+  submittedAt: string
+  /** Name of last editor (if different from submitter) */
+  lastEditedBy?: string
+  /** ISO timestamp of last edit */
+  lastEditedAt?: string
+}
+
+/** Student roster item for the marking interface */
+export interface ClassRosterStudent {
+  /** Unique student ID */
+  id: string
+  /** Full name */
+  name: string
+  /** Roll number */
+  rollNumber: string
+  /** Avatar URL */
+  avatarUrl?: string
+}
+
+/** Summary row for the attendance history table */
+export interface AttendanceHistoryRow {
+  /** Date in YYYY-MM-DD format */
+  date: string
+  /** Number of students marked present */
+  present: number
+  /** Number of students marked late */
+  late: number
+  /** Number of students marked absent */
+  absent: number
+  /** Total students in class */
+  total: number
+  /** Who submitted the attendance */
+  submittedBy: string
+  /** When it was submitted (ISO timestamp) */
+  submittedAt: string
+  /** Whether attendance has been submitted for this date */
+  isSubmitted: boolean
+}
+

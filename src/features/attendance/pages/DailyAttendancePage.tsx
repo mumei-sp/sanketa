@@ -1,0 +1,358 @@
+import * as React from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { CheckCircle, AlertTriangle, UserCheck, History } from 'lucide-react'
+import { colors } from '@/theme/colors'
+import { spacing } from '@/config/spacing'
+import { useDailyAttendance } from '../hooks/use-daily-attendance'
+import { useAttendanceHistory } from '../hooks/use-attendance-history'
+import { fetchAvailableClasses } from '@/api/services/attendance-service'
+import { AttendanceMarkingTable } from '../components/AttendanceMarkingTable'
+import { AttendanceMarkingCards } from '../components/AttendanceMarkingCards'
+import { AttendanceDailySummaryBar } from '../components/AttendanceDailySummaryBar'
+import { AttendanceHistoryTable } from '../components/AttendanceHistoryTable'
+import { AttendancePageLayout } from '../components/AttendancePageLayout'
+import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
+import type { MarkableAttendanceStatus, AttendanceEntry } from '../types'
+
+type ViewMode = 'mark' | 'history'
+
+/** Get today's date as YYYY-MM-DD */
+function getTodayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Format date for display */
+function formatDisplayDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+/**
+ * DailyAttendancePage — mark and manage daily attendance.
+ *
+ * Route: /attendance/daily
+ * Supports query params: ?class=9A&date=2035-03-25
+ */
+export function DailyAttendancePage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [viewMode, setViewMode] = React.useState<ViewMode>('mark')
+
+  // Available classes
+  const [classes, setClasses] = React.useState<string[]>([])
+  React.useEffect(() => {
+    fetchAvailableClasses().then(setClasses)
+  }, [])
+
+  // Selected class and date from URL params or defaults
+  const selectedClass = searchParams.get('class') ?? classes[0] ?? ''
+  const selectedDate = searchParams.get('date') ?? getTodayStr()
+
+  // Derived month/year for history
+  const [histYear, histMonth] = React.useMemo(() => {
+    const parts = selectedDate.split('-')
+    return [parseInt(parts[0]), parseInt(parts[1]) - 1]
+  }, [selectedDate])
+
+  // Data hooks
+  const {
+    roster,
+    existingSubmission,
+    isLoading,
+    error,
+    saveAttendance,
+    isSaving,
+  } = useDailyAttendance(selectedClass, selectedDate)
+
+  const {
+    rows: historyRows,
+    isLoading: historyLoading,
+    refetch: refetchHistory,
+  } = useAttendanceHistory(selectedClass, histYear, histMonth)
+
+  // Local state for marking entries
+  const [entries, setEntries] = React.useState<
+    Record<string, { status: MarkableAttendanceStatus | undefined; note: string }>
+  >({})
+
+  // When roster or existing submission changes, initialize entries
+  React.useEffect(() => {
+    const initial: typeof entries = {}
+    roster.forEach(student => {
+      const existing = existingSubmission?.entries.find(e => e.studentId === student.id)
+      initial[student.id] = {
+        status: existing?.status,
+        note: existing?.note ?? '',
+      }
+    })
+    setEntries(initial)
+  }, [roster, existingSubmission])
+
+  // Handlers
+  const handleClassChange = React.useCallback((cls: string) => {
+    setSearchParams(prev => {
+      prev.set('class', cls)
+      return prev
+    })
+  }, [setSearchParams])
+
+  const handleDateChange = React.useCallback((date: string) => {
+    setSearchParams(prev => {
+      prev.set('date', date)
+      return prev
+    })
+  }, [setSearchParams])
+
+  const handleStatusChange = React.useCallback((studentId: string, status: MarkableAttendanceStatus) => {
+    setEntries(prev => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], status, note: prev[studentId]?.note ?? '' },
+    }))
+  }, [])
+
+  const handleNoteChange = React.useCallback((studentId: string, note: string) => {
+    setEntries(prev => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], note },
+    }))
+  }, [])
+
+  const handleMarkAllPresent = React.useCallback(() => {
+    setEntries(prev => {
+      const next = { ...prev }
+      Object.keys(next).forEach(id => {
+        if (!next[id].status) {
+          next[id] = { ...next[id], status: 'present' }
+        }
+      })
+      return next
+    })
+  }, [])
+
+  const handleSave = React.useCallback(async () => {
+    const attendanceEntries: AttendanceEntry[] = Object.entries(entries)
+      .filter(([, e]) => e.status !== undefined)
+      .map(([studentId, e]) => ({
+        studentId,
+        status: e.status!,
+        note: e.note || undefined,
+      }))
+
+    try {
+      await saveAttendance(attendanceEntries, 'Admin')
+      // Refresh history after save
+      refetchHistory()
+    } catch (err) {
+      console.error('Failed to save attendance:', err)
+    }
+  }, [entries, saveAttendance, refetchHistory])
+
+  const handleHistoryEdit = React.useCallback((date: string) => {
+    setViewMode('mark')
+    handleDateChange(date)
+  }, [handleDateChange])
+
+  // Derived state
+  const allMarked = roster.length > 0 && roster.every(s => entries[s.id]?.status !== undefined)
+  const entriesForSummary: Record<string, MarkableAttendanceStatus | undefined> = {}
+  Object.entries(entries).forEach(([id, e]) => { entriesForSummary[id] = e.status })
+
+  const breadcrumbs = React.useMemo(
+    () => getAttendanceBreadcrumbs('details', 'Daily Attendance'),
+    [],
+  )
+
+  return (
+    <AttendancePageLayout
+      title="Daily Attendance"
+      breadcrumbs={breadcrumbs}
+      isLoading={false}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
+        {/* ═══ TOOLBAR ═══ */}
+        <div
+          className="rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap"
+          style={{
+            backgroundColor: colors.background.card,
+            borderColor: colors.border.default,
+            padding: spacing['3'],
+          }}
+        >
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Class selector */}
+            <select
+              value={selectedClass}
+              onChange={e => handleClassChange(e.target.value)}
+              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+              style={{
+                borderColor: colors.border.default,
+                color: colors.text.heading,
+                backgroundColor: colors.background.card,
+              }}
+            >
+              {classes.map(cls => (
+                <option key={cls} value={cls}>Class {cls}</option>
+              ))}
+            </select>
+
+            {/* Date picker */}
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={e => handleDateChange(e.target.value)}
+              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+              style={{
+                borderColor: colors.border.default,
+                color: colors.text.heading,
+                backgroundColor: colors.background.card,
+              }}
+            />
+
+            {/* Mark All Present button */}
+            {viewMode === 'mark' && (
+              <button
+                type="button"
+                onClick={handleMarkAllPresent}
+                className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
+                style={{
+                  backgroundColor: colors.status.success.soft,
+                  color: colors.status.success.base,
+                  border: `1px solid ${colors.status.success.base}`,
+                }}
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                Mark All Present
+              </button>
+            )}
+          </div>
+
+          {/* View toggle */}
+          <div
+            className="flex items-center rounded-md border overflow-hidden"
+            style={{ borderColor: colors.border.default }}
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode('mark')}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
+              style={{
+                backgroundColor: viewMode === 'mark' ? colors.text.heading : 'transparent',
+                color: viewMode === 'mark' ? '#fff' : colors.text.muted,
+              }}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              Mark
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('history')}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
+              style={{
+                backgroundColor: viewMode === 'history' ? colors.text.heading : 'transparent',
+                color: viewMode === 'history' ? '#fff' : colors.text.muted,
+              }}
+            >
+              <History className="w-3.5 h-3.5" />
+              History
+            </button>
+          </div>
+        </div>
+
+        {/* ═══ STATUS BANNER ═══ */}
+        {viewMode === 'mark' && selectedClass && (
+          <div
+            className="rounded-lg border flex items-center gap-2 text-sm"
+            style={{
+              padding: `${spacing['2.5']} ${spacing['3']}`,
+              borderColor: existingSubmission ? colors.status.success.base : colors.status.warning.base,
+              backgroundColor: existingSubmission ? colors.status.success.soft : colors.status.warning.soft,
+              color: existingSubmission ? colors.status.success.text : colors.status.warning.text,
+            }}
+          >
+            {existingSubmission ? (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                <span>
+                  Submitted by <strong>{existingSubmission.submittedBy}</strong>
+                  {existingSubmission.submittedAt && (
+                    <> at {new Date(existingSubmission.submittedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</>
+                  )}
+                  {existingSubmission.lastEditedBy && (
+                    <> · Last edited by <strong>{existingSubmission.lastEditedBy}</strong></>
+                  )}
+                </span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-4 h-4" />
+                <span>
+                  Attendance not yet submitted for <strong>{formatDisplayDate(selectedDate)}</strong>
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ═══ CONTENT ═══ */}
+        {viewMode === 'mark' ? (
+          <>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <span className="text-sm" style={{ color: colors.text.muted }}>Loading roster...</span>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center py-16">
+                <span className="text-sm" style={{ color: colors.status.danger.base }}>{error}</span>
+              </div>
+            ) : (
+              <>
+                {/* Desktop: table (hidden on mobile) */}
+                <div className="hidden lg:block">
+                  <AttendanceMarkingTable
+                    roster={roster}
+                    entries={entries}
+                    onStatusChange={handleStatusChange}
+                    onNoteChange={handleNoteChange}
+                    disabled={isSaving}
+                  />
+                </div>
+
+                {/* Mobile/Tablet: cards (hidden on desktop) */}
+                <div className="block lg:hidden">
+                  <AttendanceMarkingCards
+                    roster={roster}
+                    entries={entries}
+                    onStatusChange={handleStatusChange}
+                    onNoteChange={handleNoteChange}
+                    disabled={isSaving}
+                  />
+                </div>
+
+                {/* Summary bar */}
+                {roster.length > 0 && (
+                  <AttendanceDailySummaryBar
+                    entries={entriesForSummary}
+                    totalStudents={roster.length}
+                    isSaving={isSaving}
+                    onSave={handleSave}
+                    allMarked={allMarked}
+                  />
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          /* ═══ HISTORY VIEW ═══ */
+          <AttendanceHistoryTable
+            rows={historyRows}
+            isLoading={historyLoading}
+            onEdit={handleHistoryEdit}
+            onMark={handleHistoryEdit}
+          />
+        )}
+      </div>
+    </AttendancePageLayout>
+  )
+}
+
+export default DailyAttendancePage
