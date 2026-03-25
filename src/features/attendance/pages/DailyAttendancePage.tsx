@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, UserCheck, History } from 'lucide-react'
-import { colors, darken, baseColors } from '@/theme/colors'
+import { colors, darken, baseColors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
 import { useAttendanceHistory } from '../hooks/use-attendance-history'
@@ -265,7 +265,7 @@ export function DailyAttendancePage() {
             style={{
               padding: `${spacing['2.5']} ${spacing['3']}`,
               borderColor: existingSubmission ? darken(baseColors.blue, 10) : darken(baseColors.pink, 15),
-              backgroundColor: existingSubmission ? colors.accent.base : colors.primary.base,
+              backgroundColor: existingSubmission ? colors.accent.base : withOpacity(baseColors.pink, 0.4),
               color: colors.text.heading,
             }}
           >
