@@ -215,9 +215,9 @@ export function DailyAttendancePage() {
                 onClick={handleMarkAllPresent}
                 className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
                 style={{
-                  backgroundColor: colors.accent.soft,
-                  color: darken(baseColors.blue, 15),
-                  border: `1px solid ${darken(baseColors.blue, 15)}`,
+                  backgroundColor: colors.accent.base,
+                  color: colors.text.heading,
+                  border: `1px solid ${darken(baseColors.blue, 10)}`,
                 }}
               >
                 <UserCheck className="w-3.5 h-3.5" />
