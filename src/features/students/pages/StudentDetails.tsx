@@ -1,34 +1,50 @@
 import * as React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { TileWrapper, Tile } from '@/components/tile'
 import { DetailPageLayout } from '@/components/ui/detail-page-layout'
-import { Edit } from 'lucide-react'
+import { spacing } from '@/config/spacing'
 import { useStudentById } from '@/features/students/hooks/use-student-by-id'
-import { StudentProfileCard } from '@/features/students/components/StudentProfileCard'
+import { useStudentDetailData } from '@/features/students/hooks/use-student-detail-data'
 import { getDisplayName } from '@/features/students/utils/formatting'
-import { AcademicPerformance } from '../components/AcademicPerformance'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { STUDENT_MESSAGES } from '../constants'
 
+import { StudentProfileCard } from '../components/StudentProfileCard'
+import { StudentDocuments } from '../components/StudentDocuments'
+import { StudentAttendanceCalendar } from '../components/StudentAttendanceCalendar'
+import { StudentScholarships } from '../components/StudentScholarships'
+import { StudentHealthInfo } from '../components/StudentHealthInfo'
+import { AcademicPerformance } from '../components/AcademicPerformance'
+import { StudentExtracurricular } from '../components/StudentExtracurricular'
+import { StudentBehaviorLog } from '../components/StudentBehaviorLog'
+
 /**
  * StudentDetails page component
- * Displays detailed information about a specific student
+ * Displays comprehensive student information in a 3-column layout (desktop),
+ * 2-column (tablet), or single column (mobile).
  */
 export default function StudentDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { student, isLoading, error } = useStudentById(id)
+  const { detailData } = useStudentDetailData(id)
+
+  const [calYear, setCalYear] = React.useState(2035)
+  const [calMonth, setCalMonth] = React.useState(2) // March
 
   const handleBack = React.useCallback(() => {
     navigate('/students')
   }, [navigate])
 
-  const handleEdit = React.useCallback(() => {
-    if (id) {
-      navigate(`/students/edit/${id}`)
-    }
-  }, [navigate, id])
+  const handleMonthChange = React.useCallback((year: number, month: number) => {
+    setCalYear(year)
+    setCalMonth(month)
+  }, [])
+
+  // Get attendance data for the currently displayed month
+  const monthKey = `${calYear}-${calMonth}`
+  const currentAttendance = detailData?.monthlyAttendance[monthKey]
+  const calendarHighlights = currentAttendance?.highlights ?? []
+  const attendanceSummary = currentAttendance?.summary
 
   const displayName = student ? getDisplayName(student) : 'Student Details'
   const breadcrumbs = React.useMemo(
@@ -47,48 +63,56 @@ export default function StudentDetails() {
       onErrorAction={handleBack}
       loadingMessage={STUDENT_MESSAGES.LOADING_DETAILS}
     >
-      <TileWrapper columns={12} gap={12} mode="grid">
-        {/* Left Column: Student Profile Card (25% - 3 columns) */}
-        <Tile
-          id="profile-card-wrapper"
-          width={{ default: 12, lg: 3 }}
-          layoutMode="grid"
-          background="card"
-          borderRadius="xl"
-          shadowed
-          nested
-          padding={16}
-          style={{ position: 'relative' }}
+      {student && (
+        <div
+          className="grid grid-cols-1 md:grid-cols-[280px_1fr] xl:grid-cols-[25%_25%_1fr]"
+          style={{ gap: spacing['4'] }}
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleEdit}
-            style={{
-              position: 'absolute',
-              top: '0.5rem',
-              right: '0.5rem',
-              width: '2rem',
-              height: '2rem',
-            }}
+          {/* ═══ LEFT COLUMN ═══ */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
+            <StudentProfileCard student={student} />
+            {detailData?.documents && detailData.documents.length > 0 && (
+              <StudentDocuments documents={detailData.documents} />
+            )}
+          </div>
+
+          {/* ═══ MIDDLE COLUMN ═══ */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
+            <StudentAttendanceCalendar
+              year={2035}
+              month={2}
+              highlights={calendarHighlights}
+              summary={attendanceSummary}
+              today={calYear === 2035 && calMonth === 2 ? 2 : undefined}
+              onMonthChange={handleMonthChange}
+            />
+            {detailData?.scholarships && detailData.scholarships.length > 0 && (
+              <StudentScholarships scholarships={detailData.scholarships} />
+            )}
+            {detailData?.healthRecords && detailData.healthRecords.length > 0 && (
+              <StudentHealthInfo records={detailData.healthRecords} />
+            )}
+          </div>
+
+          {/* ═══ RIGHT COLUMN ═══ */}
+          <div
+            className="md:col-span-2 xl:col-span-1"
+            style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}
           >
-            <Edit style={{ width: '1rem', height: '1rem' }} />
-          </Button>
-          {student && <StudentProfileCard student={student} />}
-        </Tile>
-
-        {/* Middle Column: Academic Performance (50% - 6 columns) */}
-        {student && (
-          <AcademicPerformance
-            averageScore={student.percentage}
-            studentName={getDisplayName(student)}
-            tileWidth={{ default: 12, lg: 6 }}
-            tileLayoutMode="grid"
-          />
-        )}
-
-        {/* Right Column: Empty space (25% - 3 columns) */}
-      </TileWrapper>
+            <AcademicPerformance
+              averageScore={student.gpa}
+              maxScore={4}
+              studentName={getDisplayName(student)}
+            />
+            {detailData?.extracurriculars && detailData.extracurriculars.length > 0 && (
+              <StudentExtracurricular activities={detailData.extracurriculars} />
+            )}
+            {detailData?.behaviorLog && detailData.behaviorLog.length > 0 && (
+              <StudentBehaviorLog entries={detailData.behaviorLog} />
+            )}
+          </div>
+        </div>
+      )}
     </DetailPageLayout>
   )
 }

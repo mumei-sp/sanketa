@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button'
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, primary, accent, background } from '@/theme/colors'
+import { text, primary, accent, background, border } from '@/theme/colors'
 
 export interface CalendarHighlight {
   date: number
-  variant: 'present' | 'late' | 'onLeave'
+  variant: 'present' | 'late' | 'onLeave' | 'absent' | 'sick'
 }
 
 interface MiniCalendarProps {
@@ -167,8 +167,8 @@ export function MiniCalendar({
 
             const highlight = highlightMap.get(day)
             const isToday = day === today
-            let bgColor = 'transparent'
-            let textColor = text.body
+            let bgColor: string = 'transparent'
+            let textColor: string = text.body
             let fontWeight = 400
 
             if (highlight) {
@@ -177,6 +177,12 @@ export function MiniCalendar({
               } else if (highlight.variant === 'late') {
                 bgColor = primary.base
               } else if (highlight.variant === 'onLeave') {
+                bgColor = text.heading
+                textColor = background.card
+              } else if (highlight.variant === 'absent') {
+                bgColor = border.default
+                textColor = text.heading
+              } else if (highlight.variant === 'sick') {
                 bgColor = text.heading
                 textColor = background.card
               }

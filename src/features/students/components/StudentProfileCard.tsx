@@ -36,7 +36,7 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
       avatarUrl={profilePictureUrl}
       avatarSize="8rem"
       gender={student.gender}
-      wrapped={false}
+      wrapped
       badges={[
         { label: student.studentId, variant: 'muted' },
         { label: classLabel, variant: 'muted' },

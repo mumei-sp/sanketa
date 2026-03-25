@@ -1,7 +1,8 @@
-import type { Student } from '@/features/students/types'
+import type { Student, StudentDetailData } from '@/features/students/types'
 import { studentsData } from '@/data/mocks/students'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/data/mocks/student-dashboard'
+import { studentDetailData } from '@/data/mocks/student-details'
 
 /**
  * Mock API service for fetching students
@@ -70,6 +71,26 @@ export async function fetchEnrollmentTrends(): Promise<EnrollmentData[]> {
  *
  * @returns Promise resolving to array of attendance data
  */
+/**
+ * Mock API service for fetching student detail data (attendance, scholarships, etc.)
+ *
+ * Replace with a real API call: GET /api/students/:id/details
+ *
+ * @param id - The student ID
+ * @returns Promise resolving to student detail data
+ */
+export async function fetchStudentDetailData(_id: string): Promise<StudentDetailData> {
+  const delay = Math.floor(Math.random() * 300) + 200
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      // Currently returns the same mock data for all students.
+      // When the backend is ready, this will fetch per-student detail data.
+      resolve(studentDetailData)
+    }, delay)
+  })
+}
+
 export async function fetchAttendanceOverview(): Promise<AttendanceData[]> {
   // Simulate network delay (300-800ms)
   const delay = Math.floor(Math.random() * 500) + 300

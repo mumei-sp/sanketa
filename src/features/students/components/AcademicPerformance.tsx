@@ -28,7 +28,8 @@ export interface MonthlyPerformance {
 }
 
 export interface AcademicPerformanceProps {
-  averageScore: number // Score out of 100
+  averageScore: number
+  maxScore?: number
   monthlyData?: MonthlyPerformance[]
   studentName?: string
   isLoading?: boolean
@@ -37,26 +38,23 @@ export interface AcademicPerformanceProps {
 }
 
 /**
- * Generate mock monthly performance data if not provided
+ * Default monthly performance data matching the Figma reference.
+ * Values represent a 0-10 scale (e.g. activity/assignment scores).
  */
-function generateMonthlyData(baseScore: number): MonthlyPerformance[] {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-  const variation = 5 // Allow ±5 points variation
-  const data: MonthlyPerformance[] = []
-
-  for (let i = 0; i < months.length; i++) {
-    // Create a slight upward trend with some variation
-    const trend = (i / months.length) * 2 // Small upward trend
-    const randomVariation = (Math.random() - 0.5) * variation
-    const score = Math.max(0, Math.min(100, baseScore + trend + randomVariation))
-    data.push({
-      month: months[i],
-      score: Math.round(score),
-    })
-  }
-
-  return data
-}
+const DEFAULT_MONTHLY_DATA: MonthlyPerformance[] = [
+  { month: 'Jul', score: 5 },
+  { month: 'Aug', score: 3 },
+  { month: 'Sep', score: 6 },
+  { month: 'Oct', score: 5 },
+  { month: 'Nov', score: 7 },
+  { month: 'Dec', score: 6 },
+  { month: 'Jan', score: 4 },
+  { month: 'Feb', score: 6 },
+  { month: 'Mar', score: 7 },
+  { month: 'Apr', score: 6 },
+  { month: 'May', score: 4 },
+  { month: 'Jun', score: 4 },
+]
 
 /**
  * Custom tooltip for bar chart
@@ -185,7 +183,7 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
           fill={colors.text.heading}
           dominantBaseline="middle"
         >
-          {value.toFixed(1)}/100
+          {maxValue <= 10 ? `${value.toFixed(1)}/${maxValue.toFixed(1)}` : `${value.toFixed(1)}/${maxValue}`}
         </text>
         {/* Subtitle text - directly below score */}
         <text
@@ -210,6 +208,7 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
  */
 export function AcademicPerformance({
   averageScore,
+  maxScore = 100,
   monthlyData,
   studentName = 'Student',
   isLoading = false,
@@ -217,7 +216,7 @@ export function AcademicPerformance({
   tileLayoutMode = 'block',
 }: AcademicPerformanceProps) {
   const [timePeriod, setTimePeriod] = React.useState('6months')
-  const data = monthlyData || generateMonthlyData(averageScore)
+  const data = monthlyData || DEFAULT_MONTHLY_DATA
 
   // Filter data based on selected time period
   const filteredData = React.useMemo(() => {
@@ -236,13 +235,14 @@ export function AcademicPerformance({
     }
   }, [data, timePeriod])
 
-  // Generate motivational message based on score
+  // Generate motivational message based on score (normalized to percentage)
   const getMotivationalMessage = (score: number): string => {
-    if (score >= 90) {
+    const pct = maxScore <= 10 ? (score / maxScore) * 100 : score
+    if (pct >= 90) {
       return `${studentName} shows consistent excellence in studies and leadership in group projects. Keep aiming high!`
-    } else if (score >= 80) {
+    } else if (pct >= 80) {
       return `${studentName} demonstrates strong academic performance. Continue to build on this foundation!`
-    } else if (score >= 70) {
+    } else if (pct >= 70) {
       return `${studentName} is making good progress. Keep up the effort and focus on areas for improvement!`
     } else {
       return `${studentName} has room for growth. With dedication and support, improvement is within reach!`
@@ -301,18 +301,18 @@ export function AcademicPerformance({
         </CardHeader>
         <CardContent className="px-6 pt-0 pb-4">
           <div className="chart-scale">
-            <div className="grid grid-cols-2 gap-8" style={{ height: '220px' }}>
+            <div className="grid grid-cols-[1fr_1fr] gap-4" style={{ minHeight: '200px' }}>
               {/* Left side: Gauge Chart */}
-              <div className="flex flex-col items-center justify-center">
-                <GaugeChart value={averageScore} />
-                <p className="mt-8 text-xs text-muted-foreground text-left max-w-[200px] leading-relaxed">
+              <div className="flex flex-col items-center justify-start">
+                <GaugeChart value={averageScore} maxValue={maxScore} />
+                <p className="mt-4 text-xs text-muted-foreground text-left max-w-[200px] leading-relaxed">
                   {getMotivationalMessage(averageScore)}
                 </p>
               </div>
 
               {/* Right side: Bar Chart */}
               <div className="flex flex-col">
-                <ResponsiveContainer width="100%" height={220}>
+                <ResponsiveContainer width="100%" height={200}>
                   <BarChart
                     data={filteredData}
                     margin={{ top: 24, right: 0, left: 4, bottom: 12 }}
@@ -339,8 +339,8 @@ export function AcademicPerformance({
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
-                      domain={[0, 100]}
-                      tickCount={6}
+                      domain={[0, 'dataMax + 2']}
+                      tickCount={5}
                       hide={true}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={false} />

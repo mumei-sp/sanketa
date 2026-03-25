@@ -76,6 +76,73 @@ export interface Student extends Omit<UserProfile, 'userId' | 'profileType'> {
   avatarUrl?: string
 }
 
+// ============================================================================
+// Student Detail Page Types
+// ============================================================================
+
+import type { CalendarHighlight } from '@/components/ui/mini-calendar'
+import type { DocumentItem } from '@/components/ui/documents-list'
+
+/** Attendance data for a specific month */
+export interface StudentAttendanceMonth {
+  highlights: CalendarHighlight[]
+  summary: {
+    present: number
+    late: number
+    absent: number
+    sick: number
+  }
+}
+
+/** Scholarship entry */
+export interface StudentScholarship {
+  id: string
+  title: string
+  category: string
+  icon: 'globe' | 'award'
+}
+
+/** Health/Medical record */
+export interface StudentHealthRecord {
+  id: string
+  title: string
+  description: string
+  severity?: 'normal' | 'mild' | 'severe'
+}
+
+/** Extracurricular activity */
+export interface StudentActivity {
+  id: string
+  club: string
+  role: string
+  icon: string
+  achievements: string
+  duration: string
+  advisor: string
+}
+
+/** Behavior log entry */
+export type BehaviorType = 'Positive Note' | 'Minor Issue'
+
+export interface StudentBehaviorEntry {
+  id: string
+  date: string
+  type: BehaviorType
+  details: string
+  reportedBy: string
+  statusAction: string
+}
+
+/** Aggregate detail data for the student detail page */
+export interface StudentDetailData {
+  monthlyAttendance: Record<string, StudentAttendanceMonth>
+  scholarships: StudentScholarship[]
+  healthRecords: StudentHealthRecord[]
+  extracurriculars: StudentActivity[]
+  behaviorLog: StudentBehaviorEntry[]
+  documents: DocumentItem[]
+}
+
 // Re-export types for convenience
 export type { StudentFormValues } from '../schemas/student-schema'
 export type { UserProfile, Gender, ProfileType } from '@/types/user-profile'

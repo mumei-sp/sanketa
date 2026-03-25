@@ -4,7 +4,8 @@ import { MiniCalendar } from '@/components/ui/mini-calendar'
 import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
-import { text, status, border, accent, primary, background } from '@/theme/colors'
+import { text, border, accent, primary, background } from '@/theme/colors'
+import { AttendanceSummaryBadges } from '@/components/ui/attendance-summary-badges'
 import { useTeacherById } from '../hooks/use-teacher-by-id'
 import { getDisplayName } from '../utils/formatting'
 import { getTeacherBreadcrumbs } from '../utils/breadcrumbs'
@@ -99,34 +100,14 @@ export default function TeacherDetails() {
               onMonthChange={handleMonthChange}
             >
               {attendanceSummary && (
-                <div
-                  style={{
-                    marginTop: spacing['8'],
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: spacing['4'],
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    {[
+                <div style={{ marginTop: spacing['8'] }}>
+                  <AttendanceSummaryBadges
+                    items={[
                       { label: 'Present', value: attendanceSummary.present, color: accent.base },
                       { label: 'Late', value: attendanceSummary.late, color: primary.base },
                       { label: 'On Leave', value: attendanceSummary.onLeave, color: text.heading },
-                    ].map(item => (
-                      <div key={item.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing['1'] }}>
-                        <div style={{ width: '48px', height: '4px', borderRadius: '3px', backgroundColor: item.color }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing['1'], whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: fontSizes.xs, fontWeight: 500, color: text.body }}>{item.label}</span>
-                          <span style={{ fontSize: fontSizes.base, fontWeight: 800, color: text.heading }}>{item.value}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                    ]}
+                  />
                 </div>
               )}
 
