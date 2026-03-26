@@ -25,6 +25,8 @@ export interface SchoolConfig {
   // ── General ──
   /** Display name of the school */
   schoolName: string
+  /** School logo as base64 data URL (null = use default) */
+  schoolLogo: string | null
 
   // ── Academic Calendar ──
   /** Month the academic year starts (0=January, 3=April, 7=August) */
@@ -40,9 +42,10 @@ export interface SchoolConfig {
 /** Default config — used on first load and for "Reset to Defaults" */
 export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   schoolName: 'Sanketa School',
+  schoolLogo: null,
   academicYearStartMonth: 3, // April (common for Indian academic year)
   termStructure: 'semester',
-} as const
+}
 
 // ============================================================================
 // Constants
@@ -74,3 +77,22 @@ export const TERM_STRUCTURE_OPTIONS: {
 
 /** localStorage key for persisting school config */
 export const SCHOOL_CONFIG_STORAGE_KEY = 'sanketa:school-config'
+
+// ============================================================================
+// Logo Upload Constraints
+// ============================================================================
+
+/** Max logo file size in bytes (512 KB) */
+export const LOGO_MAX_SIZE_BYTES = 512 * 1024
+
+/** Human-readable max size label */
+export const LOGO_MAX_SIZE_LABEL = '512 KB'
+
+/** Accepted image MIME types */
+export const LOGO_ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp']
+
+/** Accepted file extensions for the input */
+export const LOGO_ACCEPTED_EXTENSIONS = '.png,.jpg,.jpeg,.svg,.webp'
+
+/** Recommended dimensions */
+export const LOGO_RECOMMENDED_SIZE = '128×128px or 256×256px'

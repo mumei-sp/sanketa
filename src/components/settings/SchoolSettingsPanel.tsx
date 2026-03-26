@@ -19,6 +19,9 @@ import {
   Shield,
   Palette,
   ChevronRight,
+  Upload,
+  Trash2,
+  ImageIcon,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -42,6 +45,11 @@ import {
   MONTH_LABELS,
   MONTH_SHORT_LABELS,
   TERM_STRUCTURE_OPTIONS,
+  LOGO_MAX_SIZE_BYTES,
+  LOGO_MAX_SIZE_LABEL,
+  LOGO_ACCEPTED_TYPES,
+  LOGO_ACCEPTED_EXTENSIONS,
+  LOGO_RECOMMENDED_SIZE,
   type TermStructure,
   type SchoolConfig,
 } from '@/config/school-config'
@@ -102,10 +110,125 @@ interface SectionProps {
 }
 
 function GeneralSection({ draft, setDraft }: SectionProps) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [logoError, setLogoError] = React.useState<string | null>(null)
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoError(null)
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate type
+    if (!LOGO_ACCEPTED_TYPES.includes(file.type)) {
+      setLogoError('Invalid file type. Use PNG, JPG, SVG, or WebP.')
+      return
+    }
+
+    // Validate size
+    if (file.size > LOGO_MAX_SIZE_BYTES) {
+      setLogoError(`File too large. Maximum size is ${LOGO_MAX_SIZE_LABEL}.`)
+      return
+    }
+
+    // Read as data URL
+    const reader = new FileReader()
+    reader.onload = () => {
+      setDraft(prev => ({ ...prev, schoolLogo: reader.result as string }))
+    }
+    reader.onerror = () => {
+      setLogoError('Failed to read file. Please try again.')
+    }
+    reader.readAsDataURL(file)
+
+    // Reset input so the same file can be re-selected
+    e.target.value = ''
+  }
+
+  const handleRemoveLogo = () => {
+    setDraft(prev => ({ ...prev, schoolLogo: null }))
+    setLogoError(null)
+  }
+
   return (
     <>
       <SectionHeading title="General Settings" description="Basic information about your school." />
 
+      {/* School Logo */}
+      <div
+        className="rounded-xl shadow-sm"
+        style={{
+          backgroundColor: background.card,
+          padding: spacing['6'],
+          border: `1px solid ${border.default}`,
+        }}
+      >
+        <FieldGroup label="School Logo" hint={`Recommended: ${LOGO_RECOMMENDED_SIZE}. Max ${LOGO_MAX_SIZE_LABEL}. Accepts PNG, JPG, SVG, WebP.`}>
+          <div className="flex items-center" style={{ gap: spacing['4'] }}>
+            {/* Logo preview */}
+            <div
+              className="rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+              style={{
+                width: '72px',
+                height: '72px',
+                backgroundColor: draft.schoolLogo ? 'transparent' : accent.soft,
+                border: `2px dashed ${draft.schoolLogo ? 'transparent' : border.default}`,
+              }}
+            >
+              {draft.schoolLogo ? (
+                <img
+                  src={draft.schoolLogo}
+                  alt="School logo"
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <ImageIcon style={{ width: '28px', height: '28px', color: text.muted }} />
+              )}
+            </div>
+
+            {/* Upload / Remove buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
+              <div className="flex items-center" style={{ gap: spacing['2'] }}>
+                <Button
+                  variant="outline"
+                  className="text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ gap: spacing['1.5'] }}
+                >
+                  <Upload style={{ width: '14px', height: '14px' }} />
+                  {draft.schoolLogo ? 'Change Logo' : 'Upload Logo'}
+                </Button>
+                {draft.schoolLogo && (
+                  <Button
+                    variant="outline"
+                    className="text-xs"
+                    onClick={handleRemoveLogo}
+                    style={{ gap: spacing['1.5'], color: text.muted }}
+                  >
+                    <Trash2 style={{ width: '14px', height: '14px' }} />
+                    Remove
+                  </Button>
+                )}
+              </div>
+              {logoError && (
+                <p className="text-xs font-medium" style={{ color: '#D64445' }}>
+                  {logoError}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={LOGO_ACCEPTED_EXTENSIONS}
+            onChange={handleLogoUpload}
+            className="hidden"
+          />
+        </FieldGroup>
+      </div>
+
+      {/* School Name */}
       <div
         className="rounded-xl shadow-sm"
         style={{

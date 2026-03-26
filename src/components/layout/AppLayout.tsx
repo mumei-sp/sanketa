@@ -94,6 +94,10 @@ function TopActions() {
 function LayoutContent({ logoPath }: AppLayoutProps) {
   const isDesktop = useIsDesktop()
   const { setOpen, isMobile, toggleSidebar } = useSidebar()
+  const { config } = useSchoolConfig()
+
+  // Use uploaded school logo if available, otherwise fall back to prop
+  const effectiveLogoPath = config.schoolLogo ?? logoPath
 
   // Sync sidebar state with screen width
   useEffect(() => {
@@ -104,11 +108,11 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
   return (
     <>
-      <AppSidebar logoPath={logoPath} />
+      <AppSidebar logoPath={effectiveLogoPath} />
       <SidebarInset className="overflow-hidden">
         {/* ── Mobile top bar (< md) ── */}
         <header className="flex md:hidden items-center justify-between px-4 h-12 border-b bg-background">
-          <Logo logoPath={logoPath} className="px-0 py-0" />
+          <Logo logoPath={effectiveLogoPath} className="px-0 py-0" />
           <Button
             variant="ghost"
             size="icon"
