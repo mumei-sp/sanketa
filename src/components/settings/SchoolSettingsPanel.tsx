@@ -1,14 +1,13 @@
 /**
- * SchoolSettingsPanel — Full-screen right-side Sheet with internal navigation.
+ * SchoolSettingsPanel — Full-screen settings overlay with internal navigation.
  *
- * Opens when the gear icon in the top bar is clicked.
- * Contains an internal sidebar for switching between settings sections.
- * Uses local draft state so Cancel discards edits.
+ * Uses the project's Tile/SectionCard components for consistent card styling.
+ * Opens from the gear icon in the top bar.
  *
  * To add a new settings section:
- * 1. Add a new entry to SETTINGS_SECTIONS
+ * 1. Add entry to SETTINGS_SECTIONS
  * 2. Create the section component
- * 3. Add it to the renderSection switch
+ * 3. Add to renderSection switch
  */
 
 import * as React from 'react'
@@ -47,12 +46,12 @@ import {
   type SchoolConfig,
 } from '@/config/school-config'
 import { getAcademicYear, getTerms } from '@/utils/academic-date'
-import { colors } from '@/theme/colors'
+import { text, border, accent, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 
 // ============================================================================
-// Settings Navigation Registry
+// Settings Navigation
 // ============================================================================
 
 interface SettingsSection {
@@ -72,35 +71,29 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
 ]
 
 // ============================================================================
-// Shared Styled Wrapper for Form Fields
+// Reusable form field wrapper
 // ============================================================================
 
-function FieldGroup({ label, hint, children, maxWidth = '480px' }: {
+function FieldGroup({ label, hint, children }: {
   label: string
   hint?: string
   children: React.ReactNode
-  maxWidth?: string
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'], maxWidth }}>
-      <Label
-        className="text-sm font-semibold"
-        style={{ color: colors.text.heading }}
-      >
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
+      <Label className="text-sm font-semibold" style={{ color: text.heading }}>
         {label}
       </Label>
       {children}
       {hint && (
-        <p style={{ fontSize: fontSizes.xs, color: colors.text.muted, lineHeight: 1.4 }}>
-          {hint}
-        </p>
+        <p style={{ fontSize: fontSizes.xs, color: text.muted, lineHeight: 1.5 }}>{hint}</p>
       )}
     </div>
   )
 }
 
 // ============================================================================
-// Section Components
+// Section: General
 // ============================================================================
 
 interface SectionProps {
@@ -108,32 +101,36 @@ interface SectionProps {
   setDraft: React.Dispatch<React.SetStateAction<SchoolConfig>>
 }
 
-/** General Settings */
 function GeneralSection({ draft, setDraft }: SectionProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
-      <SectionHeader
-        title="General Settings"
-        description="Basic information about your school that appears across the application."
-      />
+    <>
+      <SectionHeading title="General Settings" description="Basic information about your school." />
 
-      <FieldGroup label="School Name" hint="Displayed in the sidebar header and exported reports.">
-        <Input
-          id="school-name"
-          value={draft.schoolName}
-          onChange={e => setDraft(prev => ({ ...prev, schoolName: e.target.value }))}
-          className="text-sm"
-          style={{
-            backgroundColor: colors.background.card,
-            borderColor: colors.border.default,
-          }}
-        />
-      </FieldGroup>
-    </div>
+      <div
+        className="rounded-xl shadow-sm"
+        style={{
+          backgroundColor: background.card,
+          padding: spacing['6'],
+          border: `1px solid ${border.default}`,
+        }}
+      >
+        <FieldGroup label="School Name" hint="Displayed in the sidebar header and exported reports.">
+          <Input
+            value={draft.schoolName}
+            onChange={e => setDraft(prev => ({ ...prev, schoolName: e.target.value }))}
+            className="text-sm"
+            style={{ maxWidth: '420px' }}
+          />
+        </FieldGroup>
+      </div>
+    </>
   )
 }
 
-/** Academic Calendar Settings */
+// ============================================================================
+// Section: Academic Calendar
+// ============================================================================
+
 function AcademicSection({ draft, setDraft }: SectionProps) {
   const previewYear = React.useMemo(
     () => getAcademicYear(new Date(), draft.academicYearStartMonth),
@@ -145,197 +142,212 @@ function AcademicSection({ draft, setDraft }: SectionProps) {
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
-      <SectionHeader
+    <>
+      <SectionHeading
         title="Academic Calendar"
-        description="Configure your school's academic year and term structure. All date filters and semester labels across the app adjust automatically."
+        description="Configure your academic year and term structure. All date filters across the app adjust automatically."
       />
 
-      {/* Start Month */}
-      <FieldGroup
-        label="Academic Year Start Month"
-        hint="The month your academic year begins. Common: April (India), August (US), September (UK)."
+      {/* Start Month Card */}
+      <div
+        className="rounded-xl shadow-sm"
+        style={{
+          backgroundColor: background.card,
+          padding: spacing['6'],
+          border: `1px solid ${border.default}`,
+        }}
       >
-        <Select
-          value={String(draft.academicYearStartMonth)}
-          onValueChange={v => setDraft(prev => ({ ...prev, academicYearStartMonth: parseInt(v) }))}
+        <FieldGroup
+          label="Academic Year Start Month"
+          hint="The month your academic year begins. Common: April (India), August (US), September (UK)."
         >
-          <SelectTrigger
-            className="text-sm"
-            style={{
-              maxWidth: '240px',
-              backgroundColor: colors.background.card,
-              borderColor: colors.border.default,
-              color: colors.text.heading,
-            }}
+          <Select
+            value={String(draft.academicYearStartMonth)}
+            onValueChange={v => setDraft(prev => ({ ...prev, academicYearStartMonth: parseInt(v) }))}
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {MONTH_LABELS.map((month, idx) => (
-              <SelectItem key={idx} value={String(idx)}>
-                {month}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FieldGroup>
+            <SelectTrigger className="text-sm" style={{ maxWidth: '240px' }}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTH_LABELS.map((month, idx) => (
+                <SelectItem key={idx} value={String(idx)}>{month}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FieldGroup>
+      </div>
 
-      {/* Term Structure */}
-      <FieldGroup label="Term Structure" maxWidth="520px">
-        <RadioGroup
-          value={draft.termStructure}
-          onValueChange={v => setDraft(prev => ({ ...prev, termStructure: v as TermStructure }))}
-          style={{ display: 'flex', flexDirection: 'column', gap: spacing['2.5'] }}
-        >
-          {TERM_STRUCTURE_OPTIONS.map(opt => {
-            const isSelected = draft.termStructure === opt.value
-            return (
-              <label
-                key={opt.value}
-                htmlFor={`term-${opt.value}`}
-                className="flex items-center rounded-xl border-2 cursor-pointer transition-all"
-                style={{
-                  padding: `${spacing['3']} ${spacing['4']}`,
-                  borderColor: isSelected ? colors.text.heading : colors.border.default,
-                  backgroundColor: isSelected ? colors.accent.soft : colors.background.card,
-                }}
-              >
-                <RadioGroupItem value={opt.value} id={`term-${opt.value}`} className="mr-4 shrink-0" />
-                <div className="flex-1">
-                  <span
-                    className="text-sm font-semibold block"
-                    style={{ color: colors.text.heading }}
-                  >
-                    {opt.label}
-                  </span>
-                  <span
-                    className="text-xs block"
-                    style={{ color: colors.text.muted, marginTop: spacing['0.5'] }}
-                  >
-                    {opt.description}
-                  </span>
-                </div>
-                {isSelected && (
-                  <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-3"
-                    style={{ backgroundColor: colors.text.heading }}
-                  >
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+      {/* Term Structure Card */}
+      <div
+        className="rounded-xl shadow-sm"
+        style={{
+          backgroundColor: background.card,
+          padding: spacing['6'],
+          border: `1px solid ${border.default}`,
+        }}
+      >
+        <FieldGroup label="Term Structure">
+          <RadioGroup
+            value={draft.termStructure}
+            onValueChange={v => setDraft(prev => ({ ...prev, termStructure: v as TermStructure }))}
+            style={{ display: 'flex', flexDirection: 'column', gap: spacing['2.5'] }}
+          >
+            {TERM_STRUCTURE_OPTIONS.map(opt => {
+              const isSelected = draft.termStructure === opt.value
+              return (
+                <label
+                  key={opt.value}
+                  htmlFor={`term-${opt.value}`}
+                  className="flex items-center rounded-xl cursor-pointer transition-all"
+                  style={{
+                    padding: `${spacing['3']} ${spacing['4']}`,
+                    maxWidth: '460px',
+                    border: `2px solid ${isSelected ? text.heading : border.default}`,
+                    backgroundColor: isSelected ? accent.soft : background.surface,
+                  }}
+                >
+                  <RadioGroupItem value={opt.value} id={`term-${opt.value}`} className="mr-4 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-sm font-semibold" style={{ color: text.heading }}>
+                      {opt.label}
+                    </span>
+                    <span className="text-xs block" style={{ color: text.muted, marginTop: '2px' }}>
+                      {opt.description}
+                    </span>
                   </div>
-                )}
-              </label>
-            )
-          })}
-        </RadioGroup>
-      </FieldGroup>
+                  {isSelected && (
+                    <div
+                      className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-3"
+                      style={{ backgroundColor: text.heading }}
+                    >
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  )}
+                </label>
+              )
+            })}
+          </RadioGroup>
+        </FieldGroup>
+      </div>
 
       {/* Preview Card */}
       <div
-        className="rounded-xl"
+        className="rounded-xl shadow-sm"
         style={{
-          backgroundColor: colors.accent.soft,
-          border: `1px solid ${colors.accent.base}`,
-          padding: spacing['5'],
-          maxWidth: '520px',
+          backgroundColor: accent.soft,
+          padding: spacing['6'],
+          border: `1px solid ${accent.base}`,
         }}
       >
         <div className="flex items-center" style={{ gap: spacing['2'], marginBottom: spacing['3'] }}>
-          <Calendar className="w-4 h-4" style={{ color: colors.text.heading }} />
+          <Calendar className="w-4 h-4" style={{ color: text.heading }} />
           <p
-            className="text-xs font-bold uppercase tracking-wider"
-            style={{ color: colors.text.heading }}
+            style={{
+              fontSize: fontSizes.xs,
+              fontWeight: 700,
+              color: text.heading,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
           >
             Academic Year Preview
           </p>
         </div>
 
-        <p className="text-sm font-semibold" style={{ color: colors.text.heading, marginBottom: spacing['3'] }}>
+        <p className="text-sm font-semibold" style={{ color: text.heading, marginBottom: spacing['4'] }}>
           {MONTH_LABELS[draft.academicYearStartMonth]} {previewYear.startYear}
           {' — '}
           {MONTH_LABELS[(draft.academicYearStartMonth + 11) % 12]} {previewYear.endYear}
         </p>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing['2'] }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing['3'] }}>
           {previewTerms.map(term => (
             <div
               key={term.term}
-              className="rounded-lg"
+              className="rounded-lg shadow-sm"
               style={{
-                backgroundColor: colors.background.card,
-                border: `1px solid ${colors.border.default}`,
-                padding: `${spacing['2']} ${spacing['3']}`,
+                backgroundColor: background.card,
+                border: `1px solid ${border.default}`,
+                padding: `${spacing['3']} ${spacing['4']}`,
+                minWidth: '140px',
               }}
             >
-              <p className="text-xs font-semibold" style={{ color: colors.text.heading }}>
+              <p className="text-xs font-bold" style={{ color: text.heading }}>
                 {term.label}
               </p>
-              <p className="text-xs" style={{ color: colors.text.muted, marginTop: spacing['0.5'] }}>
+              <p className="text-xs" style={{ color: text.muted, marginTop: spacing['1'] }}>
                 {MONTH_SHORT_LABELS[term.startMonth]} — {MONTH_SHORT_LABELS[term.endMonth]}
-                <span style={{ marginLeft: spacing['1'], opacity: 0.6 }}>
-                  ({term.monthCount} months)
+                <span style={{ opacity: 0.6, marginLeft: spacing['1'] }}>
+                  · {term.monthCount}mo
                 </span>
               </p>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
-/** Section header with title + description */
-function SectionHeader({ title, description }: { title: string; description: string }) {
+// ============================================================================
+// Section heading
+// ============================================================================
+
+function SectionHeading({ title, description }: { title: string; description: string }) {
   return (
-    <div style={{ borderBottom: `1px solid ${colors.border.default}`, paddingBottom: spacing['4'] }}>
-      <h3
-        className="text-lg font-bold"
-        style={{ color: colors.text.heading, marginBottom: spacing['1'] }}
-      >
+    <div style={{ marginBottom: spacing['2'] }}>
+      <h3 className="text-lg font-bold" style={{ color: text.heading }}>
         {title}
       </h3>
-      <p className="text-sm" style={{ color: colors.text.muted, lineHeight: 1.5, maxWidth: '600px' }}>
+      <p className="text-sm" style={{ color: text.muted, lineHeight: 1.5, marginTop: spacing['1'] }}>
         {description}
       </p>
     </div>
   )
 }
 
-/** Placeholder for future sections */
+// ============================================================================
+// Coming Soon placeholder
+// ============================================================================
+
 function ComingSoonSection({ section }: { section: SettingsSection }) {
   const Icon = section.icon
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
-      <SectionHeader title={section.label} description={section.description} />
+    <>
+      <SectionHeading title={section.label} description={section.description} />
 
       <div
         className="rounded-xl border-2 border-dashed flex flex-col items-center justify-center"
         style={{
-          borderColor: colors.border.default,
+          borderColor: border.default,
           padding: `${spacing['16']} ${spacing['8']}`,
+          backgroundColor: background.surface,
         }}
       >
         <div
-          className="w-12 h-12 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: colors.accent.soft, marginBottom: spacing['4'] }}
+          className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
+          style={{ backgroundColor: accent.soft, marginBottom: spacing['4'] }}
         >
-          <Icon className="w-6 h-6" style={{ color: colors.text.muted }} />
+          <Icon className="w-6 h-6" style={{ color: text.muted }} />
         </div>
-        <p className="text-sm font-medium" style={{ color: colors.text.heading }}>
+        <p className="text-sm font-semibold" style={{ color: text.heading }}>
           Coming Soon
         </p>
-        <p className="text-xs text-center" style={{ color: colors.text.muted, marginTop: spacing['1'], maxWidth: '280px' }}>
+        <p
+          className="text-xs text-center"
+          style={{ color: text.muted, marginTop: spacing['1.5'], maxWidth: '300px', lineHeight: 1.5 }}
+        >
           This settings section is under development and will be available in a future update.
         </p>
       </div>
-    </div>
+    </>
   )
 }
 
 // ============================================================================
-// Main Panel Component
+// Main Panel
 // ============================================================================
 
 export function SchoolSettingsPanel() {
@@ -351,29 +363,17 @@ export function SchoolSettingsPanel() {
     }
   }, [isSettingsOpen, config])
 
-  const handleSave = () => {
-    updateConfig(draft)
-    setSettingsOpen(false)
-  }
-
-  const handleCancel = () => {
-    setSettingsOpen(false)
-  }
-
-  const handleReset = () => {
-    resetConfig()
-    setSettingsOpen(false)
-  }
+  const handleSave = () => { updateConfig(draft); setSettingsOpen(false) }
+  const handleCancel = () => { setSettingsOpen(false) }
+  const handleReset = () => { resetConfig(); setSettingsOpen(false) }
 
   const renderSection = () => {
     switch (activeSection) {
-      case 'general':
-        return <GeneralSection draft={draft} setDraft={setDraft} />
-      case 'academic':
-        return <AcademicSection draft={draft} setDraft={setDraft} />
+      case 'general': return <GeneralSection draft={draft} setDraft={setDraft} />
+      case 'academic': return <AcademicSection draft={draft} setDraft={setDraft} />
       default: {
-        const section = SETTINGS_SECTIONS.find(s => s.id === activeSection)
-        return section ? <ComingSoonSection section={section} /> : null
+        const s = SETTINGS_SECTIONS.find(x => x.id === activeSection)
+        return s ? <ComingSoonSection section={s} /> : null
       }
     }
   }
@@ -391,155 +391,92 @@ export function SchoolSettingsPanel() {
           }
         }}
       >
-        {/* Accessibility title */}
         <SheetTitle className="sr-only">School Settings</SheetTitle>
-
-        {/* ═══ Header ═══ */}
-        <div
-          className="flex items-center justify-between shrink-0"
-          style={{
-            padding: `${spacing['4']} ${spacing['8']}`,
-            borderBottom: `1px solid ${colors.border.default}`,
-            backgroundColor: colors.background.card,
-          }}
-        >
-          <div>
-            <h2
-              className="text-xl font-bold"
-              style={{ color: colors.text.heading }}
-            >
-              Settings
-            </h2>
-            <p className="text-xs" style={{ color: colors.text.muted, marginTop: spacing['0.5'] }}>
-              Manage your school configuration and preferences
-            </p>
-          </div>
-          <div className="flex items-center" style={{ gap: spacing['2'] }}>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="flex items-center text-xs font-medium transition-opacity hover:opacity-70 cursor-pointer"
-              style={{ color: colors.text.muted, gap: spacing['1.5'] }}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Reset
-            </button>
-            <Button variant="outline" onClick={handleCancel} className="text-sm">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="text-sm"
-              style={{
-                backgroundColor: colors.text.heading,
-                color: colors.background.card,
-              }}
-            >
-              Save Changes
-            </Button>
-          </div>
-        </div>
 
         {/* ═══ Body: Sidebar + Content ═══ */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
+
           {/* ── Left sidebar nav ── */}
           <nav
-            className="shrink-0 overflow-y-auto hidden md:flex flex-col"
+            className="shrink-0 overflow-y-auto hidden md:flex flex-col justify-between"
             style={{
               width: '260px',
-              backgroundColor: colors.background.page,
-              borderRight: `1px solid ${colors.border.default}`,
-              padding: `${spacing['4']} ${spacing['3']}`,
-              gap: spacing['1'],
+              backgroundColor: background.card,
+              borderRight: `1px solid ${border.default}`,
+              padding: spacing['4'],
             }}
           >
-            <p
-              className="text-[10px] font-bold uppercase tracking-wider"
-              style={{
-                color: colors.text.muted,
-                padding: `${spacing['1']} ${spacing['3']}`,
-                marginBottom: spacing['1'],
-              }}
-            >
-              Settings
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['1'] }}>
+              {/* Title */}
+              <div style={{ padding: `${spacing['2']} ${spacing['3']}`, marginBottom: spacing['2'] }}>
+                <h2 className="text-lg font-bold" style={{ color: text.heading }}>
+                  Settings
+                </h2>
+                <p className="text-xs" style={{ color: text.muted, marginTop: spacing['0.5'] }}>
+                  School configuration
+                </p>
+              </div>
 
-            {SETTINGS_SECTIONS.map(section => {
-              const isActive = section.id === activeSection
-              const Icon = section.icon
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => section.enabled && setActiveSection(section.id)}
-                  className="flex items-center rounded-xl text-left transition-all"
-                  style={{
-                    padding: `${spacing['2.5']} ${spacing['3']}`,
-                    gap: spacing['3'],
-                    backgroundColor: isActive ? colors.accent.base : 'transparent',
-                    opacity: section.enabled ? 1 : 0.45,
-                    cursor: section.enabled ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  {/* Icon circle */}
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              {/* Nav items */}
+              {SETTINGS_SECTIONS.map(section => {
+                const isActive = section.id === activeSection
+                const Icon = section.icon
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => section.enabled && setActiveSection(section.id)}
+                    className="flex items-center rounded-xl text-left transition-all"
                     style={{
-                      backgroundColor: isActive ? colors.text.heading : colors.background.card,
-                      border: isActive ? 'none' : `1px solid ${colors.border.default}`,
+                      padding: `${spacing['2.5']} ${spacing['3']}`,
+                      gap: spacing['3'],
+                      backgroundColor: isActive ? accent.base : 'transparent',
+                      opacity: section.enabled ? 1 : 0.45,
+                      cursor: section.enabled ? 'pointer' : 'not-allowed',
                     }}
                   >
-                    <Icon
-                      className="w-4 h-4"
-                      style={{ color: isActive ? colors.background.card : colors.text.muted }}
-                    />
-                  </div>
-
-                  {/* Label + description */}
-                  <div className="flex-1 min-w-0">
-                    <span
-                      className="text-sm block truncate"
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                       style={{
-                        color: isActive ? colors.text.heading : colors.text.body,
-                        fontWeight: isActive ? 600 : 400,
+                        backgroundColor: isActive ? text.heading : background.surface,
+                        border: isActive ? 'none' : `1px solid ${border.default}`,
                       }}
                     >
-                      {section.label}
-                    </span>
-                    <span
-                      className="text-[10px] block truncate"
-                      style={{ color: colors.text.muted, marginTop: '1px' }}
-                    >
-                      {section.description}
-                    </span>
-                  </div>
-
-                  {/* Active indicator or "Soon" badge */}
-                  {isActive ? (
-                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: colors.text.heading }} />
-                  ) : !section.enabled ? (
-                    <span
-                      className="text-[9px] font-semibold uppercase rounded-full shrink-0"
-                      style={{
-                        backgroundColor: colors.border.default,
-                        color: colors.text.muted,
-                        padding: `${spacing['0.5']} ${spacing['2']}`,
-                      }}
-                    >
-                      Soon
-                    </span>
-                  ) : null}
-                </button>
-              )
-            })}
+                      <Icon className="w-4 h-4" style={{ color: isActive ? background.card : text.muted }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span
+                        className="text-sm block truncate"
+                        style={{ color: isActive ? text.heading : text.body, fontWeight: isActive ? 600 : 400 }}
+                      >
+                        {section.label}
+                      </span>
+                      <span className="text-[10px] block truncate" style={{ color: text.muted }}>
+                        {section.description}
+                      </span>
+                    </div>
+                    {isActive ? (
+                      <ChevronRight className="w-4 h-4 shrink-0" style={{ color: text.heading }} />
+                    ) : !section.enabled ? (
+                      <span
+                        className="text-[9px] font-semibold uppercase rounded-full shrink-0"
+                        style={{ backgroundColor: border.default, color: text.muted, padding: `2px ${spacing['1.5']}` }}
+                      >
+                        Soon
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              })}
+            </div>
           </nav>
 
-          {/* ── Mobile section tabs ── */}
+          {/* ── Mobile tabs ── */}
           <div
-            className="flex md:hidden overflow-x-auto shrink-0 border-b"
+            className="flex md:hidden overflow-x-auto shrink-0"
             style={{
-              borderColor: colors.border.default,
-              backgroundColor: colors.background.page,
+              borderBottom: `1px solid ${border.default}`,
+              backgroundColor: background.card,
               padding: `${spacing['2']} ${spacing['4']}`,
               gap: spacing['1.5'],
             }}
@@ -556,8 +493,8 @@ export function SchoolSettingsPanel() {
                   style={{
                     padding: `${spacing['2']} ${spacing['3']}`,
                     gap: spacing['1.5'],
-                    backgroundColor: isActive ? colors.accent.base : 'transparent',
-                    color: isActive ? colors.text.heading : colors.text.muted,
+                    backgroundColor: isActive ? accent.base : 'transparent',
+                    color: isActive ? text.heading : text.muted,
                   }}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -569,13 +506,54 @@ export function SchoolSettingsPanel() {
 
           {/* ── Right content area ── */}
           <div
-            className="flex-1 overflow-y-auto"
-            style={{
-              padding: `${spacing['8']} ${spacing['10']}`,
-              backgroundColor: colors.background.card,
-            }}
+            className="flex-1 overflow-y-auto flex flex-col"
+            style={{ backgroundColor: background.page }}
           >
-            {renderSection()}
+            {/* Content */}
+            <div
+              className="flex-1"
+              style={{
+                padding: `${spacing['8']} ${spacing['10']}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: spacing['5'],
+                maxWidth: '720px',
+              }}
+            >
+              {renderSection()}
+            </div>
+
+            {/* ── Footer — bottom of content area ── */}
+            <div
+              className="shrink-0 flex items-center justify-between"
+              style={{
+                padding: `${spacing['4']} ${spacing['10']}`,
+                borderTop: `1px solid ${border.default}`,
+                backgroundColor: background.card,
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex items-center text-xs font-medium transition-opacity hover:opacity-70 cursor-pointer"
+                style={{ color: text.muted, gap: spacing['1.5'] }}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset to defaults
+              </button>
+              <div className="flex items-center" style={{ gap: spacing['2'] }}>
+                <Button variant="outline" onClick={handleCancel} className="text-sm">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  className="text-sm"
+                  style={{ backgroundColor: text.heading, color: background.card }}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </SheetContent>
