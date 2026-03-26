@@ -384,6 +384,7 @@ export function SchoolSettingsPanel() {
         side="right"
         size="full"
         className="flex flex-col p-0 gap-0"
+        style={{ width: 'calc(100vw - 16rem)', maxWidth: 'calc(100vw - 16rem)' }}
         onInteractOutside={e => {
           const target = e.target as HTMLElement
           if (target?.closest('[data-radix-popper-content-wrapper]') || target?.closest('[role="listbox"]')) {
@@ -400,7 +401,7 @@ export function SchoolSettingsPanel() {
           <nav
             className="shrink-0 overflow-y-auto hidden md:flex flex-col justify-between"
             style={{
-              width: '260px',
+              width: '220px',
               backgroundColor: background.card,
               borderRight: `1px solid ${border.default}`,
               padding: spacing['4'],
@@ -426,24 +427,23 @@ export function SchoolSettingsPanel() {
                     key={section.id}
                     type="button"
                     onClick={() => section.enabled && setActiveSection(section.id)}
-                    className="flex items-center rounded-xl text-left transition-all"
+                    className="flex items-center rounded-lg text-left transition-all"
                     style={{
                       padding: `${spacing['2.5']} ${spacing['3']}`,
-                      gap: spacing['3'],
+                      gap: spacing['2.5'],
                       backgroundColor: isActive ? accent.base : 'transparent',
                       opacity: section.enabled ? 1 : 0.45,
                       cursor: section.enabled ? 'pointer' : 'not-allowed',
                     }}
                   >
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    <Icon
+                      className="shrink-0"
                       style={{
-                        backgroundColor: isActive ? text.heading : background.surface,
-                        border: isActive ? 'none' : `1px solid ${border.default}`,
+                        width: '18px',
+                        height: '18px',
+                        color: isActive ? text.heading : text.muted,
                       }}
-                    >
-                      <Icon className="w-4 h-4" style={{ color: isActive ? background.card : text.muted }} />
-                    </div>
+                    />
                     <div className="flex-1 min-w-0">
                       <span
                         className="text-sm block truncate"
@@ -451,20 +451,15 @@ export function SchoolSettingsPanel() {
                       >
                         {section.label}
                       </span>
-                      <span className="text-[10px] block truncate" style={{ color: text.muted }}>
-                        {section.description}
-                      </span>
                     </div>
-                    {isActive ? (
-                      <ChevronRight className="w-4 h-4 shrink-0" style={{ color: text.heading }} />
-                    ) : !section.enabled ? (
+                    {!section.enabled && (
                       <span
-                        className="text-[9px] font-semibold uppercase rounded-full shrink-0"
+                        className="text-[9px] font-medium rounded-full shrink-0"
                         style={{ backgroundColor: border.default, color: text.muted, padding: `2px ${spacing['1.5']}` }}
                       >
                         Soon
                       </span>
-                    ) : null}
+                    )}
                   </button>
                 )
               })}
