@@ -6,6 +6,8 @@ import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { TeacherFormActions } from '../components/TeacherFormActions'
 import { getTeacherBreadcrumbs } from '../utils/breadcrumbs'
 import { useTeacherFormHandlers } from '../hooks/use-teacher-form-handlers'
+import { createTeacher } from '@/api/services/teacher-service'
+import { formToTeacher } from '../utils/transform'
 import { TEACHER_LABELS } from '../constants'
 
 export default function AddTeacher() {
@@ -13,10 +15,10 @@ export default function AddTeacher() {
   const { handleHandlersReady, handleSaveClick } = useTeacherFormHandlers()
 
   const onSubmit = React.useCallback(async (data: TeacherFormValues) => {
-    console.log('Teacher form submitted:', data)
-    console.log('Form data (JSON):', JSON.stringify(data, null, 2))
-    // TODO: Implement save and add teacher logic
-  }, [])
+    const teacherData = formToTeacher(data)
+    const created = await createTeacher(teacherData)
+    navigate(`/teachers/details/${created.id}`)
+  }, [navigate])
 
   const handleCancel = React.useCallback(() => {
     navigate(-1)

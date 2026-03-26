@@ -79,6 +79,55 @@ export async function fetchEnrollmentTrends(): Promise<EnrollmentData[]> {
  * @param id - The student ID
  * @returns Promise resolving to student detail data
  */
+/**
+ * Mock API service for creating a new student
+ *
+ * Replace with: POST /api/students
+ */
+export async function createStudent(data: Partial<Student>): Promise<Student> {
+  const delay = Math.floor(Math.random() * 500) + 300
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const newStudent: Student = {
+        ...data,
+        id: `stu-${Date.now()}`,
+        studentId: data.studentId || `S-${Math.floor(1000 + Math.random() * 9000)}`,
+        gpa: data.gpa ?? 0,
+        performance: data.performance ?? 'Good',
+        percentage: data.percentage ?? 0,
+        status: data.status ?? 'Active',
+      } as Student
+
+      studentsData.unshift(newStudent)
+      resolve(newStudent)
+    }, delay)
+  })
+}
+
+/**
+ * Mock API service for updating an existing student
+ *
+ * Replace with: PUT /api/students/:id
+ */
+export async function updateStudent(id: string, data: Partial<Student>): Promise<Student> {
+  const delay = Math.floor(Math.random() * 500) + 300
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const index = studentsData.findIndex(s => s.id === id)
+      if (index === -1) {
+        reject(new Error('Student not found'))
+        return
+      }
+
+      const updated = { ...studentsData[index], ...data }
+      studentsData[index] = updated
+      resolve(updated)
+    }, delay)
+  })
+}
+
 export async function fetchStudentDetailData(_id: string): Promise<StudentDetailData> {
   const delay = Math.floor(Math.random() * 300) + 200
 

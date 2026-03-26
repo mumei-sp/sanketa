@@ -8,6 +8,8 @@ import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { TeacherFormActions } from '../components/TeacherFormActions'
 import { getTeacherBreadcrumbs } from '../utils/breadcrumbs'
 import { useTeacherFormHandlers } from '../hooks/use-teacher-form-handlers'
+import { updateTeacher } from '@/api/services/teacher-service'
+import { formToTeacher } from '../utils/transform'
 import { TEACHER_MESSAGES, TEACHER_LABELS } from '../constants'
 
 export default function EditTeacher() {
@@ -18,12 +20,10 @@ export default function EditTeacher() {
 
   const onSubmit = React.useCallback(
     async (data: TeacherFormValues) => {
-      console.log('Teacher form submitted:', data)
-      console.log('Form data (JSON):', JSON.stringify(data, null, 2))
-      // TODO: Implement update teacher logic
-      if (id) {
-        navigate(`/teachers/details/${id}`)
-      }
+      if (!id) return
+      const teacherData = formToTeacher(data)
+      await updateTeacher(id, teacherData)
+      navigate(`/teachers/details/${id}`)
     },
     [navigate, id],
   )

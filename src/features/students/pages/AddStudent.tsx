@@ -6,6 +6,8 @@ import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { StudentFormActions } from '../components/StudentFormActions'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
+import { createStudent } from '@/api/services/student-service'
+import { formToStudent } from '../utils/transform'
 import { STUDENT_LABELS } from '../constants'
 
 export default function AddStudent() {
@@ -13,11 +15,10 @@ export default function AddStudent() {
   const { handleHandlersReady, handleSaveClick } = useStudentFormHandlers()
 
   const onSubmit = React.useCallback(async (data: StudentFormValues) => {
-    console.log('Form submitted:', data)
-    console.log('Form data (JSON):', JSON.stringify(data, null, 2))
-    // TODO: Implement save and add student logic
-    // After successful save, navigate or show a success message
-  }, [])
+    const studentData = formToStudent(data)
+    const created = await createStudent(studentData)
+    navigate(`/students/details/${created.id}`)
+  }, [navigate])
 
   const handleCancel = React.useCallback(() => {
     navigate(-1)

@@ -67,6 +67,51 @@ export async function fetchTeacherStatistics(): Promise<TeacherStatistics> {
 }
 
 /**
+ * Mock API service for creating a new teacher
+ *
+ * Replace with: POST /api/teachers
+ */
+export async function createTeacher(data: Partial<Teacher>): Promise<Teacher> {
+  const delay = Math.floor(Math.random() * 500) + 300
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const newTeacher: Teacher = {
+        ...data,
+        id: `tch-${Date.now()}`,
+        teacherId: data.teacherId || `T-${Math.floor(1000 + Math.random() * 9000)}`,
+      } as Teacher
+
+      teachersData.unshift(newTeacher)
+      resolve(newTeacher)
+    }, delay)
+  })
+}
+
+/**
+ * Mock API service for updating an existing teacher
+ *
+ * Replace with: PUT /api/teachers/:id
+ */
+export async function updateTeacher(id: string, data: Partial<Teacher>): Promise<Teacher> {
+  const delay = Math.floor(Math.random() * 500) + 300
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const index = teachersData.findIndex(t => t.id === id)
+      if (index === -1) {
+        reject(new Error('Teacher not found'))
+        return
+      }
+
+      const updated = { ...teachersData[index], ...data }
+      teachersData[index] = updated
+      resolve(updated)
+    }, delay)
+  })
+}
+
+/**
  * Mock API service for deleting a teacher by ID
  * Simulates network delay and removes teacher from mock data
  *

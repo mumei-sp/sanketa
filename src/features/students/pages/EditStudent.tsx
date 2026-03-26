@@ -8,6 +8,8 @@ import { DetailPageLayout } from '@/components/ui/detail-page-layout'
 import { StudentFormActions } from '../components/StudentFormActions'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
+import { updateStudent } from '@/api/services/student-service'
+import { formToStudent } from '../utils/transform'
 import { STUDENT_MESSAGES, STUDENT_LABELS } from '../constants'
 
 export default function EditStudent() {
@@ -18,13 +20,10 @@ export default function EditStudent() {
 
   const onSubmit = React.useCallback(
     async (data: StudentFormValues) => {
-      console.log('Form submitted:', data)
-      console.log('Form data (JSON):', JSON.stringify(data, null, 2))
-      // TODO: Implement update student logic
-      // After successful update, navigate back to student details or show a success message
-      if (id) {
-        navigate(`/students/details/${id}`)
-      }
+      if (!id) return
+      const studentData = formToStudent(data)
+      await updateStudent(id, studentData)
+      navigate(`/students/details/${id}`)
     },
     [navigate, id],
   )

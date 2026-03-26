@@ -3,6 +3,27 @@ import type { TeacherDetail } from '../types/teacher-detail'
 import type { TeacherFormValues } from '../schemas/teacher-schema'
 
 /**
+ * Transforms form values to flat Teacher structure for API submission
+ */
+export function formToTeacher(formValues: TeacherFormValues): Partial<Teacher> {
+  return {
+    firstName: formValues.personalInfo?.firstName,
+    middleName: formValues.personalInfo?.middleName,
+    lastName: formValues.personalInfo?.lastName,
+    preferredName: formValues.personalInfo?.preferredName,
+    dateOfBirth: formValues.personalInfo?.dateOfBirth,
+    gender: formValues.personalInfo?.gender ?? undefined,
+
+    teacherId: formValues.employmentInfo?.teacherId,
+    subject: formValues.professionalInfo?.subject,
+    email: formValues.contactInfo?.email,
+    primaryPhone: formValues.contactInfo?.primaryPhone,
+    phoneCountryCode: formValues.contactInfo?.phoneCountryCode,
+    profilePictureUrl: formValues.contactInfo?.profilePictureUrl,
+  }
+}
+
+/**
  * Transforms a Teacher or TeacherDetail to form values for the edit form
  */
 export function teacherToForm(teacher: Teacher | TeacherDetail): Partial<TeacherFormValues> {
