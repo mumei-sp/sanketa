@@ -1,15 +1,16 @@
-import { Users, Clock, RefreshCw } from 'lucide-react'
+import * as React from 'react'
+import { Settings } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { baseColors, text, colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
-import { TileWrapper, Tile } from '@/components/tile'
-
-interface TeacherStatistics {
-  total: number
-  fullTime: number
-  partTime: number
-  substitute: number
-}
+import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
+import { useTileSelection } from '@/hooks/use-tile-selection'
+import type { TeacherStatistics } from '@/data/mocks/teacher-statistics'
+import {
+  teacherTileRegistry,
+  DEFAULT_TEACHER_TILE_IDS,
+  toTeacherTileOptions,
+} from '../config/teacher-tile-registry'
 
 interface TeachersDashboardProps {
   statistics: TeacherStatistics
@@ -42,7 +43,7 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
           className="text-numeric text-2xl"
           style={{ color: text.heading, fontWeight: fontWeights.bold }}
         >
-          {value}
+          {value.toLocaleString('en-US')}
         </span>
       </div>
       <div
@@ -57,44 +58,65 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
 
 /**
  * Teachers Dashboard Component
- * Displays teacher statistics in a responsive grid
- * Desktop: 4 cols in a row | Tablet/Mobile: 2×2 grid
+ * Displays configurable teacher statistics in a responsive grid.
+ * Admin can customize which tiles appear via the Customize button.
  */
 export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
+  const {
+    selectedTiles,
+    selectedIds,
+    toggle,
+    reset,
+  } = useTileSelection(teacherTileRegistry, {
+    storageKey: 'sanketa:teacher-tiles',
+    defaults: DEFAULT_TEACHER_TILE_IDS,
+    maxSelections: 4,
+  })
+
+  const [customizeOpen, setCustomizeOpen] = React.useState(false)
+
   return (
-    <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
-      <StatCard
-        id="stat-total-teachers"
-        label="Total Teachers"
-        value={statistics.total}
-        icon={Users}
-        iconBg={baseColors.heading}
-        iconColor={colors.background.card}
+    <>
+      <div className="flex items-center justify-end mb-1">
+        <button
+          type="button"
+          onClick={() => setCustomizeOpen(true)}
+          className="flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
+          style={{
+            color: colors.text.heading,
+            backgroundColor: colors.accent.soft,
+            border: `1px solid ${colors.border.default}`,
+          }}
+        >
+          <Settings className="w-3.5 h-3.5" />
+          Customize
+        </button>
+      </div>
+
+      <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
+        {selectedTiles.map(tile => (
+          <StatCard
+            key={tile.id}
+            id={`stat-${tile.id}`}
+            label={tile.label}
+            value={tile.getValue(statistics)}
+            icon={tile.icon}
+            iconBg={tile.iconBg}
+            iconColor={tile.iconColor}
+          />
+        ))}
+      </TileWrapper>
+
+      <TileCustomizeModal
+        open={customizeOpen}
+        onOpenChange={setCustomizeOpen}
+        options={toTeacherTileOptions(teacherTileRegistry)}
+        selectedIds={selectedIds}
+        onToggle={toggle}
+        onReset={reset}
+        maxSelections={4}
+        title="Customize Teacher Tiles"
       />
-      <StatCard
-        id="stat-full-time"
-        label="Full-Time Teacher"
-        value={statistics.fullTime}
-        icon={Clock}
-        iconBg={baseColors.pink}
-        iconColor={text.heading}
-      />
-      <StatCard
-        id="stat-part-time"
-        label="Part-Time Teacher"
-        value={statistics.partTime}
-        icon={Clock}
-        iconBg={baseColors.blue}
-        iconColor={text.heading}
-      />
-      <StatCard
-        id="stat-substitute"
-        label="Substitute Teacher"
-        value={statistics.substitute}
-        icon={RefreshCw}
-        iconBg={baseColors.pink}
-        iconColor={text.heading}
-      />
-    </TileWrapper>
+    </>
   )
 }
