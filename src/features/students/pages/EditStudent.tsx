@@ -11,21 +11,28 @@ import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
 import { updateStudent } from '@/api/services/student-service'
 import { formToStudent } from '../utils/transform'
 import { STUDENT_MESSAGES, STUDENT_LABELS } from '../constants'
+import { useAppToast } from '@/hooks/use-app-toast'
 
 export default function EditStudent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { student, isLoading, error } = useStudentById(id)
   const { handleHandlersReady, handleSaveClick } = useStudentFormHandlers()
+  const { showSuccess, showError } = useAppToast()
 
   const onSubmit = React.useCallback(
     async (data: StudentFormValues) => {
       if (!id) return
-      const studentData = formToStudent(data)
-      await updateStudent(id, studentData)
-      navigate(`/students/details/${id}`)
+      try {
+        const studentData = formToStudent(data)
+        await updateStudent(id, studentData)
+        showSuccess('Student updated', { description: `${data.firstName} ${data.lastName}'s details have been saved.` })
+        navigate(`/students/details/${id}`)
+      } catch {
+        showError('Failed to update student', { description: 'Please try again.' })
+      }
     },
-    [navigate, id],
+    [navigate, id, showSuccess, showError],
   )
 
   const handleCancel = React.useCallback(() => {

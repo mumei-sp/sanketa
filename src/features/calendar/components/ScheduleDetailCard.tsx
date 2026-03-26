@@ -12,14 +12,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { baseColors } from '@/theme/colors'
+import { baseColors, status } from '@/theme/colors'
 import { categoryConfig } from '../utils/category-config'
 import type { CalendarEventExtendedProps } from '../types'
 
 const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
-  low: { label: 'Low', color: '#22c55e' },
-  medium: { label: 'Medium', color: '#f59e0b' },
-  high: { label: 'High', color: '#ef4444' },
+  low: { label: 'Low', color: status.success.base },
+  medium: { label: 'Medium', color: status.warning.base },
+  high: { label: 'High', color: status.danger.base },
 }
 
 interface ScheduleDetailCardProps {

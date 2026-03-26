@@ -1,13 +1,13 @@
 import type { ColumnDef, Row, Table } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
-import { baseColors, status, darken } from '@/theme/colors'
+import { baseColors, status, darken, background } from '@/theme/colors'
 
 const STATUS_STYLES: Record<FeeStatus, { color: string; bg: string; border?: string }> = {
-  Paid: { color: '#fff', bg: status.success.base },
+  Paid: { color: background.card, bg: status.success.base },
   Pending: { color: baseColors.heading, bg: baseColors.pink, border: darken(baseColors.pink, 20) },
   'Partially Paid': { color: baseColors.heading, bg: baseColors.blue, border: darken(baseColors.blue, 15) },
-  Overdue: { color: '#fff', bg: status.danger.base },
+  Overdue: { color: background.card, bg: status.danger.base },
 }
 
 /** Check if this row is the first of a student group in the visible (paginated) rows */

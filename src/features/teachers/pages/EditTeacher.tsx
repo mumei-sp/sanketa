@@ -11,21 +11,28 @@ import { useTeacherFormHandlers } from '../hooks/use-teacher-form-handlers'
 import { updateTeacher } from '@/api/services/teacher-service'
 import { formToTeacher } from '../utils/transform'
 import { TEACHER_MESSAGES, TEACHER_LABELS } from '../constants'
+import { useAppToast } from '@/hooks/use-app-toast'
 
 export default function EditTeacher() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { teacher, isLoading, error } = useTeacherById(id)
   const { handleHandlersReady, handleSaveClick } = useTeacherFormHandlers()
+  const { showSuccess, showError } = useAppToast()
 
   const onSubmit = React.useCallback(
     async (data: TeacherFormValues) => {
       if (!id) return
-      const teacherData = formToTeacher(data)
-      await updateTeacher(id, teacherData)
-      navigate(`/teachers/details/${id}`)
+      try {
+        const teacherData = formToTeacher(data)
+        await updateTeacher(id, teacherData)
+        showSuccess('Teacher updated', { description: `${data.firstName} ${data.lastName}'s details have been saved.` })
+        navigate(`/teachers/details/${id}`)
+      } catch {
+        showError('Failed to update teacher', { description: 'Please try again.' })
+      }
     },
-    [navigate, id],
+    [navigate, id, showSuccess, showError],
   )
 
   const handleCancel = React.useCallback(() => {

@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tile } from '@/components/tile'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { primary, accent, text } from '@/theme/colors'
+import { primary, accent, text, border } from '@/theme/colors'
 
 export interface ProfileBadge {
   label: string
@@ -142,7 +142,7 @@ export function ProfileCard({
                   fontSize: fontSizes.xs,
                   display: 'inline-flex',
                   alignItems: 'center',
-                  backgroundColor: badge.variant === 'primary' ? primary.base : '#F0F0F0',
+                  backgroundColor: badge.variant === 'primary' ? primary.base : border.default,
                   color: text.body,
                 }}
               >

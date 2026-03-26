@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { status, accent } from '@/theme/colors'
 import type { StudentPerformance } from '@/features/students/types'
 
 interface PerformanceBadgeProps {
@@ -9,30 +10,28 @@ interface PerformanceBadgeProps {
 /**
  * Badge component for displaying student performance levels
  * Soft pastel badge with circular dot indicator
- * Uses exact Tailwind color values to match original design
+ * Uses theme color tokens from colors.ts
  */
 export function PerformanceBadge({ performance, className }: PerformanceBadgeProps) {
-  // Using exact Tailwind color values to maintain original appearance
-  // These match the original bg-blue-50, text-blue-700, bg-blue-500 etc.
-  const variants = {
+  const variants: Record<StudentPerformance, { background: string; text: string }> = {
     Good: {
-      background: '#EFF6FF', // blue-50
-      text: '#1E40AF', // blue-700
+      background: accent.soft,
+      text: status.info.text,
     },
     'Needs Support': {
-      background: '#F9FAFB', // gray-50
-      text: '#374151', // gray-700
+      background: status.info.soft,
+      text: status.info.text,
     },
     'At Risk': {
-      background: '#FEF2F2', // red-50
-      text: '#B91C1C', // red-700
+      background: status.danger.soft,
+      text: status.danger.text,
     },
   }
 
-  const dotColors = {
-    Good: '#3B82F6', // blue-500
-    'Needs Support': '#6B7280', // gray-500
-    'At Risk': '#EF4444', // red-500
+  const dotColors: Record<StudentPerformance, string> = {
+    Good: status.success.base,
+    'Needs Support': status.warning.base,
+    'At Risk': status.danger.base,
   }
 
   const variant = variants[performance]
@@ -57,4 +56,3 @@ export function PerformanceBadge({ performance, className }: PerformanceBadgePro
     </div>
   )
 }
-

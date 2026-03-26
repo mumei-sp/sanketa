@@ -9,16 +9,23 @@ import { useTeacherFormHandlers } from '../hooks/use-teacher-form-handlers'
 import { createTeacher } from '@/api/services/teacher-service'
 import { formToTeacher } from '../utils/transform'
 import { TEACHER_LABELS } from '../constants'
+import { useAppToast } from '@/hooks/use-app-toast'
 
 export default function AddTeacher() {
   const navigate = useNavigate()
   const { handleHandlersReady, handleSaveClick } = useTeacherFormHandlers()
+  const { showSuccess, showError } = useAppToast()
 
   const onSubmit = React.useCallback(async (data: TeacherFormValues) => {
-    const teacherData = formToTeacher(data)
-    const created = await createTeacher(teacherData)
-    navigate(`/teachers/details/${created.id}`)
-  }, [navigate])
+    try {
+      const teacherData = formToTeacher(data)
+      const created = await createTeacher(teacherData)
+      showSuccess('Teacher added', { description: `${data.firstName} ${data.lastName} has been added to the staff.` })
+      navigate(`/teachers/details/${created.id}`)
+    } catch {
+      showError('Failed to add teacher', { description: 'Please try again.' })
+    }
+  }, [navigate, showSuccess, showError])
 
   const handleCancel = React.useCallback(() => {
     navigate(-1)

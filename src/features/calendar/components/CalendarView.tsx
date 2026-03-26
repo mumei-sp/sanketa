@@ -7,7 +7,7 @@ import type { EventClickArg, DateClickArg, EventContentArg, DatesSetArg } from '
 import { ChevronLeft, ChevronRight, ChevronDown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { baseColors, text } from '@/theme/colors'
+import { baseColors, text, background } from '@/theme/colors'
 import { cn } from '@/lib/utils'
 import type { CalendarEvent, CalendarViewType } from '../types'
 import '../styles/fullcalendar-theme.css'
@@ -210,7 +210,7 @@ export function CalendarView({
                           ? 'text-white shadow-sm'
                           : 'hover:bg-accent hover:text-accent-foreground active:scale-95',
                       )}
-                      style={isActive ? { backgroundColor: baseColors.heading, color: '#fff' } : { color: baseColors.heading }}
+                      style={isActive ? { backgroundColor: baseColors.heading, color: background.card } : { color: baseColors.heading }}
                     >
                       {name.slice(0, 3)}
                     </button>
@@ -241,7 +241,7 @@ export function CalendarView({
                 className="px-3 h-full text-xs font-medium transition-colors"
                 style={
                   currentView === opt.value
-                    ? { backgroundColor: baseColors.heading, color: '#FFFFFF', fontWeight: 600 }
+                    ? { backgroundColor: baseColors.heading, color: background.card, fontWeight: 600 }
                     : { color: baseColors.heading, opacity: 0.55 }
                 }
               >

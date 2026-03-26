@@ -55,7 +55,7 @@ import {
 } from '@/config/school-config'
 import { getAcademicYear, getTerms } from '@/utils/academic-date'
 import { useAppToast } from '@/hooks/use-app-toast'
-import { text, border, accent, background } from '@/theme/colors'
+import { text, border, accent, background, status } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 
@@ -211,7 +211,7 @@ function GeneralSection({ draft, setDraft }: SectionProps) {
                 )}
               </div>
               {logoError && (
-                <p className="text-xs font-medium" style={{ color: '#D64445' }}>
+                <p className="text-xs font-medium" style={{ color: status.danger.base }}>
                   {logoError}
                 </p>
               )}
@@ -743,7 +743,7 @@ export function SchoolSettingsPanel() {
                       style={{
                         width: '8px',
                         height: '8px',
-                        backgroundColor: '#D64445',
+                        backgroundColor: status.danger.base,
                         border: `2px solid ${background.card}`,
                       }}
                     />

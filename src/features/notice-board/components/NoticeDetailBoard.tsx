@@ -13,15 +13,15 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tile } from '@/components/tile'
-import { baseColors } from '@/theme/colors'
+import { baseColors, status, accent, border as borderTokens } from '@/theme/colors'
 import type { NoticeBoardEntry, NoticeStatus } from '../types'
 
 const statusStyles: Record<NoticeStatus, { bg: string; text: string }> = {
-  Active: { bg: '#D4EDDA', text: '#155724' },
-  Scheduled: { bg: '#CDEAF0', text: '#0C5460' },
-  Draft: { bg: '#E2E3E5', text: '#383D41' },
-  Expired: { bg: '#F8D7DA', text: '#721C24' },
-  Cancelled: { bg: '#FFF3CD', text: '#856404' },
+  Active: { bg: status.success.soft, text: status.success.text },
+  Scheduled: { bg: accent.soft, text: status.info.text },
+  Draft: { bg: borderTokens.default, text: baseColors.heading },
+  Expired: { bg: status.danger.soft, text: status.danger.text },
+  Cancelled: { bg: status.warning.soft, text: status.warning.text },
 }
 
 const CONTENT_LINE_CLAMP = 4

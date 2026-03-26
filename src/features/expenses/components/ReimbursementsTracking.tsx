@@ -26,8 +26,8 @@ const statusStyles: Record<
   ReimbursementStatus,
   { color: string; bg: string }
 > = {
-  Approved: { color: '#fff', bg: colors.status.success.base },
-  Declined: { color: '#fff', bg: colors.status.danger.base },
+  Approved: { color: colors.background.card, bg: colors.status.success.base },
+  Declined: { color: colors.background.card, bg: colors.status.danger.base },
   Pending: { color: colors.status.warning.text, bg: colors.status.warning.soft },
 }
 

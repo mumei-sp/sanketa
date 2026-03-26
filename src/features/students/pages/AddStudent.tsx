@@ -9,16 +9,23 @@ import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
 import { createStudent } from '@/api/services/student-service'
 import { formToStudent } from '../utils/transform'
 import { STUDENT_LABELS } from '../constants'
+import { useAppToast } from '@/hooks/use-app-toast'
 
 export default function AddStudent() {
   const navigate = useNavigate()
   const { handleHandlersReady, handleSaveClick } = useStudentFormHandlers()
+  const { showSuccess, showError } = useAppToast()
 
   const onSubmit = React.useCallback(async (data: StudentFormValues) => {
-    const studentData = formToStudent(data)
-    const created = await createStudent(studentData)
-    navigate(`/students/details/${created.id}`)
-  }, [navigate])
+    try {
+      const studentData = formToStudent(data)
+      const created = await createStudent(studentData)
+      showSuccess('Student added', { description: `${data.firstName} ${data.lastName} has been enrolled.` })
+      navigate(`/students/details/${created.id}`)
+    } catch {
+      showError('Failed to add student', { description: 'Please try again.' })
+    }
+  }, [navigate, showSuccess, showError])
 
   const handleCancel = React.useCallback(() => {
     navigate(-1)

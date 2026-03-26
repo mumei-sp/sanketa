@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card'
 import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
-import { baseColors } from '@/theme/colors'
+import { baseColors, text } from '@/theme/colors'
 import type { FeeStat } from '../types'
 
 interface FeeStatCardsProps {
@@ -68,7 +68,7 @@ export function FeeStatCards({ stats, isLoading = false }: FeeStatCardsProps) {
                 </span>
                 <span
                   className="text-[10px] md:text-[13px] font-medium truncate"
-                  style={{ color: '#6B7B8D' }}
+                  style={{ color: text.muted }}
                 >
                   {stat.label}
                 </span>
