@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { baseColors, withOpacity } from '@/theme/colors'
+import { baseColors, withOpacity, colors } from '@/theme/colors'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { categoryConfig, allCategories } from '../utils/category-config'
 import type { CalendarEvent, EventCategory } from '../types'
@@ -65,9 +65,11 @@ export function CalendarCategoryTabs({
         bgColor: config.backgroundColor,
         borderColor: config.borderColor,
         iconBgColor: isFinance ? baseColors.heading : config.backgroundColor,
-        iconColor: isFinance ? '#FFFFFF' : baseColors.heading,
+        iconColor: isFinance ? colors.background.card : baseColors.heading,
       }
-    }),
+    })
+    // Sort categories by event count (busiest first)
+    .sort((a, b) => b.count - a.count),
   ]
 
   if (isMobile) {
