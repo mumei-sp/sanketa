@@ -95,12 +95,12 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
                 <button
                   onClick={e => e.stopPropagation()}
                   className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
-                  style={{ backgroundColor: status.danger.muted }}
+                  style={{ backgroundColor: accent.soft }}
                   onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = status.danger.muted }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
                   aria-label="Delete teacher"
                 >
-                  <Trash2 className="w-3.5 h-3.5" style={{ color: status.danger.text }} />
+                  <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent onClick={e => e.stopPropagation()}>

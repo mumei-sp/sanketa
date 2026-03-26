@@ -192,7 +192,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, showClose
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-[#D64445] border-[#D64445]/20 hover:bg-[#D64445]/5">
+            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-text-heading border-border-default hover:bg-accent-soft">
               <Trash2 className="size-3.5" />
               Delete
             </Button>

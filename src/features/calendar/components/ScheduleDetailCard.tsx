@@ -98,7 +98,7 @@ export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, on
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    <Trash2 className="h-3.5 w-3.5" style={{ color: baseColors.heading }} />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
