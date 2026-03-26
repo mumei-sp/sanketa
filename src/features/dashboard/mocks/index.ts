@@ -13,6 +13,7 @@ import type {
 
 export const dashboardStats: DashboardStat[] = [
   {
+    id: 'enrolled-students',
     label: 'Enrolled Students',
     value: 1245,
     icon: GraduationCap,
@@ -20,6 +21,7 @@ export const dashboardStats: DashboardStat[] = [
     iconColor: baseColors.heading,
   },
   {
+    id: 'active-teachers',
     label: 'Active Teachers',
     value: 86,
     icon: Users,
@@ -27,6 +29,7 @@ export const dashboardStats: DashboardStat[] = [
     iconColor: baseColors.heading,
   },
   {
+    id: 'support-staff',
     label: 'Support Staff',
     value: 34,
     icon: UserCog,
@@ -34,6 +37,7 @@ export const dashboardStats: DashboardStat[] = [
     iconColor: baseColors.heading,
   },
   {
+    id: 'total-awards',
     label: 'Total Awards',
     value: 152,
     icon: Award,

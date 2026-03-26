@@ -1,8 +1,15 @@
 import * as React from 'react'
+import { Settings } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
-import { TileWrapper, Tile } from '@/components/tile'
+import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
 import { Card } from '@/components/ui/card'
-import { accent } from '@/theme/colors'
+import { accent, colors } from '@/theme/colors'
+import { useTileSelection } from '@/hooks/use-tile-selection'
+import {
+  dashboardTileRegistry,
+  DEFAULT_DASHBOARD_TILE_IDS,
+  toTileOptions,
+} from '@/features/dashboard/config/dashboard-tile-registry'
 import {
   DashboardStatCard,
   StudentPerformanceChart,
@@ -17,7 +24,6 @@ import {
 } from '@/features/dashboard/components'
 import type { HighlightedDate } from '@/features/dashboard/components/DashboardCalendar'
 import {
-  fetchDashboardStats,
   fetchStudentPerformance,
   fetchEarnings,
   fetchGenderDistribution,
@@ -28,7 +34,6 @@ import {
 } from '@/api/services/dashboard-service'
 import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
 import type {
-  DashboardStat,
   PerformanceDataset,
   EarningsDataset,
   GenderDataset,
@@ -40,7 +45,20 @@ import type {
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 
 export default function Dashboard() {
-  const [stats, setStats] = React.useState<DashboardStat[]>([])
+  // Configurable tile selection (persisted to localStorage)
+  const {
+    selectedTiles,
+    selectedIds,
+    toggle: toggleTile,
+    reset: resetTiles,
+    isMaxed,
+  } = useTileSelection(dashboardTileRegistry, {
+    storageKey: 'sanketa:dashboard-tiles',
+    defaults: DEFAULT_DASHBOARD_TILE_IDS,
+    maxSelections: 4,
+  })
+  const [customizeOpen, setCustomizeOpen] = React.useState(false)
+
   const [performance, setPerformance] = React.useState<PerformanceDataset[]>([])
   const [earnings, setEarnings] = React.useState<EarningsDataset[]>([])
   const [gender, setGender] = React.useState<GenderDataset[]>([])
@@ -57,7 +75,6 @@ export default function Dashboard() {
       try {
         setIsLoading(true)
         const [
-          statsData,
           perfData,
           earnData,
           genderData,
@@ -67,7 +84,6 @@ export default function Dashboard() {
           noticesData,
           activityData,
         ] = await Promise.all([
-          fetchDashboardStats(),
           fetchStudentPerformance(),
           fetchEarnings(),
           fetchGenderDistribution(),
@@ -77,7 +93,6 @@ export default function Dashboard() {
           fetchNoticeBoardEntries(),
           fetchRecentActivity(),
         ])
-        setStats(statsData)
         setPerformance(perfData)
         setEarnings(earnData)
         setGender(genderData)
@@ -135,12 +150,40 @@ export default function Dashboard() {
       <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
         {/* Stat Cards — Desktop: 9 cols nested grid | Tablet: full width */}
         <Tile id="stats-container" width={{ md: 12, lg: 9 }} className="lg:col-start-1 lg:row-start-1">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={() => setCustomizeOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
+              style={{
+                color: colors.text.heading,
+                backgroundColor: colors.accent.soft,
+                border: `1px solid ${colors.border.default}`,
+              }}
+            >
+              <Settings className="w-3.5 h-3.5" />
+              Customize
+            </button>
+          </div>
           <TileWrapper columns={{ default: 2, md: 4 }} gap={12}>
-            {stats.map(stat => (
-              <DashboardStatCard key={stat.label} stat={stat} />
+            {selectedTiles.map(stat => (
+              <DashboardStatCard key={stat.id} stat={stat} />
             ))}
           </TileWrapper>
         </Tile>
+
+        {/* Tile customize modal */}
+        <TileCustomizeModal
+          open={customizeOpen}
+          onOpenChange={setCustomizeOpen}
+          options={toTileOptions(dashboardTileRegistry)}
+          selectedIds={selectedIds}
+          onToggle={toggleTile}
+          onReset={resetTiles}
+          maxSelections={4}
+          title="Customize Dashboard Tiles"
+        />
 
         {/* Calendar + Events — Desktop: row1-3 col10-12 | Tablet: row4 (single card) */}
         <Tile

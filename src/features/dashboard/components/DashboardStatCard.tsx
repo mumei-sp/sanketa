@@ -9,7 +9,7 @@ interface DashboardStatCardProps {
 
 export function DashboardStatCard({ stat }: DashboardStatCardProps) {
   const Icon = stat.icon
-  const tileId = `stat-${stat.label.toLowerCase().replace(/\s+/g, '-')}-tile`
+  const tileId = `stat-${stat.id}-tile`
 
   return (
     <Tile id={tileId} layoutMode="block" background="transparent" padding={0} shadowed={false}>

@@ -8,4 +8,5 @@ export {
   type BorderRadiusToken,
 } from "./Tile"
 export { type ResponsiveValue, type Breakpoint } from "./tile-class-maps"
+export { TileCustomizeModal, type TileOption } from "./TileCustomizeModal"
 

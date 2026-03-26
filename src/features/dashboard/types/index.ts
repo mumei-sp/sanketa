@@ -1,11 +1,15 @@
 import type { LucideIcon } from 'lucide-react'
 
 export interface DashboardStat {
+  /** Unique identifier for the stat tile */
+  id: string
   label: string
   value: number
   icon: LucideIcon
   iconBg: string
   iconColor: string
+  /** Short description for the customize modal */
+  description?: string
 }
 
 export interface GradeConfig {

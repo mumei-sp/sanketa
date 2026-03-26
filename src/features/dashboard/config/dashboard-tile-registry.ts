@@ -1,0 +1,201 @@
+/**
+ * Dashboard Tile Registry
+ *
+ * Defines all available KPI tiles that can appear at the top of the dashboard.
+ * Admins select 3-4 from this pool via the customize modal.
+ *
+ * When backend is ready, values can be fetched dynamically via a service function.
+ * The registry structure (id, label, icon, colors) stays the same.
+ */
+
+import {
+  GraduationCap,
+  Users,
+  UserCog,
+  Award,
+  UserPlus,
+  UserX,
+  Briefcase,
+  UserCheck,
+  DollarSign,
+  CreditCard,
+  TrendingDown,
+  CheckCircle,
+  XCircle,
+  Calendar,
+  ClipboardList,
+} from 'lucide-react'
+import { baseColors } from '@/theme/colors'
+import type { DashboardStat } from '../types'
+import type { TileOption } from '@/components/tile/TileCustomizeModal'
+
+/**
+ * Full registry of available dashboard stat tiles (15 options).
+ * Each page that uses configurable tiles defines its own registry.
+ */
+export const dashboardTileRegistry: DashboardStat[] = [
+  // ── Students ──
+  {
+    id: 'enrolled-students',
+    label: 'Enrolled Students',
+    value: 1245,
+    description: 'Total active students',
+    icon: GraduationCap,
+    iconBg: baseColors.pink,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'new-admissions',
+    label: 'New Admissions',
+    value: 28,
+    description: 'This month',
+    icon: UserPlus,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'students-on-leave',
+    label: 'Students on Leave',
+    value: 12,
+    description: 'Currently on leave',
+    icon: UserX,
+    iconBg: baseColors.pink,
+    iconColor: baseColors.heading,
+  },
+
+  // ── Teachers ──
+  {
+    id: 'active-teachers',
+    label: 'Active Teachers',
+    value: 86,
+    description: 'Full & part-time',
+    icon: Users,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'full-time-teachers',
+    label: 'Full-Time Teachers',
+    value: 62,
+    description: 'Permanent staff',
+    icon: Briefcase,
+    iconBg: baseColors.pink,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'substitute-teachers',
+    label: 'Substitute Teachers',
+    value: 6,
+    description: 'Temporary staff',
+    icon: UserCheck,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+
+  // ── Finance ──
+  {
+    id: 'fees-collected',
+    label: 'Fees Collected',
+    value: 245000,
+    description: 'This month',
+    icon: DollarSign,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'pending-fees',
+    label: 'Pending Fees',
+    value: 38500,
+    description: 'Outstanding amount',
+    icon: CreditCard,
+    iconBg: baseColors.pink,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'monthly-expenses',
+    label: 'Monthly Expenses',
+    value: 125000,
+    description: 'This month',
+    icon: TrendingDown,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+
+  // ── Attendance ──
+  {
+    id: 'today-attendance',
+    label: "Today's Attendance",
+    value: 94,
+    description: 'Percentage present',
+    icon: CheckCircle,
+    iconBg: baseColors.pink,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'absent-today',
+    label: 'Absent Today',
+    value: 18,
+    description: 'Students absent',
+    icon: XCircle,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+
+  // ── General ──
+  {
+    id: 'support-staff',
+    label: 'Support Staff',
+    value: 34,
+    description: 'Non-teaching staff',
+    icon: UserCog,
+    iconBg: baseColors.pink,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'total-awards',
+    label: 'Total Awards',
+    value: 152,
+    description: 'All-time awards',
+    icon: Award,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'upcoming-events',
+    label: 'Upcoming Events',
+    value: 5,
+    description: 'Next 7 days',
+    icon: Calendar,
+    iconBg: baseColors.pink,
+    iconColor: baseColors.heading,
+  },
+  {
+    id: 'assignments-due',
+    label: 'Assignments Due',
+    value: 12,
+    description: 'This week',
+    icon: ClipboardList,
+    iconBg: baseColors.blue,
+    iconColor: baseColors.heading,
+  },
+]
+
+/** Default tiles shown to new users (matches the original hardcoded dashboard) */
+export const DEFAULT_DASHBOARD_TILE_IDS = [
+  'enrolled-students',
+  'active-teachers',
+  'support-staff',
+  'total-awards',
+]
+
+/** Convert DashboardStat items to TileOption for the customize modal */
+export function toTileOptions(registry: DashboardStat[]): TileOption[] {
+  return registry.map(stat => ({
+    id: stat.id,
+    label: stat.label,
+    icon: stat.icon,
+    iconBg: stat.iconBg,
+    iconColor: stat.iconColor,
+    description: stat.description,
+  }))
+}
