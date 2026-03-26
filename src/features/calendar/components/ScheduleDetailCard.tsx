@@ -83,7 +83,7 @@ export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, on
           )}
         </div>
         {(onEdit || onDelete) && (
-          <div className="flex items-center gap-0.5 -mt-0.5 -mr-1">
+          <div className="flex items-center -mt-0.5 -mr-2">
             {onEdit && (
               <Button
                 variant="ghost"
