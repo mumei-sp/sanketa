@@ -96,8 +96,8 @@ export function TileCustomizeModal({
 
         {/* Tile options grid */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-3 overflow-y-auto flex-1 -mx-1 px-1"
-          style={{ gap: spacing['3'], maxHeight: '50vh' }}
+          className="grid grid-cols-2 sm:grid-cols-3 overflow-y-auto flex-1"
+          style={{ gap: spacing['3'], maxHeight: '50vh', padding: spacing['1.5'] }}
         >
           {options.map(opt => {
             const isSelected = selectedIds.includes(opt.id)
