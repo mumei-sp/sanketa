@@ -166,7 +166,7 @@ export function TileCustomizeModal({
           <button
             type="button"
             onClick={onReset}
-            className="flex items-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-70"
+            className="flex items-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-70 cursor-pointer"
             style={{ color: colors.text.muted }}
           >
             <RotateCcw className="w-3.5 h-3.5" />
