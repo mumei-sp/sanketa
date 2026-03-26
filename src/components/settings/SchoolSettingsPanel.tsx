@@ -464,6 +464,24 @@ export function SchoolSettingsPanel() {
                 )
               })}
             </div>
+
+            {/* Reset to defaults — pinned to bottom like Logout in main sidebar */}
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex items-center rounded-lg text-left transition-opacity hover:opacity-70 cursor-pointer"
+              style={{
+                padding: `${spacing['2.5']} ${spacing['3']}`,
+                gap: spacing['2.5'],
+                color: text.muted,
+                marginTop: spacing['2'],
+                borderTop: `1px solid ${border.default}`,
+                paddingTop: spacing['4'],
+              }}
+            >
+              <RotateCcw style={{ width: '18px', height: '18px' }} />
+              <span className="text-sm">Reset to defaults</span>
+            </button>
           </nav>
 
           {/* ── Mobile tabs ── */}
@@ -520,34 +538,24 @@ export function SchoolSettingsPanel() {
 
             {/* ── Footer — bottom of content area ── */}
             <div
-              className="shrink-0 flex items-center justify-between"
+              className="shrink-0 flex items-center justify-end"
               style={{
                 padding: `${spacing['4']} ${spacing['10']}`,
                 borderTop: `1px solid ${border.default}`,
                 backgroundColor: background.card,
+                gap: spacing['2'],
               }}
             >
-              <button
-                type="button"
-                onClick={handleReset}
-                className="flex items-center text-xs font-medium transition-opacity hover:opacity-70 cursor-pointer"
-                style={{ color: text.muted, gap: spacing['1.5'] }}
+              <Button variant="outline" onClick={handleCancel} className="text-sm">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                className="text-sm"
+                style={{ backgroundColor: text.heading, color: background.card }}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Reset to defaults
-              </button>
-              <div className="flex items-center" style={{ gap: spacing['2'] }}>
-                <Button variant="outline" onClick={handleCancel} className="text-sm">
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  className="text-sm"
-                  style={{ backgroundColor: text.heading, color: background.card }}
-                >
-                  Save Changes
-                </Button>
-              </div>
+                Save Changes
+              </Button>
             </div>
           </div>
         </div>
