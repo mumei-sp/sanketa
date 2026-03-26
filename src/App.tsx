@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { SchoolConfigProvider } from './config/SchoolConfigContext'
+import { Toaster } from './components/ui/sonner'
 import { AppLayout } from './components/layout'
 import { generateRoutesFromNavigation } from './config/routes'
 import { AuthGuard, GuestGuard } from './features/auth/components/RouteGuards'
@@ -77,6 +78,7 @@ function App() {
   return (
     <SchoolConfigProvider>
       <RouterProvider router={router} />
+      <Toaster />
     </SchoolConfigProvider>
   )
 }

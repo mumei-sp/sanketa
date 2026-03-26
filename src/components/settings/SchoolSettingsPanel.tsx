@@ -54,6 +54,7 @@ import {
   type SchoolConfig,
 } from '@/config/school-config'
 import { getAcademicYear, getTerms } from '@/utils/academic-date'
+import { useAppToast } from '@/hooks/use-app-toast'
 import { text, border, accent, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
@@ -475,9 +476,16 @@ function ComingSoonSection({ section }: { section: SettingsSection }) {
 
 export function SchoolSettingsPanel() {
   const { config, updateConfig, resetConfig, isSettingsOpen, setSettingsOpen } = useSchoolConfig()
+  const { showSuccess, showInfo } = useAppToast()
 
   const [activeSection, setActiveSection] = React.useState('general')
   const [draft, setDraft] = React.useState(config)
+
+  // Detect unsaved changes
+  const hasChanges = React.useMemo(
+    () => JSON.stringify(draft) !== JSON.stringify(config),
+    [draft, config],
+  )
 
   React.useEffect(() => {
     if (isSettingsOpen) {
@@ -486,9 +494,21 @@ export function SchoolSettingsPanel() {
     }
   }, [isSettingsOpen, config])
 
-  const handleSave = () => { updateConfig(draft); setSettingsOpen(false) }
+  const handleSave = () => {
+    if (!hasChanges) {
+      showInfo('No changes to save')
+      return
+    }
+    updateConfig(draft)
+    setSettingsOpen(false)
+    showSuccess('Settings saved', { description: 'Your school configuration has been updated.' })
+  }
   const handleCancel = () => { setSettingsOpen(false) }
-  const handleReset = () => { resetConfig(); setSettingsOpen(false) }
+  const handleReset = () => {
+    resetConfig()
+    setSettingsOpen(false)
+    showSuccess('Settings reset', { description: 'All settings have been restored to defaults.' })
+  }
 
   const renderSection = () => {
     switch (activeSection) {
@@ -531,14 +551,36 @@ export function SchoolSettingsPanel() {
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['1'] }}>
-              {/* Title */}
-              <div style={{ padding: `${spacing['2']} ${spacing['3']}`, marginBottom: spacing['2'] }}>
-                <h2 className="text-lg font-bold" style={{ color: text.heading }}>
-                  Settings
-                </h2>
-                <p className="text-xs" style={{ color: text.muted, marginTop: spacing['0.5'] }}>
-                  School configuration
-                </p>
+              {/* Title with logo preview */}
+              <div className="flex items-center" style={{ padding: `${spacing['2']} ${spacing['3']}`, marginBottom: spacing['2'], gap: spacing['2.5'] }}>
+                {draft.schoolLogo ? (
+                  <img
+                    src={draft.schoolLogo}
+                    alt=""
+                    className="shrink-0 rounded-lg object-contain"
+                    style={{ width: '32px', height: '32px' }}
+                  />
+                ) : (
+                  <div
+                    className="shrink-0 rounded-lg flex items-center justify-center"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      backgroundColor: accent.soft,
+                      border: `1px solid ${border.default}`,
+                    }}
+                  >
+                    <Building2 style={{ width: '16px', height: '16px', color: text.muted }} />
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-lg font-bold" style={{ color: text.heading }}>
+                    Settings
+                  </h2>
+                  <p className="text-xs" style={{ color: text.muted, marginTop: spacing['0.5'] }}>
+                    {draft.schoolName || 'School configuration'}
+                  </p>
+                </div>
               </div>
 
               {/* Nav items */}
@@ -661,23 +703,53 @@ export function SchoolSettingsPanel() {
 
             {/* ── Footer — bottom of content area ── */}
             <div
-              className="shrink-0 flex items-center justify-end"
+              className="shrink-0 flex items-center justify-between"
               style={{
                 padding: `${spacing['4']} ${spacing['10']}`,
                 borderTop: `1px solid ${border.default}`,
-                gap: spacing['2'],
               }}
             >
-              <Button variant="outline" onClick={handleCancel} className="text-sm">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="text-sm"
-                style={{ backgroundColor: text.heading, color: background.card }}
-              >
-                Save Changes
-              </Button>
+              {/* Unsaved changes indicator */}
+              <div>
+                {hasChanges && (
+                  <div className="flex items-center" style={{ gap: spacing['2'] }}>
+                    <div
+                      className="rounded-full"
+                      style={{ width: '6px', height: '6px', backgroundColor: accent.base }}
+                    />
+                    <span className="text-xs font-medium" style={{ color: text.muted }}>
+                      You have unsaved changes
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center" style={{ gap: spacing['2'] }}>
+                <Button variant="outline" onClick={handleCancel} className="text-sm">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  className="text-sm relative"
+                  style={{
+                    backgroundColor: hasChanges ? text.heading : border.default,
+                    color: background.card,
+                  }}
+                >
+                  Save Changes
+                  {hasChanges && (
+                    <span
+                      className="absolute -top-1 -right-1 rounded-full"
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        backgroundColor: '#D64445',
+                        border: `2px solid ${background.card}`,
+                      }}
+                    />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
