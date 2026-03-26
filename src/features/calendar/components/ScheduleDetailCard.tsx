@@ -83,12 +83,12 @@ export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, on
           )}
         </div>
         {(onEdit || onDelete) && (
-          <div className="flex items-center -mt-0.5 -mr-2">
+          <div className="flex items-center gap-0 -mt-0.5 -mr-1.5">
             {onEdit && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-6 w-6"
                 onClick={() => onEdit(id)}
               >
                 <Pencil className="h-3.5 w-3.5" style={{ color: baseColors.heading }} />
@@ -97,7 +97,7 @@ export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, on
             {onDelete && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
                     <Trash2 className="h-3.5 w-3.5" style={{ color: baseColors.heading }} />
                   </Button>
                 </AlertDialogTrigger>
