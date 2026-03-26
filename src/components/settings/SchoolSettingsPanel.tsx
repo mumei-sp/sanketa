@@ -384,7 +384,7 @@ export function SchoolSettingsPanel() {
         side="right"
         size="full"
         className="flex flex-col p-0 gap-0"
-        style={{ width: 'calc(100vw - 16rem)', maxWidth: 'calc(100vw - 16rem)' }}
+        style={{ width: 'calc(100vw - 16rem)', maxWidth: '900px' }}
         onInteractOutside={e => {
           const target = e.target as HTMLElement
           if (target?.closest('[data-radix-popper-content-wrapper]') || target?.closest('[role="listbox"]')) {
@@ -542,7 +542,6 @@ export function SchoolSettingsPanel() {
               style={{
                 padding: `${spacing['4']} ${spacing['10']}`,
                 borderTop: `1px solid ${border.default}`,
-                backgroundColor: background.card,
                 gap: spacing['2'],
               }}
             >
