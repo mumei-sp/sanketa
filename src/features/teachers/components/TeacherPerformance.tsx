@@ -3,8 +3,10 @@ import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
 import { text, border, primary, accent, background } from '@/theme/colors'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
 import type { PerformanceMetric } from '../types/teacher-detail'
 
+/** "This Year" now means the academic year, dynamically labeled */
 const PERIODS = ['Last Month', 'Last 3 Months', 'Last 6 Months', 'This Year']
 
 interface TeacherPerformanceProps {
@@ -17,7 +19,14 @@ interface TeacherPerformanceProps {
  * with pink progress bars and a navy marker indicator.
  */
 export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerformanceProps) {
-  const [selectedPeriod, setSelectedPeriod] = React.useState(PERIODS[0])
+  const { academicYear } = useAcademicDates()
+
+  // Dynamic periods — "This Year" shows the academic year label
+  const periods = React.useMemo(() => [
+    'Last Month', 'Last 3 Months', 'Last 6 Months', `This Year (${academicYear.label})`,
+  ], [academicYear.label])
+
+  const [selectedPeriod, setSelectedPeriod] = React.useState(periods[0])
   const [isOpen, setIsOpen] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
@@ -85,7 +94,7 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
             overflow: 'hidden',
           }}
         >
-          {PERIODS.map(period => (
+          {periods.map(period => (
             <button
               key={period}
               onClick={() => { setSelectedPeriod(period); setIsOpen(false) }}

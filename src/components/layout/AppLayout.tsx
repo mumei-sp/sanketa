@@ -12,6 +12,8 @@ import { Search, Settings, Bell, Menu, SlidersHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { baseColors } from '@/theme/colors'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { SchoolSettingsPanel } from '@/components/settings/SchoolSettingsPanel'
 
 interface AppLayoutProps {
   logoPath?: string
@@ -27,6 +29,7 @@ export function useTopActions() {
 
 /** Search bar + settings + notifications + avatar — styled to match figma */
 function TopActions() {
+  const { setSettingsOpen } = useSchoolConfig()
   return (
     <div className="hidden md:flex items-center gap-3">
       {/* ── Search bar (desktop) ── */}
@@ -48,6 +51,7 @@ function TopActions() {
         variant="ghost"
         size="icon"
         className="size-10 rounded-full bg-card border border-border shadow-sm"
+        onClick={() => setSettingsOpen(true)}
       >
         <Settings className="h-4 w-4 text-foreground" />
       </Button>
@@ -123,6 +127,9 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
           </main>
         </TopActionsContext.Provider>
       </SidebarInset>
+
+      {/* School settings side panel — opens on gear icon click */}
+      <SchoolSettingsPanel />
     </>
   )
 }

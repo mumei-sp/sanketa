@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { SchoolConfigProvider } from './config/SchoolConfigContext'
 import { AppLayout } from './components/layout'
 import { generateRoutesFromNavigation } from './config/routes'
 import { AuthGuard, GuestGuard } from './features/auth/components/RouteGuards'
@@ -73,7 +74,11 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <SchoolConfigProvider>
+      <RouterProvider router={router} />
+    </SchoolConfigProvider>
+  )
 }
 
 export default App

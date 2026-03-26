@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
 import type { AttendanceOverviewData } from '@/features/attendance/types'
 import { baseColors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
@@ -93,6 +94,8 @@ export function AttendanceOverviewAreaChart({
   data,
   isLoading = false,
 }: AttendanceOverviewAreaChartProps) {
+  const { terms } = useAcademicDates()
+  const termName = terms.length > 0 ? terms[0].label.split(' ')[0] : 'Semester'
   const [timeRange, setTimeRange] = React.useState('last-semester')
 
   if (isLoading) {
@@ -117,8 +120,8 @@ export function AttendanceOverviewAreaChart({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="last-semester">Last Semester</SelectItem>
-            <SelectItem value="this-semester">This Semester</SelectItem>
+            <SelectItem value="last-semester">Last {termName}</SelectItem>
+            <SelectItem value="this-semester">This {termName}</SelectItem>
             <SelectItem value="last-year">Last Year</SelectItem>
           </SelectContent>
         </Select>

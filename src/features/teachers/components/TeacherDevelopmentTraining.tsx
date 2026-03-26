@@ -4,30 +4,15 @@ import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
 import { text, border, status, accent, background } from '@/theme/colors'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
 import type { TrainingEvent } from '../types/teacher-detail'
 
 type SortKey = 'event' | 'date' | 'location' | 'status'
 type SortDir = 'asc' | 'desc'
 
-const SEMESTERS = ['This Semester', 'Last Semester', 'All']
-
 /** Parse "Mon DD, YYYY" date strings for sorting */
 function parseDate(dateStr: string): number {
   return new Date(dateStr).getTime()
-}
-
-/** Check if a training event falls within the given semester */
-function inSemester(event: TrainingEvent, semester: string): boolean {
-  if (semester === 'All') return true
-  const ts = parseDate(event.date)
-  // This Semester: Jan–Jun 2035, Last Semester: Jul–Dec 2034
-  const thisSemStart = new Date('Jan 1, 2035').getTime()
-  const thisSemEnd = new Date('Jun 30, 2035').getTime()
-  const lastSemStart = new Date('Jul 1, 2034').getTime()
-  const lastSemEnd = new Date('Dec 31, 2034').getTime()
-  if (semester === 'This Semester') return ts >= thisSemStart && ts <= thisSemEnd
-  if (semester === 'Last Semester') return ts >= lastSemStart && ts <= lastSemEnd
-  return true
 }
 
 interface TeacherDevelopmentTrainingProps {
@@ -42,9 +27,18 @@ const HEADERS: { key: SortKey; label: string }[] = [
 ]
 
 export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainingProps) {
+  const { terms, getRange } = useAcademicDates()
+
+  // Build dynamic term options from config + "All"
+  const termOptions = React.useMemo(() => {
+    const currentTermLabel = terms.length > 0 ? `This ${terms[0].label.split(' ')[0]}` : 'This Term'
+    const lastTermLabel = terms.length > 0 ? `Last ${terms[0].label.split(' ')[0]}` : 'Last Term'
+    return [currentTermLabel, lastTermLabel, 'All']
+  }, [terms])
+
   const [sortKey, setSortKey] = React.useState<SortKey | null>(null)
   const [sortDir, setSortDir] = React.useState<SortDir>('asc')
-  const [semester, setSemester] = React.useState(SEMESTERS[0])
+  const [semester, setSemester] = React.useState(termOptions[0])
   const [isOpen, setIsOpen] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
@@ -61,11 +55,19 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
     }
   }, [isOpen])
 
-  // Filter by semester
-  const filtered = React.useMemo(
-    () => events.filter(e => inSemester(e, semester)),
-    [events, semester],
-  )
+  // Filter by term using academic calendar config
+  const filtered = React.useMemo(() => {
+    if (semester === 'All') return events
+
+    // Map display label to period key for getRange
+    const periodKey = semester.startsWith('This') ? 'this-term' : 'last-term'
+    const range = getRange(periodKey)
+
+    return events.filter(e => {
+      const ts = parseDate(e.date)
+      return ts >= range.startDate.getTime() && ts <= range.endDate.getTime()
+    })
+  }, [events, semester, getRange])
 
   // Sort
   const sorted = React.useMemo(() => {
@@ -142,7 +144,7 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
             overflow: 'hidden',
           }}
         >
-          {SEMESTERS.map(s => (
+          {termOptions.map(s => (
             <button
               key={s}
               onClick={() => { setSemester(s); setIsOpen(false) }}
