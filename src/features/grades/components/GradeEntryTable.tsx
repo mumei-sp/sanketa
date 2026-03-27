@@ -1,0 +1,163 @@
+/**
+ * GradeEntryTable — Desktop table for entering student marks.
+ *
+ * Uses DataTable with editable marks inputs and auto-calculated grade badges.
+ * Row tinting: green-ish for passing, subtle red for failing.
+ */
+
+import * as React from 'react'
+import type { ColumnDef, Row } from '@tanstack/react-table'
+import { DataTable } from '@/components/table'
+import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
+import { colors } from '@/theme/colors'
+import { useGradeCalculator } from '../hooks/use-grade-calculator'
+import type { GradeEntry } from '../types'
+
+interface GradeEntryTableProps {
+  entries: GradeEntry[]
+  onMarksChange: (studentId: string, marks: number | null) => void
+  onRemarksChange: (studentId: string, remarks: string) => void
+  disabled?: boolean
+}
+
+export function GradeEntryTable({
+  entries,
+  onMarksChange,
+  onRemarksChange,
+  disabled = false,
+}: GradeEntryTableProps) {
+  const { calculateGrade } = useGradeCalculator()
+
+  const columns: ColumnDef<GradeEntry>[] = React.useMemo(() => [
+    // Roll #
+    {
+      accessorKey: 'rollNumber',
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Roll #" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-text-muted">{row.original.rollNumber}</span>
+      ),
+      size: 70,
+    },
+    // Student
+    {
+      accessorKey: 'studentName',
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
+      cell: ({ row }) => {
+        const s = row.original
+        return (
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+              style={{ backgroundColor: colors.accent.base, color: colors.text.heading }}
+            >
+              {s.studentName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </div>
+            <span className="text-sm font-medium text-text-heading">{s.studentName}</span>
+          </div>
+        )
+      },
+    },
+    // Marks (editable)
+    {
+      id: 'marks',
+      header: 'Marks',
+      cell: ({ row }) => (
+        <input
+          type="number"
+          value={row.original.marksObtained ?? ''}
+          onChange={e => {
+            const val = e.target.value
+            onMarksChange(row.original.studentId, val === '' ? null : Math.min(row.original.maxMarks, Math.max(0, parseInt(val) || 0)))
+          }}
+          min={0}
+          max={row.original.maxMarks}
+          disabled={disabled}
+          placeholder="—"
+          className="w-[72px] text-sm rounded-md border px-2.5 py-1.5 outline-none transition-colors focus:ring-1 border-border-default text-text-heading bg-bg-card text-center"
+        />
+      ),
+      size: 90,
+      enableSorting: false,
+    },
+    // Out of
+    {
+      id: 'outOf',
+      header: '/ Max',
+      cell: ({ row }) => (
+        <span className="text-sm text-text-muted">/ {row.original.maxMarks}</span>
+      ),
+      size: 60,
+      enableSorting: false,
+    },
+    // Percentage (auto-calculated)
+    {
+      id: 'percentage',
+      header: '%',
+      cell: ({ row }) => {
+        const { marksObtained, maxMarks } = row.original
+        if (marksObtained === null) return <span className="text-sm text-text-muted">—</span>
+        const result = calculateGrade(marksObtained, maxMarks)
+        return <span className="text-sm font-medium text-text-heading">{result.percentage}%</span>
+      },
+      size: 70,
+      enableSorting: false,
+    },
+    // Grade badge (auto-calculated)
+    {
+      id: 'grade',
+      header: 'Grade',
+      cell: ({ row }) => {
+        const { marksObtained, maxMarks } = row.original
+        if (marksObtained === null) return <span className="text-sm text-text-muted">—</span>
+        const result = calculateGrade(marksObtained, maxMarks)
+        return (
+          <span
+            className="inline-flex items-center justify-center text-xs font-semibold rounded-full px-2.5 py-0.5"
+            style={{
+              backgroundColor: result.isPassing ? colors.status.success.soft : colors.status.danger.soft,
+              color: result.isPassing ? colors.status.success.text : colors.status.danger.text,
+            }}
+          >
+            {result.label}
+          </span>
+        )
+      },
+      size: 80,
+      enableSorting: false,
+    },
+    // Remarks
+    {
+      id: 'remarks',
+      header: 'Remarks',
+      cell: ({ row }) => (
+        <input
+          type="text"
+          value={row.original.remarks}
+          onChange={e => onRemarksChange(row.original.studentId, e.target.value)}
+          placeholder="Optional..."
+          disabled={disabled}
+          className="w-full text-sm rounded-md border px-2.5 py-1.5 outline-none transition-colors focus:ring-1 border-border-default text-text-body bg-bg-card"
+        />
+      ),
+      enableSorting: false,
+    },
+  ], [calculateGrade, onMarksChange, onRemarksChange, disabled])
+
+  const rowClassName = React.useCallback((row: Row<GradeEntry>) => {
+    const { marksObtained, maxMarks } = row.original
+    if (marksObtained === null) return ''
+    const result = calculateGrade(marksObtained, maxMarks)
+    return result.isPassing ? 'bg-accent-soft' : 'bg-primary-soft'
+  }, [calculateGrade])
+
+  return (
+    <DataTable
+      columns={columns}
+      data={entries}
+      enableSorting
+      enablePagination={false}
+      showToolbar={false}
+      bodyProps={{ rowClassName }}
+    />
+  )
+}
