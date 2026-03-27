@@ -89,7 +89,6 @@ export interface GradingConfig {
 // Defaults
 // ============================================================================
 
-/** Default config — used on first load and for "Reset to Defaults" */
 /** Default period definitions — 6 teaching periods + 2 breaks */
 export const DEFAULT_PERIODS: PeriodDefinition[] = [
   { id: 'p1',      label: 'Period 1',    startTime: '08:00', endTime: '08:45', isBreak: false },
