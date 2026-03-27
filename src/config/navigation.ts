@@ -12,6 +12,7 @@ import {
   TrendingUp,
   BarChart3,
   CalendarCheck,
+  Clock,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -79,6 +80,11 @@ export const navigationItems: NavItem[] = [
         path: "/attendance/daily",
       },
     ],
+  },
+  {
+    title: "Timetable",
+    icon: Clock,
+    path: "/timetable",
   },
   {
     title: "Assignments",

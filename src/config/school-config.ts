@@ -33,6 +33,21 @@ export interface SchoolConfig {
   academicYearStartMonth: number
   /** How the academic year is divided into terms */
   termStructure: TermStructure
+
+  // ── Timetable ──
+  /** Period/break definitions for the school day */
+  periods: PeriodDefinition[]
+  /** Which days of week have school (0=Mon, 1=Tue, ..., 5=Sat) */
+  schoolDays: number[]
+}
+
+/** A single period/break slot in the school day (re-exported from timetable types for convenience) */
+export interface PeriodDefinition {
+  id: string
+  label: string
+  startTime: string
+  endTime: string
+  isBreak: boolean
 }
 
 // ============================================================================
@@ -40,11 +55,29 @@ export interface SchoolConfig {
 // ============================================================================
 
 /** Default config — used on first load and for "Reset to Defaults" */
+/** Default period definitions — 6 teaching periods + 2 breaks */
+export const DEFAULT_PERIODS: PeriodDefinition[] = [
+  { id: 'p1',      label: 'Period 1',    startTime: '08:00', endTime: '08:45', isBreak: false },
+  { id: 'p2',      label: 'Period 2',    startTime: '08:45', endTime: '09:30', isBreak: false },
+  { id: 'break-1', label: 'Short Break', startTime: '09:30', endTime: '09:45', isBreak: true },
+  { id: 'p3',      label: 'Period 3',    startTime: '09:45', endTime: '10:30', isBreak: false },
+  { id: 'p4',      label: 'Period 4',    startTime: '10:30', endTime: '11:15', isBreak: false },
+  { id: 'lunch',   label: 'Lunch Break', startTime: '11:15', endTime: '11:55', isBreak: true },
+  { id: 'p5',      label: 'Period 5',    startTime: '11:55', endTime: '12:40', isBreak: false },
+  { id: 'p6',      label: 'Period 6',    startTime: '12:40', endTime: '13:25', isBreak: false },
+]
+
+/** Default school days: Monday through Friday */
+export const DEFAULT_SCHOOL_DAYS = [0, 1, 2, 3, 4] as const
+
+/** Default config — used on first load and for "Reset to Defaults" */
 export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   schoolName: 'Sanketa School',
   schoolLogo: null,
-  academicYearStartMonth: 3, // April (common for Indian academic year)
+  academicYearStartMonth: 3,
   termStructure: 'semester',
+  periods: DEFAULT_PERIODS,
+  schoolDays: [...DEFAULT_SCHOOL_DAYS],
 }
 
 // ============================================================================
