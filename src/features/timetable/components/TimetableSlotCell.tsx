@@ -85,20 +85,22 @@ export function TimetableSlotCell({
   return (
     <td style={{ padding: `${spacing['1']}` }}>
       <div
-        className="relative rounded-lg shadow-sm transition-all hover:shadow-md"
+        className="relative rounded-lg shadow-sm transition-all hover:shadow-md overflow-hidden"
         style={{
           backgroundColor: background.card,
-          borderTop: `1px solid ${border.subtle}`,
-          borderRight: `1px solid ${border.subtle}`,
-          borderBottom: `1px solid ${border.subtle}`,
-          borderLeft: `3px solid ${leftBorderColor}`,
+          outline: `1px solid ${border.subtle}`,
           opacity: cardOpacity,
-          padding: `${spacing['2']} ${spacing['2.5']}`,
           cursor: isEditMode ? 'pointer' : 'default',
           minHeight: '56px',
         }}
         onClick={isEditMode ? onClick : undefined}
       >
+        {/* Left accent border */}
+        <div
+          className="absolute left-0 top-0 bottom-0 rounded-l-lg"
+          style={{ width: '3px', backgroundColor: leftBorderColor }}
+        />
+      <div style={{ padding: `${spacing['2']} ${spacing['2.5']}`, paddingLeft: `${spacing['3']}` }}>
         {/* Subject name */}
         <div
           className="text-xs font-semibold truncate leading-tight"
@@ -138,6 +140,7 @@ export function TimetableSlotCell({
             title={exception?.reason}
           />
         )}
+      </div>
       </div>
     </td>
   )
