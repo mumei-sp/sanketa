@@ -24,6 +24,7 @@ import {
   Trash2,
   Plus,
   ImageIcon,
+  GraduationCap,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -61,6 +62,7 @@ import { text, border, accent, background, status, primary } from '@/theme/color
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { TimetableSettingsSection } from './TimetableSettingsSection'
+import { GradingSettingsSection } from './GradingSettingsSection'
 import { subjects as mockSubjects, classSections as mockClassSections } from '@/data/mocks/timetable'
 import type { Subject, ClassSection } from '@/features/timetable/types'
 
@@ -80,6 +82,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: 'general', label: 'General', description: 'School name & info', icon: Building2, enabled: true },
   { id: 'academic', label: 'Academic Calendar', description: 'Year & term structure', icon: Calendar, enabled: true },
   { id: 'timetable', label: 'Timetable', description: 'Periods, days & subjects', icon: Clock, enabled: true },
+  { id: 'grades', label: 'Grades', description: 'Grade scale & report cards', icon: GraduationCap, enabled: true },
   { id: 'notifications', label: 'Notifications', description: 'Alerts & reminders', icon: Bell, enabled: false },
   { id: 'appearance', label: 'Appearance', description: 'Theme & layout', icon: Palette, enabled: false },
   { id: 'security', label: 'Security', description: 'Access & permissions', icon: Shield, enabled: false },
@@ -758,6 +761,7 @@ export function SchoolSettingsPanel() {
       case 'general': return <GeneralSection draft={draft} setDraft={setDraft} />
       case 'academic': return <AcademicSection draft={draft} setDraft={setDraft} />
       case 'timetable': return <TimetableSettingsSection draft={draft} setDraft={setDraft} />
+      case 'grades': return <GradingSettingsSection draft={draft} setDraft={setDraft} />
       default: {
         const s = SETTINGS_SECTIONS.find(x => x.id === activeSection)
         return s ? <ComingSoonSection section={s} /> : null

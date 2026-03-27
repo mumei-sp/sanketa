@@ -39,6 +39,10 @@ export interface SchoolConfig {
   periods: PeriodDefinition[]
   /** Which days of week have school (0=Mon, 1=Tue, ..., 5=Sat) */
   schoolDays: number[]
+
+  // ── Grading ──
+  /** Grade scale configuration */
+  grading: GradingConfig
 }
 
 /** A single period/break slot in the school day (re-exported from timetable types for convenience) */
@@ -48,6 +52,37 @@ export interface PeriodDefinition {
   startTime: string
   endTime: string
   isBreak: boolean
+}
+
+// ── Grading ──
+
+/** A single row in the grade scale table */
+export interface GradeScaleEntry {
+  /** Unique identifier */
+  id: string
+  /** Grade label (e.g., "A1", "1", or empty for percentage-only) */
+  label: string
+  /** Minimum percentage for this grade (0-100) */
+  minPercent: number
+  /** Maximum percentage for this grade (0-100) */
+  maxPercent: number
+  /** Grade points awarded (e.g., 10 for A1 in CBSE) */
+  gradePoints: number
+  /** Human-readable description (e.g., "Outstanding") */
+  description: string
+}
+
+/** Available grading system presets */
+export type GradeScalePreset = 'cbse' | 'icse' | 'percentage' | 'custom'
+
+/** Complete grading configuration */
+export interface GradingConfig {
+  /** Which preset is active (tracks origin, does not lock editing) */
+  preset: GradeScalePreset
+  /** The grade scale entries (editable regardless of preset) */
+  entries: GradeScaleEntry[]
+  /** Minimum passing percentage */
+  passingThreshold: number
 }
 
 // ============================================================================
@@ -70,6 +105,53 @@ export const DEFAULT_PERIODS: PeriodDefinition[] = [
 /** Default school days: Monday through Friday */
 export const DEFAULT_SCHOOL_DAYS = [0, 1, 2, 3, 4] as const
 
+// ── Grade Scale Presets ──
+
+/** CBSE 9-point grading scale (A1–E2) */
+export const CBSE_GRADE_SCALE: GradeScaleEntry[] = [
+  { id: 'cbse-a1', label: 'A1', minPercent: 91, maxPercent: 100, gradePoints: 10, description: 'Outstanding' },
+  { id: 'cbse-a2', label: 'A2', minPercent: 81, maxPercent: 90,  gradePoints: 9,  description: 'Excellent' },
+  { id: 'cbse-b1', label: 'B1', minPercent: 71, maxPercent: 80,  gradePoints: 8,  description: 'Very Good' },
+  { id: 'cbse-b2', label: 'B2', minPercent: 61, maxPercent: 70,  gradePoints: 7,  description: 'Good' },
+  { id: 'cbse-c1', label: 'C1', minPercent: 51, maxPercent: 60,  gradePoints: 6,  description: 'Above Average' },
+  { id: 'cbse-c2', label: 'C2', minPercent: 41, maxPercent: 50,  gradePoints: 5,  description: 'Average' },
+  { id: 'cbse-d',  label: 'D',  minPercent: 33, maxPercent: 40,  gradePoints: 4,  description: 'Below Average' },
+  { id: 'cbse-e1', label: 'E1', minPercent: 21, maxPercent: 32,  gradePoints: 3,  description: 'Needs Improvement' },
+  { id: 'cbse-e2', label: 'E2', minPercent: 0,  maxPercent: 20,  gradePoints: 2,  description: 'Poor' },
+]
+
+/** ICSE 9-point grading scale (1–9) */
+export const ICSE_GRADE_SCALE: GradeScaleEntry[] = [
+  { id: 'icse-1', label: '1', minPercent: 90, maxPercent: 100, gradePoints: 10, description: 'Exceptional' },
+  { id: 'icse-2', label: '2', minPercent: 80, maxPercent: 89,  gradePoints: 9,  description: 'Very Good' },
+  { id: 'icse-3', label: '3', minPercent: 70, maxPercent: 79,  gradePoints: 8,  description: 'Good' },
+  { id: 'icse-4', label: '4', minPercent: 60, maxPercent: 69,  gradePoints: 7,  description: 'Satisfactory' },
+  { id: 'icse-5', label: '5', minPercent: 50, maxPercent: 59,  gradePoints: 6,  description: 'Average' },
+  { id: 'icse-6', label: '6', minPercent: 40, maxPercent: 49,  gradePoints: 5,  description: 'Below Average' },
+  { id: 'icse-7', label: '7', minPercent: 33, maxPercent: 39,  gradePoints: 4,  description: 'Needs Improvement' },
+  { id: 'icse-8', label: '8', minPercent: 21, maxPercent: 32,  gradePoints: 3,  description: 'Unsatisfactory' },
+  { id: 'icse-9', label: '9', minPercent: 0,  maxPercent: 20,  gradePoints: 0,  description: 'Fail' },
+]
+
+/** Available grade scale presets for the settings UI */
+export const GRADE_SCALE_PRESET_OPTIONS: {
+  value: GradeScalePreset
+  label: string
+  description: string
+}[] = [
+  { value: 'cbse',       label: 'CBSE 9-Point',   description: 'A1–E2 scale used by CBSE board schools' },
+  { value: 'icse',       label: 'ICSE 9-Point',   description: '1–9 numeric scale used by ICSE board schools' },
+  { value: 'percentage', label: 'Percentage Only', description: 'No grade labels — scores as percentages' },
+  { value: 'custom',     label: 'Custom',          description: 'Define your own grading scale' },
+]
+
+/** Default grading config — CBSE preset with 33% pass threshold */
+export const DEFAULT_GRADING_CONFIG: GradingConfig = {
+  preset: 'cbse',
+  entries: CBSE_GRADE_SCALE.map(e => ({ ...e })),
+  passingThreshold: 33,
+}
+
 /** Default config — used on first load and for "Reset to Defaults" */
 export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   schoolName: 'Sanketa School',
@@ -78,6 +160,7 @@ export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   termStructure: 'semester',
   periods: DEFAULT_PERIODS,
   schoolDays: [...DEFAULT_SCHOOL_DAYS],
+  grading: { ...DEFAULT_GRADING_CONFIG, entries: DEFAULT_GRADING_CONFIG.entries.map(e => ({ ...e })) },
 }
 
 // ============================================================================
