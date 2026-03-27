@@ -11,7 +11,7 @@ import { Plus, Trash2, GripVertical, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { text, border, accent, background } from '@/theme/colors'
+import { text, border, accent, background, status } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { DAY_LABELS } from '@/features/timetable/types'
@@ -252,14 +252,16 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               }}
             />
 
-            {/* Delete */}
+            {/* Delete — ml-auto keeps all delete icons vertically aligned */}
             <button
               type="button"
               onClick={() => removePeriod(idx)}
-              className="p-1 rounded-md hover:opacity-70 cursor-pointer flex-shrink-0"
-              style={{ color: text.muted }}
+              className="w-7 h-7 rounded-md flex items-center justify-center transition-colors cursor-pointer flex-shrink-0 ml-auto"
+              style={{ backgroundColor: accent.soft }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
             </button>
           </div>
         ))}
