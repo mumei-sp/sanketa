@@ -9,7 +9,7 @@ import { classRosters } from '@/data/mocks/attendance-daily'
 import { gradeSubmissions, findSubmission, upsertSubmission } from '@/data/mocks/grades'
 import { EXAMS, GRADEABLE_SUBJECT_IDS } from '@/features/grades/constants'
 import { subjects } from '@/data/mocks/timetable'
-import type { Exam, GradeEntry, GradeSubmission, GradeSheetRow, GradeSheetSummary } from '@/features/grades/types'
+import type { Exam, GradeEntry, GradeSubmission, GradeSheetRow, GradeSheetSummary, SubjectGrade } from '@/features/grades/types'
 
 // ============================================================================
 // Helpers
@@ -206,5 +206,67 @@ export async function fetchGradeSheet(
       failCount,
       totalStudents: roster.length,
     },
+  }
+}
+
+// ============================================================================
+// Report Card
+// ============================================================================
+
+/** Attendance summary for a student (mock) */
+export interface StudentAttendanceSummary {
+  totalDays: number
+  present: number
+  late: number
+  absent: number
+}
+
+/** Report card data for a single student */
+export interface ReportCardData {
+  gradeRow: GradeSheetRow
+  subjects: { id: string; name: string; shortName: string }[]
+  exam: Exam
+  maxMarks: number
+  attendance: StudentAttendanceSummary
+}
+
+/** Fetch all data needed for a student's report card */
+export async function fetchStudentReportCard(
+  studentId: string,
+  classId: string,
+  examId: string,
+  calculateGrade: (marks: number, maxMarks: number) => { label: string; points: number; percentage: number },
+  passingThreshold: number,
+): Promise<ReportCardData | null> {
+  await delay(300, 600)
+
+  // Get the grade sheet for the class + exam
+  const { rows } = await fetchGradeSheet(classId, examId, calculateGrade, passingThreshold)
+  const gradeRow = rows.find(r => r.studentId === studentId)
+  if (!gradeRow) return null
+
+  // Get subjects
+  const subjectList = subjects
+    .filter(s => (GRADEABLE_SUBJECT_IDS as readonly string[]).includes(s.id))
+    .map(s => ({ id: s.id, name: s.name, shortName: s.shortName }))
+
+  // Get exam metadata
+  const exam = EXAMS.find(e => e.id === examId)
+  if (!exam) return null
+
+  // Mock attendance (realistic for an Indian school year — ~180 working days)
+  const attendance: StudentAttendanceSummary = {
+    totalDays: 180,
+    present: 164 + Math.floor(Math.random() * 10),
+    late: 3 + Math.floor(Math.random() * 5),
+    absent: 3 + Math.floor(Math.random() * 5),
+  }
+
+  return {
+    gradeRow,
+    subjects: subjectList,
+    exam,
+    maxMarks: exam.maxMarks,
+    attendance,
   }
 }

@@ -1,6 +1,6 @@
 import type { PageHeaderBreadcrumbItem } from '@/components/layout/PageHeader'
 
-export type GradePageType = 'entry' | 'sheet'
+export type GradePageType = 'entry' | 'sheet' | 'report-card'
 
 export function getGradeBreadcrumbs(page: GradePageType): PageHeaderBreadcrumbItem[] {
   const base: PageHeaderBreadcrumbItem[] = [
@@ -13,6 +13,8 @@ export function getGradeBreadcrumbs(page: GradePageType): PageHeaderBreadcrumbIt
       return [...base, { label: 'Grade Entry' }]
     case 'sheet':
       return [...base, { label: 'Grade Sheet' }]
+    case 'report-card':
+      return [...base, { label: 'Report Card' }]
     default:
       return base
   }
