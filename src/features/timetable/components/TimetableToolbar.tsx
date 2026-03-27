@@ -35,8 +35,14 @@ export function TimetableToolbar({
       {/* Left: Class selector with icon */}
       <div className="flex items-center gap-2.5">
         <div
-          className="flex items-center justify-center w-9 h-9 min-w-9 min-h-9 aspect-square rounded-full overflow-hidden flex-shrink-0"
-          style={{ backgroundColor: accent.base }}
+          className="flex items-center justify-center rounded-full overflow-hidden flex-shrink-0"
+          style={{
+            backgroundColor: accent.base,
+            width: '36px',
+            height: '36px',
+            minWidth: '36px',
+            minHeight: '36px',
+          }}
         >
           <GraduationCap className="w-4 h-4" style={{ color: text.heading }} />
         </div>
