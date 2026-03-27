@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react'
-import type { ColumnDef, Row } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { colors } from '@/theme/colors'
@@ -144,13 +144,6 @@ export function GradeEntryTable({
     },
   ], [calculateGrade, onMarksChange, onRemarksChange, disabled])
 
-  const rowClassName = React.useCallback((row: Row<GradeEntry>) => {
-    const { marksObtained, maxMarks } = row.original
-    if (marksObtained === null) return ''
-    const result = calculateGrade(marksObtained, maxMarks)
-    return result.isPassing ? 'bg-accent-soft' : 'bg-primary-soft'
-  }, [calculateGrade])
-
   return (
     <DataTable
       columns={columns}
@@ -158,7 +151,6 @@ export function GradeEntryTable({
       enableSorting
       enablePagination={false}
       showToolbar={false}
-      bodyProps={{ rowClassName }}
     />
   )
 }

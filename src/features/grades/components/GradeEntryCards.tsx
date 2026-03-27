@@ -39,9 +39,7 @@ export function GradeEntryCards({
             style={{
               padding: spacing['3'],
               borderColor: colors.border.default,
-              backgroundColor: grade
-                ? (grade.isPassing ? colors.accent.soft : colors.primary.soft)
-                : colors.background.card,
+              backgroundColor: colors.background.card,
             }}
           >
             {/* Top row: avatar + name + roll */}
