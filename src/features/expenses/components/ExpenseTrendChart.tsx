@@ -22,6 +22,8 @@ import { Tile } from '@/components/tile'
 import { colors, baseColors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
 import type { ExpenseTrendData } from '../types'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
+import { reorderByAcademicMonth } from '@/utils/academic-date'
 
 interface ExpenseTrendChartProps {
   data: ExpenseTrendData[]
@@ -79,20 +81,18 @@ const ActiveBar = (props: any) => <CustomBar {...props} isActive />
 
 export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChartProps) {
   const [timeRange, setTimeRange] = React.useState('last-8-months')
+  const { startMonth } = useAcademicDates()
 
-  /** Slice data based on selected time range */
+  /** Reorder data by academic year, then slice to selected range */
   const filteredData = React.useMemo(() => {
     if (!data || data.length === 0) return []
-    switch (timeRange) {
-      case 'last-6-months':
-        return data.slice(-6)
-      case 'last-12-months':
-        return data
-      case 'last-8-months':
-      default:
-        return data.slice(-8)
-    }
-  }, [data, timeRange])
+
+    const sliceCount = timeRange === 'last-6-months' ? 6
+      : timeRange === 'last-12-months' ? undefined
+      : 8 // last-8-months default
+
+    return reorderByAcademicMonth(data, 'month', startMonth, sliceCount)
+  }, [data, timeRange, startMonth])
 
   const average = React.useMemo(() => {
     if (filteredData.length === 0) return 0

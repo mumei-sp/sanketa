@@ -20,6 +20,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { baseColors, colors } from '@/theme/colors'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
+import { reorderByAcademicMonth } from '@/utils/academic-date'
 import type { EarningsDataset } from '../types'
 
 interface EarningsChartProps {
@@ -77,8 +79,13 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
     }
   }, [datasets, selected])
 
+  const { startMonth } = useAcademicDates()
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
-  const data = activeDataset?.data ?? []
+  const rawData = activeDataset?.data ?? []
+  const data = React.useMemo(
+    () => reorderByAcademicMonth(rawData, 'month', startMonth),
+    [rawData, startMonth],
+  )
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 400
 

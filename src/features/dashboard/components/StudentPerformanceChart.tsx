@@ -20,6 +20,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { baseColors, colors } from '@/theme/colors'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
+import { reorderByAcademicMonth } from '@/utils/academic-date'
 import type { PerformanceDataset } from '../types'
 
 interface StudentPerformanceChartProps {
@@ -74,9 +76,14 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
     }
   }, [datasets, selected])
 
+  const { startMonth } = useAcademicDates()
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
   const grades = activeDataset?.grades ?? []
-  const data = activeDataset?.data ?? []
+  const rawData = activeDataset?.data ?? []
+  const data = React.useMemo(
+    () => reorderByAcademicMonth(rawData, 'month', startMonth),
+    [rawData, startMonth],
+  )
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 300
 

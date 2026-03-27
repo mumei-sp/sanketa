@@ -21,6 +21,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fontWeights } from '@/config/typography'
 import { Tile, type ResponsiveValue } from '@/components/tile'
 import { colors } from '@/theme/colors'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
+import { reorderByAcademicMonth } from '@/utils/academic-date'
 
 export interface MonthlyPerformance {
   month: string
@@ -216,24 +218,19 @@ export function AcademicPerformance({
   tileLayoutMode = 'block',
 }: AcademicPerformanceProps) {
   const [timePeriod, setTimePeriod] = React.useState('6months')
+  const { startMonth } = useAcademicDates()
   const data = monthlyData || DEFAULT_MONTHLY_DATA
 
-  // Filter data based on selected time period
+  // Filter data based on selected time period, reordered by academic year
   const filteredData = React.useMemo(() => {
     if (!data || data.length === 0) return []
 
-    switch (timePeriod) {
-      case '3months':
-        return data.slice(-3)
-      case '6months':
-        return data.slice(-6)
-      case '12months':
-        // If we have less than 12 months, return all available
-        return data
-      default:
-        return data.slice(-6)
-    }
-  }, [data, timePeriod])
+    const sliceCount = timePeriod === '3months' ? 3
+      : timePeriod === '6months' ? 6
+      : undefined // 12months = all
+
+    return reorderByAcademicMonth(data, 'month', startMonth, sliceCount)
+  }, [data, timePeriod, startMonth])
 
   // Generate motivational message based on score (normalized to percentage)
   const getMotivationalMessage = (score: number): string => {

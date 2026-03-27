@@ -279,6 +279,45 @@ export function getDateRangeForPeriod(
  * @param range - Date range to check against
  * @returns true if the month/year is within the range
  */
+/**
+ * Reorder and optionally slice a month-based data array to follow academic year order.
+ *
+ * Data arrays from mocks typically have months in Jan–Dec order.
+ * This function reorders them starting from the academic year start month,
+ * then optionally slices to the last N months.
+ *
+ * @param data - Array with a month field (short label like "Jan", "Feb")
+ * @param monthKey - Key name for the month field in each data item
+ * @param startMonth - Academic year start month (0-11)
+ * @param sliceLast - Optional: only return the last N items after reordering
+ * @returns Reordered (and optionally sliced) data array
+ *
+ * @example
+ * // Academic year starts April, show last 6 months
+ * reorderByAcademicMonth(data, 'month', 3, 6)
+ * // Returns data in order: [..., Nov, Dec, Jan, Feb, Mar, Apr] (last 6 from Apr start)
+ */
+export function reorderByAcademicMonth<T>(
+  data: T[],
+  monthKey: keyof T,
+  startMonth: number,
+  sliceLast?: number,
+): T[] {
+  const academicOrder = getAcademicMonths(startMonth)
+  const orderMap = new Map(academicOrder.map((m, i) => [MONTH_SHORT_LABELS[m], i]))
+
+  const sorted = [...data].sort((a, b) => {
+    const aMonth = String(a[monthKey]).slice(0, 3)
+    const bMonth = String(b[monthKey]).slice(0, 3)
+    return (orderMap.get(aMonth) ?? 0) - (orderMap.get(bMonth) ?? 0)
+  })
+
+  if (sliceLast && sliceLast < sorted.length) {
+    return sorted.slice(-sliceLast)
+  }
+  return sorted
+}
+
 export function isMonthInRange(monthName: string, year: number, range: DateRange): boolean {
   const shortIdx = MONTH_SHORT_LABELS.findIndex(
     m => m.toLowerCase() === monthName.slice(0, 3).toLowerCase(),

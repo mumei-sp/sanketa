@@ -21,6 +21,8 @@ import { Tile } from '@/components/tile'
 import { colors, baseColors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
 import type { FeeTrendData } from '../types'
+import { useAcademicDates } from '@/hooks/use-academic-dates'
+import { reorderByAcademicMonth } from '@/utils/academic-date'
 
 interface FeeCollectionTrendProps {
   data: FeeTrendData[]
@@ -53,22 +55,18 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function FeeCollectionTrend({ data, isLoading = false }: FeeCollectionTrendProps) {
   const [timeRange, setTimeRange] = React.useState('last-6-months')
+  const { startMonth } = useAcademicDates()
 
   const filteredData = React.useMemo(() => {
     if (!data || data.length === 0) return []
-    switch (timeRange) {
-      case 'last-3-months':
-        return data.slice(-3)
-      case 'last-6-months':
-        return data.slice(-6)
-      case 'last-8-months':
-        return data.slice(-8)
-      case 'last-12-months':
-        return data
-      default:
-        return data.slice(-6)
-    }
-  }, [data, timeRange])
+
+    const sliceCount = timeRange === 'last-3-months' ? 3
+      : timeRange === 'last-6-months' ? 6
+      : timeRange === 'last-8-months' ? 8
+      : undefined // last-12-months = all
+
+    return reorderByAcademicMonth(data, 'month', startMonth, sliceCount)
+  }, [data, timeRange, startMonth])
 
   const yAxisMax = React.useMemo(() => {
     if (filteredData.length === 0) return 100000
