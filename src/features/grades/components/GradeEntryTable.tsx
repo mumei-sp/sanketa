@@ -114,8 +114,8 @@ export function GradeEntryTable({
           <span
             className="inline-flex items-center justify-center text-xs font-semibold rounded-full px-2.5 py-0.5 whitespace-nowrap"
             style={{
-              backgroundColor: result.isPassing ? colors.status.success.soft : colors.status.danger.soft,
-              color: result.isPassing ? colors.status.success.text : colors.status.danger.text,
+              backgroundColor: result.isPassing ? colors.accent.base : colors.status.danger.soft,
+              color: result.isPassing ? colors.text.heading : colors.status.danger.text,
               minWidth: 'fit-content',
             }}
           >

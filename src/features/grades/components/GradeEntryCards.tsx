@@ -58,8 +58,8 @@ export function GradeEntryCards({
                 <span
                   className="text-xs font-semibold rounded-full px-2.5 py-0.5 flex-shrink-0"
                   style={{
-                    backgroundColor: grade.isPassing ? colors.status.success.soft : colors.status.danger.soft,
-                    color: grade.isPassing ? colors.status.success.text : colors.status.danger.text,
+                    backgroundColor: grade.isPassing ? colors.accent.base : colors.status.danger.soft,
+                    color: grade.isPassing ? colors.text.heading : colors.status.danger.text,
                   }}
                 >
                   {grade.label} ({grade.percentage}%)

@@ -57,7 +57,7 @@ export function GradeSheetTable({ rows, summary, subjectList }: GradeSheetTableP
               <span
                 className="text-[10px] font-medium rounded px-1.5 py-px"
                 style={{
-                  backgroundColor: colors.accent.soft,
+                  backgroundColor: colors.accent.base,
                   color: colors.text.heading,
                 }}
               >
@@ -99,8 +99,8 @@ export function GradeSheetTable({ rows, summary, subjectList }: GradeSheetTableP
             <span
               className="inline-flex items-center justify-center text-xs font-semibold rounded-full px-2.5 py-0.5"
               style={{
-                backgroundColor: colors.status.success.soft,
-                color: colors.status.success.text,
+                backgroundColor: colors.accent.base,
+                color: colors.text.heading,
               }}
             >
               {grade}
@@ -141,7 +141,7 @@ export function GradeSheetTable({ rows, summary, subjectList }: GradeSheetTableP
           className="flex items-center gap-4 flex-wrap mt-3 rounded-lg"
           style={{
             padding: `${spacing['2.5']} ${spacing['3']}`,
-            backgroundColor: colors.accent.soft,
+            backgroundColor: colors.accent.base,
             border: `1px solid ${colors.accent.base}`,
           }}
         >
