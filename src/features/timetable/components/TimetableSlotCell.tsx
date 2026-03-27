@@ -1,4 +1,4 @@
-import { text, border, background } from '@/theme/colors'
+import { text, border, background, status } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { getSubjectById } from '@/data/mocks/timetable'
 import type { TimetableSlot, TimetableException } from '../types'
@@ -15,9 +15,10 @@ interface TimetableSlotCellProps {
 }
 
 /**
- * Individual cell in the timetable grid.
- * Shows subject name, teacher, and room with subject-specific color tinting.
- * Handles break rows, cancellations, substitutions, and extra classes.
+ * Individual card cell in the timetable grid.
+ *
+ * Design: White card with colored left border (3px) per subject,
+ * rounded corners, subtle shadow. Break rows are muted full-width bars.
  */
 export function TimetableSlotCell({
   slot,
@@ -29,7 +30,7 @@ export function TimetableSlotCell({
   isEditMode,
   onClick,
 }: TimetableSlotCellProps) {
-  // Break cells
+  // Break cells — rendered by parent as colSpan, this handles individual
   if (isBreak) {
     return (
       <td
@@ -46,93 +47,98 @@ export function TimetableSlotCell({
   // Empty slot (no class assigned)
   if (!slot && !isExtraClass) {
     return (
-      <td
-        className="text-center text-xs"
-        style={{
-          backgroundColor: background.card,
-          color: text.muted,
-          padding: `${spacing['2']} ${spacing['3']}`,
-          cursor: isEditMode ? 'pointer' : 'default',
-          border: isEditMode ? `1px dashed ${border.default}` : undefined,
-        }}
-        onClick={isEditMode ? onClick : undefined}
-      >
-        {isEditMode ? '+' : '—'}
+      <td style={{ padding: `${spacing['1']}` }}>
+        <div
+          className="flex items-center justify-center rounded-lg h-full min-h-[56px] transition-all"
+          style={{
+            backgroundColor: isEditMode ? background.card : 'transparent',
+            border: isEditMode ? `1.5px dashed ${border.default}` : undefined,
+            cursor: isEditMode ? 'pointer' : 'default',
+            color: text.muted,
+          }}
+          onClick={isEditMode ? onClick : undefined}
+        >
+          {isEditMode && (
+            <span className="text-xs font-medium">+ Add</span>
+          )}
+        </div>
       </td>
     )
   }
 
-  // Get subject color
+  // Subject color for left border accent
   const subjectColor = slot ? (getSubjectById(slot.subjectId)?.color ?? border.default) : border.default
 
-  // Determine cell styling
-  let cellBg = subjectColor
-  let cellBorder = 'transparent'
-  let opacity = 1
+  // Card styling based on state
+  let cardOpacity = 1
+  let leftBorderColor = subjectColor
 
   if (isCancelled) {
-    cellBg = border.subtle
-    opacity = 0.5
+    cardOpacity = 0.45
+    leftBorderColor = status.danger.base
   } else if (isSubstitution) {
-    cellBorder = text.heading
+    leftBorderColor = text.heading
   } else if (isExtraClass) {
-    cellBorder = text.heading
+    leftBorderColor = text.heading
   }
 
   return (
-    <td
-      className="relative transition-all"
-      style={{
-        backgroundColor: cellBg,
-        opacity,
-        padding: `${spacing['1.5']} ${spacing['2']}`,
-        borderLeft: cellBorder !== 'transparent' ? `3px solid ${cellBorder}` : undefined,
-        cursor: isEditMode ? 'pointer' : 'default',
-        minWidth: '120px',
-      }}
-      onClick={isEditMode ? onClick : undefined}
-    >
-      {/* Subject name */}
+    <td style={{ padding: `${spacing['1']}` }}>
       <div
-        className="text-xs font-semibold truncate"
+        className="relative rounded-lg shadow-sm transition-all hover:shadow-md"
         style={{
-          color: text.heading,
-          textDecoration: isCancelled ? 'line-through' : undefined,
+          backgroundColor: background.card,
+          borderLeft: `3px solid ${leftBorderColor}`,
+          border: `1px solid ${border.subtle}`,
+          borderLeftWidth: '3px',
+          borderLeftColor: leftBorderColor,
+          opacity: cardOpacity,
+          padding: `${spacing['2']} ${spacing['2.5']}`,
+          cursor: isEditMode ? 'pointer' : 'default',
+          minHeight: '56px',
         }}
+        onClick={isEditMode ? onClick : undefined}
       >
-        {slot?.subjectName ?? exception?.newSubject ?? ''}
-      </div>
-
-      {/* Teacher name */}
-      <div
-        className="text-[10px] truncate mt-0.5"
-        style={{ color: text.body }}
-      >
-        {slot?.teacherName ?? exception?.newTeacherName ?? ''}
-      </div>
-
-      {/* Room */}
-      {slot?.room && (
+        {/* Subject name */}
         <div
-          className="text-[10px] truncate mt-0.5"
-          style={{ color: text.muted }}
-        >
-          {slot.room}
-        </div>
-      )}
-
-      {/* Exception badge */}
-      {(isSubstitution || isExtraClass || isCancelled) && (
-        <div
-          className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full"
+          className="text-xs font-semibold truncate leading-tight"
           style={{
-            backgroundColor: isCancelled
-              ? '#FC5859' // status.danger — small dot, acceptable inline
-              : text.heading,
+            color: text.heading,
+            textDecoration: isCancelled ? 'line-through' : undefined,
           }}
-          title={exception?.reason}
-        />
-      )}
+        >
+          {slot?.subjectName ?? exception?.newSubject ?? ''}
+        </div>
+
+        {/* Teacher name */}
+        <div
+          className="text-[10px] truncate mt-1 leading-tight"
+          style={{ color: text.body }}
+        >
+          {slot?.teacherName ?? exception?.newTeacherName ?? ''}
+        </div>
+
+        {/* Room */}
+        {slot?.room && (
+          <div
+            className="text-[10px] truncate mt-0.5 leading-tight"
+            style={{ color: text.muted }}
+          >
+            {slot.room}
+          </div>
+        )}
+
+        {/* Exception indicator dot */}
+        {(isSubstitution || isExtraClass || isCancelled) && (
+          <div
+            className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+            style={{
+              backgroundColor: isCancelled ? status.danger.base : text.heading,
+            }}
+            title={exception?.reason}
+          />
+        )}
+      </div>
     </td>
   )
 }
