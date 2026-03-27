@@ -13,6 +13,9 @@ import {
   BarChart3,
   CalendarCheck,
   Clock,
+  ClipboardCheck,
+  PenLine,
+  FileSpreadsheet,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -85,6 +88,23 @@ export const navigationItems: NavItem[] = [
     title: "Timetable",
     icon: Clock,
     path: "/timetable",
+  },
+  {
+    title: "Grades",
+    icon: ClipboardCheck,
+    path: "/grades",
+    children: [
+      {
+        title: "Grade Entry",
+        icon: PenLine,
+        path: "/grades/entry",
+      },
+      {
+        title: "Grade Sheet",
+        icon: FileSpreadsheet,
+        path: "/grades/sheet",
+      },
+    ],
   },
   {
     title: "Assignments",
