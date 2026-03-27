@@ -18,6 +18,7 @@ import {
   Bell,
   Shield,
   Palette,
+  Clock,
   ChevronRight,
   Upload,
   Trash2,
@@ -58,6 +59,7 @@ import { useAppToast } from '@/hooks/use-app-toast'
 import { text, border, accent, background, status } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
+import { TimetableSettingsSection } from './TimetableSettingsSection'
 
 // ============================================================================
 // Settings Navigation
@@ -74,6 +76,7 @@ interface SettingsSection {
 const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: 'general', label: 'General', description: 'School name & info', icon: Building2, enabled: true },
   { id: 'academic', label: 'Academic Calendar', description: 'Year & term structure', icon: Calendar, enabled: true },
+  { id: 'timetable', label: 'Timetable', description: 'Periods, days & subjects', icon: Clock, enabled: true },
   { id: 'notifications', label: 'Notifications', description: 'Alerts & reminders', icon: Bell, enabled: false },
   { id: 'appearance', label: 'Appearance', description: 'Theme & layout', icon: Palette, enabled: false },
   { id: 'security', label: 'Security', description: 'Access & permissions', icon: Shield, enabled: false },
@@ -514,6 +517,7 @@ export function SchoolSettingsPanel() {
     switch (activeSection) {
       case 'general': return <GeneralSection draft={draft} setDraft={setDraft} />
       case 'academic': return <AcademicSection draft={draft} setDraft={setDraft} />
+      case 'timetable': return <TimetableSettingsSection draft={draft} setDraft={setDraft} />
       default: {
         const s = SETTINGS_SECTIONS.find(x => x.id === activeSection)
         return s ? <ComingSoonSection section={s} /> : null
