@@ -275,12 +275,10 @@ function SubjectsCard() {
   const addSubject = () => {
     if (!newName.trim() || !newShort.trim()) return
     const id = newName.toLowerCase().replace(/\s+/g, '-')
-    // Cycle through brand colors for new subjects
     const colorOptions = [accent.base, primary.base, accent.soft, primary.soft, accent.muted]
     const color = colorOptions[subjects.length % colorOptions.length]
     const newSubject: Subject = { id, name: newName.trim(), shortName: newShort.trim(), color }
     setSubjects(prev => [...prev, newSubject])
-    // Also update the mock registry so timetable picker reflects changes
     mockSubjects.push(newSubject)
     setNewName('')
     setNewShort('')
@@ -325,40 +323,45 @@ function SubjectsCard() {
               >
                 {subject.shortName}
               </span>
+              {/* Delete — matches project pattern: w-7 h-7, accent.soft bg, danger.soft on hover */}
               <button
                 type="button"
                 onClick={() => removeSubject(subject.id)}
-                className="p-1 rounded-md hover:opacity-70 cursor-pointer"
-                style={{ color: text.muted }}
+                className="w-7 h-7 rounded-md flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
+                style={{ backgroundColor: accent.soft }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
               >
-                <Trash2 style={{ width: '14px', height: '14px' }} />
+                <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
               </button>
             </div>
           ))}
 
           {/* Add new subject row */}
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-2">
             <Input
               value={newName}
               onChange={e => setNewName(e.target.value)}
               placeholder="Subject name"
-              className="text-xs h-8 flex-1"
+              className="text-sm h-9 flex-1"
               style={{ maxWidth: '200px' }}
             />
             <Input
               value={newShort}
               onChange={e => setNewShort(e.target.value)}
               placeholder="Short"
-              className="text-xs h-8"
+              className="text-sm h-9"
               style={{ maxWidth: '80px' }}
             />
+            {/* Add — matches project pattern: same h-9 as inputs, outline style */}
             <Button
               variant="outline"
-              size="xs"
+              size="default"
               onClick={addSubject}
               disabled={!newName.trim() || !newShort.trim()}
+              className="h-9"
             >
-              <Plus style={{ width: '14px', height: '14px' }} />
+              <Plus className="w-4 h-4" />
               Add
             </Button>
           </div>
@@ -438,17 +441,19 @@ function ClassSectionsCard() {
                 {grpSections.map(section => (
                   <span
                     key={section.id}
-                    className="inline-flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1.5"
                     style={{ backgroundColor: accent.base, color: text.heading }}
                   >
                     {section.label}
                     <button
                       type="button"
                       onClick={() => removeSection(section.id)}
-                      className="hover:opacity-70 cursor-pointer ml-0.5"
-                      style={{ color: text.muted }}
+                      className="w-4 h-4 rounded-sm flex items-center justify-center transition-colors cursor-pointer"
+                      style={{ backgroundColor: 'transparent' }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
                     >
-                      ×
+                      <Trash2 className="w-3 h-3" style={{ color: text.heading }} />
                     </button>
                   </span>
                 ))}
@@ -457,28 +462,29 @@ function ClassSectionsCard() {
           ))}
 
           {/* Add new section row */}
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-2">
             <Input
               value={newGrade}
               onChange={e => setNewGrade(e.target.value)}
               placeholder="Grade (e.g. 11)"
-              className="text-xs h-8"
+              className="text-sm h-9"
               style={{ maxWidth: '120px' }}
             />
             <Input
               value={newSection}
               onChange={e => setNewSection(e.target.value)}
               placeholder="Section (e.g. A)"
-              className="text-xs h-8"
+              className="text-sm h-9"
               style={{ maxWidth: '120px' }}
             />
             <Button
               variant="outline"
-              size="xs"
+              size="default"
               onClick={addSection}
               disabled={!newGrade.trim() || !newSection.trim()}
+              className="h-9"
             >
-              <Plus style={{ width: '14px', height: '14px' }} />
+              <Plus className="w-4 h-4" />
               Add
             </Button>
           </div>
