@@ -35,7 +35,7 @@ export function TimetableToolbar({
       {/* Left: Class selector with icon */}
       <div className="flex items-center gap-2.5">
         <div
-          className="flex items-center justify-center w-8 h-8 rounded-lg"
+          className="flex items-center justify-center w-8 h-8 rounded-full"
           style={{ backgroundColor: accent.base }}
         >
           <GraduationCap className="w-4 h-4" style={{ color: text.heading }} />
