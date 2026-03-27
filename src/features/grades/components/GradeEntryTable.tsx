@@ -47,8 +47,8 @@ export function GradeEntryTable({
         return (
           <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
-              style={{ backgroundColor: colors.accent.base, color: colors.text.heading }}
+              className="rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden"
+              style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base, color: colors.text.heading }}
             >
               {s.studentName.split(' ').map(n => n[0]).join('').slice(0, 2)}
             </div>
@@ -112,10 +112,11 @@ export function GradeEntryTable({
         const result = calculateGrade(marksObtained, maxMarks)
         return (
           <span
-            className="inline-flex items-center justify-center text-xs font-semibold rounded-full px-2.5 py-0.5"
+            className="inline-flex items-center justify-center text-xs font-semibold rounded-full px-2.5 py-0.5 whitespace-nowrap"
             style={{
               backgroundColor: result.isPassing ? colors.status.success.soft : colors.status.danger.soft,
               color: result.isPassing ? colors.status.success.text : colors.status.danger.text,
+              minWidth: 'fit-content',
             }}
           >
             {result.label}
