@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   PenLine,
   FileSpreadsheet,
+  ScrollText,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -103,6 +104,11 @@ export const navigationItems: NavItem[] = [
         title: "Grade Sheet",
         icon: FileSpreadsheet,
         path: "/grades/sheet",
+      },
+      {
+        title: "Report Card",
+        icon: ScrollText,
+        path: "/grades/report-card",
       },
     ],
   },

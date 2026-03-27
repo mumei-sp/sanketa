@@ -47,6 +47,9 @@ export const GRADE_LABELS = {
   SUBMIT: 'Submit Grades',
   CANCEL: 'Cancel',
   EDIT: 'Edit',
+  REPORT_CARD: 'Report Card',
+  PRINT: 'Print Report Card',
+  VIEW: 'View',
 } as const
 
 export const GRADE_MESSAGES = {
@@ -60,4 +63,6 @@ export const GRADE_MESSAGES = {
   NO_CLASS: 'Select a class to begin',
   NO_GRADES: 'No grades submitted yet for this selection.',
   EMPTY_SHEET: 'No grade data available for this class and exam.',
+  SELECT_STUDENT: 'Select a student to preview their report card.',
+  NO_REPORT_DATA: 'No grade data available to generate report cards.',
 } as const

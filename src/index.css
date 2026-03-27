@@ -562,3 +562,63 @@
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-muted-foreground);
 }
+
+/* ===================================================================
+ * PRINT STYLES — Report Card + Timetable
+ * =================================================================== */
+
+@media print {
+  /* Hide all UI chrome */
+  aside,
+  nav,
+  header,
+  [data-sidebar="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"],
+  [data-slot="sheet-overlay"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Clean white background */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Make the report card area full-page */
+  #report-card-print-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+    padding: 15mm 20mm;
+    background: white !important;
+  }
+
+  /* Sheet content should be position-static for print */
+  [data-slot="sheet-content"] {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Ensure table borders print */
+  #report-card-print-area table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  #report-card-print-area th,
+  #report-card-print-area td {
+    border: 1px solid #333 !important;
+    padding: 6px 10px;
+  }
+}
