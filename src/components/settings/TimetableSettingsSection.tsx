@@ -7,10 +7,11 @@
  */
 
 import * as React from 'react'
-import { Plus, Trash2, GripVertical, Coffee } from 'lucide-react'
+import { Plus, Trash2, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SortableList, SortableItem, SortableDragHandle } from '@/components/ui/sortable-list'
 import { text, border, accent, background, status } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
@@ -179,6 +180,12 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
     }))
   }
 
+  const handleReorder = React.useCallback((reordered: PeriodDefinition[]) => {
+    setDraft(prev => ({ ...prev, periods: reordered }))
+  }, [setDraft])
+
+  const keyExtractor = React.useCallback((p: PeriodDefinition) => p.id, [])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
       <div>
@@ -190,11 +197,17 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
         </p>
       </div>
 
-      {/* Period list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
-        {draft.periods.map((period, idx) => (
-          <div
+      {/* Period list — draggable */}
+      <SortableList
+        items={draft.periods}
+        onReorder={handleReorder}
+        keyExtractor={keyExtractor}
+        style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}
+      >
+        {(period, idx) => (
+          <SortableItem
             key={period.id}
+            id={period.id}
             className="flex items-center gap-2 rounded-lg transition-all"
             style={{
               backgroundColor: period.isBreak ? border.subtle : background.card,
@@ -202,8 +215,8 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               padding: `${spacing['2']} ${spacing['2.5']}`,
             }}
           >
-            {/* Drag handle placeholder */}
-            <GripVertical className="w-4 h-4 flex-shrink-0" style={{ color: border.default }} />
+            {/* Drag handle */}
+            <SortableDragHandle />
 
             {/* Break indicator */}
             {period.isBreak && (
@@ -252,7 +265,7 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               }}
             />
 
-            {/* Delete — ml-auto keeps all delete icons vertically aligned */}
+            {/* Delete */}
             <button
               type="button"
               onClick={() => removePeriod(idx)}
@@ -263,9 +276,9 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
             >
               <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
             </button>
-          </div>
-        ))}
-      </div>
+          </SortableItem>
+        )}
+      </SortableList>
 
       {/* Add buttons */}
       <div className="flex items-center gap-2">
