@@ -88,10 +88,10 @@ export function TimetableSlotCell({
         className="relative rounded-lg shadow-sm transition-all hover:shadow-md"
         style={{
           backgroundColor: background.card,
+          borderTop: `1px solid ${border.subtle}`,
+          borderRight: `1px solid ${border.subtle}`,
+          borderBottom: `1px solid ${border.subtle}`,
           borderLeft: `3px solid ${leftBorderColor}`,
-          border: `1px solid ${border.subtle}`,
-          borderLeftWidth: '3px',
-          borderLeftColor: leftBorderColor,
           opacity: cardOpacity,
           padding: `${spacing['2']} ${spacing['2.5']}`,
           cursor: isEditMode ? 'pointer' : 'default',

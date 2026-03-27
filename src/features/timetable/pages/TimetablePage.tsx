@@ -3,6 +3,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { spacing } from '@/config/spacing'
+import { border } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { useAppToast } from '@/hooks/use-app-toast'
 import { fetchClassSections } from '@/api/services/timetable-service'
@@ -114,59 +115,50 @@ export function TimetablePage() {
         breadcrumbs={breadcrumbs}
       />
 
-      <TimetableToolbar
-        classSections={classSections}
-        selectedClassId={selectedClassId}
-        onClassChange={setSelectedClassId}
-        isEditMode={isEditMode}
-        onToggleEditMode={handleToggleEditMode}
-        onPrint={handlePrint}
-        isSaving={isSaving}
-      />
+      <Tile
+        id="timetable-tile"
+        layoutMode="block"
+        background="card"
+        borderRadius="lg"
+        shadowed={false}
+        padding="p-0"
+        overflow="auto"
+      >
+        {/* Toolbar — integrated inside the Tile as header */}
+        <TimetableToolbar
+          classSections={classSections}
+          selectedClassId={selectedClassId}
+          onClassChange={setSelectedClassId}
+          isEditMode={isEditMode}
+          onToggleEditMode={handleToggleEditMode}
+          onPrint={handlePrint}
+          isSaving={isSaving}
+        />
 
-      {isLoading ? (
-        <Tile
-          id="timetable-skeleton"
-          layoutMode="block"
-          background="card"
-          borderRadius="lg"
-          shadowed={false}
-          padding="p-6"
-        >
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full" />
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full" />
-            ))}
+        {/* Divider */}
+        <div style={{ height: '1px', backgroundColor: border.default }} />
+
+        {/* Content */}
+        {isLoading ? (
+          <div style={{ padding: spacing['6'] }}>
+            <div className="space-y-3">
+              <Skeleton className="h-10 w-full" />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
           </div>
-        </Tile>
-      ) : timetable ? (
-        <Tile
-          id="timetable-grid-tile"
-          layoutMode="block"
-          background="card"
-          borderRadius="lg"
-          shadowed={false}
-          padding="p-4"
-          overflow="auto"
-        >
-          <TimetableGrid
-            periods={config.periods}
-            slots={displaySlots}
-            schoolDays={config.schoolDays}
-            isEditMode={isEditMode}
-            onSlotClick={handleSlotClick}
-          />
-        </Tile>
-      ) : (
-        <Tile
-          id="timetable-empty"
-          layoutMode="block"
-          background="card"
-          borderRadius="lg"
-          shadowed={false}
-          padding="p-6"
-        >
+        ) : timetable ? (
+          <div style={{ padding: spacing['3'] }}>
+            <TimetableGrid
+              periods={config.periods}
+              slots={displaySlots}
+              schoolDays={config.schoolDays}
+              isEditMode={isEditMode}
+              onSlotClick={handleSlotClick}
+            />
+          </div>
+        ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-sm text-text-muted mb-2">
               No timetable configured for Class {selectedLabel}
@@ -179,8 +171,8 @@ export function TimetablePage() {
               Create timetable
             </button>
           </div>
-        </Tile>
-      )}
+        )}
+      </Tile>
 
       {/* Slot Editor Modal */}
       <TimetableSlotEditor

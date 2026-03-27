@@ -128,7 +128,7 @@ export function TimetableGrid({
                 <td
                   className={`sticky left-0 z-10 ${isLast ? 'rounded-bl-lg' : ''}`}
                   style={{
-                    backgroundColor: background.page,
+                    backgroundColor: background.card,
                     padding: `${spacing['1.5']} ${spacing['2.5']}`,
                     borderRight: `1px solid ${border.subtle}`,
                     width: '110px',
