@@ -11,13 +11,11 @@ import { Plus, Trash2, GripVertical, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { text, border, accent, background, primary } from '@/theme/colors'
+import { text, border, accent, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { DAY_LABELS } from '@/features/timetable/types'
 import type { SchoolConfig, PeriodDefinition } from '@/config/school-config'
-import { subjects as mockSubjects, classSections as mockClassSections } from '@/data/mocks/timetable'
-import type { Subject, ClassSection } from '@/features/timetable/types'
 
 // ============================================================================
 // Types
@@ -28,13 +26,11 @@ interface TimetableSettingsSectionProps {
   setDraft: React.Dispatch<React.SetStateAction<SchoolConfig>>
 }
 
-type SubTab = 'days' | 'bell' | 'subjects' | 'sections'
+type SubTab = 'days' | 'bell'
 
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'days', label: 'School Days' },
   { id: 'bell', label: 'Bell Schedule' },
-  { id: 'subjects', label: 'Subjects' },
-  { id: 'sections', label: 'Class Sections' },
 ]
 
 // ============================================================================
@@ -74,8 +70,6 @@ export function TimetableSettingsSection({ draft, setDraft }: TimetableSettingsS
       {/* Tab content */}
       {activeTab === 'days' && <SchoolDaysTab draft={draft} setDraft={setDraft} />}
       {activeTab === 'bell' && <BellScheduleTab draft={draft} setDraft={setDraft} />}
-      {activeTab === 'subjects' && <SubjectsTab />}
-      {activeTab === 'sections' && <ClassSectionsTab />}
     </div>
   )
 }
@@ -296,154 +290,6 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
       <p style={{ fontSize: fontSizes.xs, color: text.muted }}>
         {draft.periods.filter(p => !p.isBreak).length} teaching periods,{' '}
         {draft.periods.filter(p => p.isBreak).length} break{draft.periods.filter(p => p.isBreak).length !== 1 ? 's' : ''}.
-      </p>
-    </div>
-  )
-}
-
-// ============================================================================
-// Tab 3: Subjects
-// ============================================================================
-
-function SubjectsTab() {
-  // For now, display mock subjects as read-only (will be editable when backend is ready)
-  const [localSubjects] = React.useState<Subject[]>(mockSubjects)
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
-      <div>
-        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
-          Subjects
-        </Label>
-        <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
-          Manage the subjects available for timetable assignment.
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['1.5'] }}>
-        {localSubjects.map(subject => (
-          <div
-            key={subject.id}
-            className="flex items-center gap-3 rounded-lg"
-            style={{
-              backgroundColor: background.card,
-              border: `1px solid ${border.default}`,
-              padding: `${spacing['2']} ${spacing['3']}`,
-            }}
-          >
-            {/* Color dot */}
-            <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: subject.color }}
-            />
-
-            {/* Name */}
-            <span
-              className="text-sm font-medium flex-1"
-              style={{ color: text.heading }}
-            >
-              {subject.name}
-            </span>
-
-            {/* Short name badge */}
-            <span
-              className="text-[10px] font-medium rounded px-2 py-0.5"
-              style={{
-                backgroundColor: border.subtle,
-                color: text.muted,
-              }}
-            >
-              {subject.shortName}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <p style={{ fontSize: fontSizes.xs, color: text.muted }}>
-        {localSubjects.length} subjects configured. Subject colors are used in the timetable grid.
-      </p>
-    </div>
-  )
-}
-
-// ============================================================================
-// Tab 4: Class Sections
-// ============================================================================
-
-function ClassSectionsTab() {
-  const [localSections] = React.useState<ClassSection[]>(mockClassSections)
-
-  // Group by grade
-  const grouped = React.useMemo(() => {
-    const map = new Map<string, ClassSection[]>()
-    localSections.forEach(s => {
-      const list = map.get(s.grade) ?? []
-      list.push(s)
-      map.set(s.grade, list)
-    })
-    // Sort by grade number
-    return Array.from(map.entries()).sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-  }, [localSections])
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
-      <div>
-        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
-          Class Sections
-        </Label>
-        <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
-          Define grades and sections. Each section gets its own timetable template.
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['3'] }}>
-        {grouped.map(([grade, sections]) => (
-          <div
-            key={grade}
-            className="rounded-lg"
-            style={{
-              backgroundColor: background.card,
-              border: `1px solid ${border.default}`,
-              padding: `${spacing['2.5']} ${spacing['3']}`,
-            }}
-          >
-            {/* Grade header */}
-            <div className="flex items-center justify-between mb-2">
-              <span
-                className="text-xs font-semibold"
-                style={{ color: text.heading }}
-              >
-                Grade {grade}
-              </span>
-              <span
-                className="text-[10px]"
-                style={{ color: text.muted }}
-              >
-                {sections.length} section{sections.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-
-            {/* Section badges */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {sections.map(section => (
-                <span
-                  key={section.id}
-                  className="text-xs font-medium rounded-md px-2.5 py-1"
-                  style={{
-                    backgroundColor: accent.base,
-                    color: text.heading,
-                  }}
-                >
-                  {section.label}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <p style={{ fontSize: fontSizes.xs, color: text.muted }}>
-        {localSections.length} class sections across {grouped.length} grades.
       </p>
     </div>
   )

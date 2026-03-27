@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Upload,
   Trash2,
+  Plus,
   ImageIcon,
   type LucideIcon,
 } from 'lucide-react'
@@ -56,10 +57,12 @@ import {
 } from '@/config/school-config'
 import { getAcademicYear, getTerms } from '@/utils/academic-date'
 import { useAppToast } from '@/hooks/use-app-toast'
-import { text, border, accent, background, status } from '@/theme/colors'
+import { text, border, accent, background, status, primary } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { TimetableSettingsSection } from './TimetableSettingsSection'
+import { subjects as mockSubjects, classSections as mockClassSections } from '@/data/mocks/timetable'
+import type { Subject, ClassSection } from '@/features/timetable/types'
 
 // ============================================================================
 // Settings Navigation
@@ -250,7 +253,238 @@ function GeneralSection({ draft, setDraft }: SectionProps) {
           />
         </FieldGroup>
       </div>
+
+      {/* Subjects Management */}
+      <SubjectsCard />
+
+      {/* Class Sections Management */}
+      <ClassSectionsCard />
     </>
+  )
+}
+
+// ============================================================================
+// General: Subjects Management (editable)
+// ============================================================================
+
+function SubjectsCard() {
+  const [subjects, setSubjects] = React.useState<Subject[]>([...mockSubjects])
+  const [newName, setNewName] = React.useState('')
+  const [newShort, setNewShort] = React.useState('')
+
+  const addSubject = () => {
+    if (!newName.trim() || !newShort.trim()) return
+    const id = newName.toLowerCase().replace(/\s+/g, '-')
+    // Cycle through brand colors for new subjects
+    const colorOptions = [accent.base, primary.base, accent.soft, primary.soft, accent.muted]
+    const color = colorOptions[subjects.length % colorOptions.length]
+    const newSubject: Subject = { id, name: newName.trim(), shortName: newShort.trim(), color }
+    setSubjects(prev => [...prev, newSubject])
+    // Also update the mock registry so timetable picker reflects changes
+    mockSubjects.push(newSubject)
+    setNewName('')
+    setNewShort('')
+  }
+
+  const removeSubject = (id: string) => {
+    setSubjects(prev => prev.filter(s => s.id !== id))
+    const idx = mockSubjects.findIndex(s => s.id === id)
+    if (idx >= 0) mockSubjects.splice(idx, 1)
+  }
+
+  return (
+    <div
+      className="rounded-xl shadow-sm"
+      style={{
+        backgroundColor: background.card,
+        padding: spacing['6'],
+        border: `1px solid ${border.default}`,
+      }}
+    >
+      <FieldGroup label="Subjects" hint="Subjects available for timetable assignment. Add, edit, or remove as needed.">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
+          {subjects.map(subject => (
+            <div
+              key={subject.id}
+              className="flex items-center gap-3 rounded-lg"
+              style={{
+                backgroundColor: border.subtle,
+                padding: `${spacing['2']} ${spacing['3']}`,
+              }}
+            >
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: subject.color }}
+              />
+              <span className="text-sm font-medium flex-1" style={{ color: text.heading }}>
+                {subject.name}
+              </span>
+              <span
+                className="text-[10px] font-medium rounded px-2 py-0.5"
+                style={{ backgroundColor: background.card, color: text.muted }}
+              >
+                {subject.shortName}
+              </span>
+              <button
+                type="button"
+                onClick={() => removeSubject(subject.id)}
+                className="p-1 rounded-md hover:opacity-70 cursor-pointer"
+                style={{ color: text.muted }}
+              >
+                <Trash2 style={{ width: '14px', height: '14px' }} />
+              </button>
+            </div>
+          ))}
+
+          {/* Add new subject row */}
+          <div className="flex items-center gap-2 mt-1">
+            <Input
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              placeholder="Subject name"
+              className="text-xs h-8 flex-1"
+              style={{ maxWidth: '200px' }}
+            />
+            <Input
+              value={newShort}
+              onChange={e => setNewShort(e.target.value)}
+              placeholder="Short"
+              className="text-xs h-8"
+              style={{ maxWidth: '80px' }}
+            />
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={addSubject}
+              disabled={!newName.trim() || !newShort.trim()}
+            >
+              <Plus style={{ width: '14px', height: '14px' }} />
+              Add
+            </Button>
+          </div>
+        </div>
+      </FieldGroup>
+    </div>
+  )
+}
+
+// ============================================================================
+// General: Class Sections Management (editable)
+// ============================================================================
+
+function ClassSectionsCard() {
+  const [sections, setSections] = React.useState<ClassSection[]>([...mockClassSections])
+  const [newGrade, setNewGrade] = React.useState('')
+  const [newSection, setNewSection] = React.useState('')
+
+  // Group by grade
+  const grouped = React.useMemo(() => {
+    const map = new Map<string, ClassSection[]>()
+    sections.forEach(s => {
+      const list = map.get(s.grade) ?? []
+      list.push(s)
+      map.set(s.grade, list)
+    })
+    return Array.from(map.entries()).sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+  }, [sections])
+
+  const addSection = () => {
+    if (!newGrade.trim() || !newSection.trim()) return
+    const label = `${newGrade}${newSection.toUpperCase()}`
+    const id = `cls-${newGrade}${newSection.toLowerCase()}`
+    if (sections.find(s => s.id === id)) return // Already exists
+    const newItem: ClassSection = { id, grade: newGrade.trim(), section: newSection.toUpperCase().trim(), label }
+    setSections(prev => [...prev, newItem])
+    mockClassSections.push(newItem)
+    setNewGrade('')
+    setNewSection('')
+  }
+
+  const removeSection = (id: string) => {
+    setSections(prev => prev.filter(s => s.id !== id))
+    const idx = mockClassSections.findIndex(s => s.id === id)
+    if (idx >= 0) mockClassSections.splice(idx, 1)
+  }
+
+  return (
+    <div
+      className="rounded-xl shadow-sm"
+      style={{
+        backgroundColor: background.card,
+        padding: spacing['6'],
+        border: `1px solid ${border.default}`,
+      }}
+    >
+      <FieldGroup label="Class Sections" hint="Define grades and sections. Each section gets its own timetable.">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['3'] }}>
+          {grouped.map(([grade, grpSections]) => (
+            <div
+              key={grade}
+              className="rounded-lg"
+              style={{
+                backgroundColor: border.subtle,
+                padding: `${spacing['2.5']} ${spacing['3']}`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold" style={{ color: text.heading }}>
+                  Grade {grade}
+                </span>
+                <span className="text-[10px]" style={{ color: text.muted }}>
+                  {grpSections.length} section{grpSections.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {grpSections.map(section => (
+                  <span
+                    key={section.id}
+                    className="inline-flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1"
+                    style={{ backgroundColor: accent.base, color: text.heading }}
+                  >
+                    {section.label}
+                    <button
+                      type="button"
+                      onClick={() => removeSection(section.id)}
+                      className="hover:opacity-70 cursor-pointer ml-0.5"
+                      style={{ color: text.muted }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Add new section row */}
+          <div className="flex items-center gap-2 mt-1">
+            <Input
+              value={newGrade}
+              onChange={e => setNewGrade(e.target.value)}
+              placeholder="Grade (e.g. 11)"
+              className="text-xs h-8"
+              style={{ maxWidth: '120px' }}
+            />
+            <Input
+              value={newSection}
+              onChange={e => setNewSection(e.target.value)}
+              placeholder="Section (e.g. A)"
+              className="text-xs h-8"
+              style={{ maxWidth: '120px' }}
+            />
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={addSection}
+              disabled={!newGrade.trim() || !newSection.trim()}
+            >
+              <Plus style={{ width: '14px', height: '14px' }} />
+              Add
+            </Button>
+          </div>
+        </div>
+      </FieldGroup>
+    </div>
   )
 }
 
