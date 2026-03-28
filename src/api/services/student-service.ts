@@ -197,7 +197,8 @@ export async function fetchPromotionCandidates(
       const students = studentsData.filter(s => s.class === classLabel)
       const candidates: PromotionCandidate[] = students.map(s => {
         const pct = s.percentage ?? 0
-        const recommendation = pct >= passingThreshold ? 'promote' : 'retain'
+        const isAtRisk = s.performance === 'At Risk'
+        const recommendation = (pct >= passingThreshold && !isAtRisk) ? 'promote' : 'retain'
         return {
           studentId: s.id,
           studentName: s.fullName || s.displayName || s.name || [s.firstName, s.lastName].filter(Boolean).join(' ') || 'Unknown',

@@ -56,7 +56,12 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
             <div>
               <span className="text-sm font-medium text-text-heading">{s.studentName}</span>
               {s.status === 'On Leave' && (
-                <span className="text-[10px] text-text-muted ml-1.5">(On Leave)</span>
+                <span
+                  className="text-[9px] font-medium rounded-full px-1.5 py-px ml-1.5"
+                  style={{ backgroundColor: colors.border.default, color: colors.text.muted }}
+                >
+                  On Leave
+                </span>
               )}
             </div>
           </div>
@@ -107,7 +112,7 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
       cell: ({ row }) => {
         const { studentId, decision } = row.original
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {DECISION_OPTIONS.map(opt => {
               const isActive = decision === opt.value
               const Icon = opt.icon
@@ -121,6 +126,7 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
                     backgroundColor: isActive ? opt.activeColor : 'transparent',
                     color: isActive ? '#fff' : colors.text.muted,
                     border: isActive ? 'none' : `1px solid ${colors.border.default}`,
+                    opacity: isActive ? 1 : 0.6,
                   }}
                 >
                   <Icon className="w-3 h-3" />
