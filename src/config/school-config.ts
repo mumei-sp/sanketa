@@ -75,6 +75,9 @@ export interface GradeScaleEntry {
 /** Available grading system presets */
 export type GradeScalePreset = 'cbse' | 'icse' | 'percentage' | 'custom'
 
+/** Available report card visual themes */
+export type ReportCardTheme = 'classic' | 'modern' | 'minimal' | 'formal'
+
 /** Complete grading configuration */
 export interface GradingConfig {
   /** Which preset is active (tracks origin, does not lock editing) */
@@ -83,6 +86,8 @@ export interface GradingConfig {
   entries: GradeScaleEntry[]
   /** Minimum passing percentage */
   passingThreshold: number
+  /** Report card visual theme */
+  reportCardTheme: ReportCardTheme
 }
 
 // ============================================================================
@@ -144,11 +149,24 @@ export const GRADE_SCALE_PRESET_OPTIONS: {
   { value: 'custom',     label: 'Custom',          description: 'Define your own grading scale' },
 ]
 
+/** Report card theme options for the settings UI */
+export const REPORT_CARD_THEMES: {
+  value: ReportCardTheme
+  label: string
+  description: string
+}[] = [
+  { value: 'classic', label: 'Classic',  description: 'Traditional report card with bordered tables' },
+  { value: 'modern',  label: 'Modern',   description: 'Clean design with accent color highlights' },
+  { value: 'minimal', label: 'Minimal',  description: 'Simple, text-focused layout with minimal borders' },
+  { value: 'formal',  label: 'Formal',   description: 'Official format with formal typography' },
+]
+
 /** Default grading config — CBSE preset with 33% pass threshold */
 export const DEFAULT_GRADING_CONFIG: GradingConfig = {
   preset: 'cbse',
   entries: CBSE_GRADE_SCALE.map(e => ({ ...e })),
   passingThreshold: 33,
+  reportCardTheme: 'classic',
 }
 
 /** Default config — used on first load and for "Reset to Defaults" */

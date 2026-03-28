@@ -1,6 +1,8 @@
 /**
  * GradeSheetPage — Read-only spreadsheet view of all grades for a class + exam.
  *
+ * Includes report card preview via Sheet overlay when clicking a student row.
+ *
  * Route: /grades/sheet
  * Supports query params: ?class=9A&exam=ut1
  */
@@ -12,7 +14,13 @@ import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { GradeSheetTable } from '../components/GradeSheetTable'
+import { ReportCardPreview } from '../components/ReportCardPreview'
 import { getGradeBreadcrumbs } from '../utils/breadcrumbs'
 import { EXAMS_BY_TERM, GRADE_MESSAGES } from '../constants'
 import { useGradeCalculator } from '../hooks/use-grade-calculator'
@@ -20,8 +28,10 @@ import {
   fetchAvailableClasses,
   fetchGradeableSubjects,
   fetchGradeSheet,
+  fetchStudentReportCard,
 } from '@/api/services/grade-service'
 import type { GradeSheetRow, GradeSheetSummary } from '../types'
+import type { ReportCardData } from '@/api/services/grade-service'
 
 export function GradeSheetPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -54,7 +64,7 @@ export function GradeSheetPage() {
     [selectedExam],
   )
 
-  // ── Data ──
+  // ── Grade sheet data ──
   const [rows, setRows] = React.useState<GradeSheetRow[]>([])
   const [summary, setSummary] = React.useState<GradeSheetSummary>({
     subjectAverages: {}, classAverage: 0, passCount: 0, failCount: 0, totalStudents: 0,
@@ -83,6 +93,33 @@ export function GradeSheetPage() {
     return () => { cancelled = true }
   }, [selectedClass, selectedExam, calculateGrade, passingThreshold])
 
+  // ── Report card overlay ──
+  const [selectedStudentId, setSelectedStudentId] = React.useState<string | null>(null)
+  const [reportData, setReportData] = React.useState<ReportCardData | null>(null)
+  const [isStudentLoading, setIsStudentLoading] = React.useState(false)
+
+  const handleViewReportCard = React.useCallback(async (studentId: string) => {
+    setSelectedStudentId(studentId)
+    setIsStudentLoading(true)
+    try {
+      const data = await fetchStudentReportCard(studentId, selectedClass, selectedExam, calculateGrade, passingThreshold)
+      setReportData(data)
+    } catch (err) {
+      console.error('Failed to load report card:', err)
+    } finally {
+      setIsStudentLoading(false)
+    }
+  }, [selectedClass, selectedExam, calculateGrade, passingThreshold])
+
+  const handleCloseSheet = React.useCallback(() => {
+    setSelectedStudentId(null)
+    setReportData(null)
+  }, [])
+
+  const handlePrint = React.useCallback(() => {
+    window.print()
+  }, [])
+
   const breadcrumbs = React.useMemo(() => getGradeBreadcrumbs('sheet'), [])
 
   return (
@@ -100,7 +137,6 @@ export function GradeSheetPage() {
           }}
         >
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Class selector */}
             <select
               value={selectedClass}
               onChange={e => handleParamChange('class', e.target.value)}
@@ -116,7 +152,6 @@ export function GradeSheetPage() {
               ))}
             </select>
 
-            {/* Exam selector */}
             <select
               value={selectedExam}
               onChange={e => handleParamChange('exam', e.target.value)}
@@ -139,7 +174,6 @@ export function GradeSheetPage() {
             </select>
           </div>
 
-          {/* Info */}
           {examObj && (
             <div className="flex items-center gap-1.5 text-xs text-text-muted">
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -176,10 +210,41 @@ export function GradeSheetPage() {
               rows={rows}
               summary={summary}
               subjectList={subjectList}
+              onViewReportCard={handleViewReportCard}
             />
           </Tile>
         )}
       </div>
+
+      {/* ═══ REPORT CARD SHEET ═══ */}
+      <Sheet open={selectedStudentId !== null} onOpenChange={open => { if (!open) handleCloseSheet() }}>
+        <SheetContent
+          side="right"
+          size="2xl"
+          className="flex flex-col p-0 gap-0"
+        >
+          <SheetTitle className="sr-only">Report Card Preview</SheetTitle>
+          {isStudentLoading ? (
+            <div className="flex items-center justify-center py-16 flex-1">
+              <span className="text-sm text-text-muted">Loading report card...</span>
+            </div>
+          ) : reportData ? (
+            <ReportCardPreview
+              gradeRow={reportData.gradeRow}
+              subjects={reportData.subjects}
+              classId={selectedClass}
+              examName={reportData.exam.name}
+              maxMarks={reportData.maxMarks}
+              attendance={reportData.attendance}
+              onPrint={handlePrint}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-16 flex-1">
+              <span className="text-sm text-text-muted">No data available</span>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

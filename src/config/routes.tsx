@@ -10,7 +10,6 @@ import DailyAttendance from '../pages/DailyAttendance'
 import Timetable from '../pages/Timetable'
 import GradeEntry from '../pages/GradeEntry'
 import GradeSheet from '../pages/GradeSheet'
-import ReportCard from '../pages/ReportCard'
 import Assignments from '../pages/Assignments'
 import FeesCollection from '../pages/FeesCollection'
 import Expenses from '../pages/Expenses'
@@ -32,7 +31,6 @@ const routeConfig: Record<LeafPaths<typeof navigationItems>, React.ComponentType
   '/timetable': Timetable,
   '/grades/entry': GradeEntry,
   '/grades/sheet': GradeSheet,
-  '/grades/report-card': ReportCard,
   '/assignments': Assignments,
   '/finance/fees-collection': FeesCollection,
   '/finance/expenses': Expenses,

@@ -29,9 +29,6 @@ export function ReportCardHeader({ examName }: ReportCardHeaderProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
-        paddingBottom: '16px',
-        borderBottom: `2px solid ${text.heading}`,
-        marginBottom: '20px',
       }}
     >
       {/* Logo */}
