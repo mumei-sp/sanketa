@@ -1,13 +1,12 @@
 /**
- * PaymentDialog — 3-step payment processing dialog.
+ * PaymentDialog — "Mark as Paid" form for admin fee management.
  *
- * Step 1: Form — select payment method
- * Step 2: Processing — spinner (mock delay)
- * Step 3: Success — transaction details + receipt link
+ * Simple form: select method, enter transaction ID, date, notes → mark paid.
+ * No payment gateway simulation.
  */
 
 import * as React from 'react'
-import { CheckCircle, Loader2, CreditCard, Banknote, FileText, Building2 } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -16,235 +15,175 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { text, border, accent, background, baseColors, status } from '@/theme/colors'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { text, border, accent, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
-import { processPayment } from '@/api/services/fees-collection-service'
-import type { FeeCollectionRecord, PaymentMethod, PaymentGateway, PaymentTransaction, FeeCategory } from '../types'
-import { PAYMENT_METHOD_LABELS, PAYMENT_GATEWAY_LABELS } from '../types'
-
-type Step = 'form' | 'processing' | 'success'
+import { markAsPaid } from '@/api/services/fees-collection-service'
+import type { FeeCollectionRecord, PaymentMethod, PaymentTransaction, FeeCategory } from '../types'
+import { PAYMENT_METHOD_LABELS } from '../types'
 
 interface PaymentDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   record: FeeCollectionRecord | null
-  onPaymentComplete: (transaction: PaymentTransaction) => void
+  onComplete: (transaction: PaymentTransaction) => void
 }
 
-const METHOD_OPTIONS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
-  { value: 'online', label: 'Online', icon: CreditCard },
-  { value: 'cash', label: 'Cash', icon: Banknote },
-  { value: 'cheque', label: 'Cheque', icon: FileText },
-  { value: 'bank_transfer', label: 'Bank Transfer', icon: Building2 },
-]
+function getTodayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
-const GATEWAY_OPTIONS: { value: PaymentGateway; label: string }[] = [
-  { value: 'razorpay', label: 'Razorpay' },
-  { value: 'paytm', label: 'Paytm' },
-]
+export function PaymentDialog({ open, onOpenChange, record, onComplete }: PaymentDialogProps) {
+  const [method, setMethod] = React.useState<PaymentMethod>('cash')
+  const [transactionId, setTransactionId] = React.useState('')
+  const [paidDate, setPaidDate] = React.useState(getTodayStr())
+  const [notes, setNotes] = React.useState('')
+  const [isSaving, setIsSaving] = React.useState(false)
 
-export function PaymentDialog({ open, onOpenChange, record, onPaymentComplete }: PaymentDialogProps) {
-  const [step, setStep] = React.useState<Step>('form')
-  const [method, setMethod] = React.useState<PaymentMethod>('online')
-  const [gateway, setGateway] = React.useState<PaymentGateway>('razorpay')
-  const [transaction, setTransaction] = React.useState<PaymentTransaction | null>(null)
-
-  // Reset state when dialog opens
   React.useEffect(() => {
     if (open) {
-      setStep('form')
-      setMethod('online')
-      setGateway('razorpay')
-      setTransaction(null)
+      setMethod('cash')
+      setTransactionId('')
+      setPaidDate(getTodayStr())
+      setNotes('')
     }
   }, [open])
 
-  const handleProcess = React.useCallback(async () => {
-    if (!record) return
-    setStep('processing')
+  const handleSubmit = React.useCallback(async () => {
+    if (!record || !transactionId.trim()) return
+    setIsSaving(true)
     try {
-      const txn = await processPayment({
+      const formattedDate = new Date(paidDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      const txn = await markAsPaid({
         studentId: record.studentId,
         feeCategory: record.feeCategory as FeeCategory,
         amount: record.totalAmount,
         method,
-        gateway: method === 'online' ? gateway : undefined,
+        transactionId: transactionId.trim(),
+        paidDate: formattedDate,
+        notes: notes.trim() || undefined,
       })
-      setTransaction(txn)
-      setStep('success')
+      onComplete(txn)
+      onOpenChange(false)
     } catch (err) {
-      console.error('Payment failed:', err)
-      setStep('form')
+      console.error('Failed to mark as paid:', err)
+    } finally {
+      setIsSaving(false)
     }
-  }, [record, method, gateway])
-
-  const handleDone = React.useCallback(() => {
-    if (transaction) onPaymentComplete(transaction)
-    onOpenChange(false)
-  }, [transaction, onPaymentComplete, onOpenChange])
+  }, [record, method, transactionId, paidDate, notes, onComplete, onOpenChange])
 
   if (!record) return null
 
   return (
-    <Dialog open={open} onOpenChange={step === 'processing' ? undefined : onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]">
+    <Dialog open={open} onOpenChange={isSaving ? undefined : onOpenChange}>
+      <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle style={{ color: text.heading }}>
-            {step === 'success' ? 'Payment Successful' : 'Process Payment'}
-          </DialogTitle>
+          <DialogTitle style={{ color: text.heading }}>Mark as Paid</DialogTitle>
         </DialogHeader>
 
-        {/* ═══ FORM STEP ═══ */}
-        {step === 'form' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
-            {/* Student + fee info */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '6px 16px',
-                padding: '10px 14px',
-                backgroundColor: accent.base,
-                borderRadius: '8px',
-              }}
-            >
-              <div>
-                <span style={{ fontSize: '10px', color: text.muted, display: 'block' }}>Student</span>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: text.heading }}>{record.studentName}</span>
-              </div>
-              <div>
-                <span style={{ fontSize: '10px', color: text.muted, display: 'block' }}>Class</span>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: text.heading }}>{record.class}</span>
-              </div>
-              <div>
-                <span style={{ fontSize: '10px', color: text.muted, display: 'block' }}>Fee Category</span>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: text.heading }}>{record.feeCategory}</span>
-              </div>
-              <div>
-                <span style={{ fontSize: '10px', color: text.muted, display: 'block' }}>Amount</span>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: text.heading }}>₹{record.totalAmount.toLocaleString('en-IN')}</span>
-              </div>
-            </div>
-
-            {/* Payment method */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
+          {/* Fee info */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: `${spacing['3']} ${spacing['4']}`,
+              backgroundColor: accent.base,
+              borderRadius: '10px',
+            }}
+          >
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: text.heading, display: 'block', marginBottom: spacing['2'] }}>
-                Payment Method
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['2'] }}>
-                {METHOD_OPTIONS.map(opt => {
-                  const isSelected = method === opt.value
-                  const Icon = opt.icon
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setMethod(opt.value)}
-                      className="flex items-center gap-2 rounded-lg cursor-pointer transition-all text-left"
-                      style={{
-                        padding: `${spacing['2.5']} ${spacing['3']}`,
-                        border: `2px solid ${isSelected ? text.heading : border.default}`,
-                        backgroundColor: isSelected ? accent.base : background.surface,
-                      }}
-                    >
-                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: text.heading }} />
-                      <span style={{ fontSize: '12px', fontWeight: isSelected ? 600 : 400, color: text.heading }}>{opt.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: text.heading }}>{record.feeCategory}</p>
+              <p style={{ fontSize: '11px', color: text.muted }}>{record.studentName} · {record.class}</p>
             </div>
-
-            {/* Gateway selector (online only) */}
-            {method === 'online' && (
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: text.heading, display: 'block', marginBottom: spacing['2'] }}>
-                  Payment Gateway
-                </label>
-                <div style={{ display: 'flex', gap: spacing['2'] }}>
-                  {GATEWAY_OPTIONS.map(opt => {
-                    const isSelected = gateway === opt.value
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setGateway(opt.value)}
-                        className="flex-1 rounded-lg cursor-pointer transition-all text-center"
-                        style={{
-                          padding: `${spacing['2']} ${spacing['3']}`,
-                          border: `2px solid ${isSelected ? text.heading : border.default}`,
-                          backgroundColor: isSelected ? accent.base : background.surface,
-                          fontSize: '12px',
-                          fontWeight: isSelected ? 600 : 400,
-                          color: text.heading,
-                        }}
-                      >
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+            <span style={{ fontSize: '18px', fontWeight: 700, color: text.heading }}>
+              ₹{record.totalAmount.toLocaleString('en-IN')}
+            </span>
           </div>
-        )}
 
-        {/* ═══ PROCESSING STEP ═══ */}
-        {step === 'processing' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing['3'], padding: spacing['8'] }}>
-            <Loader2 className="w-8 h-8 animate-spin" style={{ color: text.heading }} />
-            <p style={{ fontSize: '14px', color: text.muted }}>Processing payment...</p>
-            <p style={{ fontSize: '11px', color: text.muted }}>
-              {method === 'online' ? `Via ${PAYMENT_GATEWAY_LABELS[gateway]}` : PAYMENT_METHOD_LABELS[method]}
-            </p>
-          </div>
-        )}
-
-        {/* ═══ SUCCESS STEP ═══ */}
-        {step === 'success' && transaction && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing['3'], padding: spacing['4'] }}>
-            <div
-              className="rounded-full flex items-center justify-center"
-              style={{ width: '48px', height: '48px', backgroundColor: status.success.base }}
-            >
-              <CheckCircle className="w-6 h-6" style={{ color: '#fff' }} />
-            </div>
-            <p style={{ fontSize: '16px', fontWeight: 600, color: text.heading }}>Payment Successful</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['1'], alignItems: 'center' }}>
-              <p style={{ fontSize: '12px', color: text.muted }}>
-                Transaction: <strong style={{ color: text.heading }}>{transaction.transactionId}</strong>
-              </p>
-              <p style={{ fontSize: '12px', color: text.muted }}>
-                Receipt: <strong style={{ color: text.heading }}>{transaction.receiptId}</strong>
-              </p>
-              <p style={{ fontSize: '18px', fontWeight: 700, color: text.heading, marginTop: spacing['2'] }}>
-                ₹{transaction.amount.toLocaleString('en-IN')}
-              </p>
+          {/* Payment method */}
+          <div>
+            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['2'], display: 'block' }}>
+              Payment Received Via
+            </Label>
+            <div style={{ display: 'flex', gap: spacing['1.5'], flexWrap: 'wrap' }}>
+              {(['cash', 'cheque', 'bank_transfer', 'online'] as PaymentMethod[]).map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMethod(m)}
+                  className="text-xs font-medium rounded-full px-3 py-1.5 cursor-pointer transition-all"
+                  style={{
+                    border: `1.5px solid ${method === m ? text.heading : border.default}`,
+                    backgroundColor: method === m ? accent.base : 'transparent',
+                    color: text.heading,
+                  }}
+                >
+                  {PAYMENT_METHOD_LABELS[m]}
+                </button>
+              ))}
             </div>
           </div>
-        )}
 
-        {/* ═══ FOOTER ═══ */}
-        <DialogFooter className="flex-row items-center justify-end gap-2">
-          {step === 'form' && (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button
-                onClick={handleProcess}
-                style={{ backgroundColor: text.heading, color: background.card }}
-              >
-                Process Payment
-              </Button>
-            </>
-          )}
-          {step === 'success' && (
-            <Button
-              onClick={handleDone}
-              style={{ backgroundColor: text.heading, color: background.card }}
-            >
-              Done
-            </Button>
-          )}
+          {/* Transaction / Reference ID */}
+          <div>
+            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['1.5'], display: 'block' }}>
+              Transaction / Reference ID
+            </Label>
+            <Input
+              value={transactionId}
+              onChange={e => setTransactionId(e.target.value)}
+              placeholder="e.g., CHQ-4521 or TXN-20350315"
+              className="text-sm"
+              style={{ borderColor: border.default }}
+            />
+          </div>
+
+          {/* Date received */}
+          <div>
+            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['1.5'], display: 'block' }}>
+              Date Received
+            </Label>
+            <input
+              type="date"
+              value={paidDate}
+              onChange={e => setPaidDate(e.target.value)}
+              className="w-full text-sm rounded-md border px-3 py-2 outline-none"
+              style={{ borderColor: border.default, color: text.heading, backgroundColor: background.card }}
+            />
+          </div>
+
+          {/* Notes (optional) */}
+          <div>
+            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['1.5'], display: 'block' }}>
+              Notes <span style={{ fontWeight: 400, color: text.muted }}>(optional)</span>
+            </Label>
+            <Input
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Any additional notes..."
+              className="text-sm"
+              style={{ borderColor: border.default }}
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="flex-row items-center justify-end gap-2 mt-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!transactionId.trim() || isSaving}
+            className="gap-1.5"
+            style={{ backgroundColor: text.heading, color: background.card }}
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            {isSaving ? 'Saving...' : 'Mark as Paid'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
