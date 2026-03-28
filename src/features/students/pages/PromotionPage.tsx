@@ -164,7 +164,7 @@ export function PromotionPage() {
             {atRiskCount > 0 && (
               <>
                 <span style={{ opacity: 0.4 }}>·</span>
-                <span style={{ color: colors.status.danger.base }}>
+                <span style={{ color: colors.status.danger.text }}>
                   <strong>{atRiskCount}</strong> at risk
                 </span>
               </>
