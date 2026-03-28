@@ -1,7 +1,14 @@
 import type { ColumnDef, Row, Table } from '@tanstack/react-table'
+import { CreditCard, Receipt, Clock } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
-import { baseColors, status, darken, background } from '@/theme/colors'
+import { baseColors, status, darken, background, accent, text } from '@/theme/colors'
+
+export interface FeeTableActions {
+  onPay: (record: FeeCollectionRecord) => void
+  onViewReceipt: (record: FeeCollectionRecord) => void
+  onViewHistory: (record: FeeCollectionRecord) => void
+}
 
 const STATUS_STYLES: Record<FeeStatus, { color: string; bg: string; border?: string }> = {
   Paid: { color: background.card, bg: status.success.base },
@@ -59,8 +66,9 @@ function makeGroupSortFn(
  */
 export function createFeeCollectionColumns(
   firstRecords: Map<string, FeeCollectionRecord>,
+  actions?: FeeTableActions,
 ): ColumnDef<FeeCollectionRecord>[] {
-  return [
+  const cols: ColumnDef<FeeCollectionRecord>[] = [
     {
       accessorKey: 'studentName',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
@@ -168,4 +176,57 @@ export function createFeeCollectionColumns(
       },
     },
   ]
+
+  // Actions column (when callbacks provided)
+  if (actions) {
+    cols.push({
+      id: 'actions',
+      header: '',
+      cell: ({ row, table }) => {
+        const record = row.original
+        const isFirst = isFirstOfStudentGroup(row, table as Table<FeeCollectionRecord>)
+
+        return (
+          <div className="flex items-center gap-1.5">
+            {record.status !== 'Paid' ? (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); actions.onPay(record) }}
+                className="flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1 cursor-pointer transition-opacity"
+                style={{ backgroundColor: text.heading, color: background.card }}
+              >
+                <CreditCard className="w-3 h-3" />
+                Pay
+              </button>
+            ) : record.transactionId ? (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); actions.onViewReceipt(record) }}
+                className="flex items-center gap-1 text-[11px] font-medium rounded-full px-2.5 py-1 cursor-pointer"
+                style={{ backgroundColor: accent.base, color: text.heading }}
+              >
+                <Receipt className="w-3 h-3" />
+                Receipt
+              </button>
+            ) : null}
+            {isFirst && (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); actions.onViewHistory(record) }}
+                className="flex items-center gap-1 text-[11px] font-medium rounded-full px-2.5 py-1 cursor-pointer"
+                style={{ backgroundColor: accent.base, color: text.heading }}
+              >
+                <Clock className="w-3 h-3" />
+                History
+              </button>
+            )}
+          </div>
+        )
+      },
+      size: 180,
+      enableSorting: false,
+    })
+  }
+
+  return cols
 }

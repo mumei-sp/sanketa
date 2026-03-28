@@ -3,7 +3,7 @@ import type { Row, Table as TanStackTable } from '@tanstack/react-table'
 import { DataTable } from '@/components/table'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { Skeleton } from '@/components/ui/skeleton'
-import { createFeeCollectionColumns } from './fee-collection-columns'
+import { createFeeCollectionColumns, type FeeTableActions } from './fee-collection-columns'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,7 @@ import {
 interface FeeCollectionTableProps {
   data: FeeCollectionRecord[]
   isLoading?: boolean
+  actions?: FeeTableActions
 }
 
 const CLASSES = ['7A', '7B', '7C', '8A', '8B']
@@ -39,7 +40,7 @@ function ensureStudentGrouping(data: FeeCollectionRecord[]): FeeCollectionRecord
   return Array.from(groups.values()).flat()
 }
 
-export function FeeCollectionTable({ data, isLoading = false }: FeeCollectionTableProps) {
+export function FeeCollectionTable({ data, isLoading = false, actions }: FeeCollectionTableProps) {
   const [classFilter, setClassFilter] = React.useState<string>('all')
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
   const [timeFilter, setTimeFilter] = React.useState<string>('this-month')
@@ -56,8 +57,8 @@ export function FeeCollectionTable({ data, isLoading = false }: FeeCollectionTab
         firstRecords.set(record.studentId, record)
       }
     }
-    return createFeeCollectionColumns(firstRecords)
-  }, [groupedData])
+    return createFeeCollectionColumns(firstRecords, actions)
+  }, [groupedData, actions])
 
   const renderToolbar = React.useCallback(
     (table: TanStackTable<FeeCollectionRecord>) => {
