@@ -589,8 +589,9 @@
     print-color-adjust: exact;
   }
 
-  /* Make the report card area full-page */
-  #report-card-print-area {
+  /* Make the printable areas full-page */
+  #report-card-print-area,
+  #receipt-print-area {
     position: fixed;
     top: 0;
     left: 0;
@@ -611,13 +612,16 @@
   }
 
   /* Ensure table borders print */
-  #report-card-print-area table {
+  #report-card-print-area table,
+  #receipt-print-area table {
     border-collapse: collapse;
     width: 100%;
   }
 
   #report-card-print-area th,
-  #report-card-print-area td {
+  #report-card-print-area td,
+  #receipt-print-area th,
+  #receipt-print-area td {
     border: 1px solid #333 !important;
     padding: 6px 10px;
   }
