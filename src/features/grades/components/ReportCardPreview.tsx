@@ -170,6 +170,7 @@ export function ReportCardPreview({
         style={{
           flex: 1,
           padding: spacing['6'],
+          paddingTop: '48px',
           backgroundColor: background.card,
           fontFamily: 'Inter, system-ui, sans-serif',
           overflow: 'auto',
