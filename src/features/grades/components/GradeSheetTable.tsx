@@ -7,6 +7,7 @@
 
 import * as React from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
+import { Eye } from 'lucide-react'
 import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { colors } from '@/theme/colors'
@@ -17,9 +18,10 @@ interface GradeSheetTableProps {
   rows: GradeSheetRow[]
   summary: GradeSheetSummary
   subjectList: { id: string; name: string; shortName: string }[]
+  onViewReportCard?: (studentId: string) => void
 }
 
-export function GradeSheetTable({ rows, summary, subjectList }: GradeSheetTableProps) {
+export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }: GradeSheetTableProps) {
   const columns: ColumnDef<GradeSheetRow>[] = React.useMemo(() => {
     const cols: ColumnDef<GradeSheetRow>[] = [
       // Roll #
@@ -122,8 +124,29 @@ export function GradeSheetTable({ rows, summary, subjectList }: GradeSheetTableP
       },
     )
 
+    // Report card action column
+    if (onViewReportCard) {
+      cols.push({
+        id: 'action',
+        header: '',
+        cell: ({ row }) => (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onViewReportCard(row.original.studentId) }}
+            className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors cursor-pointer whitespace-nowrap"
+            style={{ backgroundColor: colors.accent.base, color: colors.text.heading }}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            Report Card
+          </button>
+        ),
+        size: 120,
+        enableSorting: false,
+      })
+    }
+
     return cols
-  }, [subjectList])
+  }, [subjectList, onViewReportCard])
 
   return (
     <div>

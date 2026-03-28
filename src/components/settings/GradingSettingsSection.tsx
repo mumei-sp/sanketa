@@ -20,11 +20,12 @@ import { SortableList, SortableItem, SortableDragHandle } from '@/components/ui/
 import { text, border, accent, background, status } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
-import type { SchoolConfig, GradingConfig, GradeScaleEntry, GradeScalePreset } from '@/config/school-config'
+import type { SchoolConfig, GradingConfig, GradeScaleEntry, GradeScalePreset, ReportCardTheme } from '@/config/school-config'
 import {
   CBSE_GRADE_SCALE,
   ICSE_GRADE_SCALE,
   GRADE_SCALE_PRESET_OPTIONS,
+  REPORT_CARD_THEMES,
 } from '@/config/school-config'
 
 // ============================================================================
@@ -464,6 +465,70 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
             </span>
           )}
         </div>
+      </div>
+
+      {/* ═══ REPORT CARD THEME ═══ */}
+      <div
+        className="rounded-xl shadow-sm"
+        style={{
+          backgroundColor: background.card,
+          padding: spacing['6'],
+          border: `1px solid ${border.default}`,
+        }}
+      >
+        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+          Report Card Theme
+        </Label>
+        <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
+          Choose the visual style for printed report cards.
+        </p>
+
+        <RadioGroup
+          value={grading.reportCardTheme}
+          onValueChange={(v: string) => updateGrading({ reportCardTheme: v as ReportCardTheme })}
+          className="mt-3"
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['2'] }}
+        >
+          {REPORT_CARD_THEMES.map(theme => {
+            const isSelected = grading.reportCardTheme === theme.value
+            return (
+              <label
+                key={theme.value}
+                htmlFor={`theme-${theme.value}`}
+                className="flex items-center rounded-xl cursor-pointer transition-all"
+                style={{
+                  padding: `${spacing['3']} ${spacing['4']}`,
+                  border: `2px solid ${isSelected ? text.heading : border.default}`,
+                  backgroundColor: isSelected ? accent.base : background.surface,
+                }}
+              >
+                <RadioGroupItem
+                  value={theme.value}
+                  id={`theme-${theme.value}`}
+                  className="sr-only"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold" style={{ color: text.heading }}>
+                    {theme.label}
+                  </span>
+                  <span className="text-xs block mt-0.5" style={{ color: text.muted }}>
+                    {theme.description}
+                  </span>
+                </div>
+                {isSelected && (
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-3"
+                    style={{ backgroundColor: text.heading }}
+                  >
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+              </label>
+            )
+          })}
+        </RadioGroup>
       </div>
 
       {/* ═══ VALIDATION WARNINGS ═══ */}
