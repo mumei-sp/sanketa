@@ -14,7 +14,6 @@ import type {
   FeeCollectionRecord,
   PaymentTransaction,
   PaymentMethod,
-  PaymentGateway,
   Receipt,
   FeeCategory,
 } from '@/features/fees-collection/types'
@@ -82,25 +81,26 @@ export async function fetchFeeCollection(): Promise<FeeCollectionRecord[]> {
 }
 
 // ============================================================================
-// Payment Processing
+// Mark as Paid
 // ============================================================================
 
-export async function processPayment(params: {
+export async function markAsPaid(params: {
   studentId: string
   feeCategory: FeeCategory
   amount: number
   method: PaymentMethod
-  gateway?: PaymentGateway
+  transactionId: string
+  paidDate: string
+  notes?: string
 }): Promise<PaymentTransaction> {
-  // Simulate gateway processing (longer for online)
-  await delay(params.method === 'online' ? 2000 : 1200)
+  await delay(400, 700)
 
   const record = findFeeRecord(params.studentId, params.feeCategory)
   if (!record) throw new Error('Fee record not found')
 
-  const txnId = `TXN-${Date.now()}`
+  const txnId = params.transactionId || `TXN-${Date.now()}`
   const receiptId = `REC-${Date.now()}`
-  const paidDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const paidDate = params.paidDate
 
   // Update the fee record
   record.status = 'Paid'
@@ -119,7 +119,6 @@ export async function processPayment(params: {
     feeCategory: record.feeCategory,
     amount: params.amount,
     method: params.method,
-    gateway: params.gateway,
     status: 'success',
     transactionId: txnId,
     paidDate,
