@@ -5,6 +5,7 @@ import Dashboard from '../pages/Dashboard'
 import Calendar from '../pages/Calendar'
 import Teachers from '../pages/Teachers'
 import Students from '../pages/Students'
+import StudentPromotion from '../pages/StudentPromotion'
 import Attendance from '../pages/Attendance'
 import DailyAttendance from '../pages/DailyAttendance'
 import Timetable from '../pages/Timetable'
@@ -25,7 +26,8 @@ const routeConfig: Record<LeafPaths<typeof navigationItems>, React.ComponentType
   '/': Dashboard,
   '/calendar': Calendar,
   '/teachers': Teachers,
-  '/students': Students,
+  '/students/all': Students,
+  '/students/promotion': StudentPromotion,
   '/attendance/overview': Attendance,
   '/attendance/daily': DailyAttendance,
   '/timetable': Timetable,
