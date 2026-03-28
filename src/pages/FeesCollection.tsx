@@ -1,5 +1,8 @@
 /**
- * FeesCollection — Fee management page with payment processing, receipts, and history.
+ * FeesCollection — Fee management page with student detail side panel.
+ *
+ * Click any row to open the student's fee panel with all fees,
+ * payment actions, and transaction history.
  */
 
 import * as React from 'react'
@@ -16,23 +19,19 @@ import {
   FeeCollectionTrend,
   FeeCollectionProgress,
   FeeCollectionTable,
-  PaymentDialog,
-  ReceiptPreview,
-  PaymentHistorySheet,
 } from '@/features/fees-collection/components'
+import { FeeStudentPanel } from '@/features/fees-collection/components/FeeStudentPanel'
 import {
   fetchFeeStats,
   fetchFeeTrend,
   fetchFeeProgress,
   fetchFeeCollection,
-  fetchPaymentHistory,
 } from '@/api/services/fees-collection-service'
 import type {
   FeeStat,
   FeeTrendData,
   FeeProgressData,
   FeeCollectionRecord,
-  PaymentTransaction,
 } from '@/features/fees-collection/types'
 
 export default function FeesCollection() {
@@ -67,61 +66,21 @@ export default function FeesCollection() {
 
   React.useEffect(() => { loadData() }, [loadData])
 
-  // ── Payment dialog ──
-  const [paymentDialogOpen, setPaymentDialogOpen] = React.useState(false)
-  const [selectedRecord, setSelectedRecord] = React.useState<FeeCollectionRecord | null>(null)
+  // ── Student detail panel ──
+  const [selectedStudentId, setSelectedStudentId] = React.useState<string | null>(null)
+  const panelOpen = selectedStudentId !== null
 
-  const handlePay = React.useCallback((record: FeeCollectionRecord) => {
-    setSelectedRecord(record)
-    setPaymentDialogOpen(true)
+  const handleRowClick = React.useCallback((record: FeeCollectionRecord) => {
+    setSelectedStudentId(record.studentId)
   }, [])
 
-  const handlePaymentComplete = React.useCallback(() => {
-    // Re-fetch all data to reflect updated payment
+  const handleClosePanel = React.useCallback(() => {
+    setSelectedStudentId(null)
+  }, [])
+
+  const handleDataChanged = React.useCallback(() => {
     loadData()
   }, [loadData])
-
-  // ── Receipt sheet ──
-  const [receiptSheetOpen, setReceiptSheetOpen] = React.useState(false)
-  const [receiptTransaction, setReceiptTransaction] = React.useState<PaymentTransaction | null>(null)
-
-  const handleViewReceipt = React.useCallback(async (record: FeeCollectionRecord) => {
-    if (!record.transactionId) return
-    // Find transaction from history
-    const history = await fetchPaymentHistory(record.studentId)
-    const txn = history.find(t => t.transactionId === record.transactionId)
-    if (txn) {
-      setReceiptTransaction(txn)
-      setReceiptSheetOpen(true)
-    }
-  }, [])
-
-  const handleViewReceiptFromTransaction = React.useCallback((txn: PaymentTransaction) => {
-    setReceiptTransaction(txn)
-    setReceiptSheetOpen(true)
-  }, [])
-
-  // ── Payment history sheet ──
-  const [historySheetOpen, setHistorySheetOpen] = React.useState(false)
-  const [historyStudentId, setHistoryStudentId] = React.useState<string | null>(null)
-  const [historyStudentName, setHistoryStudentName] = React.useState('')
-
-  const handleViewHistory = React.useCallback((record: FeeCollectionRecord) => {
-    setHistoryStudentId(record.studentId)
-    setHistoryStudentName(record.studentName)
-    setHistorySheetOpen(true)
-  }, [])
-
-  const handlePrint = React.useCallback(() => {
-    window.print()
-  }, [])
-
-  // ── Table actions ──
-  const tableActions = React.useMemo(() => ({
-    onPay: handlePay,
-    onViewReceipt: handleViewReceipt,
-    onViewHistory: handleViewHistory,
-  }), [handlePay, handleViewReceipt, handleViewHistory])
 
   return (
     <div className="space-y-4">
@@ -156,42 +115,21 @@ export default function FeesCollection() {
         padding="p-6"
         overflow="auto"
       >
-        <FeeCollectionTable data={collectionData} isLoading={isLoading} actions={tableActions} />
+        <FeeCollectionTable
+          data={collectionData}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+        />
       </Tile>
 
-      {/* ═══ PAYMENT DIALOG ═══ */}
-      <PaymentDialog
-        open={paymentDialogOpen}
-        onOpenChange={setPaymentDialogOpen}
-        record={selectedRecord}
-        onPaymentComplete={handlePaymentComplete}
-      />
-
-      {/* ═══ RECEIPT SHEET ═══ */}
-      <Sheet open={receiptSheetOpen} onOpenChange={setReceiptSheetOpen}>
+      {/* ═══ STUDENT FEE DETAIL PANEL ═══ */}
+      <Sheet open={panelOpen} onOpenChange={open => { if (!open) handleClosePanel() }}>
         <SheetContent side="right" size="2xl" className="flex flex-col p-0 gap-0">
-          <SheetTitle className="sr-only">Payment Receipt</SheetTitle>
-          {receiptTransaction ? (
-            <ReceiptPreview
-              transaction={receiptTransaction}
-              onPrint={handlePrint}
-            />
-          ) : (
-            <div className="flex items-center justify-center py-16 flex-1">
-              <span className="text-sm text-text-muted">No receipt data</span>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
-      {/* ═══ PAYMENT HISTORY SHEET ═══ */}
-      <Sheet open={historySheetOpen} onOpenChange={setHistorySheetOpen}>
-        <SheetContent side="right" size="lg" className="flex flex-col p-0 gap-0">
-          <SheetTitle className="sr-only">Payment History</SheetTitle>
-          <PaymentHistorySheet
-            studentId={historyStudentId}
-            studentName={historyStudentName}
-            onViewReceipt={handleViewReceiptFromTransaction}
+          <SheetTitle className="sr-only">Student Fee Details</SheetTitle>
+          <FeeStudentPanel
+            studentId={selectedStudentId}
+            allRecords={collectionData}
+            onDataChanged={handleDataChanged}
           />
         </SheetContent>
       </Sheet>

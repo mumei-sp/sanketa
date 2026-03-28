@@ -3,7 +3,7 @@ import type { Row, Table as TanStackTable } from '@tanstack/react-table'
 import { DataTable } from '@/components/table'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { Skeleton } from '@/components/ui/skeleton'
-import { createFeeCollectionColumns, type FeeTableActions } from './fee-collection-columns'
+import { createFeeCollectionColumns } from './fee-collection-columns'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,7 @@ import {
 interface FeeCollectionTableProps {
   data: FeeCollectionRecord[]
   isLoading?: boolean
-  actions?: FeeTableActions
+  onRowClick?: (record: FeeCollectionRecord) => void
 }
 
 const CLASSES = ['7A', '7B', '7C', '8A', '8B']
@@ -40,7 +40,7 @@ function ensureStudentGrouping(data: FeeCollectionRecord[]): FeeCollectionRecord
   return Array.from(groups.values()).flat()
 }
 
-export function FeeCollectionTable({ data, isLoading = false, actions }: FeeCollectionTableProps) {
+export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeCollectionTableProps) {
   const [classFilter, setClassFilter] = React.useState<string>('all')
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
   const [timeFilter, setTimeFilter] = React.useState<string>('this-month')
@@ -57,8 +57,8 @@ export function FeeCollectionTable({ data, isLoading = false, actions }: FeeColl
         firstRecords.set(record.studentId, record)
       }
     }
-    return createFeeCollectionColumns(firstRecords, actions)
-  }, [groupedData, actions])
+    return createFeeCollectionColumns(firstRecords)
+  }, [groupedData])
 
   const renderToolbar = React.useCallback(
     (table: TanStackTable<FeeCollectionRecord>) => {
@@ -158,12 +158,17 @@ export function FeeCollectionTable({ data, isLoading = false, actions }: FeeColl
     )
   }, [])
 
-  // Zebra-striping: alternate every other row
+  // Zebra-striping + cursor pointer when clickable
   const rowClassName = React.useCallback((row: Row<FeeCollectionRecord>) => {
     const allRows = (row as any).table?.getRowModel?.()?.rows ?? []
     const visualIndex = allRows.findIndex((r: any) => r.id === row.id)
-    return visualIndex % 2 === 1 ? 'bg-accent/30' : ''
-  }, [])
+    const zebra = visualIndex % 2 === 1 ? 'bg-accent/30' : ''
+    return onRowClick ? `${zebra} cursor-pointer hover:bg-accent/50` : zebra
+  }, [onRowClick])
+
+  const handleRowClick = React.useCallback((row: Row<FeeCollectionRecord>) => {
+    onRowClick?.(row.original)
+  }, [onRowClick])
 
   if (isLoading) {
     return (
@@ -197,7 +202,24 @@ export function FeeCollectionTable({ data, isLoading = false, actions }: FeeColl
       showToolbar={true}
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
-      bodyProps={{ rowClassName }}
+      bodyProps={{
+        rowClassName,
+        renderRow: onRowClick ? (row) => (
+          <tr
+            key={row.id}
+            onClick={() => handleRowClick(row)}
+            className={typeof rowClassName === 'function' ? rowClassName(row) : rowClassName}
+          >
+            {row.getVisibleCells().map(cell => (
+              <td key={cell.id} className="px-3 py-2.5 text-sm">
+                {typeof cell.column.columnDef.cell === 'function'
+                  ? cell.column.columnDef.cell(cell.getContext())
+                  : cell.getValue() as string}
+              </td>
+            ))}
+          </tr>
+        ) : undefined,
+      }}
       tableOptions={{
         enableSortingRemoval: true,
         initialState: {
