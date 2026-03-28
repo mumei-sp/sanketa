@@ -9,7 +9,7 @@
 
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { FileSpreadsheet } from 'lucide-react'
+import { FileSpreadsheet, Download } from 'lucide-react'
 import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import PageHeader from '@/components/layout/PageHeader'
@@ -30,6 +30,7 @@ import {
   fetchGradeSheet,
   fetchStudentReportCard,
 } from '@/api/services/grade-service'
+import { generateCsv, downloadCsv } from '@/lib/csv'
 import type { GradeSheetRow, GradeSheetSummary } from '../types'
 import type { ReportCardData } from '@/api/services/grade-service'
 
@@ -174,12 +175,42 @@ export function GradeSheetPage() {
             </select>
           </div>
 
-          {examObj && (
-            <div className="flex items-center gap-1.5 text-xs text-text-muted">
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Class {selectedClass} — {examObj.name}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {examObj && (
+              <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Class {selectedClass} — {examObj.name}</span>
+              </div>
+            )}
+            {rows.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const csvCols = [
+                    { key: 'rollNumber' as const, header: 'Roll #' },
+                    { key: 'studentName' as const, header: 'Student' },
+                    ...subjectList.map(s => ({ key: `sub_${s.id}` as string, header: s.name })),
+                    { key: 'total' as const, header: 'Total' },
+                    { key: 'percentage' as const, header: '%' },
+                    { key: 'overallGrade' as const, header: 'Grade' },
+                    { key: 'gpa' as const, header: 'GPA' },
+                  ]
+                  const csvData = rows.map(r => {
+                    const flat: Record<string, unknown> = { ...r }
+                    subjectList.forEach(s => { flat[`sub_${s.id}`] = r.subjects[s.id]?.marks ?? '' })
+                    return flat
+                  })
+                  const csv = generateCsv(csvData as Record<string, unknown>[], csvCols as { key: string; header: string }[])
+                  downloadCsv(csv, `grades-${selectedClass}-${selectedExam}.csv`)
+                }}
+                className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 cursor-pointer transition-colors"
+                style={{ backgroundColor: colors.accent.base, color: colors.text.heading }}
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ═══ CONTENT ═══ */}

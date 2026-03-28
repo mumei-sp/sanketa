@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Table as TanStackTable, Row } from '@tanstack/react-table'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Upload, Download } from 'lucide-react'
 import { DataTable, DataTableSearch, DataTableCell } from '@/components/table'
 import { studentColumns } from './student-columns'
 import type { Student } from '@/features/students/types'
@@ -20,12 +20,14 @@ import { DataTablePaginationCustom } from '@/components/table/DataTablePaginatio
 interface StudentsTableProps {
   data: Student[]
   isLoading?: boolean
+  onImport?: () => void
+  onExport?: () => void
 }
 
 /**
  * Students table component using TanStack Table
  */
-export function StudentsTable({ data, isLoading }: StudentsTableProps) {
+export function StudentsTable({ data, isLoading, onImport, onExport }: StudentsTableProps) {
   const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
 
@@ -76,6 +78,26 @@ export function StudentsTable({ data, isLoading }: StudentsTableProps) {
                 <SelectItem value="On Leave">On Leave</SelectItem>
               </SelectContent>
             </Select>
+            {onExport && (
+              <Button
+                variant="outline"
+                onClick={onExport}
+                className="h-8 gap-1.5"
+              >
+                <Download className="size-3.5" />
+                Export
+              </Button>
+            )}
+            {onImport && (
+              <Button
+                variant="outline"
+                onClick={onImport}
+                className="h-8 gap-1.5"
+              >
+                <Upload className="size-3.5" />
+                Import
+              </Button>
+            )}
             <Button
               onClick={() => navigate('/students/add')}
               className="bg-primary hover:bg-primary/90 text-foreground"
