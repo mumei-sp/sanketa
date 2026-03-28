@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   PenLine,
   FileSpreadsheet,
+  ArrowUpCircle,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -66,6 +67,18 @@ export const navigationItems: NavItem[] = [
     title: "Students",
     icon: Users,
     path: "/students",
+    children: [
+      {
+        title: "All Students",
+        icon: Users,
+        path: "/students/all",
+      },
+      {
+        title: "Promotion",
+        icon: ArrowUpCircle,
+        path: "/students/promotion",
+      },
+    ],
   },
   {
     title: "Attendance",
