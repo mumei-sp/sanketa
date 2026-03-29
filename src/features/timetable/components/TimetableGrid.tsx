@@ -49,6 +49,7 @@ export function TimetableGrid({
         style={{
           borderSpacing: '0 4px',
           minWidth: `${(schoolDays.length + 1) * 140}px`,
+          tableLayout: 'fixed',
         }}
       >
         {/* Header row — day names */}
