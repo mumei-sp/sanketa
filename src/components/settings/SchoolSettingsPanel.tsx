@@ -962,7 +962,7 @@ export function SchoolSettingsPanel() {
                 {hasChanges && (
                   <div className="flex items-center" style={{ gap: spacing['2'] }}>
                     <div
-                      className="rounded-full"
+                      className="rounded-full animate-pulse"
                       style={{ width: '6px', height: '6px', backgroundColor: accent.base }}
                     />
                     <span className="text-xs font-medium" style={{ color: text.muted }}>
@@ -978,7 +978,7 @@ export function SchoolSettingsPanel() {
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="text-sm relative"
+                  className={`text-sm relative${hasChanges ? ' animate-pulse' : ''}`}
                   style={{
                     backgroundColor: hasChanges ? text.heading : border.default,
                     color: background.card,
@@ -987,7 +987,7 @@ export function SchoolSettingsPanel() {
                   Save Changes
                   {hasChanges && (
                     <span
-                      className="absolute -top-1 -right-1 rounded-full"
+                      className="absolute -top-1 -right-1 rounded-full animate-pulse"
                       style={{
                         width: '8px',
                         height: '8px',
