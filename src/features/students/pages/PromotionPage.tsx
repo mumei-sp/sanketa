@@ -15,6 +15,7 @@ import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { PromotionTable } from '../components/promotion/PromotionTable'
+import { PromotionCards } from '../components/promotion/PromotionCards'
 import { PromotionSummaryBar } from '../components/promotion/PromotionSummaryBar'
 import { PromotionConfirmDialog } from '../components/promotion/PromotionConfirmDialog'
 import {
@@ -232,10 +233,21 @@ export function PromotionPage() {
               padding="p-6"
               overflow="auto"
             >
-              <PromotionTable
-                candidates={candidates}
-                onDecisionChange={handleDecisionChange}
-              />
+              {/* Desktop: table */}
+              <div className="hidden lg:block">
+                <PromotionTable
+                  candidates={candidates}
+                  onDecisionChange={handleDecisionChange}
+                />
+              </div>
+
+              {/* Mobile/Tablet: cards */}
+              <div className="block lg:hidden">
+                <PromotionCards
+                  candidates={candidates}
+                  onDecisionChange={handleDecisionChange}
+                />
+              </div>
             </Tile>
 
             <PromotionSummaryBar

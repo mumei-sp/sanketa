@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Plus } from 'lucide-react'
-import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution, deleteTeacher } from '@/api/services/teacher-service'
+import { Search, Plus, Download, Upload } from 'lucide-react'
+import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution, deleteTeacher, createTeacher } from '@/api/services/teacher-service'
 import type { Teacher } from '@/features/teachers/types'
 import type { TeacherStatistics, DepartmentData } from '@/data/mocks/teacher-statistics'
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
@@ -25,6 +25,9 @@ import { fetchAttendanceOverview } from '@/api/services/student-service'
 import type { AttendanceData } from '@/data/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TileWrapper, Tile } from '@/components/tile'
+import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
+import { generateCsv, downloadCsv } from '@/lib/csv'
+import { toast } from 'sonner'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'
 
@@ -251,9 +254,51 @@ export default function Teachers() {
     navigate('/teachers/add')
   }, [navigate])
 
+  // ── Import / Export ──
+  const [importOpen, setImportOpen] = React.useState(false)
+
+  const teacherImportColumns: ImportColumn[] = React.useMemo(() => [
+    { csvHeader: 'First Name', fieldKey: 'firstName', label: 'First Name', required: true },
+    { csvHeader: 'Last Name', fieldKey: 'lastName', label: 'Last Name', required: true },
+    { csvHeader: 'Teacher ID', fieldKey: 'teacherId', label: 'Teacher ID', required: true },
+    { csvHeader: 'Subject', fieldKey: 'subject', label: 'Subject', required: true },
+    { csvHeader: 'Email', fieldKey: 'email', label: 'Email' },
+    { csvHeader: 'Phone', fieldKey: 'primaryPhone', label: 'Phone' },
+  ], [])
+
+  const handleImport = React.useCallback(async (rows: Record<string, string>[]) => {
+    for (const row of rows) {
+      await createTeacher({
+        firstName: row['First Name'] || '',
+        lastName: row['Last Name'] || '',
+        teacherId: row['Teacher ID'] || `T-${Date.now()}`,
+        subject: row['Subject'] || '',
+        email: row['Email'] || '',
+        primaryPhone: row['Phone'] || undefined,
+      } as Partial<Teacher>)
+    }
+    // Refresh teacher list
+    const updated = await fetchTeachers()
+    setTeachers(updated)
+    toast.success(`${rows.length} teachers imported`)
+  }, [])
+
+  const handleExport = React.useCallback(() => {
+    const csv = generateCsv(teachers, [
+      { key: 'teacherId', header: 'Teacher ID' },
+      { key: 'firstName', header: 'First Name' },
+      { key: 'lastName', header: 'Last Name' },
+      { key: 'subject', header: 'Subject' },
+      { key: 'email', header: 'Email' },
+      { key: 'primaryPhone', header: 'Phone' },
+    ])
+    downloadCsv(csv, 'teachers-export.csv')
+  }, [teachers])
+
   const totalTeachers = teacherStatistics?.total ?? 86
 
   return (
+    <>
     <div className="space-y-4">
       <PageHeader
         title="Teachers"
@@ -340,6 +385,26 @@ export default function Teachers() {
             </Select>
           </div>
 
+          {/* Export */}
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            className="h-8 gap-1.5"
+          >
+            <Download className="size-3.5" />
+            Export
+          </Button>
+
+          {/* Import */}
+          <Button
+            variant="outline"
+            onClick={() => setImportOpen(true)}
+            className="h-8 gap-1.5"
+          >
+            <Upload className="size-3.5" />
+            Import
+          </Button>
+
           {/* Add Teacher Button */}
           <Button
             onClick={handleAddTeacher}
@@ -392,5 +457,17 @@ export default function Teachers() {
         </>
       )}
     </div>
+
+    <ImportDialog
+      open={importOpen}
+      onOpenChange={setImportOpen}
+      title="Import Teachers"
+      columns={teacherImportColumns}
+      templateSampleRows={[
+        ['Jane', 'Smith', 'T-9001', 'Mathematics', 'jane@school.edu', '9876543210'],
+      ]}
+      onImport={handleImport}
+    />
+    </>
   )
 }
