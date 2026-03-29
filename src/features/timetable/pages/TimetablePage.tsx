@@ -44,11 +44,9 @@ export function TimetablePage() {
   const [isEditMode, setIsEditMode] = React.useState(false)
   const [editingSlots, setEditingSlots] = React.useState<TimetableSlot[]>([])
 
-  // Sync editing slots when timetable loads or edit mode toggles
+  // Sync editing slots when timetable loads or class changes
   React.useEffect(() => {
-    if (timetable) {
-      setEditingSlots([...timetable.slots])
-    }
+    setEditingSlots(timetable ? [...timetable.slots] : [])
   }, [timetable])
 
   // Slot editor modal
@@ -148,7 +146,7 @@ export function TimetablePage() {
               ))}
             </div>
           </div>
-        ) : timetable ? (
+        ) : (timetable || isEditMode) ? (
           <div style={{ padding: spacing['3'] }}>
             <TimetableGrid
               periods={config.periods}
