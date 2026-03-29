@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react'
 import { text, border, background, status, accent, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { getSubjectById } from '@/data/mocks/timetable'
@@ -78,16 +79,27 @@ export function TimetableSlotCell({
   return (
     <td style={{ padding: `${spacing['0.5']}` }}>
       <div
-        className="relative rounded-xl transition-all overflow-hidden"
+        className="relative rounded-xl transition-all overflow-hidden group"
         style={{
           backgroundColor: withOpacity(tintColor, 0.1),
-          border: `1px solid ${withOpacity(tintColor, 0.18)}`,
+          border: isEditMode
+            ? `1.5px dashed ${withOpacity(tintColor, 0.35)}`
+            : `1px solid ${withOpacity(tintColor, 0.18)}`,
           opacity: cardOpacity,
           cursor: isEditMode ? 'pointer' : 'default',
           minHeight: '60px',
         }}
         onClick={isEditMode ? onClick : undefined}
       >
+        {/* Edit mode pencil indicator */}
+        {isEditMode && (
+          <div
+            className="absolute top-1.5 right-1.5 rounded-full flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity"
+            style={{ width: '18px', height: '18px', backgroundColor: withOpacity(tintColor, 0.2) }}
+          >
+            <Pencil className="w-2.5 h-2.5" style={{ color: text.heading }} />
+          </div>
+        )}
         <div style={{ padding: `${spacing['2.5']} ${spacing['3']}` }}>
           {/* Subject name */}
           <div
@@ -123,7 +135,7 @@ export function TimetableSlotCell({
           )}
 
           {/* Exception indicator dot */}
-          {(isSubstitution || isExtraClass || isCancelled) && (
+          {(isSubstitution || isExtraClass || isCancelled) && !isEditMode && (
             <div
               className="absolute top-2 right-2 w-2 h-2 rounded-full"
               style={{
