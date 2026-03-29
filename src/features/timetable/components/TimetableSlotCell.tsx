@@ -80,8 +80,8 @@ export function TimetableSlotCell({
       <div
         className="relative rounded-xl transition-all overflow-hidden"
         style={{
-          backgroundColor: withOpacity(tintColor, 0.1),
-          border: `1px solid ${withOpacity(tintColor, 0.18)}`,
+          backgroundColor: withOpacity(tintColor, 0.18),
+          border: `1px solid ${withOpacity(tintColor, 0.28)}`,
           opacity: cardOpacity,
           cursor: isEditMode ? 'pointer' : 'default',
           minHeight: '60px',
@@ -114,7 +114,7 @@ export function TimetableSlotCell({
               className="inline-block text-[9px] font-medium rounded-full mt-1.5 leading-tight"
               style={{
                 color: text.heading,
-                backgroundColor: withOpacity(tintColor, 0.15),
+                backgroundColor: withOpacity(tintColor, 0.22),
                 padding: '1px 6px',
               }}
             >
