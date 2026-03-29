@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react'
-import { Check, Clock } from 'lucide-react'
+import { Check, Clock, Send } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { text, border, accent, background, baseColors, status as statusColors, darken, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
@@ -148,6 +148,19 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
             {pendingAmount > 0 ? `₹${pendingAmount.toLocaleString('en-IN')} pending` : 'All clear'}
           </span>
         </div>
+
+        {/* Send Reminder — only when pending */}
+        {pendingAmount > 0 && (
+          <button
+            type="button"
+            onClick={() => toast.success(`Reminder sent to ${student.studentName}'s guardian`, { description: `₹${pendingAmount.toLocaleString('en-IN')} pending via SMS & Email` })}
+            className="flex items-center gap-1.5 mt-4 text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-70"
+            style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity(baseColors.heading, 0.3) }}
+          >
+            <Send className="w-3 h-3" />
+            Send Payment Reminder
+          </button>
+        )}
       </div>
 
       <div style={{ marginLeft: spacing['8'], marginRight: spacing['8'] }}><Separator /></div>
