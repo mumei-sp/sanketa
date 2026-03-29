@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { text, background, border } from '@/theme/colors'
+import { text, background, border, accent } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { TimetableSlotCell } from './TimetableSlotCell'
 import { resolveScheduleForDay } from '../utils/timetable-helpers'
@@ -17,11 +17,10 @@ interface TimetableGridProps {
 }
 
 /**
- * Card-based timetable grid.
+ * Bento-style timetable grid.
  *
- * Each slot is a white card with colored left border accent per subject.
- * Break rows are full-width muted bars.
- * Period labels in a sticky left column.
+ * Subject slots are rounded colored cards. Break rows are pill badges.
+ * Period labels are compact. Row gaps for breathing room.
  */
 export function TimetableGrid({
   periods,
@@ -31,6 +30,9 @@ export function TimetableGrid({
   isEditMode,
   onSlotClick,
 }: TimetableGridProps) {
+  // Track period numbering (excluding breaks)
+  let periodNumber = 0
+
   // Resolve schedule for each day
   const resolvedDays = React.useMemo(() => {
     const result: Record<number, ResolvedSlot[]> = {}
@@ -45,36 +47,34 @@ export function TimetableGrid({
       <table
         className="w-full border-separate"
         style={{
-          borderSpacing: 0,
+          borderSpacing: '0 4px',
           minWidth: `${(schoolDays.length + 1) * 140}px`,
         }}
       >
         {/* Header row — day names */}
         <thead>
           <tr>
-            {/* Period column header */}
             <th
-              className="text-left text-xs font-semibold sticky left-0 z-10 rounded-tl-lg"
+              className="text-left text-[11px] font-semibold sticky left-0 z-10 rounded-tl-lg"
               style={{
                 backgroundColor: background.tableHeader,
                 color: text.muted,
-                padding: `${spacing['3']} ${spacing['3']}`,
-                width: '110px',
-                minWidth: '110px',
+                padding: `${spacing['2.5']} ${spacing['3']}`,
+                width: '90px',
+                minWidth: '90px',
               }}
             >
               Period
             </th>
 
-            {/* Day column headers */}
             {schoolDays.map((day, idx) => (
               <th
                 key={day}
-                className={`text-center text-xs font-semibold ${idx === schoolDays.length - 1 ? 'rounded-tr-lg' : ''}`}
+                className={`text-center text-[11px] font-semibold ${idx === schoolDays.length - 1 ? 'rounded-tr-lg' : ''}`}
                 style={{
                   backgroundColor: background.tableHeader,
                   color: text.heading,
-                  padding: `${spacing['3']} ${spacing['2']}`,
+                  padding: `${spacing['2.5']} ${spacing['2']}`,
                 }}
               >
                 <span className="hidden md:inline">{DAY_LABELS[day]}</span>
@@ -84,74 +84,65 @@ export function TimetableGrid({
           </tr>
         </thead>
 
-        {/* Body — one row per period */}
         <tbody>
-          {periods.map((period, idx) => {
-            const isLast = idx === periods.length - 1
-
-            // Break rows span all columns
+          {periods.map((period) => {
+            // Break rows — pill badge centered
             if (period.isBreak) {
               return (
                 <tr key={period.id}>
                   <td
                     colSpan={schoolDays.length + 1}
-                    className={isLast ? 'rounded-b-lg' : ''}
-                    style={{
-                      backgroundColor: border.subtle,
-                      padding: `${spacing['2']} ${spacing['3']}`,
-                    }}
+                    style={{ padding: `${spacing['1']} 0` }}
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <div
-                        className="h-px flex-1"
-                        style={{ backgroundColor: border.default }}
-                      />
+                    <div className="flex items-center justify-center">
                       <span
-                        className="text-[11px] font-medium whitespace-nowrap"
-                        style={{ color: text.muted }}
+                        className="inline-flex items-center rounded-full text-[11px] font-medium whitespace-nowrap"
+                        style={{
+                          padding: `${spacing['1']} ${spacing['4']}`,
+                          backgroundColor: accent.base,
+                          color: text.heading,
+                        }}
                       >
                         {period.label} · {period.startTime} – {period.endTime}
                       </span>
-                      <div
-                        className="h-px flex-1"
-                        style={{ backgroundColor: border.default }}
-                      />
                     </div>
                   </td>
                 </tr>
               )
             }
 
+            periodNumber++
+
             return (
               <tr key={period.id}>
-                {/* Period label — sticky left */}
+                {/* Period label — compact */}
                 <td
-                  className={`sticky left-0 z-10 ${isLast ? 'rounded-bl-lg' : ''}`}
+                  className="sticky left-0 z-10"
                   style={{
                     backgroundColor: background.card,
-                    padding: `${spacing['1.5']} ${spacing['2.5']}`,
-                    borderRight: `1px solid ${border.subtle}`,
-                    width: '110px',
-                    minWidth: '110px',
+                    padding: `${spacing['2']} ${spacing['2.5']}`,
+                    width: '90px',
+                    minWidth: '90px',
                   }}
                 >
                   <div
-                    className="text-xs font-semibold leading-tight"
+                    className="text-xs font-bold leading-tight"
                     style={{ color: text.heading }}
                   >
-                    {period.label}
+                    P{periodNumber}
                   </div>
                   <div
                     className="text-[10px] leading-tight mt-0.5"
-                    style={{ color: text.muted }}
+                    style={{ color: text.muted, fontVariantNumeric: 'tabular-nums' }}
                   >
                     {period.startTime} – {period.endTime}
                   </div>
                 </td>
 
-                {/* Day cells — card-style slots */}
+                {/* Day cells */}
                 {schoolDays.map(day => {
-                  const resolved = resolvedDays[day]?.[idx]
+                  const periodIdx = periods.indexOf(period)
+                  const resolved = resolvedDays[day]?.[periodIdx]
                   if (!resolved) return <td key={day} />
 
                   return (
