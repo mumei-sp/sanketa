@@ -33,7 +33,7 @@ const MIN_WIDTH_PER_ITEM = 60
 
 const formatYAxis = (value: number) => {
   if (value >= 1000) return `₹${(value / 1000).toFixed(0)}K`
-  return `₹${value}`
+  return `₹${value.toLocaleString('en-IN')}`
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {

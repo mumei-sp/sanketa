@@ -32,9 +32,9 @@ interface ExpenseTrendChartProps {
 
 const formatYAxis = (value: number) => {
   if (value >= 1000) {
-    return `₹${value / 1000}K`
+    return `₹${(value / 1000).toLocaleString('en-IN')}K`
   }
-  return `₹${value}`
+  return `₹${value.toLocaleString('en-IN')}`
 }
 
 const CustomTooltip = ({ active, payload }: any) => {

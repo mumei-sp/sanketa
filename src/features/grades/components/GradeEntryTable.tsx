@@ -151,6 +151,7 @@ export function GradeEntryTable({
       enableSorting
       enablePagination={false}
       showToolbar={false}
+      bodyProps={{ rowClassName: 'hover:bg-accent/20' }}
     />
   )
 }

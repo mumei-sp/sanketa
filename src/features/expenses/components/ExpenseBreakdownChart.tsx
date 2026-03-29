@@ -115,7 +115,7 @@ export function ExpenseBreakdownChart({
                   <div className="min-w-0">
                     <span className="text-xs text-muted-foreground block truncate">{item.category}</span>
                     <span className="text-xs font-medium" style={{ color: baseColors.heading }}>
-                      ₹{(item.amount / 1000).toFixed(0)}K
+                      ₹{(item.amount / 1000).toLocaleString('en-IN', { maximumFractionDigits: 0 })}K
                     </span>
                     <span className="text-[10px] text-muted-foreground ml-1">{item.percentage}%</span>
                   </div>

@@ -13,6 +13,7 @@ import { spacing } from '@/config/spacing'
 import { fetchPaymentHistory } from '@/api/services/fees-collection-service'
 import { PaymentDialog } from './PaymentDialog'
 import { PAYMENT_METHOD_LABELS } from '../types'
+import { toast } from 'sonner'
 import type { FeeCollectionRecord, FeeStatus, PaymentTransaction } from '../types'
 
 // ============================================================================
@@ -73,7 +74,8 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
   const allPaid = paidCount === studentRecords.length
   const paidPercent = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) : 0
 
-  const handleMarkComplete = React.useCallback(() => {
+  const handleMarkComplete = React.useCallback((txn: PaymentTransaction) => {
+    toast.success(`Payment recorded for ${txn.feeCategory}`)
     onDataChanged()
     loadHistory()
   }, [onDataChanged, loadHistory])

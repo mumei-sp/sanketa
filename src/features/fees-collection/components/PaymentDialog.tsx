@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { text, border, accent, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { markAsPaid } from '@/api/services/fees-collection-service'
+import { toast } from 'sonner'
 import type { FeeCollectionRecord, PaymentMethod, PaymentTransaction, FeeCategory } from '../types'
 import { PAYMENT_METHOD_LABELS } from '../types'
 
@@ -65,6 +66,7 @@ export function PaymentDialog({ open, onOpenChange, record, onComplete }: Paymen
         paidDate: formattedDate,
         notes: notes.trim() || undefined,
       })
+      toast.success(`Marked as paid — ${record.feeCategory}`)
       onComplete(txn)
       onOpenChange(false)
     } catch (err) {

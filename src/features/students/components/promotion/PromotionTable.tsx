@@ -149,6 +149,7 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
       enableSorting
       enablePagination={false}
       showToolbar={false}
+      bodyProps={{ rowClassName: 'hover:bg-accent/20' }}
     />
   )
 }

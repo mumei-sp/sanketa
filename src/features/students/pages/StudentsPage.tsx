@@ -3,6 +3,7 @@ import { StudentsTable } from '../components/StudentsTable'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
 import { fetchStudents, createStudent } from '@/api/services/student-service'
 import { generateCsv, downloadCsv } from '@/lib/csv'
+import { toast } from 'sonner'
 import type { Student } from '@/features/students/types'
 import { Tile, TileWrapper } from '@/components/tile'
 import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart'
@@ -89,6 +90,7 @@ export function StudentsPage() {
     // Refresh student list
     const updated = await fetchStudents()
     setStudents(updated)
+    toast.success(`${rows.length} students imported`)
   }, [])
 
   const handleExport = React.useCallback(() => {

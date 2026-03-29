@@ -79,7 +79,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="rounded-md border bg-white px-2 py-1.5 shadow-sm">
         <p className="text-badge text-heading">
-          {`${payload[0].payload.day}: ${payload[0].value.toLocaleString()}`}
+          {`${payload[0].payload.day}: ${payload[0].value.toLocaleString('en-IN')}`}
         </p>
       </div>
     )
@@ -99,7 +99,7 @@ const CustomActiveBar = (props: any) => {
   if (height <= 0) return <g />
 
   // Calculate label width based on value length
-  const valueText = value?.toLocaleString() || ''
+  const valueText = value?.toLocaleString('en-IN') || ''
   const labelWidth = Math.max(28, valueText.length * 7 + 8)
   const labelX = x + width / 2 - labelWidth / 2
   const labelY = y - 28 // Position higher to avoid clipping

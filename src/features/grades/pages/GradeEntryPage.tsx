@@ -11,10 +11,12 @@
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, FileEdit } from 'lucide-react'
+import { toast } from 'sonner'
 import { colors, darken, baseColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
+import { Skeleton } from '@/components/ui/skeleton'
 import { GradeEntryTable } from '../components/GradeEntryTable'
 import { GradeEntryCards } from '../components/GradeEntryCards'
 import { GradeSummaryBar } from '../components/GradeSummaryBar'
@@ -122,6 +124,7 @@ export function GradeEntryPage() {
     try {
       const sub = await saveGradeDraft(selectedClass, selectedExam, selectedSubject, entries)
       setExistingSubmission(sub)
+      toast.success('Draft saved')
     } catch (err) {
       console.error('Failed to save draft:', err)
     } finally {
@@ -134,6 +137,7 @@ export function GradeEntryPage() {
     try {
       const sub = await submitGrades(selectedClass, selectedExam, selectedSubject, entries)
       setExistingSubmission(sub)
+      toast.success('Grades submitted')
     } catch (err) {
       console.error('Failed to submit grades:', err)
     } finally {
@@ -268,8 +272,18 @@ export function GradeEntryPage() {
         {/* ═══ CONTENT ═══ */}
         {isLoading ? (
           <Tile id="grade-loading" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
-            <div className="flex items-center justify-center py-16">
-              <span className="text-sm text-text-muted">Loading grades...</span>
+            <div className="space-y-4">
+              {/* Toolbar skeleton */}
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-[160px]" />
+                <Skeleton className="h-8 w-[120px]" />
+              </div>
+              {/* Table header skeleton */}
+              <Skeleton className="h-10 w-full rounded" />
+              {/* Row skeletons */}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded" />
+              ))}
             </div>
           </Tile>
         ) : entries.length === 0 ? (

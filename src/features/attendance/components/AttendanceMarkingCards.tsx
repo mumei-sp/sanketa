@@ -66,16 +66,13 @@ export function AttendanceMarkingCards({
                 <img
                   src={student.avatarUrl}
                   alt={student.name}
-                  className="w-9 h-9 rounded-full object-cover"
-                  style={{ backgroundColor: colors.accent.base }}
+                  className="rounded-full object-cover flex-shrink-0 overflow-hidden"
+                  style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base }}
                 />
               ) : (
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold"
-                  style={{
-                    backgroundColor: colors.accent.base,
-                    color: colors.text.heading,
-                  }}
+                  className="rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden"
+                  style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base, color: colors.text.heading }}
                 >
                   {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </div>

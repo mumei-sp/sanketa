@@ -38,7 +38,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="rounded-md border bg-white px-2 py-1.5 shadow-sm">
         <p className="text-badge text-heading">{`Year: ${payload[0].payload.year}`}</p>
-        <p className="text-xs text-heading">{`Enrollment: ${payload[0].value.toLocaleString()}`}</p>
+        <p className="text-xs text-heading">{`Enrollment: ${payload[0].value.toLocaleString('en-IN')}`}</p>
       </div>
     )
   }
