@@ -978,7 +978,7 @@ export function SchoolSettingsPanel() {
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className={`text-sm relative${hasChanges ? ' animate-pulse' : ''}`}
+                  className="text-sm relative"
                   style={{
                     backgroundColor: hasChanges ? text.heading : border.default,
                     color: background.card,
