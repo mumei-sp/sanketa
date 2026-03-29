@@ -100,7 +100,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="rounded-md border bg-white px-2 py-1.5">
         <p className="text-badge text-heading">
-          {`${payload[0].payload.day}: ${payload[0].value.toLocaleString()}`}
+          {`${payload[0].payload.day}: ${payload[0].value.toLocaleString('en-IN')}`}
         </p>
       </div>
     )
@@ -125,7 +125,7 @@ const CustomLabel = ({ x, y, width, value }: any) => {
       fontWeight={fontWeights.medium}
       dy={-8}
     >
-      {value.toLocaleString()}
+      {value.toLocaleString('en-IN')}
     </text>
   )
 }

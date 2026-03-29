@@ -156,6 +156,7 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
         enableSorting
         enablePagination={false}
         showToolbar={false}
+        bodyProps={{ rowClassName: 'hover:bg-accent/20' }}
       />
 
       {/* Summary footer */}
