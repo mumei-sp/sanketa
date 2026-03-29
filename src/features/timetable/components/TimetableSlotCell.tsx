@@ -1,4 +1,4 @@
-import { text, border, background, status } from '@/theme/colors'
+import { text, border, background, status, accent, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { getSubjectById } from '@/data/mocks/timetable'
 import type { TimetableSlot, TimetableException } from '../types'
@@ -15,10 +15,10 @@ interface TimetableSlotCellProps {
 }
 
 /**
- * Individual card cell in the timetable grid.
+ * Bento-style card cell in the timetable grid.
  *
- * Design: White card with colored left border (3px) per subject,
- * rounded corners, subtle shadow. Break rows are muted full-width bars.
+ * Each subject slot is a rounded card tinted with its subject color.
+ * No left border accent — the full card background carries the color.
  */
 export function TimetableSlotCell({
   slot,
@@ -30,7 +30,7 @@ export function TimetableSlotCell({
   isEditMode,
   onClick,
 }: TimetableSlotCellProps) {
-  // Break cells — rendered by parent as colSpan, this handles individual
+  // Break cells
   if (isBreak) {
     return (
       <td
@@ -44,103 +44,95 @@ export function TimetableSlotCell({
     )
   }
 
-  // Empty slot (no class assigned)
+  // Empty slot
   if (!slot && !isExtraClass) {
     return (
-      <td style={{ padding: `${spacing['1']}` }}>
+      <td style={{ padding: `${spacing['0.5']}` }}>
         <div
-          className="flex items-center justify-center rounded-lg h-full min-h-[56px] transition-all"
+          className="flex items-center justify-center rounded-xl h-full min-h-[60px] transition-all"
           style={{
-            backgroundColor: isEditMode ? background.card : 'transparent',
-            border: isEditMode ? `1.5px dashed ${border.default}` : undefined,
+            backgroundColor: isEditMode ? withOpacity(accent.base, 0.15) : 'transparent',
+            border: isEditMode ? `1.5px dashed ${accent.base}` : undefined,
             cursor: isEditMode ? 'pointer' : 'default',
             color: text.muted,
           }}
           onClick={isEditMode ? onClick : undefined}
         >
           {isEditMode && (
-            <span className="text-xs font-medium">+ Add</span>
+            <span className="text-[11px] font-medium" style={{ color: text.heading }}>+ Add</span>
           )}
         </div>
       </td>
     )
   }
 
-  // Subject color for left border accent
-  const subjectColor = slot ? (getSubjectById(slot.subjectId)?.color ?? border.default) : border.default
+  // Subject color for card tint
+  const subjectColor = slot ? (getSubjectById(slot.subjectId)?.color ?? accent.base) : accent.base
 
-  // Card styling based on state
-  let cardOpacity = 1
-  let leftBorderColor = subjectColor
+  // Opacity for cancelled
+  const cardOpacity = isCancelled ? 0.35 : 1
 
-  if (isCancelled) {
-    cardOpacity = 0.45
-    leftBorderColor = status.danger.base
-  } else if (isSubstitution) {
-    leftBorderColor = text.heading
-  } else if (isExtraClass) {
-    leftBorderColor = text.heading
-  }
+  // Tint color — substitutions and extra classes use heading color
+  const tintColor = (isSubstitution || isExtraClass) ? text.heading : subjectColor
 
   return (
-    <td style={{ padding: `${spacing['1']}` }}>
+    <td style={{ padding: `${spacing['0.5']}` }}>
       <div
-        className="relative rounded-lg shadow-sm transition-all hover:shadow-md overflow-hidden"
+        className="relative rounded-xl transition-all overflow-hidden"
         style={{
-          backgroundColor: background.card,
-          outline: `1px solid ${border.subtle}`,
+          backgroundColor: withOpacity(tintColor, 0.1),
+          border: `1px solid ${withOpacity(tintColor, 0.18)}`,
           opacity: cardOpacity,
           cursor: isEditMode ? 'pointer' : 'default',
-          minHeight: '56px',
+          minHeight: '60px',
         }}
         onClick={isEditMode ? onClick : undefined}
       >
-        {/* Left accent border */}
-        <div
-          className="absolute left-0 top-0 bottom-0 rounded-l-lg"
-          style={{ width: '3px', backgroundColor: leftBorderColor }}
-        />
-      <div style={{ padding: `${spacing['2']} ${spacing['2.5']}`, paddingLeft: `${spacing['3']}` }}>
-        {/* Subject name */}
-        <div
-          className="text-xs font-semibold truncate leading-tight"
-          style={{
-            color: text.heading,
-            textDecoration: isCancelled ? 'line-through' : undefined,
-          }}
-        >
-          {slot?.subjectName ?? exception?.newSubject ?? ''}
-        </div>
-
-        {/* Teacher name */}
-        <div
-          className="text-[10px] truncate mt-1 leading-tight"
-          style={{ color: text.body }}
-        >
-          {slot?.teacherName ?? exception?.newTeacherName ?? ''}
-        </div>
-
-        {/* Room */}
-        {slot?.room && (
+        <div style={{ padding: `${spacing['2.5']} ${spacing['3']}` }}>
+          {/* Subject name */}
           <div
-            className="text-[10px] truncate mt-0.5 leading-tight"
-            style={{ color: text.muted }}
-          >
-            {slot.room}
-          </div>
-        )}
-
-        {/* Exception indicator dot */}
-        {(isSubstitution || isExtraClass || isCancelled) && (
-          <div
-            className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+            className="text-[13px] font-semibold truncate leading-tight"
             style={{
-              backgroundColor: isCancelled ? status.danger.base : text.heading,
+              color: text.heading,
+              textDecoration: isCancelled ? 'line-through' : undefined,
             }}
-            title={exception?.reason}
-          />
-        )}
-      </div>
+          >
+            {slot?.subjectName ?? exception?.newSubject ?? ''}
+          </div>
+
+          {/* Teacher name */}
+          <div
+            className="text-[11px] truncate leading-tight"
+            style={{ color: text.muted, marginTop: '3px' }}
+          >
+            {slot?.teacherName ?? exception?.newTeacherName ?? ''}
+          </div>
+
+          {/* Room — pill badge */}
+          {slot?.room && (
+            <span
+              className="inline-block text-[9px] font-medium rounded-full mt-1.5 leading-tight"
+              style={{
+                color: text.heading,
+                backgroundColor: withOpacity(tintColor, 0.15),
+                padding: '1px 6px',
+              }}
+            >
+              {slot.room}
+            </span>
+          )}
+
+          {/* Exception indicator dot */}
+          {(isSubstitution || isExtraClass || isCancelled) && (
+            <div
+              className="absolute top-2 right-2 w-2 h-2 rounded-full"
+              style={{
+                backgroundColor: isCancelled ? status.danger.base : text.heading,
+              }}
+              title={exception?.reason}
+            />
+          )}
+        </div>
       </div>
     </td>
   )
