@@ -6,6 +6,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Logo } from './Logo'
 import { useIsDesktop } from '@/hooks/use-mobile'
 import { Search, Settings, Bell, Menu, SlidersHorizontal } from 'lucide-react'
@@ -127,7 +128,9 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
         {/* No separate desktop header — TopActions render inside PageHeader via context */}
         <TopActionsContext.Provider value={<TopActions />}>
           <main className="flex flex-1 flex-col gap-4 p-4 overflow-auto min-h-0">
-            <Outlet />
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </main>
         </TopActionsContext.Provider>
       </SidebarInset>

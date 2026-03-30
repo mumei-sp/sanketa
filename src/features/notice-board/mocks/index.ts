@@ -15,6 +15,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
       'The official midterm exam timetable for Grades 7, 8, and 9 has been released. Students are advised to check their class schedules and prepare accordingly. Exams will begin on March 25, 2035 and continue until March 28, 2035. Detailed subject-wise schedules are available in the attachments below.',
     attachments: [{ name: 'Midterm_Timetable_2035.pdf', type: 'PDF', size: '2.4 MB' }],
     views: 542,
+    pinned: true,
   },
   {
     id: 'nb-2',
@@ -123,6 +124,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
       'The annual inter-house sports competition will be held from March 15-18, 2035. Students interested in participating should register with their house captains.',
     attachments: [],
     views: 487,
+    pinned: true,
   },
   {
     id: 'nb-9',

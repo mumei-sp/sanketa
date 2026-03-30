@@ -1,4 +1,4 @@
-import { Calendar, Users } from 'lucide-react'
+import { Calendar, Pin, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { baseColors } from '@/theme/colors'
 import type { NoticeBoardEntry, NoticeStatus } from '../types'
@@ -25,10 +25,16 @@ export function NoticeCard({ notice, isSelected, onClick }: NoticeCardProps) {
       type="button"
       onClick={() => onClick(notice)}
       className={cn(
-        'w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50',
+        'relative w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50',
         isSelected && 'ring-2 ring-[#FECCFD] bg-[#FDFAFE]',
       )}
     >
+      {notice.pinned && (
+        <Pin
+          className="absolute top-2 right-2 size-4 fill-current"
+          style={{ color: baseColors.heading }}
+        />
+      )}
       {/* Thumbnail */}
       <img
         src={notice.thumbnail}

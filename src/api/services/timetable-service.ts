@@ -95,6 +95,15 @@ export async function fetchExceptions(
 }
 
 /**
+ * Fetch all class timetables (summary — used for "duplicate from" feature).
+ * Replace with: GET /api/timetable
+ */
+export async function fetchAllClassTimetables(): Promise<ClassTimetable[]> {
+  await delay(100, 300)
+  return classTimetables.map(t => ({ ...t, slots: [...t.slots] }))
+}
+
+/**
  * Create an exception record.
  * Replace with: POST /api/timetable/exceptions
  */

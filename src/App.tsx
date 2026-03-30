@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { SchoolConfigProvider } from './config/SchoolConfigContext'
 import { Toaster } from './components/ui/sonner'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { AppLayout } from './components/layout'
 import { generateRoutesFromNavigation } from './config/routes'
 import { AuthGuard, GuestGuard } from './features/auth/components/RouteGuards'
@@ -12,6 +13,7 @@ import AddTeacher from './features/teachers/pages/AddTeacher'
 import EditTeacher from './features/teachers/pages/EditTeacher'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import NotFound from './pages/NotFound'
 
 const router = createBrowserRouter([
   // ── Auth routes (guest only — redirects to / if already logged in) ──
@@ -67,19 +69,21 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ── Fallback ──
+  // ── 404 ──
   {
     path: '*',
-    element: <Navigate to="/login" replace />,
+    element: <NotFound />,
   },
 ])
 
 function App() {
   return (
-    <SchoolConfigProvider>
-      <RouterProvider router={router} />
-      <Toaster />
-    </SchoolConfigProvider>
+    <ErrorBoundary>
+      <SchoolConfigProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </SchoolConfigProvider>
+    </ErrorBoundary>
   )
 }
 

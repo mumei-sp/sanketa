@@ -96,6 +96,10 @@ export default function NoticeBoard() {
     }
 
     const sorted = [...filtered].sort((a, b) => {
+      // Pinned notices always come first
+      if (a.pinned && !b.pinned) return -1
+      if (!a.pinned && b.pinned) return 1
+
       if (sortOption === 'latest') {
         return b.id.localeCompare(a.id)
       }

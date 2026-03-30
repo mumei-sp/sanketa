@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CheckCircle, AlertTriangle, UserCheck, History } from 'lucide-react'
+import { CheckCircle, AlertTriangle, UserCheck, History, Download } from 'lucide-react'
 import { colors, darken, baseColors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
@@ -14,6 +14,7 @@ import { DailyAttendanceSkeleton, DailyAttendanceHistorySkeleton } from '../comp
 import { Tile } from '@/components/tile'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
 import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
+import { generateCsv, downloadCsv } from '@/lib/csv'
 import type { MarkableAttendanceStatus, AttendanceEntry } from '../types'
 
 type ViewMode = 'mark' | 'history'
@@ -159,6 +160,35 @@ export function DailyAttendancePage() {
   const entriesForSummary: Record<string, MarkableAttendanceStatus | undefined> = {}
   Object.entries(entries).forEach(([id, e]) => { entriesForSummary[id] = e.status })
 
+  const handleExport = React.useCallback(() => {
+    if (viewMode === 'mark') {
+      const exportData = roster.map(student => ({
+        rollNumber: student.rollNumber,
+        name: student.name,
+        status: entries[student.id]?.status ?? 'Not Marked',
+        note: entries[student.id]?.note ?? '',
+      }))
+      const csv = generateCsv(exportData, [
+        { key: 'rollNumber', header: 'Roll Number' },
+        { key: 'name', header: 'Student Name' },
+        { key: 'status', header: 'Status' },
+        { key: 'note', header: 'Note' },
+      ])
+      downloadCsv(csv, `attendance-${selectedClass}-${selectedDate}.csv`)
+    } else {
+      const csv = generateCsv(historyRows, [
+        { key: 'date', header: 'Date' },
+        { key: 'present', header: 'Present' },
+        { key: 'late', header: 'Late' },
+        { key: 'absent', header: 'Absent' },
+        { key: 'total', header: 'Total' },
+        { key: 'submittedBy', header: 'Submitted By' },
+        { key: 'isSubmitted', header: 'Submitted' },
+      ])
+      downloadCsv(csv, `attendance-history-${selectedClass}-${histYear}-${String(histMonth + 1).padStart(2, '0')}.csv`)
+    }
+  }, [viewMode, roster, entries, selectedClass, selectedDate, historyRows, histYear, histMonth])
+
   const breadcrumbs = React.useMemo(
     () => getAttendanceBreadcrumbs('details', 'Daily Attendance'),
     [],
@@ -228,6 +258,22 @@ export function DailyAttendancePage() {
             )}
           </div>
 
+          <div className="flex items-center gap-2">
+          {/* Export */}
+          <button
+            type="button"
+            onClick={handleExport}
+            className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80 border"
+            style={{
+              borderColor: colors.border.default,
+              color: colors.text.heading,
+              backgroundColor: colors.background.card,
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export
+          </button>
+
           {/* View toggle */}
           <div
             className="flex items-center rounded-md border overflow-hidden"
@@ -257,6 +303,7 @@ export function DailyAttendancePage() {
               <History className="w-3.5 h-3.5" />
               History
             </button>
+          </div>
           </div>
         </div>
 

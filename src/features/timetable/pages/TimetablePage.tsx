@@ -6,7 +6,7 @@ import { spacing } from '@/config/spacing'
 import { border } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { useAppToast } from '@/hooks/use-app-toast'
-import { fetchClassSections } from '@/api/services/timetable-service'
+import { fetchClassSections, fetchAllClassTimetables, fetchClassTimetable } from '@/api/services/timetable-service'
 import { useClassTimetable } from '../hooks/use-class-timetable'
 import { TimetableGrid } from '../components/TimetableGrid'
 import { TimetableToolbar } from '../components/TimetableToolbar'
@@ -36,6 +36,23 @@ export function TimetablePage() {
       }
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track which classes have timetables (for "Copy from..." feature)
+  const [classesWithTimetables, setClassesWithTimetables] = React.useState<
+    { classSectionId: string; label: string }[]
+  >([])
+
+  React.useEffect(() => {
+    fetchAllClassTimetables().then(timetables => {
+      const withLabels = timetables
+        .map(t => {
+          const cls = classSections.find(c => c.id === t.classSectionId)
+          return cls ? { classSectionId: t.classSectionId, label: cls.label } : null
+        })
+        .filter(Boolean) as { classSectionId: string; label: string }[]
+      setClassesWithTimetables(withLabels)
+    })
+  }, [classSections])
 
   // Timetable data
   const { timetable, isLoading, updateSlots, isSaving } = useClassTimetable(selectedClassId)
@@ -94,6 +111,25 @@ export function TimetablePage() {
     setIsEditMode(prev => !prev)
   }, [isEditMode, editingSlots, updateSlots, showSuccess, showError])
 
+  const handleCopyFrom = React.useCallback(async (sourceClassId: string) => {
+    try {
+      const sourceTimetable = await fetchClassTimetable(sourceClassId)
+      if (sourceTimetable) {
+        setEditingSlots([...sourceTimetable.slots])
+        const sourceLabel = classSections.find(c => c.id === sourceClassId)?.label ?? ''
+        showSuccess('Timetable copied', { description: `Loaded slots from Class ${sourceLabel}. Save to apply.` })
+      }
+    } catch {
+      showError('Failed to copy timetable')
+    }
+  }, [classSections, showSuccess, showError])
+
+  // Classes available to copy from (exclude current class)
+  const copyableSources = React.useMemo(
+    () => classesWithTimetables.filter(c => c.classSectionId !== selectedClassId),
+    [classesWithTimetables, selectedClassId],
+  )
+
   const handlePrint = React.useCallback(() => {
     window.print()
   }, [])
@@ -131,6 +167,8 @@ export function TimetablePage() {
           onToggleEditMode={handleToggleEditMode}
           onPrint={handlePrint}
           isSaving={isSaving}
+          copyableSources={copyableSources}
+          onCopyFrom={handleCopyFrom}
         />
 
         {/* Divider */}

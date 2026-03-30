@@ -31,4 +31,5 @@ export interface NoticeBoardEntry {
   content: string
   attachments: NoticeAttachment[]
   views: number
+  pinned?: boolean
 }

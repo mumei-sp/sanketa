@@ -1,7 +1,13 @@
-import { Pencil, Eye, Printer, GraduationCap } from 'lucide-react'
+import * as React from 'react'
+import { Pencil, Eye, Printer, GraduationCap, Copy } from 'lucide-react'
 import { text, border, background, accent } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import type { ClassSection } from '../types'
+
+interface CopySource {
+  classSectionId: string
+  label: string
+}
 
 interface TimetableToolbarProps {
   classSections: ClassSection[]
@@ -11,6 +17,10 @@ interface TimetableToolbarProps {
   onToggleEditMode: () => void
   onPrint?: () => void
   isSaving?: boolean
+  /** Classes that have timetables available to copy from (excluding current class) */
+  copyableSources?: CopySource[]
+  /** Called when user selects a class to copy timetable from */
+  onCopyFrom?: (classSectionId: string) => void
 }
 
 /**
@@ -26,7 +36,23 @@ export function TimetableToolbar({
   onToggleEditMode,
   onPrint,
   isSaving,
+  copyableSources = [],
+  onCopyFrom,
 }: TimetableToolbarProps) {
+  const [showCopyDropdown, setShowCopyDropdown] = React.useState(false)
+  const copyRef = React.useRef<HTMLDivElement>(null)
+
+  // Close dropdown on outside click
+  React.useEffect(() => {
+    if (!showCopyDropdown) return
+    function handleClick(e: MouseEvent) {
+      if (copyRef.current && !copyRef.current.contains(e.target as Node)) {
+        setShowCopyDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showCopyDropdown])
   return (
     <div
       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap"
@@ -81,6 +107,56 @@ export function TimetableToolbar({
             <Printer className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Print</span>
           </button>
+        )}
+
+        {/* Copy from another class — only in edit mode */}
+        {isEditMode && copyableSources.length > 0 && onCopyFrom && (
+          <div ref={copyRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setShowCopyDropdown(prev => !prev)}
+              className="flex items-center gap-1.5 text-xs font-medium rounded-lg px-3 py-2 transition-all cursor-pointer hover:opacity-80"
+              style={{
+                borderColor: border.default,
+                color: text.muted,
+                backgroundColor: background.card,
+                border: `1px solid ${border.default}`,
+              }}
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Copy from...</span>
+            </button>
+            {showCopyDropdown && (
+              <div
+                className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-lg shadow-lg py-1"
+                style={{
+                  backgroundColor: background.card,
+                  border: `1px solid ${border.default}`,
+                }}
+              >
+                {copyableSources.map(src => (
+                  <button
+                    key={src.classSectionId}
+                    type="button"
+                    className="w-full text-left text-xs px-3 py-2 cursor-pointer hover:opacity-80 transition-all"
+                    style={{ color: text.body }}
+                    onMouseEnter={e => {
+                      ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = accent.base
+                    }}
+                    onMouseLeave={e => {
+                      ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                    }}
+                    onClick={() => {
+                      onCopyFrom(src.classSectionId)
+                      setShowCopyDropdown(false)
+                    }}
+                  >
+                    Class {src.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Edit/View toggle */}
