@@ -136,11 +136,19 @@ export function EnrollmentTrendsChart({
     }
   }, [data, timeRange])
 
-  // Calculate the rounded max value for Y-axis domain
+  // Calculate rounded min/max values for Y-axis domain
   const yAxisMax = React.useMemo(() => {
     if (!filteredData || filteredData.length === 0) return 1000
     const maxEnrollment = Math.max(...filteredData.map(d => d.enrollment))
     return calculateRoundMax(maxEnrollment)
+  }, [filteredData])
+
+  const yAxisMin = React.useMemo(() => {
+    if (!filteredData || filteredData.length === 0) return 0
+    const minEnrollment = Math.min(...filteredData.map(d => d.enrollment))
+    // Round down to nearest nice number, with some padding below
+    const magnitude = Math.pow(10, Math.floor(Math.log10(Math.max(minEnrollment, 1))))
+    return Math.floor(minEnrollment / magnitude) * magnitude
   }, [filteredData])
 
   if (isLoading) {
@@ -154,14 +162,14 @@ export function EnrollmentTrendsChart({
         shadowed={false}
         style={{ height: '100%' }}
       >
-        <Card className="pt-6 pb-0 h-full">
+        <Card className="pt-4 pb-0 h-full">
           <CardHeader>
             <h3 className="text-section-title">Enrollment Trends</h3>
             <CardAction>
               <Skeleton className="h-9 w-[110px]" />
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-2 pb-4">
+          <CardContent className="pt-2 pb-2">
             <Skeleton className="h-[170px] w-full" />
           </CardContent>
         </Card>
@@ -179,7 +187,7 @@ export function EnrollmentTrendsChart({
       shadowed={false}
       style={{ height: '100%' }}
     >
-      <Card className="pt-6 pb-0 h-full">
+      <Card className="pt-4 pb-0 h-full">
         <CardHeader>
           <h3 className="text-section-title">Enrollment Trends</h3>
           <CardAction>
@@ -195,7 +203,7 @@ export function EnrollmentTrendsChart({
             </Select>
           </CardAction>
         </CardHeader>
-        <CardContent className="px-4 pt-0 pb-4">
+        <CardContent className="px-4 pt-0 pb-2">
           <div className="chart-scale">
             <ResponsiveContainer width="100%" height={170}>
               <AreaChart data={filteredData} margin={{ top: 10, right: 0, left: 4, bottom: 8 }}>
@@ -223,7 +231,7 @@ export function EnrollmentTrendsChart({
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={formatYAxis}
-                  domain={[0, yAxisMax]}
+                  domain={[yAxisMin, yAxisMax]}
                   tickCount={5}
                 />
                 <Tooltip content={<CustomTooltip />} cursor={false} />
