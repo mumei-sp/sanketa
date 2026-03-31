@@ -397,34 +397,34 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
 
         {/* ── Footer ── */}
         <SheetFooter
+          className="flex-row items-center justify-end"
           style={{
-            padding: `${spacing['4']} ${spacing['6']}`,
+            padding: `${spacing['3']} ${spacing['6']}`,
             borderTop: `1px solid ${border.subtle}`,
             flexShrink: 0,
-            display: 'flex',
-            justifyContent: 'flex-end',
             gap: spacing['2'],
           }}
         >
           {step === 'upload' && (
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           )}
           {step === 'preview' && (
             <>
-              <Button variant="outline" onClick={() => setStep('upload')}>Back</Button>
+              <Button size="sm" variant="outline" onClick={() => setStep('upload')}>Back</Button>
               <Button
+                size="sm"
                 onClick={handleImport}
                 disabled={isImporting || (hasErrors && validationErrors.some(e => e.includes('required') || e.includes('Missing')))}
                 className="gap-1.5"
                 style={{ backgroundColor: text.heading, color: background.card }}
               >
-                <Upload className="w-3.5 h-3.5" />
+                <Upload className="w-3 h-3" />
                 {isImporting ? 'Importing...' : `Import ${parseResult?.rows.length ?? 0} Records`}
               </Button>
             </>
           )}
           {step === 'done' && (
-            <Button onClick={() => onOpenChange(false)} style={{ backgroundColor: text.heading, color: background.card }}>
+            <Button size="sm" onClick={() => onOpenChange(false)} style={{ backgroundColor: text.heading, color: background.card }}>
               Done
             </Button>
           )}
