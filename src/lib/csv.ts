@@ -1,9 +1,12 @@
 /**
- * CSV utilities — zero-dependency CSV parsing, generation, and export.
+ * CSV utilities — powered by Papa Parse for robust parsing and generation.
  *
- * Uses native browser APIs (FileReader, Blob, URL.createObjectURL).
- * CSV files are universally openable in Excel, Google Sheets, etc.
+ * Same public API as before, so all existing call sites are unaffected.
+ * Papa Parse handles edge cases: newlines inside quotes, BOM stripping,
+ * CRLF/LF mixed line endings, malformed fields with proper error messages.
  */
+
+import Papa from 'papaparse'
 
 // ============================================================================
 // Types
@@ -19,72 +22,62 @@ export interface CsvParseResult {
 // Parse CSV
 // ============================================================================
 
-/** Parse a CSV string into headers + rows */
+/** Parse a CSV string into headers + rows using Papa Parse */
 export function parseCsv(text: string): CsvParseResult {
   const errors: string[] = []
-  const lines = text.split(/\r?\n/).filter(line => line.trim() !== '')
 
-  if (lines.length === 0) {
+  if (!text.trim()) {
     return { headers: [], rows: [], errors: ['File is empty'] }
   }
 
-  const headers = parseCsvLine(lines[0]).map(h => h.trim())
+  const result = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    skipEmptyLines: true,
+    dynamicTyping: false,       // keep everything as string — we validate types ourselves
+    transformHeader: h => h.trim(),
+    transform: v => v.trim(),
+  })
+
+  // Surface Papa Parse errors
+  result.errors.forEach(e => {
+    errors.push(`Row ${(e.row ?? 0) + 1}: ${e.message}`)
+  })
+
+  const headers = result.meta.fields ?? []
 
   if (headers.length === 0) {
-    return { headers: [], rows: [], errors: ['No headers found'] }
+    return { headers: [], rows: [], errors: ['No headers found in file'] }
   }
 
-  const rows: Record<string, string>[] = []
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCsvLine(lines[i])
-    if (values.length !== headers.length) {
-      errors.push(`Row ${i}: expected ${headers.length} columns, got ${values.length}`)
-      continue
-    }
-    const row: Record<string, string> = {}
-    headers.forEach((h, idx) => { row[h] = values[idx]?.trim() ?? '' })
-    rows.push(row)
+  return {
+    headers,
+    rows: result.data,
+    errors,
   }
-
-  return { headers, rows, errors }
 }
 
-/** Parse a single CSV line handling quoted fields */
-function parseCsvLine(line: string): string[] {
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
-
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'
-        i++
-      } else {
-        inQuotes = !inQuotes
-      }
-    } else if (ch === ',' && !inQuotes) {
-      result.push(current)
-      current = ''
-    } else {
-      current += ch
-    }
-  }
-  result.push(current)
-  return result
-}
-
-/** Read a File object as CSV text */
+/** Read a File object as CSV — Papa Parse handles BOM + encoding automatically */
 export function readFileAsCsv(file: File): Promise<CsvParseResult> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const text = reader.result as string
-      resolve(parseCsv(text))
-    }
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsText(file)
+    Papa.parse<Record<string, string>>(file, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: false,
+      transformHeader: h => h.trim(),
+      transform: v => v.trim(),
+      complete: result => {
+        const errors: string[] = []
+        result.errors.forEach(e => {
+          errors.push(`Row ${(e.row ?? 0) + 1}: ${e.message}`)
+        })
+        resolve({
+          headers: result.meta.fields ?? [],
+          rows: result.data,
+          errors,
+        })
+      },
+      error: err => reject(new Error(err.message)),
+    })
   })
 }
 
@@ -92,33 +85,28 @@ export function readFileAsCsv(file: File): Promise<CsvParseResult> {
 // Generate CSV
 // ============================================================================
 
-/** Convert an array of objects to CSV string */
+/** Convert an array of objects to CSV string using Papa Parse's unparser */
 export function generateCsv<T extends Record<string, unknown>>(
   data: T[],
   columns: { key: keyof T; header: string }[],
 ): string {
-  const headers = columns.map(c => escapeCsvField(c.header))
+  const fields = columns.map(c => c.header)
   const rows = data.map(row =>
-    columns.map(c => escapeCsvField(String(row[c.key] ?? ''))),
+    columns.reduce<Record<string, string>>((acc, c) => {
+      acc[c.header] = String(row[c.key] ?? '')
+      return acc
+    }, {}),
   )
-  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
-}
-
-/** Escape a CSV field (quote if it contains commas, quotes, or newlines) */
-function escapeCsvField(field: string): string {
-  if (field.includes(',') || field.includes('"') || field.includes('\n')) {
-    return `"${field.replace(/"/g, '""')}"`
-  }
-  return field
+  return Papa.unparse({ fields, data: rows })
 }
 
 // ============================================================================
 // Download
 // ============================================================================
 
-/** Trigger a CSV file download in the browser */
+/** Trigger a CSV file download in the browser (with UTF-8 BOM for Excel) */
 export function downloadCsv(csvContent: string, filename: string): void {
-  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }) // BOM for Excel UTF-8
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -138,11 +126,14 @@ export function generateTemplate(
   headers: string[],
   sampleRows?: string[][],
 ): string {
-  const lines = [headers.join(',')]
-  if (sampleRows) {
-    sampleRows.forEach(row => {
-      lines.push(row.map(escapeCsvField).join(','))
-    })
+  if (!sampleRows || sampleRows.length === 0) {
+    return Papa.unparse({ fields: headers, data: [] })
   }
-  return lines.join('\n')
+  const data = sampleRows.map(row =>
+    headers.reduce<Record<string, string>>((acc, h, i) => {
+      acc[h] = row[i] ?? ''
+      return acc
+    }, {}),
+  )
+  return Papa.unparse({ fields: headers, data })
 }

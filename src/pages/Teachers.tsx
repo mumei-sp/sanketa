@@ -262,8 +262,8 @@ export default function Teachers() {
     { csvHeader: 'Last Name', fieldKey: 'lastName', label: 'Last Name', required: true },
     { csvHeader: 'Teacher ID', fieldKey: 'teacherId', label: 'Teacher ID', required: true },
     { csvHeader: 'Subject', fieldKey: 'subject', label: 'Subject', required: true },
-    { csvHeader: 'Email', fieldKey: 'email', label: 'Email' },
-    { csvHeader: 'Phone', fieldKey: 'primaryPhone', label: 'Phone' },
+    { csvHeader: 'Email', fieldKey: 'email', label: 'Email', type: 'email' },
+    { csvHeader: 'Phone', fieldKey: 'primaryPhone', label: 'Phone', type: 'phone' },
   ], [])
 
   const handleImport = React.useCallback(async (rows: Record<string, string>[]) => {

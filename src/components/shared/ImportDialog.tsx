@@ -33,8 +33,51 @@ export interface ImportColumn {
   label: string
   /** Whether the field is required */
   required?: boolean
-  /** Validation function */
+  /**
+   * Built-in type validator — runs after required check, before custom validate.
+   * - email   → must match RFC-5322 simple pattern
+   * - phone   → 7–15 digits, optional leading +
+   * - date    → YYYY-MM-DD | DD/MM/YYYY | MM/DD/YYYY
+   * - number  → must be numeric
+   * - enum    → must be one of enumValues (case-insensitive)
+   */
+  type?: 'email' | 'phone' | 'date' | 'number' | 'enum'
+  /** Required when type is 'enum' — list of allowed values */
+  enumValues?: string[]
+  /** Custom validation function (runs last) */
   validate?: (value: string) => string | null
+}
+
+// ============================================================================
+// Built-in type validators
+// ============================================================================
+
+const TYPE_VALIDATORS: Record<
+  NonNullable<ImportColumn['type']>,
+  (value: string, col: ImportColumn) => string | null
+> = {
+  email: v =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+      ? null
+      : 'must be a valid email address',
+  phone: v =>
+    /^\+?\d{7,15}$/.test(v.replace(/[\s\-().]/g, ''))
+      ? null
+      : 'must be a valid phone number (7–15 digits)',
+  date: v =>
+    /^\d{4}-\d{2}-\d{2}$/.test(v) ||
+    /^\d{2}\/\d{2}\/\d{4}$/.test(v) ||
+    /^\d{2}-\d{2}-\d{4}$/.test(v)
+      ? null
+      : 'must be a valid date (YYYY-MM-DD or DD/MM/YYYY)',
+  number: v =>
+    !isNaN(Number(v)) && v.trim() !== '' ? null : 'must be a number',
+  enum: (v, col) => {
+    const allowed = col.enumValues ?? []
+    return allowed.some(a => a.toLowerCase() === v.toLowerCase())
+      ? null
+      : `must be one of: ${allowed.join(', ')}`
+  },
 }
 
 interface ImportDialogProps {
@@ -104,11 +147,26 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
     // Validate rows
     result.rows.forEach((row, idx) => {
       columns.forEach(col => {
-        if (col.required && !row[col.csvHeader]?.trim()) {
-          errors.push(`Row ${idx + 1}: "${col.csvHeader}" is required`)
+        const value = row[col.csvHeader]?.trim() ?? ''
+
+        // 1. Required check
+        if (col.required && !value) {
+          errors.push(`Row ${idx + 1}: "${col.label}" is required`)
+          return
         }
-        if (col.validate && row[col.csvHeader]) {
-          const err = col.validate(row[col.csvHeader])
+
+        // 2. Built-in type validation (only when value is present)
+        if (col.type && value) {
+          const typeErr = TYPE_VALIDATORS[col.type](value, col)
+          if (typeErr) {
+            errors.push(`Row ${idx + 1}: "${col.label}" ${typeErr}`)
+            return
+          }
+        }
+
+        // 3. Custom validation (runs last)
+        if (col.validate && value) {
+          const err = col.validate(value)
           if (err) errors.push(`Row ${idx + 1}: ${err}`)
         }
       })

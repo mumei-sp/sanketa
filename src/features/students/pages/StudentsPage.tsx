@@ -61,14 +61,24 @@ export function StudentsPage() {
     { csvHeader: 'Student ID', fieldKey: 'studentId', label: 'Student ID', required: true },
     { csvHeader: 'Class', fieldKey: 'class', label: 'Class', required: true },
     { csvHeader: 'Section', fieldKey: 'section', label: 'Section' },
-    { csvHeader: 'Date of Birth', fieldKey: 'dateOfBirth', label: 'Date of Birth' },
-    { csvHeader: 'Gender', fieldKey: 'gender', label: 'Gender' },
-    { csvHeader: 'Phone', fieldKey: 'primaryPhone', label: 'Phone' },
+    { csvHeader: 'Date of Birth', fieldKey: 'dateOfBirth', label: 'Date of Birth', type: 'date' },
+    { csvHeader: 'Gender', fieldKey: 'gender', label: 'Gender', type: 'enum', enumValues: ['Male', 'Female', 'Other'] },
+    { csvHeader: 'Phone', fieldKey: 'primaryPhone', label: 'Phone', type: 'phone' },
     { csvHeader: 'Address', fieldKey: 'address', label: 'Address' },
     { csvHeader: 'Admission Number', fieldKey: 'admissionNumber', label: 'Admission Number' },
   ], [])
 
   const handleImport = React.useCallback(async (rows: Record<string, string>[]) => {
+    // Detect duplicate Student IDs within the imported file
+    const ids = rows.map(r => r['Student ID']?.trim()).filter(Boolean)
+    const seen = new Set<string>()
+    const dupes = new Set<string>()
+    ids.forEach(id => { if (seen.has(id)) dupes.add(id); else seen.add(id) })
+    if (dupes.size > 0) {
+      toast.error(`Duplicate Student IDs in file: ${[...dupes].join(', ')}`)
+      return
+    }
+
     for (const row of rows) {
       await createStudent({
         firstName: row['First Name'] || '',
