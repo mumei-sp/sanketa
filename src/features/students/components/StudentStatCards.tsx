@@ -87,7 +87,7 @@ interface StudentStatGroupProps {
 /** 2×2 on mobile/desktop, 1×4 on tablet */
 export function StudentStatGroup({ stats }: StudentStatGroupProps) {
   return (
-    <div className="grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 lg:grid-cols-2 lg:grid-rows-2 gap-3 h-full">
+    <div className="grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 lg:grid-cols-2 lg:grid-rows-2 gap-4 h-full">
       {stats.map((stat, i) => (
         <StudentStatCard key={i} {...stat} />
       ))}

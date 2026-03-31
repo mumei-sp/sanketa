@@ -51,7 +51,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
           </CardAction>
         </CardHeader>
         <CardContent className="pt-2 pb-4">
-          <Skeleton className="h-[204px] w-full" />
+          <Skeleton className="h-[170px] w-full" />
         </CardContent>
       </Card>
     )
@@ -105,7 +105,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
 
       <CardContent className="px-4 pt-0 pb-4">
         <div className="chart-scale">
-          <ResponsiveContainer width="100%" height={204}>
+          <ResponsiveContainer width="100%" height={170}>
             <BarChart data={data} barCategoryGap="30%" barGap={3} margin={{ top: 10, right: 0, left: 4, bottom: 8 }}>
               <CartesianGrid vertical={false} stroke={border.subtle} strokeDasharray="3 3" />
               <XAxis

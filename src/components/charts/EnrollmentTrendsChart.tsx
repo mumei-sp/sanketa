@@ -161,7 +161,7 @@ export function EnrollmentTrendsChart({
             </CardAction>
           </CardHeader>
           <CardContent className="pt-2 pb-4">
-            <Skeleton className="h-[204px] w-full" />
+            <Skeleton className="h-[170px] w-full" />
           </CardContent>
         </Card>
       </Tile>
@@ -195,7 +195,7 @@ export function EnrollmentTrendsChart({
         </CardHeader>
         <CardContent className="px-4 pt-0 pb-4">
           <div className="chart-scale">
-            <ResponsiveContainer width="100%" height={204}>
+            <ResponsiveContainer width="100%" height={170}>
               <AreaChart data={filteredData} margin={{ top: 10, right: 0, left: 4, bottom: 8 }}>
                 <defs>
                   <ChartGradient id="enrollmentGradient" />
