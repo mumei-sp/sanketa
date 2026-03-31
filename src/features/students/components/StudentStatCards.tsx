@@ -26,7 +26,7 @@ export function StudentStatCard({
 }: StudentStatCardProps) {
   return (
     <Card
-      className="relative flex flex-col justify-end px-4 py-3 border-0 h-full min-h-[90px]"
+      className="relative flex flex-col justify-end px-4 py-3 border-0"
       style={{ backgroundColor: cardBg }}
     >
       {/* Icon — top-right corner */}
@@ -82,7 +82,7 @@ interface StudentStatGroupProps {
 /** 2×2 on mobile/desktop, 1×4 on tablet */
 export function StudentStatGroup({ stats }: StudentStatGroupProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3 h-full">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3 content-start">
       {stats.map((stat, i) => (
         <StudentStatCard key={i} {...stat} />
       ))}
