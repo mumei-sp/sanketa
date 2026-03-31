@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { text, accent, background, border } from '@/theme/colors'
+import { text, background, border, baseColors } from '@/theme/colors'
 import { Home, ArrowLeft } from 'lucide-react'
 
 export default function NotFound() {
@@ -20,7 +20,7 @@ export default function NotFound() {
         style={{
           fontSize: 72,
           fontWeight: 700,
-          color: accent.base,
+          color: baseColors.heading,
           margin: 0,
           lineHeight: 1,
         }}
@@ -59,7 +59,7 @@ export default function NotFound() {
             fontSize: 13,
             fontWeight: 500,
             color: 'white',
-            backgroundColor: accent.base,
+            backgroundColor: baseColors.heading,
             borderRadius: 8,
             textDecoration: 'none',
           }}
