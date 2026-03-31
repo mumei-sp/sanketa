@@ -34,6 +34,21 @@ export function StudentStatCard({ label, value, icon: Icon, iconBg, iconColor, c
   )
 }
 
+interface StudentStatGroupProps {
+  stats: StudentStatCardProps[]
+}
+
+/** 2×2 on mobile/desktop, 1×4 on tablet */
+export function StudentStatGroup({ stats }: StudentStatGroupProps) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3 h-full">
+      {stats.map((stat, i) => (
+        <StudentStatCard key={i} {...stat} />
+      ))}
+    </div>
+  )
+}
+
 /** Returns stat definitions computed from the students list */
 export function getStudentStats(students: { gradeLevel: string }[]) {
   const total = students.length

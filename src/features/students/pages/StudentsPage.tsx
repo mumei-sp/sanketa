@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { StudentsTable } from '../components/StudentsTable'
-import { StudentStatCard, getStudentStats } from '../components/StudentStatCards'
+import { StudentStatGroup, getStudentStats } from '../components/StudentStatCards'
 import { AcademicPerformanceByGradeChart } from '../components/AcademicPerformanceByGradeChart'
 import { SpecialPrograms } from '../components/SpecialPrograms'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
@@ -124,76 +124,49 @@ export function StudentsPage() {
     <>
       <TileWrapper columns={12} gap={16}>
 
-        {/* ── Row 1: 4 Stat Cards (3/12 each on desktop, 6/12 on tablet+mobile) ── */}
-        {isLoading
-          ? [0, 1, 2, 3].map(i => (
-              <Tile key={i} id={`stat-skel-${i}`} layoutMode="grid" width={{ default: 6, lg: 3 }} padding={0}>
-                <Skeleton className="h-[72px] w-full rounded-xl" />
-              </Tile>
-            ))
-          : stats.map((stat, i) => (
-              <Tile key={i} id={`student-stat-${i}`} layoutMode="grid" width={{ default: 6, lg: 3 }} padding={0}>
-                <StudentStatCard {...stat} />
-              </Tile>
-            ))
-        }
+        {/* ── Top band ── */}
 
-        {/* ── Row 2: Academic Performance (8/12) + Enrollment Trends (4/12) ── */}
-        <Tile
-          id="academic-performance-chart"
-          layoutMode="grid"
-          width={{ default: 12, lg: 8 }}
-          padding={0}
-          style={{ minHeight: 260 }}
-        >
-          {isLoadingCharts
-            ? <Skeleton className="h-full w-full rounded-xl" style={{ minHeight: 260 }} />
-            : (
-              <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
-                <AcademicPerformanceByGradeChart />
+        {/* Stat Cards Group — 2×2 on mobile/desktop, 1×4 on tablet */}
+        <Tile id="stat-group" layoutMode="grid" width={{ default: 12, lg: 3 }} padding={0}>
+          {isLoading
+            ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3">
+                {[0, 1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-[84px] w-full rounded-xl" />
+                ))}
               </div>
             )
+            : <StudentStatGroup stats={stats} />
           }
         </Tile>
 
+        {/* Academic Performance — 5/12 on desktop */}
+        <Tile
+          id="academic-performance-chart"
+          layoutMode="grid"
+          width={{ default: 12, lg: 5 }}
+          padding={0}
+        >
+          <AcademicPerformanceByGradeChart isLoading={isLoadingCharts} />
+        </Tile>
+
+        {/* Enrollment Trends — 4/12 on desktop, 6/12 on tablet */}
         <Tile
           id="enrollment-trends"
           layoutMode="grid"
-          width={{ default: 12, lg: 4 }}
+          width={{ default: 12, md: 6, lg: 4 }}
           padding={0}
-          style={{ minHeight: 260 }}
         >
           <EnrollmentTrendsChart data={enrollmentData} isLoading={isLoadingCharts} />
         </Tile>
 
-        {/* ── Row 3: Attendance Overview (8/12) + Special Programs (4/12) ── */}
-        <Tile
-          id="attendance-overview"
-          layoutMode="grid"
-          width={{ default: 12, lg: 8 }}
-          padding={0}
-          style={{ minHeight: 240 }}
-        >
-          <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
-        </Tile>
+        {/* ── Bottom band ── */}
 
-        <Tile
-          id="special-programs"
-          layoutMode="grid"
-          width={{ default: 12, lg: 4 }}
-          padding={0}
-          style={{ minHeight: 240 }}
-        >
-          <div style={cardStyle}>
-            <SpecialPrograms />
-          </div>
-        </Tile>
-
-        {/* ── Row 4: Students Table (full width) ── */}
+        {/* Students Table — 8/12 on desktop */}
         <Tile
           id="students-table"
           layoutMode="grid"
-          width={{ default: 12 }}
+          width={{ default: 12, lg: 8 }}
           background="card"
           borderRadius="lg"
           shadowed={false}
@@ -206,6 +179,21 @@ export function StudentsPage() {
             onImport={() => setImportOpen(true)}
             onExport={handleExport}
           />
+        </Tile>
+
+        {/* Right Column: Attendance Overview stacked above Special Programs — 4/12 on desktop */}
+        <Tile
+          id="right-col"
+          layoutMode="grid"
+          width={{ default: 12, lg: 4 }}
+          padding={0}
+        >
+          <div className="flex flex-col gap-4 h-full">
+            <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
+            <div style={{ ...cardStyle, flex: 1 }}>
+              <SpecialPrograms />
+            </div>
+          </div>
         </Tile>
 
       </TileWrapper>
