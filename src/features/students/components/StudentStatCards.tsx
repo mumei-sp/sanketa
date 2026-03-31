@@ -1,35 +1,76 @@
-import { GraduationCap, Users } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import { text, primary, accent, withOpacity, baseColors } from '@/theme/colors'
-import type { LucideIcon } from 'lucide-react'
+import { text, withOpacity, baseColors, accent } from '@/theme/colors'
 
 interface StudentStatCardProps {
   label: string
   value: number
-  icon: LucideIcon
+  /** Render content inside the icon circle (ReactNode: icon or text) */
+  iconContent: React.ReactNode
   iconBg: string
   iconColor: string
+  /** Card background color */
   cardBg: string
+  /** If true, card text renders white (for dark bg cards like Total Students) */
+  inverted?: boolean
 }
 
-export function StudentStatCard({ label, value, icon: Icon, iconBg, iconColor, cardBg }: StudentStatCardProps) {
+export function StudentStatCard({
+  label,
+  value,
+  iconContent,
+  iconBg,
+  iconColor,
+  cardBg,
+  inverted,
+}: StudentStatCardProps) {
   return (
     <Card
-      className="flex flex-row items-center justify-between px-4 py-3 gap-3 border-0 h-full"
+      className="relative flex flex-col justify-end px-4 py-3 border-0 h-full min-h-[90px]"
       style={{ backgroundColor: cardBg }}
     >
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <span style={{ fontSize: 12, color: text.muted }}>{label}</span>
-        <span style={{ fontSize: 22, fontWeight: 700, color: text.heading, lineHeight: 1.2 }}>
-          {value.toLocaleString('en-US')}
-        </span>
-      </div>
+      {/* Icon — top-right corner */}
       <div
-        className="flex items-center justify-center size-10 min-w-10 rounded-full flex-shrink-0"
+        className="absolute top-3 right-3 flex items-center justify-center size-9 rounded-full"
         style={{ backgroundColor: iconBg }}
       >
-        <Icon className="w-5 h-5" style={{ color: iconColor }} />
+        {typeof iconContent === 'string' ? (
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: iconColor,
+              lineHeight: 1,
+            }}
+          >
+            {iconContent}
+          </span>
+        ) : (
+          iconContent
+        )}
       </div>
+
+      {/* Number + Label — bottom-left */}
+      <span
+        style={{
+          fontSize: 26,
+          fontWeight: 700,
+          color: inverted ? '#fff' : text.heading,
+          lineHeight: 1.15,
+        }}
+      >
+        {value.toLocaleString('en-US')}
+      </span>
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 500,
+          color: inverted ? 'rgba(255,255,255,0.8)' : text.muted,
+          marginTop: 2,
+        }}
+      >
+        {label}
+      </span>
     </Card>
   )
 }
@@ -60,34 +101,35 @@ export function getStudentStats(students: { gradeLevel: string }[]) {
     {
       label: 'Total Students',
       value: total,
-      icon: GraduationCap,
-      iconBg: withOpacity(baseColors.pink, 0.55),
-      iconColor: primary.base,
-      cardBg: withOpacity(baseColors.pink, 0.15),
+      iconContent: <Users className="w-4 h-4" style={{ color: baseColors.heading }} />,
+      iconBg: withOpacity(baseColors.pink, 0.7),
+      iconColor: baseColors.heading,
+      cardBg: withOpacity(baseColors.blue, 0.35),
+      inverted: false,
     },
     {
       label: 'Grade 7 Students',
       value: grade7,
-      icon: Users,
-      iconBg: withOpacity(baseColors.blue, 0.6),
-      iconColor: accent.base,
-      cardBg: withOpacity(baseColors.blue, 0.18),
+      iconContent: '7',
+      iconBg: withOpacity(baseColors.blue, 0.5),
+      iconColor: baseColors.heading,
+      cardBg: '#ffffff',
     },
     {
       label: 'Grade 8 Students',
       value: grade8,
-      icon: Users,
-      iconBg: withOpacity(baseColors.blue, 0.6),
-      iconColor: accent.base,
-      cardBg: withOpacity(baseColors.blue, 0.18),
+      iconContent: '8',
+      iconBg: withOpacity(baseColors.blue, 0.5),
+      iconColor: baseColors.heading,
+      cardBg: '#ffffff',
     },
     {
       label: 'Grade 9 Students',
       value: grade9,
-      icon: Users,
-      iconBg: withOpacity(baseColors.blue, 0.6),
-      iconColor: accent.base,
-      cardBg: withOpacity(baseColors.blue, 0.18),
+      iconContent: '9',
+      iconBg: withOpacity(baseColors.blue, 0.5),
+      iconColor: baseColors.heading,
+      cardBg: '#ffffff',
     },
   ] as StudentStatCardProps[]
 }
