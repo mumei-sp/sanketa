@@ -29,25 +29,30 @@ export function StudentStatCard({
       className="relative flex flex-col justify-end px-4 py-3 border-0"
       style={{ backgroundColor: cardBg }}
     >
-      {/* Icon — top-right corner */}
+      {/* Icon — top-right corner: outer bg circle + inner ring + content */}
       <div
         className="absolute top-3 right-3 flex items-center justify-center size-9 rounded-full"
         style={{ backgroundColor: iconBg }}
       >
-        {typeof iconContent === 'string' ? (
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: iconColor,
-              lineHeight: 1,
-            }}
-          >
-            {iconContent}
-          </span>
-        ) : (
-          iconContent
-        )}
+        <div
+          className="flex items-center justify-center size-6 rounded-full"
+          style={{ border: `1.5px solid ${iconColor}` }}
+        >
+          {typeof iconContent === 'string' ? (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: iconColor,
+                lineHeight: 1,
+              }}
+            >
+              {iconContent}
+            </span>
+          ) : (
+            iconContent
+          )}
+        </div>
       </div>
 
       {/* Number + Label — bottom-left */}
@@ -101,7 +106,7 @@ export function getStudentStats(students: { gradeLevel: string }[]) {
     {
       label: 'Total Students',
       value: total,
-      iconContent: <Users className="w-4 h-4" style={{ color: baseColors.heading }} />,
+      iconContent: <Users className="w-3.5 h-3.5" style={{ color: baseColors.heading }} />,
       iconBg: withOpacity(baseColors.pink, 0.7),
       iconColor: baseColors.heading,
       cardBg: withOpacity(baseColors.blue, 0.35),
