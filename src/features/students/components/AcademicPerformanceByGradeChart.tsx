@@ -43,7 +43,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <Card className="pt-4 pb-0">
+      <Card className="pt-4 pb-0 gap-2">
         <CardHeader>
           <h3 className="text-section-title">Academic Performance</h3>
           <CardAction>
@@ -58,7 +58,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
   }
 
   return (
-    <Card className="pt-4 pb-0">
+    <Card className="pt-4 pb-0 gap-2">
       <CardHeader>
         <div className="flex flex-col gap-2">
           <h3 className="text-section-title">Academic Performance</h3>

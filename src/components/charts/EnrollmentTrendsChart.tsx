@@ -162,7 +162,7 @@ export function EnrollmentTrendsChart({
         shadowed={false}
         style={{ height: '100%' }}
       >
-        <Card className="pt-4 pb-0 h-full">
+        <Card className="pt-4 pb-0 h-full gap-2">
           <CardHeader>
             <h3 className="text-section-title">Enrollment Trends</h3>
             <CardAction>
@@ -187,7 +187,7 @@ export function EnrollmentTrendsChart({
       shadowed={false}
       style={{ height: '100%' }}
     >
-      <Card className="pt-4 pb-0 h-full">
+      <Card className="pt-4 pb-0 h-full gap-2">
         <CardHeader>
           <h3 className="text-section-title">Enrollment Trends</h3>
           <CardAction>
