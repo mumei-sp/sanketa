@@ -152,6 +152,7 @@ export function EnrollmentTrendsChart({
         background="transparent"
         padding={0}
         shadowed={false}
+        style={{ height: '100%' }}
       >
         <Card className="pt-6 pb-0 h-full">
           <CardHeader>
@@ -176,6 +177,7 @@ export function EnrollmentTrendsChart({
       background="transparent"
       padding={0}
       shadowed={false}
+      style={{ height: '100%' }}
     >
       <Card className="pt-6 pb-0 h-full">
         <CardHeader>
