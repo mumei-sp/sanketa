@@ -1,60 +1,65 @@
 import * as React from 'react'
 import { StudentsTable } from '../components/StudentsTable'
+import { StudentStatCard, getStudentStats } from '../components/StudentStatCards'
+import { AcademicPerformanceByGradeChart } from '../components/AcademicPerformanceByGradeChart'
+import { SpecialPrograms } from '../components/SpecialPrograms'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
-import { fetchStudents, createStudent } from '@/api/services/student-service'
+import {
+  fetchStudents,
+  createStudent,
+  fetchEnrollmentTrends,
+  fetchAttendanceOverview,
+} from '@/api/services/student-service'
 import { generateCsv, downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
 import type { Student } from '@/features/students/types'
 import { Tile, TileWrapper } from '@/components/tile'
 import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart'
 import { AttendanceOverviewChart } from '@/components/charts/AttendanceOverviewChart'
-import { fetchEnrollmentTrends, fetchAttendanceOverview } from '@/api/services/student-service'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { background, border } from '@/theme/colors'
 
-/**
- * StudentsPage component that fetches and displays student data with charts
- */
+const cardStyle: React.CSSProperties = {
+  backgroundColor: background.card,
+  borderRadius: 12,
+  border: `1px solid ${border.subtle}`,
+  padding: 20,
+  height: '100%',
+}
+
 export function StudentsPage() {
   const [students, setStudents] = React.useState<Student[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [enrollmentData, setEnrollmentData] = React.useState<EnrollmentData[]>([])
   const [attendanceData, setAttendanceData] = React.useState<AttendanceData[]>([])
-  const [isLoadingEnrollment, setIsLoadingEnrollment] = React.useState(true)
-  const [isLoadingAttendance, setIsLoadingAttendance] = React.useState(true)
+  const [isLoadingCharts, setIsLoadingCharts] = React.useState(true)
+  const [importOpen, setImportOpen] = React.useState(false)
 
   React.useEffect(() => {
     async function loadData() {
       try {
-        setIsLoading(true)
-        setIsLoadingEnrollment(true)
-        setIsLoadingAttendance(true)
-
-        // Fetch all data in parallel
         const [studentsData, enrollment, attendance] = await Promise.all([
           fetchStudents(),
           fetchEnrollmentTrends(),
           fetchAttendanceOverview(),
         ])
-
         setStudents(studentsData)
         setEnrollmentData(enrollment)
         setAttendanceData(attendance)
       } catch (error) {
-        console.error('Failed to fetch data:', error)
+        console.error('Failed to fetch students data:', error)
       } finally {
         setIsLoading(false)
-        setIsLoadingEnrollment(false)
-        setIsLoadingAttendance(false)
+        setIsLoadingCharts(false)
       }
     }
-
     loadData()
   }, [])
 
-  // ── Import / Export ──
-  const [importOpen, setImportOpen] = React.useState(false)
+  const stats = React.useMemo(() => getStudentStats(students), [students])
 
+  // ── Import / Export ──
   const studentImportColumns: ImportColumn[] = React.useMemo(() => [
     { csvHeader: 'First Name', fieldKey: 'firstName', label: 'First Name', required: true },
     { csvHeader: 'Last Name', fieldKey: 'lastName', label: 'Last Name', required: true },
@@ -69,7 +74,6 @@ export function StudentsPage() {
   ], [])
 
   const handleImport = React.useCallback(async (rows: Record<string, string>[]) => {
-    // Detect duplicate Student IDs within the imported file
     const ids = rows.map(r => r['Student ID']?.trim()).filter(Boolean)
     const seen = new Set<string>()
     const dupes = new Set<string>()
@@ -78,7 +82,6 @@ export function StudentsPage() {
       toast.error(`Duplicate Student IDs in file: ${[...dupes].join(', ')}`)
       return
     }
-
     for (const row of rows) {
       await createStudent({
         firstName: row['First Name'] || '',
@@ -91,13 +94,9 @@ export function StudentsPage() {
         primaryPhone: row['Phone'] || undefined,
         address: row['Address'] || undefined,
         admissionNumber: row['Admission Number'] || undefined,
-        gpa: 0,
-        percentage: 0,
-        performance: 'Good',
-        status: 'Active',
+        gpa: 0, percentage: 0, performance: 'Good', status: 'Active',
       } as Partial<Student>)
     }
-    // Refresh student list
     const updated = await fetchStudents()
     setStudents(updated)
     toast.success(`${rows.length} students imported`)
@@ -121,127 +120,106 @@ export function StudentsPage() {
     downloadCsv(csv, 'students-export.csv')
   }, [students])
 
-  if (isLoading) {
-    return (
-      <TileWrapper columns={12} gap={12}>
-        {/* Table skeleton - 8/12 columns on desktop */}
+  return (
+    <>
+      <TileWrapper columns={12} gap={16}>
+
+        {/* ── Row 1: 4 Stat Cards (3/12 each on desktop, 6/12 on tablet+mobile) ── */}
+        {isLoading
+          ? [0, 1, 2, 3].map(i => (
+              <Tile key={i} id={`stat-skel-${i}`} layoutMode="grid" width={{ default: 6, lg: 3 }} padding={0}>
+                <Skeleton className="h-[72px] w-full rounded-xl" />
+              </Tile>
+            ))
+          : stats.map((stat, i) => (
+              <Tile key={i} id={`student-stat-${i}`} layoutMode="grid" width={{ default: 6, lg: 3 }} padding={0}>
+                <StudentStatCard {...stat} />
+              </Tile>
+            ))
+        }
+
+        {/* ── Row 2: Academic Performance (8/12) + Enrollment Trends (4/12) ── */}
         <Tile
-          id="students-table-skeleton"
+          id="academic-performance-chart"
           layoutMode="grid"
-          width={{ default: 12, md: 8 }}
+          width={{ default: 12, lg: 8 }}
+          padding={0}
+          style={{ minHeight: 260 }}
+        >
+          {isLoadingCharts
+            ? <Skeleton className="h-full w-full rounded-xl" style={{ minHeight: 260 }} />
+            : (
+              <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
+                <AcademicPerformanceByGradeChart />
+              </div>
+            )
+          }
+        </Tile>
+
+        <Tile
+          id="enrollment-trends"
+          layoutMode="grid"
+          width={{ default: 12, lg: 4 }}
+          padding={0}
+          style={{ minHeight: 260 }}
+        >
+          <EnrollmentTrendsChart data={enrollmentData} isLoading={isLoadingCharts} />
+        </Tile>
+
+        {/* ── Row 3: Attendance Overview (8/12) + Special Programs (4/12) ── */}
+        <Tile
+          id="attendance-overview"
+          layoutMode="grid"
+          width={{ default: 12, lg: 8 }}
+          padding={0}
+          style={{ minHeight: 240 }}
+        >
+          <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
+        </Tile>
+
+        <Tile
+          id="special-programs"
+          layoutMode="grid"
+          width={{ default: 12, lg: 4 }}
+          padding={0}
+          style={{ minHeight: 240 }}
+        >
+          <div style={cardStyle}>
+            <SpecialPrograms />
+          </div>
+        </Tile>
+
+        {/* ── Row 4: Students Table (full width) ── */}
+        <Tile
+          id="students-table"
+          layoutMode="grid"
+          width={{ default: 12 }}
           background="card"
           borderRadius="lg"
           shadowed={false}
           padding="p-6"
+          overflow="auto"
         >
-          <div className="space-y-4">
-            {/* Toolbar skeleton */}
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <Skeleton className="h-7 w-[100px]" />
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-[250px] rounded-md" />
-                <Skeleton className="h-8 w-[120px] rounded-md" />
-                <Skeleton className="h-8 w-[120px] rounded-md" />
-              </div>
-            </div>
-            {/* Table header */}
-            <Skeleton className="h-10 w-full rounded" />
-            {/* Table rows */}
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full rounded" />
-            ))}
-            {/* Pagination */}
-            <div className="flex items-center justify-between pt-2">
-              <Skeleton className="h-4 w-[150px]" />
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-8 rounded" />
-                <Skeleton className="h-8 w-8 rounded" />
-                <Skeleton className="h-8 w-8 rounded" />
-                <Skeleton className="h-8 w-8 rounded" />
-              </div>
-            </div>
-          </div>
+          <StudentsTable
+            data={students}
+            isLoading={isLoading}
+            onImport={() => setImportOpen(true)}
+            onExport={handleExport}
+          />
         </Tile>
 
-        {/* Charts skeleton - 4/12 columns on desktop */}
-        <Tile
-          id="charts-skeleton"
-          layoutMode="grid"
-          width={{ default: 12, md: 4 }}
-          background="transparent"
-          padding={0}
-        >
-          <div className="flex flex-col gap-6">
-            {/* Enrollment Trends Chart skeleton */}
-            <div className="bg-card rounded-lg shadow-xs p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-5 w-[140px]" />
-                <Skeleton className="h-8 w-[110px] rounded-md" />
-              </div>
-              <Skeleton className="h-[204px] w-full rounded" />
-            </div>
-            {/* Attendance Overview Chart skeleton */}
-            <div className="bg-card rounded-lg shadow-xs p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-5 w-[160px]" />
-                <Skeleton className="h-8 w-[110px] rounded-md" />
-              </div>
-              <Skeleton className="h-[204px] w-full rounded" />
-            </div>
-          </div>
-        </Tile>
       </TileWrapper>
-    )
-  }
 
-  return (
-  <>
-    <TileWrapper columns={12} gap={12}>
-      {/* Table - 8/12 columns on desktop, full width on mobile */}
-      <Tile
-        id="students-table-tile"
-        layoutMode="grid"
-        width={{ default: 12, md: 8 }}
-        background="card"
-        borderRadius="lg"
-        shadowed={false}
-        padding="p-6"
-        overflow="auto"
-      >
-        <StudentsTable
-          data={students}
-          isLoading={isLoading}
-          onImport={() => setImportOpen(true)}
-          onExport={handleExport}
-        />
-      </Tile>
-
-      {/* Charts - 4/12 columns on desktop, full width on mobile, stacked vertically */}
-      <Tile
-        id="charts-container-tile"
-        layoutMode="grid"
-        width={{ default: 12, md: 4 }}
-        background="transparent"
-        padding={0}
-      >
-        <div className="flex flex-col gap-6">
-          <EnrollmentTrendsChart data={enrollmentData} isLoading={isLoadingEnrollment} />
-          <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingAttendance} />
-        </div>
-      </Tile>
-    </TileWrapper>
-
-    <ImportDialog
-      open={importOpen}
-      onOpenChange={setImportOpen}
-      title="Import Students"
-      columns={studentImportColumns}
-      templateSampleRows={[
-        ['John', 'Doe', 'S-9001', '7A', 'A', '2012-05-15', 'Male', '9876543210', '123 Main St', 'ADM-2025-001'],
-      ]}
-      onImport={handleImport}
-    />
-  </>
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Import Students"
+        columns={studentImportColumns}
+        templateSampleRows={[
+          ['John', 'Doe', 'S-9001', '7A', 'A', '2012-05-15', 'Male', '9876543210', '123 Main St', 'ADM-2025-001'],
+        ]}
+        onImport={handleImport}
+      />
+    </>
   )
 }
-
