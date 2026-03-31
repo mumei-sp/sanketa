@@ -1,19 +1,18 @@
 /**
- * ImportDialog — Reusable CSV import wizard dialog.
+ * ImportDialog — Reusable CSV import wizard, rendered as a slide-in Sheet.
  *
  * 3-step flow: Upload → Preview & Validate → Confirm
- * Zero dependencies — uses native FileReader + custom CSV parser.
  */
 
 import * as React from 'react'
-import { Upload, FileText, AlertTriangle, CheckCircle, X } from 'lucide-react'
+import { Upload, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { text, border, accent, background, status as statusColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
@@ -206,157 +205,207 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
   const hasErrors = validationErrors.length > 0
 
   return (
-    <Dialog open={open} onOpenChange={isImporting ? undefined : onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
-          <DialogTitle style={{ color: text.heading }}>{title}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={isImporting ? undefined : onOpenChange}>
+      <SheetContent
+        side="right"
+        className="flex flex-col p-0"
+        style={{ width: '560px', maxWidth: '100vw' }}
+      >
+        {/* ── Header ── */}
+        <SheetHeader
+          style={{
+            padding: `${spacing['5']} ${spacing['6']}`,
+            borderBottom: `1px solid ${border.subtle}`,
+            flexShrink: 0,
+          }}
+        >
+          <SheetTitle style={{ color: text.heading }}>{title}</SheetTitle>
+        </SheetHeader>
 
-        {/* ═══ UPLOAD STEP ═══ */}
-        {step === 'upload' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
-            {/* Drop zone */}
-            <div
-              onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-3 rounded-xl cursor-pointer transition-all"
-              style={{
-                padding: spacing['8'],
-                border: `2px dashed ${isDragging ? text.heading : border.default}`,
-                backgroundColor: isDragging ? accent.base : 'transparent',
-              }}
-            >
-              <Upload className="w-8 h-8" style={{ color: isDragging ? text.heading : border.default }} />
-              <div className="text-center">
-                <p style={{ fontSize: '14px', fontWeight: 500, color: text.heading }}>
-                  Drop CSV file here or click to browse
-                </p>
-                <p style={{ fontSize: '11px', color: text.muted, marginTop: '4px' }}>
-                  Only .csv files are supported
-                </p>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileInput}
-                className="hidden"
-              />
-            </div>
+        {/* ── Scrollable body ── */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: `${spacing['5']} ${spacing['6']}`, display: 'flex', flexDirection: 'column', gap: spacing['5'] }}>
 
-            {/* Template download */}
-            <button
-              type="button"
-              onClick={handleDownloadTemplate}
-              className="flex items-center justify-center gap-2 text-xs font-medium cursor-pointer transition-opacity hover:opacity-70"
-              style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px' }}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Download CSV template
-            </button>
-          </div>
-        )}
-
-        {/* ═══ PREVIEW STEP ═══ */}
-        {step === 'preview' && parseResult && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
-            {/* Stats */}
-            <div className="flex items-center gap-4">
-              <span style={{ fontSize: '13px', color: text.heading }}>
-                <strong>{parseResult.rows.length}</strong> rows found
-              </span>
-              <span style={{ fontSize: '13px', color: text.heading }}>
-                <strong>{parseResult.headers.length}</strong> columns
-              </span>
-              {hasErrors && (
-                <span style={{ fontSize: '13px', color: statusColors.danger.text }}>
-                  <strong>{validationErrors.length}</strong> issues
-                </span>
-              )}
-            </div>
-
-            {/* Errors */}
-            {hasErrors && (
+          {/* ═══ UPLOAD STEP ═══ */}
+          {step === 'upload' && (
+            <>
+              {/* Drop zone */}
               <div
-                className="rounded-lg"
+                onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-3 rounded-xl cursor-pointer transition-all"
                 style={{
-                  padding: spacing['3'],
-                  backgroundColor: statusColors.danger.soft,
-                  border: `1px solid ${statusColors.danger.base}`,
-                  maxHeight: '120px',
-                  overflowY: 'auto',
+                  padding: spacing['10'],
+                  border: `2px dashed ${isDragging ? text.heading : border.default}`,
+                  backgroundColor: isDragging ? accent.base : 'transparent',
                 }}
               >
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5" style={{ color: statusColors.danger.text }} />
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: statusColors.danger.text }}>Validation Issues</span>
+                <Upload className="w-8 h-8" style={{ color: isDragging ? text.heading : border.default }} />
+                <div className="text-center">
+                  <p style={{ fontSize: '14px', fontWeight: 500, color: text.heading }}>
+                    Drop CSV file here or click to browse
+                  </p>
+                  <p style={{ fontSize: '11px', color: text.muted, marginTop: '4px' }}>
+                    Only .csv files are supported
+                  </p>
                 </div>
-                {validationErrors.slice(0, 10).map((err, i) => (
-                  <p key={i} style={{ fontSize: '11px', color: text.muted, lineHeight: 1.5 }}>• {err}</p>
-                ))}
-                {validationErrors.length > 10 && (
-                  <p style={{ fontSize: '11px', color: text.muted }}>...and {validationErrors.length - 10} more</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileInput}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Template download */}
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                className="flex items-center justify-center gap-2 text-xs font-medium cursor-pointer transition-opacity hover:opacity-70"
+                style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px' }}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Download CSV template
+              </button>
+
+              {/* Column hints */}
+              <div style={{ borderRadius: 8, border: `1px solid ${border.subtle}`, overflow: 'hidden' }}>
+                <p style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: text.heading, backgroundColor: accent.base }}>
+                  Expected columns
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '10px 12px' }}>
+                  {columns.map(col => (
+                    <span
+                      key={col.csvHeader}
+                      style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        backgroundColor: col.required ? accent.base : background.surface,
+                        color: text.heading,
+                        border: `1px solid ${border.subtle}`,
+                      }}
+                    >
+                      {col.csvHeader}{col.required ? ' *' : ''}
+                    </span>
+                  ))}
+                </div>
+                <p style={{ padding: '0 12px 8px', fontSize: '10px', color: text.muted }}>* Required</p>
+              </div>
+            </>
+          )}
+
+          {/* ═══ PREVIEW STEP ═══ */}
+          {step === 'preview' && parseResult && (
+            <>
+              {/* Stats */}
+              <div className="flex items-center gap-4">
+                <span style={{ fontSize: '13px', color: text.heading }}>
+                  <strong>{parseResult.rows.length}</strong> rows found
+                </span>
+                <span style={{ fontSize: '13px', color: text.heading }}>
+                  <strong>{parseResult.headers.length}</strong> columns
+                </span>
+                {hasErrors && (
+                  <span style={{ fontSize: '13px', color: statusColors.danger.text }}>
+                    <strong>{validationErrors.length}</strong> issues
+                  </span>
                 )}
               </div>
-            )}
 
-            {/* Preview table */}
-            <div style={{ maxHeight: '240px', overflowY: 'auto', overflowX: 'auto', borderRadius: '8px', border: `1px solid ${border.default}` }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: '6px 10px', backgroundColor: accent.base, color: text.heading, fontWeight: 600, textAlign: 'left', position: 'sticky', top: 0 }}>
-                      #
-                    </th>
-                    {parseResult.headers.map(h => (
-                      <th key={h} style={{ padding: '6px 10px', backgroundColor: accent.base, color: text.heading, fontWeight: 600, textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0 }}>
-                        {h}
+              {/* Errors */}
+              {hasErrors && (
+                <div
+                  className="rounded-lg"
+                  style={{
+                    padding: spacing['3'],
+                    backgroundColor: statusColors.danger.soft,
+                    border: `1px solid ${statusColors.danger.base}`,
+                    maxHeight: '140px',
+                    overflowY: 'auto',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" style={{ color: statusColors.danger.text }} />
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: statusColors.danger.text }}>Validation Issues</span>
+                  </div>
+                  {validationErrors.slice(0, 10).map((err, i) => (
+                    <p key={i} style={{ fontSize: '11px', color: text.muted, lineHeight: 1.5 }}>• {err}</p>
+                  ))}
+                  {validationErrors.length > 10 && (
+                    <p style={{ fontSize: '11px', color: text.muted }}>...and {validationErrors.length - 10} more</p>
+                  )}
+                </div>
+              )}
+
+              {/* Preview table — takes remaining space, scrolls inside */}
+              <div style={{ borderRadius: '8px', border: `1px solid ${border.default}`, overflow: 'auto', flex: 1, minHeight: 0 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: '7px 10px', backgroundColor: accent.base, color: text.heading, fontWeight: 600, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap' }}>
+                        #
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {parseResult.rows.slice(0, 20).map((row, idx) => (
-                    <tr key={idx} style={{ borderBottom: `1px solid ${border.subtle}` }}>
-                      <td style={{ padding: '4px 10px', color: text.muted }}>{idx + 1}</td>
                       {parseResult.headers.map(h => (
-                        <td key={h} style={{ padding: '4px 10px', color: text.body, whiteSpace: 'nowrap', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {row[h] || '—'}
-                        </td>
+                        <th key={h} style={{ padding: '7px 10px', backgroundColor: accent.base, color: text.heading, fontWeight: 600, textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1 }}>
+                          {h}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {parseResult.rows.length > 20 && (
-                <p style={{ padding: '8px 10px', fontSize: '11px', color: text.muted, textAlign: 'center' }}>
-                  Showing first 20 of {parseResult.rows.length} rows
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+                  </thead>
+                  <tbody>
+                    {parseResult.rows.slice(0, 20).map((row, idx) => (
+                      <tr key={idx} style={{ borderBottom: `1px solid ${border.subtle}` }}>
+                        <td style={{ padding: '5px 10px', color: text.muted }}>{idx + 1}</td>
+                        {parseResult.headers.map(h => (
+                          <td key={h} style={{ padding: '5px 10px', color: text.body, whiteSpace: 'nowrap', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {row[h] || '—'}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {parseResult.rows.length > 20 && (
+                  <p style={{ padding: '8px 10px', fontSize: '11px', color: text.muted, textAlign: 'center' }}>
+                    Showing first 20 of {parseResult.rows.length} rows
+                  </p>
+                )}
+              </div>
+            </>
+          )}
 
-        {/* ═══ DONE STEP ═══ */}
-        {step === 'done' && (
-          <div className="flex flex-col items-center gap-3" style={{ padding: spacing['6'] }}>
-            <div
-              className="rounded-full flex items-center justify-center"
-              style={{ width: '48px', height: '48px', backgroundColor: statusColors.success.base }}
-            >
-              <CheckCircle className="w-6 h-6" style={{ color: '#fff' }} />
+          {/* ═══ DONE STEP ═══ */}
+          {step === 'done' && (
+            <div className="flex flex-col items-center justify-center gap-3" style={{ flex: 1, padding: spacing['8'] }}>
+              <div
+                className="rounded-full flex items-center justify-center"
+                style={{ width: '56px', height: '56px', backgroundColor: statusColors.success.base }}
+              >
+                <CheckCircle className="w-7 h-7" style={{ color: '#fff' }} />
+              </div>
+              <p style={{ fontSize: '16px', fontWeight: 600, color: text.heading }}>Import Complete</p>
+              <p style={{ fontSize: '13px', color: text.muted }}>
+                {importedCount} records imported successfully.
+              </p>
             </div>
-            <p style={{ fontSize: '16px', fontWeight: 600, color: text.heading }}>Import Complete</p>
-            <p style={{ fontSize: '13px', color: text.muted }}>
-              {importedCount} records imported successfully.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* ═══ FOOTER ═══ */}
-        <DialogFooter className="flex-row items-center justify-end gap-2 mt-2">
+        {/* ── Footer ── */}
+        <SheetFooter
+          style={{
+            padding: `${spacing['4']} ${spacing['6']}`,
+            borderTop: `1px solid ${border.subtle}`,
+            flexShrink: 0,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: spacing['2'],
+          }}
+        >
           {step === 'upload' && (
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           )}
@@ -379,8 +428,8 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
               Done
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   )
 }
