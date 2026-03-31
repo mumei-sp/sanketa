@@ -122,7 +122,7 @@ export function StudentsPage() {
 
   return (
     <>
-      <TileWrapper columns={12} gap={16}>
+      <TileWrapper columns={12} gap={12}>
 
         {/* ── Top band ── */}
 
