@@ -210,7 +210,7 @@ export function AttendanceOverviewChart({
               <Skeleton className="h-9 w-[110px]" />
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-2 pb-4">
+          <CardContent className="pt-2 pb-1">
             <Skeleton className="h-[204px] w-full" />
           </CardContent>
         </Card>
@@ -242,10 +242,10 @@ export function AttendanceOverviewChart({
             </Select>
           </CardAction>
         </CardHeader>
-        <CardContent className="px-4 pt-0 pb-4">
+        <CardContent className="px-4 pt-0 pb-1">
           <div className="chart-scale">
             <ResponsiveContainer width="100%" height={204}>
-              <BarChart data={filteredData} margin={{ top: 10, right: 0, left: 4, bottom: 8 }}>
+              <BarChart data={filteredData} margin={{ top: 10, right: 0, left: 4, bottom: 0 }}>
                 <defs>
                   <ChartGradient id="attendanceGradient" />
                 </defs>

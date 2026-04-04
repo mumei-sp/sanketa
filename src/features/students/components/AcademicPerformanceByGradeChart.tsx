@@ -111,10 +111,10 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
         </CardAction>
       </CardHeader>
 
-      <CardContent className="px-4 pt-0 pb-2">
+      <CardContent className="px-4 pt-0 pb-0">
         <div className="chart-scale">
           <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={data} barCategoryGap="15%" barGap={0} margin={{ top: 10, right: 0, left: 4, bottom: 8 }}>
+            <BarChart data={data} barCategoryGap="15%" barGap={0} margin={{ top: 10, right: 0, left: 4, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke={border.subtle} strokeDasharray="3 3" />
               <XAxis
                 dataKey="month"
