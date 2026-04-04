@@ -55,6 +55,8 @@ interface Props {
   isLoading?: boolean
 }
 
+const MIN_WIDTH_PER_ITEM = 80
+
 export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
   const [period, setPeriod] = React.useState<Period>('last')
 
@@ -62,6 +64,9 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
     period === 'last'
       ? academicPerformanceLastSemester
       : academicPerformanceThisSemester
+
+  const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
+  const needsScroll = chartMinWidth > 300
 
   if (isLoading) {
     return (
@@ -111,10 +116,11 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
         </CardAction>
       </CardHeader>
 
-      <CardContent className="px-4 pt-0 pb-0">
-        <div className="chart-scale">
-          <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={data} barCategoryGap="15%" barGap={0} margin={{ top: 10, right: 0, left: 4, bottom: 0 }}>
+      <CardContent className="px-4 pt-0 pb-0 min-h-0">
+        <div className={needsScroll ? 'overflow-x-auto' : ''}>
+          <div className="chart-scale" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
+            <ResponsiveContainer width="100%" height={170}>
+              <BarChart data={data} barCategoryGap="25%" barGap={0} margin={{ top: 10, right: 0, left: 4, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke={border.subtle} strokeDasharray="3 3" />
               <XAxis
                 dataKey="month"
@@ -149,6 +155,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
               <Bar dataKey="grade9" fill={GRADE_COLORS.grade9} shape={CustomBarShape('grade9')} />
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
       </CardContent>
     </Card>
