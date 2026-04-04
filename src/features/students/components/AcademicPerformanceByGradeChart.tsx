@@ -27,14 +27,14 @@ import {
 type Period = 'last' | 'this'
 
 const GRADE_COLORS = {
-  grade7: '#C0C0C0',
+  grade7: baseColors.blue,
   grade8: baseColors.heading,
   grade9: baseColors.pink,
 }
 
 /** Top-stroke cap on each bar matching the AttendanceOverview pattern */
 const STROKE_COLORS = {
-  grade7: '#999999',
+  grade7: '#9BCFDB',
   grade8: baseColors.heading,
   grade9: '#E0A0D0',
 }
