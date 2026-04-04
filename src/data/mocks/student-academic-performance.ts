@@ -8,17 +8,19 @@ export interface AcademicPerformanceEntry {
 }
 
 export const academicPerformanceLastSemester: AcademicPerformanceEntry[] = [
-  { month: 'Aug', grade7: 68, grade8: 72, grade9: 74 },
-  { month: 'Sep', grade7: 71, grade8: 69, grade9: 76 },
-  { month: 'Oct', grade7: 65, grade8: 74, grade9: 72 },
-  { month: 'Nov', grade7: 73, grade8: 70, grade9: 78 },
-  { month: 'Dec', grade7: 76, grade8: 75, grade9: 80 },
+  { month: 'Jul', grade7: 85, grade8: 92, grade9: 83 },
+  { month: 'Aug', grade7: 87, grade8: 94, grade9: 85 },
+  { month: 'Sep', grade7: 82, grade8: 90, grade9: 78 },
+  { month: 'Oct', grade7: 84, grade8: 88, grade9: 80 },
+  { month: 'Nov', grade7: 86, grade8: 93, grade9: 85 },
+  { month: 'Dec', grade7: 88, grade8: 96, grade9: 90 },
 ]
 
 export const academicPerformanceThisSemester: AcademicPerformanceEntry[] = [
-  { month: 'Jan', grade7: 70, grade8: 73, grade9: 77 },
-  { month: 'Feb', grade7: 74, grade8: 71, grade9: 79 },
-  { month: 'Mar', grade7: 72, grade8: 76, grade9: 81 },
-  { month: 'Apr', grade7: 77, grade8: 74, grade9: 83 },
-  { month: 'May', grade7: 79, grade8: 78, grade9: 85 },
+  { month: 'Jan', grade7: 83, grade8: 89, grade9: 85 },
+  { month: 'Feb', grade7: 86, grade8: 91, grade9: 88 },
+  { month: 'Mar', grade7: 84, grade8: 93, grade9: 86 },
+  { month: 'Apr', grade7: 88, grade8: 90, grade9: 89 },
+  { month: 'May', grade7: 87, grade8: 94, grade9: 91 },
+  { month: 'Jun', grade7: 90, grade8: 95, grade9: 93 },
 ]
