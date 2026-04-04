@@ -32,6 +32,25 @@ const GRADE_COLORS = {
   grade9: baseColors.pink,
 }
 
+/** Top-stroke cap on each bar matching the AttendanceOverview pattern */
+const STROKE_COLORS = {
+  grade7: '#999999',
+  grade8: baseColors.heading,
+  grade9: '#E0A0D0',
+}
+
+const CustomBarShape = (dataKey: string) => (props: any) => {
+  const { x, y, width, height, fill } = props
+  if (height <= 0) return <g />
+  const strokeColor = STROKE_COLORS[dataKey as keyof typeof STROKE_COLORS] || fill
+  return (
+    <g>
+      <rect x={x} y={y} width={width} height={height} fill={fill} rx={3} ry={3} />
+      <line x1={x} y1={y} x2={x + width} y2={y} stroke={strokeColor} strokeWidth={1.5} />
+    </g>
+  )
+}
+
 interface Props {
   isLoading?: boolean
 }
@@ -125,9 +144,9 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
                   name === 'grade7' ? 'Grade 7' : name === 'grade8' ? 'Grade 8' : 'Grade 9',
                 ]}
               />
-              <Bar dataKey="grade7" fill={GRADE_COLORS.grade7} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="grade8" fill={GRADE_COLORS.grade8} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="grade9" fill={GRADE_COLORS.grade9} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="grade7" fill={GRADE_COLORS.grade7} shape={CustomBarShape('grade7')} />
+              <Bar dataKey="grade8" fill={GRADE_COLORS.grade8} shape={CustomBarShape('grade8')} />
+              <Bar dataKey="grade9" fill={GRADE_COLORS.grade9} shape={CustomBarShape('grade9')} />
             </BarChart>
           </ResponsiveContainer>
         </div>
