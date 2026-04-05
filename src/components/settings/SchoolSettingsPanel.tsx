@@ -63,8 +63,9 @@ import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { TimetableSettingsSection } from './TimetableSettingsSection'
 import { GradingSettingsSection } from './GradingSettingsSection'
-import { subjects as mockSubjects, classSections as mockClassSections } from '@/data/mocks/timetable'
-import type { Subject, ClassSection } from '@/features/timetable/types'
+import { subjects as mockSubjects } from '@/data/mocks/timetable'
+import type { Subject } from '@/features/timetable/types'
+import type { ClassSection } from '@/config/school-config'
 
 // ============================================================================
 // Settings Navigation
@@ -261,7 +262,7 @@ function GeneralSection({ draft, setDraft }: SectionProps) {
       <SubjectsCard />
 
       {/* Class Sections Management */}
-      <ClassSectionsCard />
+      <ClassSectionsCard draft={draft} setDraft={setDraft} />
     </>
   )
 }
@@ -378,10 +379,11 @@ function SubjectsCard() {
 // General: Class Sections Management (editable)
 // ============================================================================
 
-function ClassSectionsCard() {
-  const [sections, setSections] = React.useState<ClassSection[]>([...mockClassSections])
+function ClassSectionsCard({ draft, setDraft }: SectionProps) {
   const [newGrade, setNewGrade] = React.useState('')
   const [newSection, setNewSection] = React.useState('')
+
+  const sections = draft.classSections
 
   // Group by grade
   const grouped = React.useMemo(() => {
@@ -396,20 +398,19 @@ function ClassSectionsCard() {
 
   const addSection = () => {
     if (!newGrade.trim() || !newSection.trim()) return
-    const label = `${newGrade}${newSection.toUpperCase()}`
-    const id = `cls-${newGrade}${newSection.toLowerCase()}`
-    if (sections.find(s => s.id === id)) return // Already exists
-    const newItem: ClassSection = { id, grade: newGrade.trim(), section: newSection.toUpperCase().trim(), label }
-    setSections(prev => [...prev, newItem])
-    mockClassSections.push(newItem)
+    const grade = newGrade.trim()
+    const section = newSection.toUpperCase().trim()
+    const label = `${grade}${section}`
+    const id = `cls-${grade}${section.toLowerCase()}`
+    if (sections.some(s => s.id === id)) return
+    const newItem: ClassSection = { id, grade, section, label }
+    setDraft(prev => ({ ...prev, classSections: [...prev.classSections, newItem] }))
     setNewGrade('')
     setNewSection('')
   }
 
   const removeSection = (id: string) => {
-    setSections(prev => prev.filter(s => s.id !== id))
-    const idx = mockClassSections.findIndex(s => s.id === id)
-    if (idx >= 0) mockClassSections.splice(idx, 1)
+    setDraft(prev => ({ ...prev, classSections: prev.classSections.filter(s => s.id !== id) }))
   }
 
   return (

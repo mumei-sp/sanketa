@@ -14,14 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { getClassLabels } from '@/utils/class-section-helpers'
 
 interface FeeCollectionTableProps {
   data: FeeCollectionRecord[]
   isLoading?: boolean
   onRowClick?: (record: FeeCollectionRecord) => void
 }
-
-const CLASSES = ['7A', '7B', '7C', '8A', '8B']
 const STATUSES: FeeStatus[] = ['Paid', 'Pending', 'Partially Paid', 'Overdue']
 
 /**
@@ -41,6 +41,8 @@ function ensureStudentGrouping(data: FeeCollectionRecord[]): FeeCollectionRecord
 }
 
 export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeCollectionTableProps) {
+  const { config } = useSchoolConfig()
+  const classLabels = React.useMemo(() => getClassLabels(config.classSections), [config.classSections])
   const [classFilter, setClassFilter] = React.useState<string>('all')
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
   const [timeFilter, setTimeFilter] = React.useState<string>('this-month')
@@ -106,7 +108,7 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Classes</SelectItem>
-                {CLASSES.map(cls => (
+                {classLabels.map(cls => (
                   <SelectItem key={cls} value={cls}>
                     {cls}
                   </SelectItem>

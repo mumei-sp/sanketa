@@ -7,6 +7,9 @@
  * This is the SINGLE SOURCE OF TRUTH for configuration shape and defaults.
  */
 
+import type { ClassSection } from '@/features/timetable/types'
+export type { ClassSection }
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -39,6 +42,10 @@ export interface SchoolConfig {
   periods: PeriodDefinition[]
   /** Which days of week have school (0=Mon, 1=Tue, ..., 5=Sat) */
   schoolDays: number[]
+
+  // ── Classes ──
+  /** All class sections in the school (e.g. 1A, 1B, 2A, ...) */
+  classSections: ClassSection[]
 
   // ── Grading ──
   /** Grade scale configuration */
@@ -161,6 +168,28 @@ export const REPORT_CARD_THEMES: {
   { value: 'formal',  label: 'Formal',   description: 'Official format with formal typography' },
 ]
 
+// ── Class Sections ──
+
+/** Default class sections — matches typical Indian school structure */
+export const DEFAULT_CLASS_SECTIONS: ClassSection[] = [
+  { id: 'cls-1a', grade: '1', section: 'A', label: '1A' },
+  { id: 'cls-1b', grade: '1', section: 'B', label: '1B' },
+  { id: 'cls-2a', grade: '2', section: 'A', label: '2A' },
+  { id: 'cls-2b', grade: '2', section: 'B', label: '2B' },
+  { id: 'cls-3a', grade: '3', section: 'A', label: '3A' },
+  { id: 'cls-4a', grade: '4', section: 'A', label: '4A' },
+  { id: 'cls-5a', grade: '5', section: 'A', label: '5A' },
+  { id: 'cls-5b', grade: '5', section: 'B', label: '5B' },
+  { id: 'cls-6a', grade: '6', section: 'A', label: '6A' },
+  { id: 'cls-7a', grade: '7', section: 'A', label: '7A' },
+  { id: 'cls-8a', grade: '8', section: 'A', label: '8A' },
+  { id: 'cls-8b', grade: '8', section: 'B', label: '8B' },
+  { id: 'cls-9a', grade: '9', section: 'A', label: '9A' },
+  { id: 'cls-9b', grade: '9', section: 'B', label: '9B' },
+  { id: 'cls-10a', grade: '10', section: 'A', label: '10A' },
+  { id: 'cls-10b', grade: '10', section: 'B', label: '10B' },
+]
+
 /** Default grading config — CBSE preset with 33% pass threshold */
 export const DEFAULT_GRADING_CONFIG: GradingConfig = {
   preset: 'cbse',
@@ -177,6 +206,7 @@ export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   termStructure: 'semester',
   periods: DEFAULT_PERIODS,
   schoolDays: [...DEFAULT_SCHOOL_DAYS],
+  classSections: DEFAULT_CLASS_SECTIONS.map(s => ({ ...s })),
   grading: { ...DEFAULT_GRADING_CONFIG, entries: DEFAULT_GRADING_CONFIG.entries.map(e => ({ ...e })) },
 }
 

@@ -22,6 +22,7 @@ import { Tile } from '@/components/tile'
 import { baseColors, colors } from '@/theme/colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import { reorderByAcademicMonth } from '@/utils/academic-date'
+import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { PerformanceDataset } from '../types'
 
 interface StudentPerformanceChartProps {
@@ -68,6 +69,7 @@ const CustomLegend = ({ payload }: any) => {
 
 export function StudentPerformanceChart({ datasets, isLoading = false }: StudentPerformanceChartProps) {
   const [selected, setSelected] = React.useState('')
+  const [pickedGrades, setPickedGrades] = React.useState<string[]>([])
 
   // Sync selected to first dataset when datasets load
   React.useEffect(() => {
@@ -78,7 +80,15 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
 
   const { startMonth } = useAcademicDates()
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
-  const grades = activeDataset?.grades ?? []
+  const allGrades = activeDataset?.grades ?? []
+
+  // Filter grades to only those selected via ClassPicker
+  // If none of the picked grades match data, show all (graceful fallback)
+  const grades = React.useMemo(() => {
+    if (pickedGrades.length === 0) return allGrades
+    const filtered = allGrades.filter(g => pickedGrades.some(p => g.key === `grade${p}`))
+    return filtered.length > 0 ? filtered : allGrades
+  }, [allGrades, pickedGrades])
   const rawData = activeDataset?.data ?? []
   const data = React.useMemo(
     () => reorderByAcademicMonth(rawData, 'month', startMonth),
@@ -103,26 +113,36 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
 
   return (
     <Tile id="student-performance-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
-      <Card className="w-full h-full pt-4 pb-4 flex flex-col gap-0">
+      <Card className="group/chart w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Student Performance</h3>
           <CardAction>
-            <Select value={selected} onValueChange={setSelected}>
-              <SelectTrigger className="w-[140px] bg-accent">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {datasets.map(ds => (
-                  <SelectItem key={ds.value} value={ds.value}>{ds.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <div className="opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200">
+                <ClassPicker
+                  storageKey="dash-perf"
+                  mode="grade"
+                  max={3}
+                  onChange={setPickedGrades}
+                />
+              </div>
+              <Select value={selected} onValueChange={setSelected}>
+                <SelectTrigger className="w-[140px] bg-accent">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {datasets.map(ds => (
+                    <SelectItem key={ds.value} value={ds.value}>{ds.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0">
-          <div className={needsScroll ? 'overflow-x-auto' : ''}>
-            <div className="chart-scale" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
-              <ResponsiveContainer width="100%" height={220}>
+          <div className={`h-full ${needsScroll ? 'overflow-x-auto' : ''}`}>
+            <div className="chart-scale h-full" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={180}>
                 <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={colors.border.default} opacity={0.3} vertical={false} />
                   <XAxis dataKey="month" stroke={colors.text.muted} fontSize={12} tickLine={false} axisLine={false} />

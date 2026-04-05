@@ -25,9 +25,9 @@ interface PromotionConfirmDialogProps {
   candidates: PromotionCandidate[]
   isExecuting: boolean
   onExecute: (targetSection: string) => void
+  /** Available sections for the target grade (derived from school config) */
+  availableSections: string[]
 }
-
-const SECTIONS = ['A', 'B', 'C']
 
 export function PromotionConfirmDialog({
   open,
@@ -36,8 +36,9 @@ export function PromotionConfirmDialog({
   candidates,
   isExecuting,
   onExecute,
+  availableSections,
 }: PromotionConfirmDialogProps) {
-  const [targetSection, setTargetSection] = React.useState('A')
+  const [targetSection, setTargetSection] = React.useState(availableSections[0] ?? 'A')
 
   const sourceGrade = parseInt(sourceClass.replace(/[A-Z]/g, ''))
   const targetGrade = sourceGrade + 1
@@ -74,7 +75,7 @@ export function PromotionConfirmDialog({
               Target Section
             </label>
             <div style={{ display: 'flex', gap: spacing['2'] }}>
-              {SECTIONS.map(s => (
+              {availableSections.map(s => (
                 <button
                   key={s}
                   type="button"

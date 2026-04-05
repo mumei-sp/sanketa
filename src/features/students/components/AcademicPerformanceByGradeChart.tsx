@@ -19,6 +19,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { text, border, baseColors, withOpacity } from '@/theme/colors'
 import { colors } from '@/theme/colors'
+import { ClassPicker } from '@/components/shared/ClassPicker'
+import type { AcademicPerformanceEntry } from '@/data/mocks/student-academic-performance'
 import {
   academicPerformanceLastSemester,
   academicPerformanceThisSemester,
@@ -26,29 +28,54 @@ import {
 
 type Period = 'last' | 'this'
 
-const GRADE_COLORS = {
-  grade7: baseColors.blue,
-  grade8: baseColors.heading,
-  grade9: baseColors.pink,
+/**
+ * Rotating palette for grade bars — cycles if more than 3 grades are shown.
+ * Each entry: [fillColor, strokeCapColor].
+ */
+const GRADE_PALETTE: [string, string][] = [
+  [baseColors.blue, '#9BCFDB'],
+  [baseColors.heading, baseColors.heading],
+  [baseColors.pink, '#E0A0D0'],
+]
+
+function getGradeColor(index: number): { fill: string; stroke: string } {
+  const [fill, stroke] = GRADE_PALETTE[index % GRADE_PALETTE.length]
+  return { fill, stroke }
 }
 
 /** Top-stroke cap on each bar matching the AttendanceOverview pattern */
-const STROKE_COLORS = {
-  grade7: '#9BCFDB',
-  grade8: baseColors.heading,
-  grade9: '#E0A0D0',
-}
-
-const CustomBarShape = (dataKey: string) => (props: any) => {
+const CustomBarShape = (strokeColor: string) => (props: any) => {
   const { x, y, width, height, fill } = props
   if (height <= 0) return <g />
-  const strokeColor = STROKE_COLORS[dataKey as keyof typeof STROKE_COLORS] || fill
   return (
     <g>
       <rect x={x} y={y} width={width} height={height} fill={fill} rx={3} ry={3} />
       <line x1={x} y1={y} x2={x + width} y2={y} stroke={strokeColor} strokeWidth={1.5} />
     </g>
   )
+}
+
+/** Extract grade keys from data (keys matching `grade{N}` pattern) */
+function extractGradeKeys(data: AcademicPerformanceEntry[]): string[] {
+  if (data.length === 0) return []
+  const first = data[0]
+  return Object.keys(first)
+    .filter(k => k.startsWith('grade') && k !== 'month')
+    .sort((a, b) => {
+      const numA = parseInt(a.replace('grade', ''))
+      const numB = parseInt(b.replace('grade', ''))
+      return numA - numB
+    })
+}
+
+/** Convert grade key 'grade7' → grade string '7' */
+function gradeKeyToGrade(key: string): string {
+  return key.replace('grade', '')
+}
+
+/** Convert grade string '7' → grade key 'grade7' */
+function gradeToGradeKey(grade: string): string {
+  return `grade${grade}`
 }
 
 interface Props {
@@ -59,18 +86,30 @@ const MIN_WIDTH_PER_ITEM = 80
 
 export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
   const [period, setPeriod] = React.useState<Period>('last')
+  const [selectedGrades, setSelectedGrades] = React.useState<string[]>([])
 
   const data =
     period === 'last'
       ? academicPerformanceLastSemester
       : academicPerformanceThisSemester
 
+  // All grade keys available in the data
+  const allGradeKeys = React.useMemo(() => extractGradeKeys(data), [data])
+
+  // Filter to only the selected grades that exist in data
+  const activeGradeKeys = React.useMemo(
+    () => selectedGrades
+      .map(gradeToGradeKey)
+      .filter(k => allGradeKeys.includes(k)),
+    [selectedGrades, allGradeKeys],
+  )
+
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 300
 
   if (isLoading) {
     return (
-      <Card className="pt-4 pb-0 gap-2">
+      <Card className="pt-4 pb-2 gap-2">
         <CardHeader>
           <h3 className="text-section-title">Academic Performance</h3>
           <CardAction>
@@ -85,34 +124,40 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
   }
 
   return (
-    <Card className="pt-4 pb-0 gap-2">
+    <Card className="group/chart pt-4 pb-0 gap-2">
       <CardHeader>
         <div className="flex flex-col gap-2">
           <h3 className="text-section-title">Academic Performance</h3>
-          {/* Legend */}
+          {/* Dynamic legend */}
           <div style={{ display: 'flex', gap: 16 }}>
-            {[
-              { key: 'grade7', label: 'Grade 7' },
-              { key: 'grade8', label: 'Grade 8' },
-              { key: 'grade9', label: 'Grade 9' },
-            ].map(({ key, label }) => (
+            {activeGradeKeys.map((key, idx) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: GRADE_COLORS[key as keyof typeof GRADE_COLORS] }} />
-                <span style={{ fontSize: 11, color: text.muted }}>{label}</span>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: getGradeColor(idx).fill }} />
+                <span style={{ fontSize: 11, color: text.muted }}>Grade {gradeKeyToGrade(key)}</span>
               </div>
             ))}
           </div>
         </div>
         <CardAction>
-          <Select value={period} onValueChange={(v: string) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-[140px] bg-accent">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="last">Last Semester</SelectItem>
-              <SelectItem value="this">This Semester</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <div className="opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200">
+              <ClassPicker
+                storageKey="academic-perf"
+                mode="grade"
+                max={3}
+                onChange={setSelectedGrades}
+              />
+            </div>
+            <Select value={period} onValueChange={(v: string) => setPeriod(v as Period)}>
+              <SelectTrigger className="w-[140px] bg-accent">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="last">Last Semester</SelectItem>
+                <SelectItem value="this">This Semester</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardAction>
       </CardHeader>
 
@@ -145,14 +190,17 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
                   fontSize: 11,
                   color: text.heading,
                 }}
-                formatter={(value: number, name: string) => [
+                formatter={(value: any, name: any) => [
                   `${value}%`,
-                  name === 'grade7' ? 'Grade 7' : name === 'grade8' ? 'Grade 8' : 'Grade 9',
+                  `Grade ${gradeKeyToGrade(String(name))}`,
                 ]}
               />
-              <Bar dataKey="grade7" fill={GRADE_COLORS.grade7} shape={CustomBarShape('grade7')} />
-              <Bar dataKey="grade8" fill={GRADE_COLORS.grade8} shape={CustomBarShape('grade8')} />
-              <Bar dataKey="grade9" fill={GRADE_COLORS.grade9} shape={CustomBarShape('grade9')} />
+              {activeGradeKeys.map((key, idx) => {
+                const { fill, stroke } = getGradeColor(idx)
+                return (
+                  <Bar key={key} dataKey={key} fill={fill} shape={CustomBarShape(stroke)} />
+                )
+              })}
             </BarChart>
           </ResponsiveContainer>
           </div>

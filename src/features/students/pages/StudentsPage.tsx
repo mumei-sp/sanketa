@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { StudentsTable } from '../components/StudentsTable'
-import { StudentStatGroup, getStudentStats } from '../components/StudentStatCards'
+import { StudentStatGroup, getStudentStats, getGradeCounts } from '../components/StudentStatCards'
+import { ClassPicker } from '@/components/shared/ClassPicker'
 import { AcademicPerformanceByGradeChart } from '../components/AcademicPerformanceByGradeChart'
 import { RecentActivity } from '@/features/dashboard/components/RecentActivity'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
@@ -53,7 +54,12 @@ export function StudentsPage() {
     loadData()
   }, [])
 
-  const stats = React.useMemo(() => getStudentStats(students), [students])
+  const gradeCounts = React.useMemo(() => getGradeCounts(students), [students])
+  const [selectedGrades, setSelectedGrades] = React.useState<string[]>([])
+  const stats = React.useMemo(
+    () => getStudentStats(students, selectedGrades),
+    [students, selectedGrades],
+  )
 
   // ── Import / Export ──
   const studentImportColumns: ImportColumn[] = React.useMemo(() => [
@@ -132,7 +138,20 @@ export function StudentsPage() {
                 ))}
               </div>
             )
-            : <StudentStatGroup stats={stats} />
+            : (
+              <StudentStatGroup
+                stats={stats}
+                action={
+                  <ClassPicker
+                    storageKey="student-stats"
+                    mode="grade"
+                    max={3}
+                    gradeCounts={gradeCounts}
+                    onChange={setSelectedGrades}
+                  />
+                }
+              />
+            )
           }
         </Tile>
 
