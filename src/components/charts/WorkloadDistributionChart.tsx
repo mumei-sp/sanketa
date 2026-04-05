@@ -263,12 +263,13 @@ export function WorkloadDistributionChart({
             </div>
           </div>
           <div className="chart-scale flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
-            <div style={{ width: `${Math.max(600, filteredData.length * 70)}px`, height: '100%' }}>
+            <div style={{ minWidth: `${filteredData.length * 60}px`, height: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={filteredData}
                   margin={{ top: 10, right: 10, left: 4, bottom: 0 }}
-                  barCategoryGap={2}
+                  barCategoryGap="20%"
+                  barSize={36}
                 >
                 <CartesianGrid
                   strokeDasharray="3 3"
