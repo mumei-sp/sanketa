@@ -196,10 +196,10 @@ export function StudentsPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="size-7 rounded-full bg-white shadow-sm"
+                    className="size-8 rounded-full bg-white shadow-sm"
                     onClick={handleExport}
                   >
-                    <Download className="size-3.5" />
+                    <Download className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Export</TooltipContent>
@@ -209,10 +209,10 @@ export function StudentsPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="size-7 rounded-full bg-white shadow-sm"
+                    className="size-8 rounded-full bg-white shadow-sm"
                     onClick={() => setImportOpen(true)}
                   >
-                    <Upload className="size-3.5" />
+                    <Upload className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Import</TooltipContent>
