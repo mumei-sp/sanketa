@@ -11,6 +11,7 @@ export const NoticeFormSchema = z.object({
   dateValue: z.string().min(1, 'Please select a date'),
   dateEndValue: z.string().optional(),
   thumbnail: z.string().min(1, 'Please select or upload an image'),
+  pinned: z.boolean().optional(),
 }).refine(
   data => !data.dateEndValue || !data.dateValue || data.dateEndValue >= data.dateValue,
   { message: 'End date must be after start date', path: ['dateEndValue'] },

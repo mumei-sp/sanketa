@@ -42,6 +42,7 @@ export async function createNoticeBoardEntry(data: NoticeFormValues): Promise<No
     content: data.content,
     attachments: [],
     views: 0,
+    pinned: data.pinned ?? false,
   }
   noticeBoardEntries.unshift(newEntry)
   return newEntry
@@ -62,6 +63,7 @@ export async function updateNoticeBoardEntry(id: string, data: NoticeFormValues)
   entry.status = data.status as NoticeBoardEntry['status']
   entry.thumbnail = data.thumbnail || ''
   entry.content = data.content
+  if (data.pinned !== undefined) entry.pinned = data.pinned
   return { ...entry }
 }
 
@@ -74,6 +76,14 @@ export async function incrementNoticeViews(id: string): Promise<number> {
     return entry.views
   }
   return 0
+}
+
+export async function toggleNoticePin(id: string): Promise<NoticeBoardEntry> {
+  await randomDelay()
+  const entry = noticeBoardEntries.find(n => n.id === id)
+  if (!entry) throw new Error('Notice not found')
+  entry.pinned = !entry.pinned
+  return { ...entry }
 }
 
 export async function deleteNoticeBoardEntry(id: string): Promise<void> {

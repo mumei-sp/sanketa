@@ -15,26 +15,47 @@ interface NoticeCardProps {
   notice: NoticeBoardEntry
   isSelected: boolean
   onClick: (notice: NoticeBoardEntry) => void
+  onTogglePin?: (id: string) => void
 }
 
-export function NoticeCard({ notice, isSelected, onClick }: NoticeCardProps) {
+export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeCardProps) {
   const status = statusStyles[notice.status]
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onClick(notice)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notice) }}
       className={cn(
-        'relative w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50',
+        'group/notice relative w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50 cursor-pointer',
         isSelected && 'ring-2 ring-[#FECCFD] bg-[#FDFAFE]',
       )}
     >
-      {notice.pinned && (
+      {/* Pin toggle button */}
+      <button
+        type="button"
+        onClick={e => {
+          e.stopPropagation()
+          onTogglePin?.(notice.id)
+        }}
+        className={cn(
+          'absolute top-2 right-2 size-7 flex items-center justify-center rounded-md transition-all cursor-pointer z-10',
+          notice.pinned
+            ? 'opacity-100'
+            : 'opacity-0 group-hover/notice:opacity-100 hover:bg-gray-100',
+        )}
+        aria-label={notice.pinned ? 'Unpin notice' : 'Pin notice'}
+      >
         <Pin
-          className="absolute top-2 right-2 size-4 fill-current"
+          className={cn(
+            'size-4 transition-transform duration-200',
+            notice.pinned && '-rotate-45 fill-current',
+          )}
           style={{ color: baseColors.heading }}
         />
-      )}
+      </button>
+
       {/* Thumbnail */}
       <img
         src={notice.thumbnail}
@@ -105,6 +126,6 @@ export function NoticeCard({ notice, isSelected, onClick }: NoticeCardProps) {
       >
         {notice.status}
       </span>
-    </button>
+    </div>
   )
 }

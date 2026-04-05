@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { X, FileText, Eye, Pencil, Trash2, Share2 } from 'lucide-react'
+import { X, FileText, Eye, Pencil, Trash2, Share2, Pin } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -31,10 +32,11 @@ interface NoticeDetailBoardProps {
   onClose: () => void
   onDelete?: (id: string) => void
   onEdit?: (notice: NoticeBoardEntry) => void
+  onTogglePin?: (id: string) => void
   showClose?: boolean
 }
 
-export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, showClose = true }: NoticeDetailBoardProps) {
+export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onTogglePin, showClose = true }: NoticeDetailBoardProps) {
   const status = statusStyles[notice.status]
   const [isContentExpanded, setIsContentExpanded] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
@@ -59,15 +61,31 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, showClose
         <h3 className="text-section-title" style={{ color: baseColors.heading }}>
           Detail Board
         </h3>
-        {showClose && (
+        <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={onClose}
-            className="size-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
+            onClick={() => onTogglePin?.(notice.id)}
+            className="size-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
+            aria-label={notice.pinned ? 'Unpin notice' : 'Pin notice'}
           >
-            <X className="size-4" />
+            <Pin
+              className={cn(
+                'size-4 transition-transform duration-200',
+                notice.pinned && '-rotate-45 fill-current',
+              )}
+              style={{ color: baseColors.heading }}
+            />
           </button>
-        )}
+          {showClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="size-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content - scrollable */}

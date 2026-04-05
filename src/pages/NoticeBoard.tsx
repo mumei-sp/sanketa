@@ -15,7 +15,8 @@ import { useIsDesktop } from '@/hooks/use-mobile'
 import { ClipboardList, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { fetchNoticeBoardEntries, deleteNoticeBoardEntry, createNoticeBoardEntry, updateNoticeBoardEntry, incrementNoticeViews } from '@/api/services/notice-board-service'
+import { fetchNoticeBoardEntries, deleteNoticeBoardEntry, createNoticeBoardEntry, updateNoticeBoardEntry, incrementNoticeViews, toggleNoticePin } from '@/api/services/notice-board-service'
+import { useAppToast } from '@/hooks/use-app-toast'
 import { EmptyState } from '@/components/ui/empty-state'
 import { NoticeCard, NoticeDetailBoard, CreateNoticeForm } from '@/features/notice-board/components'
 import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
@@ -55,11 +56,13 @@ function entryToFormValues(entry: NoticeBoardEntry): NoticeFormValues & { id: st
     dateValue: parseDisplayDate(entry.expiryDate),
     dateEndValue: parseDisplayDate(entry.dateEndValue || ''),
     thumbnail: entry.thumbnail,
+    pinned: entry.pinned ?? false,
   }
 }
 
 export default function NoticeBoard() {
   const isDesktop = useIsDesktop()
+  const { showSuccess } = useAppToast()
 
   const [notices, setNotices] = React.useState<NoticeBoardEntry[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -148,6 +151,13 @@ export default function NoticeBoard() {
     setSelectedNotice(null)
   }, [])
 
+  const handleTogglePin = React.useCallback(async (id: string) => {
+    const updated = await toggleNoticePin(id)
+    setNotices(prev => prev.map(n => n.id === id ? updated : n))
+    setSelectedNotice(prev => prev && prev.id === id ? updated : prev)
+    showSuccess(updated.pinned ? 'Notice pinned' : 'Notice unpinned')
+  }, [showSuccess])
+
   const handleCreateNotice = React.useCallback(async (data: NoticeFormValues) => {
     const newEntry = await createNoticeBoardEntry(data)
     setNotices(prev => [newEntry, ...prev])
@@ -189,10 +199,124 @@ export default function NoticeBoard() {
 
       {/* Main content area */}
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-20 w-full rounded-lg" />
-          ))}
+        <div className={isDesktop ? 'flex gap-4 items-start' : ''}>
+          {/* Left column: toolbar + notice list skeleton */}
+          <div className={isDesktop ? 'flex-1 min-w-0 space-y-3' : 'space-y-3'}>
+            {/* Toolbar skeleton */}
+            <Tile
+              id="notice-board-toolbar-skeleton"
+              layoutMode="block"
+              background="default"
+              borderRadius="lg"
+              shadowed={false}
+              padding="p-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <Skeleton className="h-5 w-[100px]" />
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-8 w-[140px] rounded-md" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-[40px]" />
+                    <Skeleton className="h-8 w-[100px] rounded-md" />
+                  </div>
+                  <Skeleton className="h-8 w-[80px] rounded-md" />
+                </div>
+              </div>
+            </Tile>
+
+            {/* Notice card skeletons */}
+            {[1, 2, 3, 4, 5].map(i => (
+              <Tile
+                key={i}
+                id={`notice-skeleton-${i}`}
+                layoutMode="block"
+                background="card"
+                borderRadius="lg"
+                shadowed={false}
+                padding="p-4"
+                className="border"
+              >
+                <div className="flex items-center gap-4">
+                  {/* Thumbnail */}
+                  <Skeleton className="size-[52px] min-w-[52px] rounded-lg" />
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 flex items-center gap-4">
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <Skeleton className="h-4 w-3/5" />
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <Skeleton className="h-3 w-[50px]" />
+                          <Skeleton className="h-3 w-[80px]" />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Skeleton className="h-3 w-[50px]" />
+                          <Skeleton className="h-3 w-[80px]" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <div className="text-right space-y-1">
+                        <Skeleton className="h-3 w-[80px]" />
+                        <Skeleton className="h-3 w-[100px]" />
+                      </div>
+                      <Skeleton className="h-6 w-[60px] rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              </Tile>
+            ))}
+          </div>
+
+          {/* Detail panel skeleton - desktop only */}
+          {isDesktop && (
+            <div className="w-[380px] flex-shrink-0 sticky top-4">
+              <Tile
+                id="notice-detail-skeleton"
+                layoutMode="block"
+                background="card"
+                borderRadius="lg"
+                shadowed={false}
+                padding="p-5"
+                className="border"
+              >
+                <div className="space-y-4">
+                  {/* Image placeholder */}
+                  <Skeleton className="h-[160px] w-full rounded-lg" />
+                  {/* Status + views */}
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-6 w-[60px] rounded-full" />
+                    <Skeleton className="h-4 w-[60px]" />
+                  </div>
+                  {/* Title */}
+                  <Skeleton className="h-5 w-4/5" />
+                  {/* Author */}
+                  <Skeleton className="h-3.5 w-[140px]" />
+                  {/* Meta rows */}
+                  <div className="space-y-3 pt-2">
+                    {[1, 2, 3].map(j => (
+                      <div key={j} className="flex items-center justify-between">
+                        <Skeleton className="h-3.5 w-[70px]" />
+                        <Skeleton className="h-3.5 w-[140px]" />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Content lines */}
+                  <div className="space-y-2 pt-2">
+                    <Skeleton className="h-3.5 w-[60px]" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                  </div>
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-3 pt-3 border-t">
+                    <Skeleton className="h-8 w-[70px] rounded-md" />
+                    <Skeleton className="h-8 w-[70px] rounded-md" />
+                    <Skeleton className="h-8 w-[70px] rounded-md" />
+                  </div>
+                </div>
+              </Tile>
+            </div>
+          )}
         </div>
       ) : (
         <div className={isDesktop ? 'flex gap-4 items-start' : ''}>
@@ -296,6 +420,7 @@ export default function NoticeBoard() {
                   notice={notice}
                   isSelected={selectedNotice?.id === notice.id}
                   onClick={handleNoticeClick}
+                  onTogglePin={handleTogglePin}
                 />
               ))
             )}
@@ -321,6 +446,7 @@ export default function NoticeBoard() {
                 onClose={handleCloseDetail}
                 onDelete={handleDeleteNotice}
                 onEdit={handleEditNotice}
+                onTogglePin={handleTogglePin}
                 showClose={false}
               />
             </div>
@@ -341,6 +467,7 @@ export default function NoticeBoard() {
                 onClose={handleCloseDetail}
                 onDelete={handleDeleteNotice}
                 onEdit={handleEditNotice}
+                onTogglePin={handleTogglePin}
               />
             )}
           </SheetContent>

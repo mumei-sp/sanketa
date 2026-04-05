@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { TextField, SelectField, DateField, TextareaField, GRID_COLS_2 } from '@/components/form/fields'
+import { TextField, SelectField, DateField, TextareaField, SwitchField, GRID_COLS_2 } from '@/components/form/fields'
 import { FormSection } from '@/components/form/FormSection'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -71,6 +71,7 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
       dateValue: '',
       dateEndValue: '',
       thumbnail: PRESET_IMAGES[0].url,
+      pinned: false,
     },
   })
 
@@ -267,6 +268,14 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
                   <p role="alert" className="text-destructive text-sm">{errors.thumbnail.message}</p>
                 )}
               </div>
+
+              {/* Pin toggle */}
+              <SwitchField
+                name="pinned"
+                control={control}
+                label="Pin this notice"
+                description="Pinned notices appear at the top of the notice board"
+              />
             </FormSection>
           </form>
         </div>
