@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { status, accent } from '@/theme/colors'
+import { status } from '@/theme/colors'
 import type { StudentPerformance } from '@/features/students/types'
 
 interface PerformanceBadgeProps {
@@ -8,34 +8,23 @@ interface PerformanceBadgeProps {
 }
 
 /**
- * Badge component for displaying student performance levels
- * Soft pastel badge with circular dot indicator
- * Uses theme color tokens from colors.ts
+ * Badge component for displaying student performance levels.
+ *
+ * Each level maps to a semantic status color:
+ *   Good         → success (green)
+ *   Needs Support → warning (amber)
+ *   At Risk      → danger  (red)
+ *
+ * Uses .soft for background, .text for label, .dot for the indicator circle.
  */
 export function PerformanceBadge({ performance, className }: PerformanceBadgeProps) {
-  const variants: Record<StudentPerformance, { background: string; text: string }> = {
-    Good: {
-      background: accent.soft,
-      text: status.info.text,
-    },
-    'Needs Support': {
-      background: status.info.soft,
-      text: status.info.text,
-    },
-    'At Risk': {
-      background: status.danger.soft,
-      text: status.danger.text,
-    },
+  const statusMap: Record<StudentPerformance, typeof status.success> = {
+    Good: status.success,
+    'Needs Support': status.warning,
+    'At Risk': status.danger,
   }
 
-  const dotColors: Record<StudentPerformance, string> = {
-    Good: status.success.base,
-    'Needs Support': status.warning.base,
-    'At Risk': status.danger.base,
-  }
-
-  const variant = variants[performance]
-  const dotColor = dotColors[performance]
+  const s = statusMap[performance]
 
   return (
     <div
@@ -44,13 +33,13 @@ export function PerformanceBadge({ performance, className }: PerformanceBadgePro
         className,
       )}
       style={{
-        backgroundColor: variant.background,
-        color: variant.text,
+        backgroundColor: s.soft,
+        color: s.text,
       }}
     >
       <div
         className="size-1.5 rounded-full"
-        style={{ backgroundColor: dotColor }}
+        style={{ backgroundColor: s.dot }}
       />
       <span className="text-badge">{performance}</span>
     </div>

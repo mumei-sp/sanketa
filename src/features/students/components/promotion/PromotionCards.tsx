@@ -22,7 +22,7 @@ const DECISION_OPTIONS: { value: PromotionDecision; label: string; icon: React.E
 ]
 
 const PERFORMANCE_STYLES: Record<string, { bg: string; color: string }> = {
-  Good: { bg: colors.accent.base, color: colors.text.heading },
+  Good: { bg: colors.status.success.soft, color: colors.status.success.text },
   'Needs Support': { bg: colors.status.warning.soft, color: colors.status.warning.text },
   'At Risk': { bg: colors.status.danger.soft, color: colors.status.danger.text },
 }
