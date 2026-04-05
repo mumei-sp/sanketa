@@ -21,10 +21,12 @@ const DECISION_OPTIONS: { value: PromotionDecision; label: string; icon: React.E
   { value: 'transfer', label: 'Transfer', icon: ArrowRight, activeColor: colors.text.heading },
 ]
 
+import { PERFORMANCE_COLORS } from '../PerformanceBadge'
+
 const PERFORMANCE_STYLES: Record<string, { bg: string; color: string }> = {
-  Good: { bg: colors.status.success.soft, color: colors.status.success.text },
-  'Needs Support': { bg: colors.status.warning.soft, color: colors.status.warning.text },
-  'At Risk': { bg: colors.status.danger.soft, color: colors.status.danger.text },
+  Good: { bg: PERFORMANCE_COLORS.Good.bg, color: PERFORMANCE_COLORS.Good.text },
+  'Needs Support': { bg: PERFORMANCE_COLORS['Needs Support'].bg, color: PERFORMANCE_COLORS['Needs Support'].text },
+  'At Risk': { bg: PERFORMANCE_COLORS['At Risk'].bg, color: PERFORMANCE_COLORS['At Risk'].text },
 }
 
 export function PromotionCards({ candidates, onDecisionChange }: PromotionCardsProps) {
