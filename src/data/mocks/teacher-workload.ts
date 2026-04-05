@@ -218,7 +218,7 @@ export const teacherWorkloadData: Record<string, Record<string, TeacherWorkloadD
       },
     ],
   },
-  Language: {
+  English: {
     Weekly: [
       {
         teacherName: 'Rayan Yasmine',

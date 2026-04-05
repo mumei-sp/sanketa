@@ -13,9 +13,9 @@ interface DepartmentChartProps {
 const DEPARTMENT_COLORS: Record<string, string> = {
   Science: baseColors.heading,
   Mathematics: baseColors.pink,
-  Language: baseColors.blue,
-  Social: '#A5D6A7',
-  Arts: '#FFB74D',
+  English: baseColors.blue,
+  'Social Studies': '#A5D6A7',
+  Art: '#FFB74D',
   'Physical Education': '#E0E0E0',
 }
 

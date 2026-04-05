@@ -34,8 +34,8 @@ export const teacherStatisticsData: TeacherStatistics = {
 export const departmentDistributionData: DepartmentData[] = [
   { name: 'Science', count: 19, percentage: 22 },
   { name: 'Mathematics', count: 17, percentage: 20 },
-  { name: 'Language', count: 14, percentage: 16 },
-  { name: 'Social', count: 13, percentage: 15 },
-  { name: 'Arts', count: 11, percentage: 13 },
+  { name: 'English', count: 14, percentage: 16 },
+  { name: 'Social Studies', count: 13, percentage: 15 },
+  { name: 'Art', count: 11, percentage: 13 },
   { name: 'Physical Education', count: 12, percentage: 12 },
 ]
