@@ -203,7 +203,7 @@ export function AttendanceOverviewChart({
         padding={0}
         shadowed={false}
       >
-        <Card className="pt-6 pb-0">
+        <Card className="pt-4 pb-2">
           <CardHeader>
             <h3 className="text-section-title">Attendance Overview</h3>
             <CardAction>
@@ -227,7 +227,7 @@ export function AttendanceOverviewChart({
       padding={0}
       shadowed={false}
     >
-      <Card className="pt-6 pb-0">
+      <Card className="pt-4 pb-2">
         <CardHeader>
           <h3 className="text-section-title">Attendance Overview</h3>
           <CardAction>

@@ -60,7 +60,7 @@ export function AttendancePage() {
           background="card"
           borderRadius="lg"
           shadowed={true}
-          padding="p-4"
+          padding="pt-4 px-4 pb-2"
         >
           <AttendanceOverviewAreaChart data={attendanceOverviewMonthlyData} isLoading={false} />
         </Tile>

@@ -14,6 +14,7 @@ import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { getSectionsForGrade } from '@/utils/class-section-helpers'
 import { PromotionTable } from '../components/promotion/PromotionTable'
 import { PromotionCards } from '../components/promotion/PromotionCards'
 import { PromotionSummaryBar } from '../components/promotion/PromotionSummaryBar'
@@ -267,6 +268,10 @@ export function PromotionPage() {
         candidates={candidates}
         isExecuting={isExecuting}
         onExecute={handleExecute}
+        availableSections={getSectionsForGrade(
+          config.classSections,
+          String(parseInt(selectedClass.replace(/[A-Z]/g, '')) + 1),
+        )}
       />
     </div>
   )

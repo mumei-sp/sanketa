@@ -25,8 +25,9 @@ import { ReportCardPreview } from '../components/ReportCardPreview'
 import { getGradeBreadcrumbs } from '../utils/breadcrumbs'
 import { EXAMS_BY_TERM, GRADE_MESSAGES } from '../constants'
 import { useGradeCalculator } from '../hooks/use-grade-calculator'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { getClassLabels } from '@/utils/class-section-helpers'
 import {
-  fetchAvailableClasses,
   fetchGradeableSubjects,
   fetchGradeSheet,
   fetchStudentReportCard,
@@ -40,14 +41,12 @@ export function GradeSheetPage() {
   const { calculateGrade, passingThreshold } = useGradeCalculator()
 
   // ── Reference data ──
-  const [classes, setClasses] = React.useState<string[]>([])
+  const { config } = useSchoolConfig()
+  const classes = React.useMemo(() => getClassLabels(config.classSections), [config.classSections])
   const [subjectList, setSubjectList] = React.useState<{ id: string; name: string; shortName: string }[]>([])
 
   React.useEffect(() => {
-    Promise.all([fetchAvailableClasses(), fetchGradeableSubjects()]).then(([cls, subs]) => {
-      setClasses(cls)
-      setSubjectList(subs)
-    })
+    fetchGradeableSubjects().then(setSubjectList)
   }, [])
 
   // ── Selections ──

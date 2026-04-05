@@ -1,10 +1,14 @@
-/** Mock data for Academic Performance by Grade chart on Students page */
+/**
+ * Mock data for Academic Performance by Grade chart on Students page.
+ *
+ * Each entry has a `month` key plus `grade{N}` keys for each grade tracked.
+ * The chart reads grade keys dynamically — add/remove grades here and
+ * the chart adapts automatically.
+ */
 
 export interface AcademicPerformanceEntry {
   month: string
-  grade7: number
-  grade8: number
-  grade9: number
+  [gradeKey: `grade${string}`]: number | string
 }
 
 export const academicPerformanceLastSemester: AcademicPerformanceEntry[] = [

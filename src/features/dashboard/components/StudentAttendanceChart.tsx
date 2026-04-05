@@ -82,7 +82,7 @@ export function StudentAttendanceChart({ datasets, isLoading = false }: StudentA
 
   return (
     <Tile id="student-attendance-tile" layoutMode="block" background="transparent" padding={0} shadowed={false} className="h-full">
-      <Card className="w-full h-full pt-4 pb-4 flex flex-col gap-0">
+      <Card className="w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Student Attendance</h3>
           <CardAction>
@@ -99,9 +99,9 @@ export function StudentAttendanceChart({ datasets, isLoading = false }: StudentA
           </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0">
-          <div className={needsScroll ? 'overflow-x-auto' : ''}>
-            <div className="chart-scale" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
-              <ResponsiveContainer width="100%" height={180}>
+          <div className={`h-full ${needsScroll ? 'overflow-x-auto' : ''}`}>
+            <div className="chart-scale h-full" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={160}>
                 <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <ChartGradient id="attendanceBarGradient" color={baseColors.pink} topOpacity={0.9} bottomOpacity={0.4} />

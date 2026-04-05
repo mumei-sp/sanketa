@@ -5,7 +5,8 @@ import { colors, darken, baseColors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
 import { useAttendanceHistory } from '../hooks/use-attendance-history'
-import { fetchAvailableClasses } from '@/api/services/attendance-service'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { getClassLabels } from '@/utils/class-section-helpers'
 import { AttendanceMarkingTable } from '../components/AttendanceMarkingTable'
 import { AttendanceMarkingCards } from '../components/AttendanceMarkingCards'
 import { AttendanceDailySummaryBar } from '../components/AttendanceDailySummaryBar'
@@ -41,11 +42,9 @@ export function DailyAttendancePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = React.useState<ViewMode>('mark')
 
-  // Available classes
-  const [classes, setClasses] = React.useState<string[]>([])
-  React.useEffect(() => {
-    fetchAvailableClasses().then(setClasses)
-  }, [])
+  // Available classes from school config
+  const { config } = useSchoolConfig()
+  const classes = React.useMemo(() => getClassLabels(config.classSections), [config.classSections])
 
   // Selected class and date from URL params or defaults
   const selectedClass = searchParams.get('class') ?? classes[0] ?? ''

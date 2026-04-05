@@ -181,7 +181,7 @@ export function WorkloadDistributionChart({
         padding={0}
         shadowed={false}
       >
-        <Card className="h-[320px] w-full pt-4 pb-0 flex flex-col gap-0">
+        <Card className="h-[320px] w-full pt-4 pb-2 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Workload Distribution</h3>
             <CardAction>
@@ -210,7 +210,7 @@ export function WorkloadDistributionChart({
       padding={0}
       shadowed={false}
     >
-      <Card className="h-[260px] w-full pt-4 pb-0 flex flex-col gap-0">
+      <Card className="h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Workload Distribution</h3>
           <CardAction>

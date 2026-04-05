@@ -22,8 +22,9 @@ import { GradeEntryCards } from '../components/GradeEntryCards'
 import { GradeSummaryBar } from '../components/GradeSummaryBar'
 import { getGradeBreadcrumbs } from '../utils/breadcrumbs'
 import { EXAMS_BY_TERM } from '../constants'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { getClassLabels } from '@/utils/class-section-helpers'
 import {
-  fetchAvailableClasses,
   fetchGradeableSubjects,
   fetchGradeSubmission,
   fetchClassRosterEntries,
@@ -36,14 +37,12 @@ export function GradeEntryPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // ── Reference data ──
-  const [classes, setClasses] = React.useState<string[]>([])
+  const { config } = useSchoolConfig()
+  const classes = React.useMemo(() => getClassLabels(config.classSections), [config.classSections])
   const [subjects, setSubjects] = React.useState<{ id: string; name: string; shortName: string }[]>([])
 
   React.useEffect(() => {
-    Promise.all([fetchAvailableClasses(), fetchGradeableSubjects()]).then(([cls, subs]) => {
-      setClasses(cls)
-      setSubjects(subs)
-    })
+    fetchGradeableSubjects().then(setSubjects)
   }, [])
 
   // ── Selections from URL params ──

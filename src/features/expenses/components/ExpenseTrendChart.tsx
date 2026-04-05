@@ -114,7 +114,7 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
         padding={0}
         shadowed={false}
       >
-        <Card className="w-full pt-4 pb-0 flex flex-col gap-0">
+        <Card className="w-full pt-4 pb-2 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Expense Trend</h3>
             <CardAction>
@@ -137,7 +137,7 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
       padding={0}
       shadowed={false}
     >
-      <Card className="w-full pt-4 pb-0 flex flex-col gap-0">
+      <Card className="w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Expense Trend</h3>
           <CardAction>
@@ -153,10 +153,10 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
             </Select>
           </CardAction>
         </CardHeader>
-        <CardContent className="px-4 pt-0 pb-4">
-          <div className="chart-scale">
-            <ResponsiveContainer width="100%" height={204}>
-              <BarChart key={timeRange} data={filteredData} margin={{ top: 20, right: 10, left: 4, bottom: 8 }}>
+        <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0">
+          <div className="chart-scale h-full">
+            <ResponsiveContainer width="100%" height="100%" minHeight={180}>
+              <BarChart key={timeRange} data={filteredData} margin={{ top: 20, right: 10, left: 4, bottom: 0 }}>
                 <defs>
                   <ChartGradient id="expenseTrendGradient" color={baseColors.pink} topOpacity={0.8} bottomOpacity={0.3} />
                 </defs>

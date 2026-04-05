@@ -11,6 +11,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { baseColors } from '@/theme/colors'
+import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { GenderDataset } from '../types'
 
 interface StudentsByGenderChartProps {
@@ -20,14 +21,23 @@ interface StudentsByGenderChartProps {
 
 export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsByGenderChartProps) {
   const [selected, setSelected] = React.useState('')
+  const [pickedGrades, setPickedGrades] = React.useState<string[]>([])
+
+  // Filter datasets to only show grades selected via ClassPicker
+  // If none match, show all (graceful fallback for mismatched defaults)
+  const filteredDatasets = React.useMemo(() => {
+    if (pickedGrades.length === 0) return datasets
+    const filtered = datasets.filter(ds => pickedGrades.some(g => ds.value === `grade-${g}`))
+    return filtered.length > 0 ? filtered : datasets
+  }, [datasets, pickedGrades])
 
   React.useEffect(() => {
-    if (datasets.length > 0 && !selected) {
-      setSelected(datasets[0].value)
+    if (filteredDatasets.length > 0 && !filteredDatasets.find(d => d.value === selected)) {
+      setSelected(filteredDatasets[0].value)
     }
-  }, [datasets, selected])
+  }, [filteredDatasets, selected])
 
-  const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
+  const activeDataset = filteredDatasets.find(d => d.value === selected) ?? filteredDatasets[0]
   const data = activeDataset?.data ?? []
   const total = React.useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])
 
@@ -47,20 +57,30 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
 
   return (
     <Tile id="gender-chart-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
-      <Card className="w-full h-full pt-4 pb-4 flex flex-col gap-0">
+      <Card className="group/chart w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Students by Gender</h3>
           <CardAction>
-            <Select value={selected} onValueChange={setSelected}>
-              <SelectTrigger className="w-[100px] bg-accent">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {datasets.map(ds => (
-                  <SelectItem key={ds.value} value={ds.value}>{ds.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <div className="opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200">
+                <ClassPicker
+                  storageKey="dash-gender"
+                  mode="grade"
+                  max={3}
+                  onChange={setPickedGrades}
+                />
+              </div>
+              <Select value={selected} onValueChange={setSelected}>
+                <SelectTrigger className="w-[100px] bg-accent">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredDatasets.map(ds => (
+                    <SelectItem key={ds.value} value={ds.value}>{ds.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0">

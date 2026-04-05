@@ -6,12 +6,12 @@ import { spacing } from '@/config/spacing'
 import { border } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { useAppToast } from '@/hooks/use-app-toast'
-import { fetchClassSections, fetchAllClassTimetables, fetchClassTimetable } from '@/api/services/timetable-service'
+import { fetchAllClassTimetables, fetchClassTimetable } from '@/api/services/timetable-service'
 import { useClassTimetable } from '../hooks/use-class-timetable'
 import { TimetableGrid } from '../components/TimetableGrid'
 import { TimetableToolbar } from '../components/TimetableToolbar'
 import { TimetableSlotEditor } from '../components/TimetableSlotEditor'
-import type { ClassSection, TimetableSlot } from '../types'
+import type { TimetableSlot } from '../types'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: '/' },
@@ -22,20 +22,13 @@ export function TimetablePage() {
   const { config } = useSchoolConfig()
   const { showSuccess, showError } = useAppToast()
 
-  // Class sections
-  const [classSections, setClassSections] = React.useState<ClassSection[]>([])
-  const [selectedClassId, setSelectedClassId] = React.useState('')
-
-  React.useEffect(() => {
-    fetchClassSections().then(sections => {
-      setClassSections(sections)
-      if (sections.length > 0 && !selectedClassId) {
-        // Default to first higher grade class (9A)
-        const defaultClass = sections.find(s => s.label === '9A') ?? sections[0]
-        setSelectedClassId(defaultClass.id)
-      }
-    })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Class sections from school config
+  const classSections = config.classSections
+  const [selectedClassId, setSelectedClassId] = React.useState(() => {
+    if (classSections.length === 0) return ''
+    const defaultClass = classSections.find(s => s.label === '9A') ?? classSections[0]
+    return defaultClass.id
+  })
 
   // Track which classes have timetables (for "Copy from..." feature)
   const [classesWithTimetables, setClassesWithTimetables] = React.useState<

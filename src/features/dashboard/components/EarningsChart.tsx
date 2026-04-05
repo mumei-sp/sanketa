@@ -105,7 +105,7 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
 
   return (
     <Tile id="earnings-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
-      <Card className="w-full h-full pt-4 pb-4 flex flex-col gap-0">
+      <Card className="w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Earnings</h3>
           <CardAction>
@@ -122,9 +122,9 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
           </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0">
-          <div className={needsScroll ? 'overflow-x-auto' : ''}>
-            <div className="chart-scale" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
-              <ResponsiveContainer width="100%" height={220}>
+          <div className={`h-full ${needsScroll ? 'overflow-x-auto' : ''}`}>
+            <div className="chart-scale h-full" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={180}>
                 <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="earningsFill" x1="0" y1="0" x2="0" y2="1">
