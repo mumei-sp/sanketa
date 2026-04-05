@@ -1,5 +1,6 @@
 import { colors, darken, baseColors } from '@/theme/colors'
-import { spacing } from '@/config/spacing'
+import { StudentAvatar } from '@/components/shared/StudentAvatar'
+import { MobileCardItem } from '@/components/shared/MobileCardItem'
 import { AttendanceStatusSelect } from './AttendanceStatusSelect'
 import type { ClassRosterStudent, MarkableAttendanceStatus } from '../types'
 
@@ -51,32 +52,15 @@ export function AttendanceMarkingCards({
         }
 
         return (
-          <div
+          <MobileCardItem
             key={student.id}
-            className="rounded-lg border transition-all"
-            style={{
-              borderColor,
-              backgroundColor: bgColor,
-              padding: spacing['3'],
-            }}
+            borderColor={borderColor}
+            bgColor={bgColor}
+            className="transition-all"
           >
             {/* Header: Avatar + Name + Roll */}
             <div className="flex items-center gap-2.5 mb-2.5">
-              {student.avatarUrl ? (
-                <img
-                  src={student.avatarUrl}
-                  alt={student.name}
-                  className="rounded-full object-cover flex-shrink-0 overflow-hidden"
-                  style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base }}
-                />
-              ) : (
-                <div
-                  className="rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden"
-                  style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base, color: colors.text.heading }}
-                >
-                  {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </div>
-              )}
+              <StudentAvatar name={student.name} avatarUrl={student.avatarUrl} />
               <div className="flex-1 min-w-0">
                 <div
                   className="text-sm font-medium truncate"
@@ -113,7 +97,7 @@ export function AttendanceMarkingCards({
                 }}
               />
             )}
-          </div>
+          </MobileCardItem>
         )
       })}
     </div>

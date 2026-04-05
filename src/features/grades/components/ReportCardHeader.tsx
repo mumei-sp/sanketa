@@ -8,6 +8,8 @@
 import { GraduationCap } from 'lucide-react'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { text, border } from '@/theme/colors'
+import { MONTH_LABELS } from '@/config/school-config'
+import { getAcademicYear } from '@/utils/academic-date'
 
 interface ReportCardHeaderProps {
   examName: string
@@ -16,11 +18,9 @@ interface ReportCardHeaderProps {
 export function ReportCardHeader({ examName }: ReportCardHeaderProps) {
   const { config } = useSchoolConfig()
 
-  // Derive academic year label
-  const startMonth = config.academicYearStartMonth
-  const startYear = 2035 // mock year
-  const endYear = startMonth >= 1 ? startYear + 1 : startYear
-  const academicYear = `Academic Year ${startYear}–${String(endYear).slice(2)}`
+  // Derive academic year label from current date + config
+  const ay = getAcademicYear(new Date(), config.academicYearStartMonth)
+  const academicYear = `Academic Year ${ay.label}`
 
   return (
     <div

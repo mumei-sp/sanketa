@@ -25,7 +25,7 @@ export function CalendarPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [selectedCategory, setSelectedCategory] = React.useState<EventCategory | 'all'>('all')
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(
-    () => new Date(2035, 2, 12), // Default to Mar 12 (English Lit Exam + Parent-Teacher Meeting)
+    () => new Date(),
   )
   const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null)
   const [showDetails, setShowDetails] = React.useState(true)

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, UserCheck, History, Download } from 'lucide-react'
+import { StatusBanner } from '@/components/shared/StatusBanner'
 import { colors, darken, baseColors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
@@ -307,39 +308,21 @@ export function DailyAttendancePage() {
         </div>
 
         {/* ═══ STATUS BANNER ═══ */}
-        {viewMode === 'mark' && selectedClass && (
-          <div
-            className="rounded-lg border flex items-center gap-2 text-sm"
-            style={{
-              padding: `${spacing['2.5']} ${spacing['3']}`,
-              borderColor: darken(baseColors.blue, 10),
-              backgroundColor: existingSubmission ? colors.accent.base : colors.accent.base,
-              color: colors.text.heading,
-            }}
-          >
-            {existingSubmission ? (
-              <>
-                <CheckCircle className="w-4 h-4" />
-                <span>
-                  Submitted by <strong>{existingSubmission.submittedBy}</strong>
-                  {existingSubmission.submittedAt && (
-                    <> at {new Date(existingSubmission.submittedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</>
-                  )}
-                  {existingSubmission.lastEditedBy && (
-                    <> · Last edited by <strong>{existingSubmission.lastEditedBy}</strong></>
-                  )}
-                </span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-4 h-4" />
-                <span>
-                  Attendance not yet submitted for <strong>{formatDisplayDate(selectedDate)}</strong>
-                </span>
-              </>
+        {viewMode === 'mark' && selectedClass && existingSubmission ? (
+          <StatusBanner icon={<CheckCircle className="w-4 h-4" />}>
+            Submitted by <strong>{existingSubmission.submittedBy}</strong>
+            {existingSubmission.submittedAt && (
+              <> at {new Date(existingSubmission.submittedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</>
             )}
-          </div>
-        )}
+            {existingSubmission.lastEditedBy && (
+              <> · Last edited by <strong>{existingSubmission.lastEditedBy}</strong></>
+            )}
+          </StatusBanner>
+        ) : viewMode === 'mark' && selectedClass ? (
+          <StatusBanner icon={<AlertTriangle className="w-4 h-4" />}>
+            Attendance not yet submitted for <strong>{formatDisplayDate(selectedDate)}</strong>
+          </StatusBanner>
+        ) : null}
 
         {/* ═══ CONTENT ═══ */}
         {viewMode === 'mark' ? (

@@ -10,6 +10,7 @@ import { ArrowUpCircle, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
+import { getAcademicYear } from '@/utils/academic-date'
 import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -137,7 +138,7 @@ export function PromotionPage() {
             </select>
 
             <span className="text-xs" style={{ color: colors.text.muted }}>
-              Academic Year 2035–36
+              Academic Year {getAcademicYear(new Date(), config.academicYearStartMonth).label}
             </span>
           </div>
 

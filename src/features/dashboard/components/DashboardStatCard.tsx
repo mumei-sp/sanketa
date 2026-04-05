@@ -20,7 +20,7 @@ export function DashboardStatCard({ stat }: DashboardStatCardProps) {
             className="text-numeric text-2xl"
             style={{ color: baseColors.heading }}
           >
-            {stat.value.toLocaleString('en-US')}
+            {stat.value.toLocaleString('en-IN')}
           </span>
         </div>
         <div

@@ -28,8 +28,8 @@ export default function StudentDetails() {
   const { student, isLoading, error } = useStudentById(id)
   const { detailData } = useStudentDetailData(id)
 
-  const [calYear, setCalYear] = React.useState(2035)
-  const [calMonth, setCalMonth] = React.useState(2) // March
+  const [calYear, setCalYear] = React.useState(() => new Date().getFullYear())
+  const [calMonth, setCalMonth] = React.useState(() => new Date().getMonth())
 
   const handleBack = React.useCallback(() => {
     navigate('/students')

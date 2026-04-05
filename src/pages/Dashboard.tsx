@@ -67,7 +67,7 @@ export default function Dashboard() {
   const [notices, setNotices] = React.useState<NoticeBoardEntry[]>([])
   const [activity, setActivity] = React.useState<RecentActivityItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
-  const [calendarDate, setCalendarDate] = React.useState(new Date(2035, 2, 1))
+  const [calendarDate, setCalendarDate] = React.useState(() => new Date())
 
   React.useEffect(() => {
     async function loadData() {

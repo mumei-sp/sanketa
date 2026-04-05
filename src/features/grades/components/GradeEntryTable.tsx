@@ -9,6 +9,7 @@ import * as React from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
+import { StudentAvatar } from '@/components/shared/StudentAvatar'
 import { colors } from '@/theme/colors'
 import { useGradeCalculator } from '../hooks/use-grade-calculator'
 import type { GradeEntry } from '../types'
@@ -46,12 +47,7 @@ export function GradeEntryTable({
         const s = row.original
         return (
           <div className="flex items-center gap-2.5">
-            <div
-              className="rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden"
-              style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base, color: colors.text.heading }}
-            >
-              {s.studentName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-            </div>
+            <StudentAvatar name={s.studentName} />
             <span className="text-sm font-medium text-text-heading">{s.studentName}</span>
           </div>
         )

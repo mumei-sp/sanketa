@@ -42,7 +42,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
         <p className="text-xs font-semibold" style={{ color: baseColors.heading }}>
-          {data.month} 2035
+          {data.month} {new Date().getFullYear()}
         </p>
         <p className="text-sm font-bold" style={{ color: baseColors.heading }}>
           ₹{data.amount.toLocaleString('en-IN')}

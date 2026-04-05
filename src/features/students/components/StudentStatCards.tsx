@@ -74,7 +74,7 @@ export function StudentStatCard({
           lineHeight: 1.15,
         }}
       >
-        {value.toLocaleString('en-US')}
+        {value.toLocaleString('en-IN')}
       </span>
       <span
         style={{

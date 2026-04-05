@@ -7,6 +7,8 @@
 
 import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
+import { StudentAvatar } from '@/components/shared/StudentAvatar'
+import { MobileCardItem } from '@/components/shared/MobileCardItem'
 import { useGradeCalculator } from '../hooks/use-grade-calculator'
 import type { GradeEntry } from '../types'
 
@@ -33,23 +35,10 @@ export function GradeEntryCards({
           : null
 
         return (
-          <div
-            key={entry.studentId}
-            className="rounded-lg border"
-            style={{
-              padding: spacing['3'],
-              borderColor: colors.border.default,
-              backgroundColor: colors.background.card,
-            }}
-          >
+          <MobileCardItem key={entry.studentId}>
             {/* Top row: avatar + name + roll */}
             <div className="flex items-center gap-2.5 mb-2.5">
-              <div
-                className="rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden"
-                style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base, color: colors.text.heading }}
-              >
-                {entry.studentName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </div>
+              <StudentAvatar name={entry.studentName} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-text-heading truncate">{entry.studentName}</div>
                 <div className="text-xs text-text-muted">Roll #{entry.rollNumber}</div>
@@ -94,7 +83,7 @@ export function GradeEntryCards({
                 className="flex-1 min-w-0 text-sm rounded-md border px-2 py-1.5 outline-none border-border-default text-text-body bg-bg-card"
               />
             </div>
-          </div>
+          </MobileCardItem>
         )
       })}
     </div>

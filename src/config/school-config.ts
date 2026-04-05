@@ -7,9 +7,8 @@
  * This is the SINGLE SOURCE OF TRUTH for configuration shape and defaults.
  */
 
-import { accent, primary, status, border } from '@/theme/colors'
 import type { ClassSection, Subject } from '@/features/timetable/types'
-export type { ClassSection, Subject }
+import { accent, primary, status, border } from '@/theme/colors'
 
 // ============================================================================
 // Types

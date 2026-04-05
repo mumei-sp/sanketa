@@ -35,9 +35,6 @@ export function TeacherForm({
         data => {
           onSubmit?.(data)
         },
-        errors => {
-          console.log('Form validation failed with errors:', errors)
-        },
       ),
     [handleSubmit, onSubmit],
   )

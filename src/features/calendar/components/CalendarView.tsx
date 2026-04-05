@@ -76,7 +76,7 @@ export function CalendarView({
   const [currentView, setCurrentView] = React.useState<CalendarViewType>('dayGridMonth')
   const [currentTitle, setCurrentTitle] = React.useState('')
   const [monthPickerOpen, setMonthPickerOpen] = React.useState(false)
-  const [pickerYear, setPickerYear] = React.useState(2035)
+  const [pickerYear, setPickerYear] = React.useState(() => new Date().getFullYear())
 
   const updateTitle = React.useCallback(() => {
     const api = calendarRef.current?.getApi()
@@ -273,8 +273,8 @@ export function CalendarView({
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
-        initialDate="2035-03-01"
-        now="2035-03-12"
+        initialDate={new Date().toISOString().slice(0, 10)}
+        now={new Date().toISOString().slice(0, 10)}
         events={events}
         eventContent={renderEventContent}
         eventClick={handleEventClick}

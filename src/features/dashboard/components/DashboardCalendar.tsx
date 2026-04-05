@@ -44,7 +44,7 @@ export function DashboardCalendar({
   className,
   embedded = false,
 }: CalendarProps) {
-  const [internalDate, setInternalDate] = React.useState(() => selectedDate ?? new Date(2035, 2, 1))
+  const [internalDate, setInternalDate] = React.useState(() => selectedDate ?? new Date())
   const displayDate = controlledDate ?? internalDate
   const year = displayDate.getFullYear()
   const month = displayDate.getMonth()

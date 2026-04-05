@@ -12,6 +12,7 @@ import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, FileEdit } from 'lucide-react'
 import { toast } from 'sonner'
+import { StatusBanner } from '@/components/shared/StatusBanner'
 import { colors, darken, baseColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import PageHeader from '@/components/layout/PageHeader'
@@ -230,43 +231,22 @@ export function GradeEntryPage() {
         </div>
 
         {/* ═══ STATUS BANNER ═══ */}
-        {selectedClass && (
-          <div
-            className="rounded-lg border flex items-center gap-2 text-sm"
-            style={{
-              padding: `${spacing['2.5']} ${spacing['3']}`,
-              borderColor: darken(baseColors.blue, 10),
-              backgroundColor: colors.accent.base,
-              color: colors.text.heading,
-            }}
-          >
-            {existingSubmission?.status === 'submitted' ? (
-              <>
-                <CheckCircle className="w-4 h-4" />
-                <span>
-                  Submitted by <strong>{existingSubmission.submittedBy}</strong>
-                  {existingSubmission.submittedAt && (
-                    <> on {new Date(existingSubmission.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
-                  )}
-                </span>
-              </>
-            ) : existingSubmission?.status === 'draft' ? (
-              <>
-                <FileEdit className="w-4 h-4" />
-                <span>
-                  Draft saved — {subjectName} grades for Class {selectedClass} ({examObj?.name})
-                </span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-4 h-4" />
-                <span>
-                  Grades not yet entered — {subjectName} for Class {selectedClass} ({examObj?.name})
-                </span>
-              </>
+        {selectedClass && existingSubmission?.status === 'submitted' ? (
+          <StatusBanner icon={<CheckCircle className="w-4 h-4" />}>
+            Submitted by <strong>{existingSubmission.submittedBy}</strong>
+            {existingSubmission.submittedAt && (
+              <> on {new Date(existingSubmission.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
             )}
-          </div>
-        )}
+          </StatusBanner>
+        ) : selectedClass && existingSubmission?.status === 'draft' ? (
+          <StatusBanner icon={<FileEdit className="w-4 h-4" />}>
+            Draft saved — {subjectName} grades for Class {selectedClass} ({examObj?.name})
+          </StatusBanner>
+        ) : selectedClass ? (
+          <StatusBanner icon={<AlertTriangle className="w-4 h-4" />}>
+            Grades not yet entered — {subjectName} for Class {selectedClass} ({examObj?.name})
+          </StatusBanner>
+        ) : null}
 
         {/* ═══ CONTENT ═══ */}
         {isLoading ? (

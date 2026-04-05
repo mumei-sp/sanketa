@@ -38,7 +38,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
       }}
     >
       <p style={{ fontSize: fontSizes.sm, fontWeight: 600, color: text.heading, margin: 0, marginBottom: spacing['1'] }}>
-        {label} 2035
+        {label} {new Date().getFullYear()}
       </p>
       {payload.map((entry, index) => (
         <div key={index} style={{ display: 'flex', alignItems: 'center', gap: spacing['2'], marginTop: spacing['1'] }}>

@@ -43,7 +43,7 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
           className="text-numeric text-2xl"
           style={{ color: text.heading, fontWeight: fontWeights.bold }}
         >
-          {value.toLocaleString('en-US')}
+          {value.toLocaleString('en-IN')}
         </span>
       </div>
       <div

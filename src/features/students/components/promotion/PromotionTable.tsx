@@ -7,29 +7,18 @@
 
 import * as React from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
-import { ArrowUp, X, ArrowRight } from 'lucide-react'
 import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
+import { StudentAvatar } from '@/components/shared/StudentAvatar'
 import { colors } from '@/theme/colors'
+import { PerformanceBadge } from '../PerformanceBadge'
+import { DecisionToggle } from './DecisionToggle'
 import type { PromotionCandidate, PromotionDecision } from '../../types/promotion'
+import type { StudentPerformance } from '../../types'
 
 interface PromotionTableProps {
   candidates: PromotionCandidate[]
   onDecisionChange: (studentId: string, decision: PromotionDecision) => void
-}
-
-const DECISION_OPTIONS: { value: PromotionDecision; label: string; icon: React.ElementType; activeColor: string }[] = [
-  { value: 'promote', label: 'Promote', icon: ArrowUp, activeColor: colors.status.success.base },
-  { value: 'retain', label: 'Retain', icon: X, activeColor: colors.status.danger.base },
-  { value: 'transfer', label: 'Transfer', icon: ArrowRight, activeColor: colors.text.heading },
-]
-
-import { PERFORMANCE_COLORS } from '../PerformanceBadge'
-
-const PERFORMANCE_STYLES: Record<string, { bg: string; color: string }> = {
-  Good: { bg: PERFORMANCE_COLORS.Good.bg, color: PERFORMANCE_COLORS.Good.text },
-  'Needs Support': { bg: PERFORMANCE_COLORS['Needs Support'].bg, color: PERFORMANCE_COLORS['Needs Support'].text },
-  'At Risk': { bg: PERFORMANCE_COLORS['At Risk'].bg, color: PERFORMANCE_COLORS['At Risk'].text },
 }
 
 export function PromotionTable({ candidates, onDecisionChange }: PromotionTableProps) {
@@ -49,12 +38,7 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
         const s = row.original
         return (
           <div className="flex items-center gap-2.5">
-            <div
-              className="rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden"
-              style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base, color: colors.text.heading }}
-            >
-              {s.studentName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-            </div>
+            <StudentAvatar name={s.studentName} />
             <div>
               <span className="text-sm font-medium text-text-heading">{s.studentName}</span>
               {s.status === 'On Leave' && (
@@ -93,52 +77,25 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
     {
       accessorKey: 'performance',
       header: 'Performance',
-      cell: ({ row }) => {
-        const perf = row.original.performance
-        const style = PERFORMANCE_STYLES[perf] || PERFORMANCE_STYLES.Good
-        return (
-          <span
-            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
-            style={{ backgroundColor: style.bg, color: style.color }}
-          >
-            {perf}
-          </span>
-        )
-      },
+      cell: ({ row }) => (
+        <PerformanceBadge
+          performance={row.original.performance as StudentPerformance}
+          variant="compact"
+        />
+      ),
       size: 120,
       enableSorting: false,
     },
     {
       id: 'decision',
       header: 'Decision',
-      cell: ({ row }) => {
-        const { studentId, decision } = row.original
-        return (
-          <div className="flex items-center gap-1.5">
-            {DECISION_OPTIONS.map(opt => {
-              const isActive = decision === opt.value
-              const Icon = opt.icon
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => onDecisionChange(studentId, opt.value)}
-                  className="flex items-center gap-1 text-[11px] font-medium rounded-full px-2.5 py-1 cursor-pointer transition-all"
-                  style={{
-                    backgroundColor: isActive ? opt.activeColor : 'transparent',
-                    color: isActive ? '#fff' : colors.text.muted,
-                    border: isActive ? 'none' : `1px solid ${colors.border.default}`,
-                    opacity: isActive ? 1 : 0.6,
-                  }}
-                >
-                  <Icon className="w-3 h-3" />
-                  {opt.label}
-                </button>
-              )
-            })}
-          </div>
-        )
-      },
+      cell: ({ row }) => (
+        <DecisionToggle
+          currentValue={row.original.decision}
+          onSelect={v => onDecisionChange(row.original.studentId, v)}
+          layout="table"
+        />
+      ),
       size: 260,
       enableSorting: false,
     },

@@ -40,7 +40,7 @@ function getCardConfig(type: AttendanceRecordType) {
 }
 
 function formatNumber(num: number): string {
-  return new Intl.NumberFormat('en-US').format(num)
+  return new Intl.NumberFormat('en-IN').format(num)
 }
 
 function formatPercentage(num: number): string {

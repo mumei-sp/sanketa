@@ -2,9 +2,9 @@
  * PromotionSummaryBar — Sticky bottom bar showing promotion decision counts.
  */
 
-import { ArrowUp, X, ArrowRight } from 'lucide-react'
 import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
+import { DECISION_OPTIONS } from '../../constants/promotion'
 import type { PromotionCandidate } from '../../types/promotion'
 
 interface PromotionSummaryBarProps {
@@ -19,11 +19,18 @@ export function PromotionSummaryBar({ candidates, isExecuting, onConfirm }: Prom
   const transferCount = candidates.filter(c => c.decision === 'transfer').length
   const hasDecisions = candidates.length > 0
 
-  const stats = [
-    { label: 'Promote', count: promoteCount, icon: ArrowUp, color: colors.status.success.base },
-    { label: 'Retain', count: retainCount, icon: X, color: colors.status.danger.base },
-    { label: 'Transfer', count: transferCount, icon: ArrowRight, color: colors.text.heading },
-  ]
+  const countByDecision: Record<string, number> = {
+    promote: promoteCount,
+    retain: retainCount,
+    transfer: transferCount,
+  }
+
+  const stats = DECISION_OPTIONS.map(opt => ({
+    label: opt.label,
+    count: countByDecision[opt.value] ?? 0,
+    icon: opt.icon,
+    color: opt.activeColor,
+  }))
 
   return (
     <div

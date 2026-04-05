@@ -46,8 +46,8 @@ function getFirstDayOfMonth(year: number, month: number): number {
  * Can be used on any detail page or dashboard widget.
  */
 export function MiniCalendar({
-  year: initialYear = 2035,
-  month: initialMonth = 2,
+  year: initialYear = new Date().getFullYear(),
+  month: initialMonth = new Date().getMonth(),
   highlights = [],
   today,
   onMonthChange,

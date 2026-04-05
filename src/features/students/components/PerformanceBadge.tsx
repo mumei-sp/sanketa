@@ -1,63 +1,54 @@
 import { cn } from '@/lib/utils'
+import { status } from '@/theme/colors'
 import type { StudentPerformance } from '@/features/students/types'
 
 interface PerformanceBadgeProps {
   performance: StudentPerformance
+  /** 'default' shows dot indicator + py-1; 'compact' is a smaller pill without dot */
+  variant?: 'default' | 'compact'
   className?: string
-}
-
-/**
- * Performance badge color definitions.
- *
- * Hand-tuned pastel palettes for each level — vibrant enough to be
- * instantly recognizable, soft enough to not overpower the table.
- */
-const PERFORMANCE_COLORS: Record<StudentPerformance, { bg: string; text: string; dot: string }> = {
-  Good: {
-    bg: '#DCFCE7',     // green-100
-    text: '#166534',    // green-800
-    dot: '#22C55E',     // green-500
-  },
-  'Needs Support': {
-    bg: '#FEF3C7',     // amber-100
-    text: '#92400E',    // amber-800
-    dot: '#F59E0B',     // amber-500
-  },
-  'At Risk': {
-    bg: '#FEE2E2',     // red-100
-    text: '#991B1B',    // red-800
-    dot: '#EF4444',     // red-500
-  },
 }
 
 /**
  * Badge component for displaying student performance levels.
  *
- * Standard across all pages: Students table, Promotion table/cards.
- * Import and reuse this component — do not duplicate the color definitions.
+ * Each level maps to a semantic status color:
+ *   Good         → success (green)
+ *   Needs Support → warning (amber)
+ *   At Risk      → danger  (red)
+ *
+ * Uses .soft for background, .text for label, .dot for the indicator circle.
  */
-export function PerformanceBadge({ performance, className }: PerformanceBadgeProps) {
-  const c = PERFORMANCE_COLORS[performance]
+export function PerformanceBadge({ performance, variant = 'default', className }: PerformanceBadgeProps) {
+  const statusMap: Record<StudentPerformance, typeof status.success> = {
+    Good: status.success,
+    'Needs Support': status.warning,
+    'At Risk': status.danger,
+  }
+
+  const s = statusMap[performance]
 
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1',
+        'inline-flex items-center rounded-full px-2.5',
+        variant === 'default' ? 'gap-1.5 py-1' : 'py-0.5',
         className,
       )}
       style={{
-        backgroundColor: c.bg,
-        color: c.text,
+        backgroundColor: s.soft,
+        color: s.text,
       }}
     >
-      <div
-        className="size-1.5 rounded-full"
-        style={{ backgroundColor: c.dot }}
-      />
-      <span className="text-badge font-medium">{performance}</span>
+      {variant === 'default' && (
+        <div
+          className="size-1.5 rounded-full"
+          style={{ backgroundColor: s.dot }}
+        />
+      )}
+      <span className={variant === 'default' ? 'text-badge' : 'text-[11px] font-medium'}>
+        {performance}
+      </span>
     </div>
   )
 }
-
-/** Exported for reuse in Promotion components that render their own badge markup */
-export { PERFORMANCE_COLORS }

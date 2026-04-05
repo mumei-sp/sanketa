@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
+import { StudentAvatar } from '@/components/shared/StudentAvatar'
 import { colors } from '@/theme/colors'
 import { AttendanceStatusSelect } from './AttendanceStatusSelect'
 import type { ClassRosterStudent, MarkableAttendanceStatus } from '../types'
@@ -47,21 +48,7 @@ export function createMarkingColumns(
         const student = row.original
         return (
           <div className="flex items-center gap-2.5">
-            {student.avatarUrl ? (
-              <img
-                src={student.avatarUrl}
-                alt={student.name}
-                className="rounded-full object-cover flex-shrink-0 overflow-hidden"
-                style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base }}
-              />
-            ) : (
-              <div
-                className="rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden"
-                style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', backgroundColor: colors.accent.base, color: colors.text.heading }}
-              >
-                {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </div>
-            )}
+            <StudentAvatar name={student.name} avatarUrl={student.avatarUrl} />
             <span className="text-sm font-medium text-text-heading">
               {student.name}
             </span>

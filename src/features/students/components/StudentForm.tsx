@@ -47,11 +47,7 @@ export function StudentForm({
     () =>
       handleSubmit(
         data => {
-          console.log('Form validation passed, calling onSubmit with:', data)
           onSubmit?.(data)
-        },
-        errors => {
-          console.log('Form validation failed with errors:', errors)
         },
       ),
     [handleSubmit, onSubmit],
