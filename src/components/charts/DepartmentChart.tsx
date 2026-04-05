@@ -92,8 +92,8 @@ export function DepartmentChart({
         </div>
 
         {/* Legend — scrollable when items overflow */}
-        <div className="w-full min-h-0 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '180px' }}>
-          <div className="flex flex-col gap-2">
+        <div className="w-full min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="flex flex-col gap-1.5">
             {data.map(item => (
               <div key={item.name} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
