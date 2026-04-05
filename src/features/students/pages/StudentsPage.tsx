@@ -192,8 +192,8 @@ export function StudentsPage() {
           overflow="auto"
           className="relative"
         >
-          {/* Import/Export overlay — floats above the tile's top-right edge */}
-          <div className="absolute -top-2 right-3 flex items-center gap-1.5 z-10">
+          {/* Import/Export — top-right inside tile */}
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
