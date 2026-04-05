@@ -11,12 +11,16 @@ interface DepartmentChartProps {
 }
 
 const DEPARTMENT_COLORS: Record<string, string> = {
-  Science: baseColors.heading,
   Mathematics: baseColors.pink,
   English: baseColors.blue,
+  Science: baseColors.heading,
   'Social Studies': '#A5D6A7',
-  Art: '#FFB74D',
+  Hindi: '#90CAF9',
+  'Computer Science': '#CE93D8',
   'Physical Education': '#E0E0E0',
+  Art: '#FFB74D',
+  Music: '#80CBC4',
+  Library: '#BCAAA4',
 }
 
 export function DepartmentChart({
