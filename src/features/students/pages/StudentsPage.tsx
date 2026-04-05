@@ -2,7 +2,7 @@ import * as React from 'react'
 import { StudentsTable } from '../components/StudentsTable'
 import { StudentStatGroup, getStudentStats } from '../components/StudentStatCards'
 import { AcademicPerformanceByGradeChart } from '../components/AcademicPerformanceByGradeChart'
-import { SpecialPrograms } from '../components/SpecialPrograms'
+import { RecentActivities } from '../components/RecentActivities'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
 import {
   fetchStudents,
@@ -191,7 +191,7 @@ export function StudentsPage() {
           <div className="flex flex-col gap-4 h-full">
             <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
             <div style={{ ...cardStyle, flex: 1 }}>
-              <SpecialPrograms />
+              <RecentActivities />
             </div>
           </div>
         </Tile>
