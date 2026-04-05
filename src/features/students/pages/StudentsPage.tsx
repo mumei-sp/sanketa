@@ -180,20 +180,16 @@ export function StudentsPage() {
 
         {/* ── Bottom band ── */}
 
-        {/* Students Table — 8/12 on desktop */}
+        {/* Students Table — 8/12 on desktop, with import/export floating outside */}
         <Tile
-          id="students-table"
+          id="students-table-wrapper"
           layoutMode="grid"
           width={{ default: 12, lg: 8 }}
-          background="card"
-          borderRadius="lg"
-          shadowed={false}
-          padding="p-6"
-          overflow="auto"
+          padding={0}
           className="relative"
         >
-          {/* Import/Export — top-right inside tile */}
-          <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+          {/* Import/Export — outside tile, above top-right edge */}
+          <div className="absolute -top-3 right-3 flex items-center gap-1.5 z-10">
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -223,10 +219,20 @@ export function StudentsPage() {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <StudentsTable
-            data={students}
-            isLoading={isLoading}
-          />
+          <Tile
+            id="students-table"
+            layoutMode="block"
+            background="card"
+            borderRadius="lg"
+            shadowed={false}
+            padding="p-6"
+            overflow="auto"
+          >
+            <StudentsTable
+              data={students}
+              isLoading={isLoading}
+            />
+          </Tile>
         </Tile>
 
         {/* Right Column: Attendance Overview stacked above Special Programs — 4/12 on desktop */}
