@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { StudentsTable } from '../components/StudentsTable'
 import { StudentStatGroup, getStudentStats, getGradeCounts } from '../components/StudentStatCards'
 import { ClassPicker } from '@/components/shared/ClassPicker'
@@ -191,26 +192,36 @@ export function StudentsPage() {
           overflow="auto"
           className="relative"
         >
-          {/* Import/Export overlay buttons — top-right of tile */}
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={handleExport}
-              title="Export students"
-            >
-              <Download className="size-3.5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={() => setImportOpen(true)}
-              title="Import students"
-            >
-              <Upload className="size-3.5" />
-            </Button>
+          {/* Import/Export overlay — floats above the tile's top-right edge */}
+          <div className="absolute -top-2 right-3 flex items-center gap-1.5 z-10">
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-7 rounded-full bg-white shadow-sm"
+                    onClick={handleExport}
+                  >
+                    <Download className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Export</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-7 rounded-full bg-white shadow-sm"
+                    onClick={() => setImportOpen(true)}
+                  >
+                    <Upload className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Import</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <StudentsTable
             data={students}
