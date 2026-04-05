@@ -2,7 +2,7 @@ import * as React from 'react'
 import { StudentsTable } from '../components/StudentsTable'
 import { StudentStatGroup, getStudentStats } from '../components/StudentStatCards'
 import { AcademicPerformanceByGradeChart } from '../components/AcademicPerformanceByGradeChart'
-import { RecentActivities } from '../components/RecentActivities'
+import { RecentActivity } from '@/features/dashboard/components/RecentActivity'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
 import {
   fetchStudents,
@@ -10,6 +10,8 @@ import {
   fetchEnrollmentTrends,
   fetchAttendanceOverview,
 } from '@/api/services/student-service'
+import { fetchRecentActivity } from '@/api/services/dashboard-service'
+import type { RecentActivityItem } from '@/features/dashboard/types'
 import { generateCsv, downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
 import type { Student } from '@/features/students/types'
@@ -18,15 +20,6 @@ import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart
 import { AttendanceOverviewChart } from '@/components/charts/AttendanceOverviewChart'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
-import { background, border } from '@/theme/colors'
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: background.card,
-  borderRadius: 12,
-  border: `1px solid ${border.subtle}`,
-  padding: 20,
-  height: '100%',
-}
 
 export function StudentsPage() {
   const [students, setStudents] = React.useState<Student[]>([])
@@ -34,19 +27,22 @@ export function StudentsPage() {
   const [enrollmentData, setEnrollmentData] = React.useState<EnrollmentData[]>([])
   const [attendanceData, setAttendanceData] = React.useState<AttendanceData[]>([])
   const [isLoadingCharts, setIsLoadingCharts] = React.useState(true)
+  const [activityItems, setActivityItems] = React.useState<RecentActivityItem[]>([])
   const [importOpen, setImportOpen] = React.useState(false)
 
   React.useEffect(() => {
     async function loadData() {
       try {
-        const [studentsData, enrollment, attendance] = await Promise.all([
+        const [studentsData, enrollment, attendance, activity] = await Promise.all([
           fetchStudents(),
           fetchEnrollmentTrends(),
           fetchAttendanceOverview(),
+          fetchRecentActivity(),
         ])
         setStudents(studentsData)
         setEnrollmentData(enrollment)
         setAttendanceData(attendance)
+        setActivityItems(activity)
       } catch (error) {
         console.error('Failed to fetch students data:', error)
       } finally {
@@ -190,9 +186,7 @@ export function StudentsPage() {
         >
           <div className="flex flex-col gap-4 h-full">
             <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
-            <div style={{ ...cardStyle, flex: 1 }}>
-              <RecentActivities />
-            </div>
+            <RecentActivity items={activityItems} isLoading={isLoadingCharts} />
           </div>
         </Tile>
 
