@@ -57,9 +57,9 @@ export function DepartmentChart({
     >
       <h3 className="text-section-title text-heading mb-3">Department</h3>
 
-      <div className="flex-1 min-h-0 flex flex-col items-center gap-4">
+      <div className="flex-1 min-h-0 flex flex-col items-center gap-3">
         {/* Donut chart with center label */}
-        <div className="relative w-[140px] h-[140px] shrink-0">
+        <div className="relative w-[130px] h-[130px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -92,7 +92,7 @@ export function DepartmentChart({
         </div>
 
         {/* Legend — scrollable when items overflow */}
-        <div className="w-full min-h-0 flex-1 overflow-y-auto scrollbar-thin pr-1">
+        <div className="w-full min-h-0 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '180px' }}>
           <div className="flex flex-col gap-2">
             {data.map(item => (
               <div key={item.name} className="flex items-center justify-between gap-2">
