@@ -7,7 +7,8 @@ import { useAcademicDates } from '@/hooks/use-academic-dates'
 import type { PerformanceMetric } from '../types/teacher-detail'
 
 /** "This Year" now means the academic year, dynamically labeled */
-const PERIODS = ['Last Month', 'Last 3 Months', 'Last 6 Months', 'This Year']
+/** @internal Available period labels for performance filtering */
+export const PERIODS = ['Last Month', 'Last 3 Months', 'Last 6 Months', 'This Year']
 
 interface TeacherPerformanceProps {
   metrics: PerformanceMetric[]

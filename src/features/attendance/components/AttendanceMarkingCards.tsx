@@ -37,8 +37,8 @@ export function AttendanceMarkingCards({
         const showNote = status === 'late' || status === 'absent'
 
         // Border & background using brand colors: blue (present), pink (late), navy (absent)
-        let borderColor = colors.border.default
-        let bgColor = colors.background.card
+        let borderColor: string = colors.border.default
+        let bgColor: string = colors.background.card
         if (status === 'present') {
           borderColor = darken(baseColors.blue, 15)
           bgColor = colors.accent.soft

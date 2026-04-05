@@ -1,5 +1,4 @@
-import type { UserProfile, Gender, ProfileType } from '@/types/user-profile'
-import type { StudentFormValues } from '../schemas/student-schema'
+import type { UserProfile, ProfileType } from '@/types/user-profile'
 
 /**
  * Student performance levels

@@ -8,7 +8,7 @@
 import * as React from 'react'
 import { Check, Clock, Send } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
-import { text, border, accent, background, baseColors, status as statusColors, darken, withOpacity } from '@/theme/colors'
+import { text, border, background, baseColors, status as statusColors, darken, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fetchPaymentHistory } from '@/api/services/fees-collection-service'
 import { PaymentDialog } from './PaymentDialog'

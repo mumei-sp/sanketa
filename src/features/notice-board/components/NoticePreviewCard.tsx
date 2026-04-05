@@ -1,7 +1,6 @@
 import { Eye } from 'lucide-react'
 import { baseColors } from '@/theme/colors'
 import type { NoticeFormValues } from '../schemas/notice-schema'
-import type { NoticeStatus } from '../types'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Academic: '#E8D5F5',

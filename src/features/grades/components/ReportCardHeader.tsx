@@ -8,7 +8,6 @@
 import { GraduationCap } from 'lucide-react'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { text, border } from '@/theme/colors'
-import { MONTH_LABELS } from '@/config/school-config'
 
 interface ReportCardHeaderProps {
   examName: string

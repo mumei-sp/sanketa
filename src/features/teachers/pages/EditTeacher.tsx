@@ -26,7 +26,7 @@ export default function EditTeacher() {
       try {
         const teacherData = formToTeacher(data)
         await updateTeacher(id, teacherData)
-        showSuccess('Teacher updated', { description: `${data.firstName} ${data.lastName}'s details have been saved.` })
+        showSuccess('Teacher updated', { description: `${data.personalInfo.firstName} ${data.personalInfo.lastName}'s details have been saved.` })
         navigate(`/teachers/details/${id}`)
       } catch {
         showError('Failed to update teacher', { description: 'Please try again.' })

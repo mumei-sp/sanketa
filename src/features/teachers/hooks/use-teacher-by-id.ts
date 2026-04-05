@@ -51,9 +51,8 @@ export function useTeacherById(id: string | undefined): UseTeacherByIdResult {
             trainingEvents: [],
             leaveRequests: [],
             performanceMetrics: [],
-            calendarHighlights: [],
             attendanceSummary: { present: 0, late: 0, onLeave: 0 },
-          })
+          } as TeacherDetail)
         }
       }
     } catch (err) {

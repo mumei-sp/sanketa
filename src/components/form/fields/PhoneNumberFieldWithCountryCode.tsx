@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Controller, useWatch, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
+import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import {
   Select,
   SelectContent,
@@ -40,7 +40,7 @@ export interface PhoneNumberFieldWithCountryCodeProps<T extends FieldValues> {
 /**
  * Inner component to handle country code select with proper initialization
  */
-function CountryCodeSelect<T extends FieldValues>({
+function CountryCodeSelect<_T extends FieldValues>({
   field,
   defaultCountryCode,
   countryCodeClassName,
@@ -154,7 +154,7 @@ export function PhoneNumberFieldWithCountryCode<T extends FieldValues>({
         <Controller
           name={countryCodeName}
           control={control}
-          defaultValue={defaultCountryCode}
+          defaultValue={defaultCountryCode as any}
           render={({ field }) => (
             <CountryCodeSelect
               field={field}

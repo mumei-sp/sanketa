@@ -3,7 +3,7 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import type { EventClickArg, DateClickArg, EventContentArg, DatesSetArg } from '@fullcalendar/core'
+import type { EventClickArg, EventContentArg, DatesSetArg } from '@fullcalendar/core'
 import { ChevronLeft, ChevronRight, ChevronDown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -142,7 +142,7 @@ export function CalendarView({
     })
   }
 
-  const handleDateClick = (info: DateClickArg) => {
+  const handleDateClick = (info: any) => {
     onDateClick(info.date)
   }
 

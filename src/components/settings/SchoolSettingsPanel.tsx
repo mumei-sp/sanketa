@@ -19,7 +19,6 @@ import {
   Shield,
   Palette,
   Clock,
-  ChevronRight,
   Upload,
   Trash2,
   Plus,

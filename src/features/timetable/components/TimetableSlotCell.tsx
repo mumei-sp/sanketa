@@ -1,5 +1,5 @@
 import { Pencil } from 'lucide-react'
-import { text, border, background, status, accent, withOpacity } from '@/theme/colors'
+import { text, border, status, accent, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { getSubjectById } from '@/data/mocks/timetable'
 import type { TimetableSlot, TimetableException } from '../types'

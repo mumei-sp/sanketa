@@ -284,7 +284,7 @@ export default function Teachers() {
   }, [])
 
   const handleExport = React.useCallback(() => {
-    const csv = generateCsv(teachers, [
+    const csv = generateCsv(teachers as any, [
       { key: 'teacherId', header: 'Teacher ID' },
       { key: 'firstName', header: 'First Name' },
       { key: 'lastName', header: 'Last Name' },
@@ -323,7 +323,7 @@ export default function Teachers() {
           id="teacher-workload-chart"
           layoutMode="block"
           width={{ default: 1, md: 12, lg: 4 }}
-          colStart={{ lg: 5 }}
+          colStart={{ default: 1, lg: 5 }}
         >
           <WorkloadDistributionChart isLoading={isLoadingAttendance} />
         </Tile>
@@ -332,9 +332,9 @@ export default function Teachers() {
           id="teacher-department-chart"
           layoutMode="block"
           width={{ default: 1, md: 5, lg: 4 }}
-          colStart={{ md: 8, lg: 9 }}
-          rowStart={{ md: 1 }}
-          rowEnd={{ lg: 3 }}
+          colStart={{ default: 1, md: 8, lg: 9 }}
+          rowStart={{ default: 1, md: 1 }}
+          rowEnd={{ default: 1, lg: 3 }}
         >
           <DepartmentChart data={departmentData} total={totalTeachers} />
         </Tile>

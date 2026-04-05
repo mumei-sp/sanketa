@@ -26,7 +26,7 @@ export default function EditStudent() {
       try {
         const studentData = formToStudent(data)
         await updateStudent(id, studentData)
-        showSuccess('Student updated', { description: `${data.firstName} ${data.lastName}'s details have been saved.` })
+        showSuccess('Student updated', { description: `${data.personalInfo.firstName} ${data.personalInfo.lastName}'s details have been saved.` })
         navigate(`/students/details/${id}`)
       } catch {
         showError('Failed to update student', { description: 'Please try again.' })

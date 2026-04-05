@@ -9,7 +9,7 @@ import { classRosters } from '@/data/mocks/attendance-daily'
 import { gradeSubmissions, findSubmission, upsertSubmission } from '@/data/mocks/grades'
 import { EXAMS, GRADEABLE_SUBJECT_IDS } from '@/features/grades/constants'
 import { subjects } from '@/data/mocks/timetable'
-import type { Exam, GradeEntry, GradeSubmission, GradeSheetRow, GradeSheetSummary, SubjectGrade } from '@/features/grades/types'
+import type { Exam, GradeEntry, GradeSubmission, GradeSheetRow, GradeSheetSummary } from '@/features/grades/types'
 
 // ============================================================================
 // Helpers

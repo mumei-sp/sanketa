@@ -31,7 +31,8 @@ function calculateRadius(size: number): number {
 /**
  * Calculates the stroke-dashoffset for the filled portion
  */
-function calculateOffset(circumference: number, percentage: number): number {
+/** @internal Calculates the stroke-dashoffset for the filled portion */
+export function calculateOffset(circumference: number, percentage: number): number {
   return circumference * (1 - percentage / 100)
 }
 

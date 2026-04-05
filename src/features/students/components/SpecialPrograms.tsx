@@ -1,5 +1,5 @@
 import { MoreHorizontal } from 'lucide-react'
-import { text, border, background, accent, withOpacity, baseColors } from '@/theme/colors'
+import { text, border, accent, withOpacity, baseColors } from '@/theme/colors'
 import { specialProgramsData } from '@/data/mocks/student-programs'
 
 const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {

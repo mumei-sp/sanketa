@@ -29,7 +29,8 @@ function isWeekend(dateStr: string): boolean {
 /**
  * Generate a random attendance status with realistic probabilities
  */
-function generateAttendanceStatus(isWeekendDay: boolean): AttendanceStatus {
+/** @internal Generate a random attendance status with realistic probabilities */
+export function generateAttendanceStatus(isWeekendDay: boolean): AttendanceStatus {
   if (isWeekendDay) {
     return 'na' // Non-school days
   }

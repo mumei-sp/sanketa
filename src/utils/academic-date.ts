@@ -309,7 +309,7 @@ export function reorderByAcademicMonth<T>(
   const sorted = [...data].sort((a, b) => {
     const aMonth = String(a[monthKey]).slice(0, 3)
     const bMonth = String(b[monthKey]).slice(0, 3)
-    return (orderMap.get(aMonth) ?? 0) - (orderMap.get(bMonth) ?? 0)
+    return (orderMap.get(aMonth as any) ?? 0) - (orderMap.get(bMonth as any) ?? 0)
   })
 
   if (sliceLast && sliceLast < sorted.length) {

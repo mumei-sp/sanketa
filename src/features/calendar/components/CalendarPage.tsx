@@ -80,13 +80,6 @@ export function CalendarPage() {
     setIsFormOpen(true)
   }, [])
 
-  const handleDateClickCreate = React.useCallback((date: Date) => {
-    // Also update selected date for sidebar
-    setSelectedDate(date)
-    setSelectedEvent(null)
-    setShowDetails(true)
-  }, [])
-
   const handleEditEvent = React.useCallback((id: string) => {
     const event = events.find(e => e.id === id)
     if (event) {
@@ -185,7 +178,7 @@ export function CalendarPage() {
       {/* Main content: Calendar + Schedule Details */}
       {isDesktop ? (
         <TileWrapper columns={{ default: 1, lg: 5 }} gap={12}>
-          <Tile id="calendar-grid" width={{ lg: showDetails ? 4 : 5 }}>
+          <Tile id="calendar-grid" width={{ default: 1, lg: showDetails ? 4 : 5 }}>
             <CalendarView
               events={filteredEvents}
               onEventClick={handleEventClick}
@@ -195,7 +188,7 @@ export function CalendarPage() {
           </Tile>
 
           {showDetails && (
-            <Tile id="schedule-details" width={{ lg: 1 }} className="sticky top-4">
+            <Tile id="schedule-details" width={{ default: 1, lg: 1 }} className="sticky top-4">
               <ScheduleDetails
                 events={detailEvents}
                 selectedDate={selectedDate}

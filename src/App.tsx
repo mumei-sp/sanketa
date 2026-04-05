@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { SchoolConfigProvider } from './config/SchoolConfigContext'
 import { Toaster } from './components/ui/sonner'
 import { ErrorBoundary } from './components/ErrorBoundary'

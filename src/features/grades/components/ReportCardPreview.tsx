@@ -6,7 +6,7 @@
  */
 
 import { Printer } from 'lucide-react'
-import { text, border, accent, background, baseColors } from '@/theme/colors'
+import { text, border, accent, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { ReportCardHeader } from './ReportCardHeader'

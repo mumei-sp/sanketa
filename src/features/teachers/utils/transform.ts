@@ -18,15 +18,15 @@ export function formToTeacher(formValues: TeacherFormValues): Partial<Teacher> {
     subject: formValues.professionalInfo?.subject,
     email: formValues.contactInfo?.email,
     primaryPhone: formValues.contactInfo?.primaryPhone,
-    phoneCountryCode: formValues.contactInfo?.phoneCountryCode,
     profilePictureUrl: formValues.contactInfo?.profilePictureUrl,
-  }
+  } as Partial<Teacher>
 }
 
 /**
  * Transforms a Teacher or TeacherDetail to form values for the edit form
  */
 export function teacherToForm(teacher: Teacher | TeacherDetail): Partial<TeacherFormValues> {
+  const t = teacher as any
   return {
     personalInfo: {
       firstName: teacher.firstName ?? '',
@@ -39,34 +39,34 @@ export function teacherToForm(teacher: Teacher | TeacherDetail): Partial<Teacher
     employmentInfo: {
       teacherId: teacher.teacherId ?? '',
       employmentType: ('employmentType' in teacher ? teacher.employmentType : 'Full-Time') ?? 'Full-Time',
-      department: ('department' in teacher ? (teacher as TeacherDetail).department : '') ?? '',
-      joiningDate: ('joiningDate' in teacher ? (teacher as TeacherDetail).joiningDate : '') ?? '',
+      department: (t.department ?? '') as string,
+      joiningDate: (t.joiningDate ?? '') as string,
     },
     professionalInfo: {
       subject: teacher.subject ?? '',
-      qualification: ('qualification' in teacher ? (teacher as TeacherDetail).qualification : '') ?? '',
-      specialization: ('specialization' in teacher ? (teacher as TeacherDetail).specialization : '') ?? '',
+      qualification: (t.qualification ?? '') as string,
+      specialization: (t.specialization ?? '') as string,
       classAssignments:
         'classAssignments' in teacher && Array.isArray((teacher as TeacherDetail).classAssignments)
-          ? (teacher as TeacherDetail).classAssignments.join(', ')
+          ? (teacher as TeacherDetail).classAssignments?.join(', ') ?? ''
           : '',
     },
     contactInfo: {
       email: teacher.email ?? '',
       primaryPhone: teacher.primaryPhone,
-      phoneCountryCode: teacher.phoneCountryCode,
-      secondaryPhone: ('secondaryPhone' in teacher ? (teacher as Record<string, string>).secondaryPhone : '') ?? '',
-      emergencyPhone: ('emergencyPhone' in teacher ? (teacher as Record<string, string>).emergencyPhone : '') ?? '',
+      phoneCountryCode: t.phoneCountryCode,
+      secondaryPhone: (t.secondaryPhone ?? '') as string,
+      emergencyPhone: (t.emergencyPhone ?? '') as string,
       address: ('address' in teacher ? (teacher as TeacherDetail).address : '') ?? '',
-      city: ('city' in teacher ? (teacher as Record<string, string>).city : '') ?? '',
-      stateProvince: ('stateProvince' in teacher ? (teacher as Record<string, string>).stateProvince : '') ?? '',
-      postalCode: ('postalCode' in teacher ? (teacher as Record<string, string>).postalCode : '') ?? '',
+      city: (t.city ?? '') as string,
+      stateProvince: (t.stateProvince ?? '') as string,
+      postalCode: (t.postalCode ?? '') as string,
       profilePictureUrl: teacher.profilePictureUrl,
     },
     additionalInfo: {
-      bio: ('bio' in teacher ? (teacher as Record<string, string>).bio : '') ?? '',
-      specialNeedsTraining: ('specialNeedsTraining' in teacher ? (teacher as Record<string, boolean>).specialNeedsTraining : false) ?? false,
-      medicalInfo: ('medicalInfo' in teacher ? (teacher as Record<string, string>).medicalInfo : '') ?? '',
+      bio: (t.bio ?? '') as string,
+      specialNeedsTraining: (t.specialNeedsTraining ?? false) as boolean,
+      medicalInfo: (t.medicalInfo ?? '') as string,
     },
   }
 }

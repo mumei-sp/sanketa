@@ -195,7 +195,7 @@ export async function fetchPromotionCandidates(
   return new Promise(resolve => {
     setTimeout(() => {
       const students = studentsData.filter(s => s.class === classLabel)
-      const candidates: PromotionCandidate[] = students.map(s => {
+      const candidates = students.map(s => {
         const pct = s.percentage ?? 0
         const isAtRisk = s.performance === 'At Risk'
         const recommendation = (pct >= passingThreshold && !isAtRisk) ? 'promote' : 'retain'
@@ -215,7 +215,7 @@ export async function fetchPromotionCandidates(
           decision: recommendation,
         }
       })
-      resolve(candidates)
+      resolve(candidates as PromotionCandidate[])
     }, delay)
   })
 }

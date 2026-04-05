@@ -16,7 +16,7 @@ export const studentColumns: ColumnDef<Student>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
     cell: ({ row }) => {
       const student = row.original
-      const initials = student.name
+      const initials = (student.name ?? '')
         .split(' ')
         .map(n => n[0])
         .join('')
@@ -37,11 +37,11 @@ export const studentColumns: ColumnDef<Student>[] = [
       )
     },
     enableSorting: true,
-    filterFn: (row, id, value) => {
+    filterFn: (row, _id, value) => {
       const student = row.original
       const searchValue = value.toLowerCase()
       return (
-        student.name.toLowerCase().includes(searchValue) ||
+        (student.name ?? '').toLowerCase().includes(searchValue) ||
         student.studentId.toLowerCase().includes(searchValue)
       )
     },
@@ -89,7 +89,7 @@ export const studentColumns: ColumnDef<Student>[] = [
       return <StatusBadge status={row.original.status} />
     },
     enableSorting: true,
-    filterFn: (row, id, value) => {
+    filterFn: (row, _id, value) => {
       if (value === 'all' || !value) return true
       return row.original.status === value
     },

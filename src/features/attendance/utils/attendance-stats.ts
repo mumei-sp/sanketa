@@ -1,4 +1,4 @@
-import type { AttendanceRecord, AttendanceRecordType, AttendanceStatus } from '../types'
+import type { AttendanceRecord, AttendanceRecordType } from '../types'
 
 /**
  * Statistics for a single attendance type (student/teacher/staff)

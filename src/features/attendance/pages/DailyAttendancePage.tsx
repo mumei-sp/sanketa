@@ -11,7 +11,7 @@ import { AttendanceMarkingTable } from '../components/AttendanceMarkingTable'
 import { AttendanceMarkingCards } from '../components/AttendanceMarkingCards'
 import { AttendanceDailySummaryBar } from '../components/AttendanceDailySummaryBar'
 import { AttendanceHistoryTable } from '../components/AttendanceHistoryTable'
-import { DailyAttendanceSkeleton, DailyAttendanceHistorySkeleton } from '../components/DailyAttendanceSkeleton'
+import { DailyAttendanceSkeleton } from '../components/DailyAttendanceSkeleton'
 import { Tile } from '@/components/tile'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
 import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
@@ -175,7 +175,7 @@ export function DailyAttendancePage() {
       ])
       downloadCsv(csv, `attendance-${selectedClass}-${selectedDate}.csv`)
     } else {
-      const csv = generateCsv(historyRows, [
+      const csv = generateCsv(historyRows as any, [
         { key: 'date', header: 'Date' },
         { key: 'present', header: 'Present' },
         { key: 'late', header: 'Late' },

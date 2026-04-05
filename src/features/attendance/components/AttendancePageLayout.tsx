@@ -53,7 +53,7 @@ export function AttendancePageLayout({
   error = null,
   errorActionLabel = 'Back to Attendance',
   onErrorAction,
-  loadingMessage = 'Loading...',
+  loadingMessage: _loadingMessage = 'Loading...',
   children,
 }: AttendancePageLayoutProps) {
   // Render PageHeader for all states

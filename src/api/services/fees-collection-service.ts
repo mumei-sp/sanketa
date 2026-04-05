@@ -93,7 +93,7 @@ export async function markAsPaid(params: {
   paidDate: string
   notes?: string
 }): Promise<PaymentTransaction> {
-  await delay(400, 700)
+  await delay(400)
 
   const record = findFeeRecord(params.studentId, params.feeCategory)
   if (!record) throw new Error('Fee record not found')

@@ -68,8 +68,8 @@ export const RegisterSchema = z
     confirmPassword: z
       .string()
       .min(1, 'Please confirm your password'),
-    agreeToTerms: z.literal(true, {
-      errorMap: () => ({ message: 'You must agree to the Terms & Conditions' }),
+    agreeToTerms: z.boolean().refine(v => v === true, {
+      message: 'You must agree to the Terms & Conditions',
     }),
   })
   .refine(data => data.password === data.confirmPassword, {

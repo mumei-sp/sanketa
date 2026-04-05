@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Table as TanStackTable, Row } from '@tanstack/react-table'
 import { Plus, Search } from 'lucide-react'
-import { DataTable, DataTableSearch, DataTableCell } from '@/components/table'
+import { DataTable, DataTableCell } from '@/components/table'
 import { studentColumns } from './student-columns'
 import type { Student } from '@/features/students/types'
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,7 @@ interface StudentsTableProps {
 /**
  * Students table component using TanStack Table
  */
-export function StudentsTable({ data, isLoading }: Omit<StudentsTableProps, 'onImport' | 'onExport'>) {
+export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTableProps, 'onImport' | 'onExport'>) {
   const navigate = useNavigate()
   const { config } = useSchoolConfig()
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
@@ -130,7 +130,7 @@ export function StudentsTable({ data, isLoading }: Omit<StudentsTableProps, 'onI
 
   // Custom row renderer with click handler for navigation
   const renderRow = React.useCallback(
-    (row: Row<Student>, table: TanStackTable<Student>) => {
+    (row: Row<Student>, _table: TanStackTable<Student>) => {
       const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
         // Don't navigate if clicking directly on interactive elements
         const target = e.target as HTMLElement

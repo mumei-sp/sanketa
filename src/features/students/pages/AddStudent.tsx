@@ -20,7 +20,7 @@ export default function AddStudent() {
     try {
       const studentData = formToStudent(data)
       const created = await createStudent(studentData)
-      showSuccess('Student added', { description: `${data.firstName} ${data.lastName} has been enrolled.` })
+      showSuccess('Student added', { description: `${data.personalInfo.firstName} ${data.personalInfo.lastName} has been enrolled.` })
       navigate(`/students/details/${created.id}`)
     } catch {
       showError('Failed to add student', { description: 'Please try again.' })

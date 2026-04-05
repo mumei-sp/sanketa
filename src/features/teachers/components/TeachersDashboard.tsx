@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Settings } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { baseColors, text, colors } from '@/theme/colors'
+import { text, colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
 import { useTileSelection } from '@/hooks/use-tile-selection'

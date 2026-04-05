@@ -77,7 +77,7 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
 
   const formValues = watch()
   const [uploadedFile, setUploadedFile] = React.useState<File | null>(null)
-  const [uploadPreview, setUploadPreview] = React.useState<string | null>(null)
+  const [_uploadPreview, setUploadPreview] = React.useState<string | null>(null)
 
   const handlePresetSelect = React.useCallback((url: string) => {
     setUploadedFile(null)

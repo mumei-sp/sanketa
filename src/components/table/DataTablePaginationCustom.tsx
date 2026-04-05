@@ -1,4 +1,3 @@
-import * as React from 'react'
 import type { Table as TanStackTable } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
 

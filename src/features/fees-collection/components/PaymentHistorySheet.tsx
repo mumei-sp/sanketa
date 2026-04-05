@@ -6,7 +6,7 @@
 
 import * as React from 'react'
 import { Receipt, Clock } from 'lucide-react'
-import { text, border, accent, background, status as statusColors, baseColors } from '@/theme/colors'
+import { text, border, accent, background, status as statusColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fetchPaymentHistory } from '@/api/services/fees-collection-service'
 import { PAYMENT_METHOD_LABELS } from '../types'

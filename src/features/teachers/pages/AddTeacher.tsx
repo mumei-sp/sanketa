@@ -20,7 +20,7 @@ export default function AddTeacher() {
     try {
       const teacherData = formToTeacher(data)
       const created = await createTeacher(teacherData)
-      showSuccess('Teacher added', { description: `${data.firstName} ${data.lastName} has been added to the staff.` })
+      showSuccess('Teacher added', { description: `${data.personalInfo.firstName} ${data.personalInfo.lastName} has been added to the staff.` })
       navigate(`/teachers/details/${created.id}`)
     } catch {
       showError('Failed to add teacher', { description: 'Please try again.' })

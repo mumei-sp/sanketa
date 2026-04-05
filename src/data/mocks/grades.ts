@@ -22,7 +22,8 @@ function randomMarks(maxMarks: number, floor = 20): number {
 }
 
 /** Build a blank entry for a student */
-function blankEntry(studentId: string, studentName: string, rollNumber: string, maxMarks: number): GradeEntry {
+/** @internal Build a blank entry for a student */
+export function blankEntry(studentId: string, studentName: string, rollNumber: string, maxMarks: number): GradeEntry {
   return { studentId, studentName, rollNumber, marksObtained: null, maxMarks, remarks: '' }
 }
 

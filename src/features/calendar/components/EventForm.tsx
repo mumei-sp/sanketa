@@ -27,7 +27,7 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
   const isEditMode = !!initialData
 
   const { control, handleSubmit, watch, formState: { isSubmitting } } = useForm<EventFormValues>({
-    resolver: zodResolver(EventFormSchema),
+    resolver: zodResolver(EventFormSchema) as any,
     defaultValues: initialData ?? {
       title: '',
       description: '',
@@ -198,7 +198,7 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
  * Simple time input field integrated with react-hook-form.
  * Uses native <input type="time"> for browser-native time picking.
  */
-function TimeField<T extends Record<string, unknown>>({
+function TimeField<_T extends Record<string, unknown>>({
   name,
   control,
   label,

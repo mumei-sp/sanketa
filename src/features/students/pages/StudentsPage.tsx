@@ -108,7 +108,7 @@ export function StudentsPage() {
   }, [])
 
   const handleExport = React.useCallback(() => {
-    const csv = generateCsv(students, [
+    const csv = generateCsv(students as any, [
       { key: 'studentId', header: 'Student ID' },
       { key: 'firstName', header: 'First Name' },
       { key: 'lastName', header: 'Last Name' },

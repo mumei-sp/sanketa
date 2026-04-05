@@ -303,7 +303,7 @@ function buildTeacherDetailsMap(): Record<string, TeacherDetail> {
   const map: Record<string, TeacherDetail> = {}
 
   teachersData.forEach((teacher, index) => {
-    const seed = parseInt(teacher.id) * 1000 + 7
+    const seed = parseInt(String(teacher.id)) * 1000 + 7
     map[teacher.id] = {
       ...teacher,
       employmentType: EMPLOYMENT_TYPES[index % EMPLOYMENT_TYPES.length],
