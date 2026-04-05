@@ -267,7 +267,7 @@ export function WorkloadDistributionChart({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={filteredData}
-                  margin={{ top: 10, right: 20, left: 4, bottom: 15 }}
+                  margin={{ top: 10, right: 10, left: 4, bottom: 0 }}
                   barCategoryGap={2}
                 >
                 <CartesianGrid
