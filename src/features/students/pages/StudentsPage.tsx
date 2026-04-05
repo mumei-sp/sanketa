@@ -1,4 +1,6 @@
 import * as React from 'react'
+import { Download, Upload } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { StudentsTable } from '../components/StudentsTable'
 import { StudentStatGroup, getStudentStats, getGradeCounts } from '../components/StudentStatCards'
 import { ClassPicker } from '@/components/shared/ClassPicker'
@@ -187,12 +189,32 @@ export function StudentsPage() {
           shadowed={false}
           padding="p-6"
           overflow="auto"
+          className="relative"
         >
+          {/* Import/Export overlay buttons — top-right of tile */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={handleExport}
+              title="Export students"
+            >
+              <Download className="size-3.5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={() => setImportOpen(true)}
+              title="Import students"
+            >
+              <Upload className="size-3.5" />
+            </Button>
+          </div>
           <StudentsTable
             data={students}
             isLoading={isLoading}
-            onImport={() => setImportOpen(true)}
-            onExport={handleExport}
           />
         </Tile>
 

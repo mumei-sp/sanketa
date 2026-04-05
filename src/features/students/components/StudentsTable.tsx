@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Table as TanStackTable, Row } from '@tanstack/react-table'
-import { Plus, Search, Upload, Download } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { DataTable, DataTableSearch, DataTableCell } from '@/components/table'
 import { studentColumns } from './student-columns'
 import type { Student } from '@/features/students/types'
@@ -9,11 +9,15 @@ import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { getGroupedByGrade } from '@/utils/class-section-helpers'
 import { TableRow } from '@/components/ui/table'
 import { DataTablePaginationCustom } from '@/components/table/DataTablePaginationCustom'
 
@@ -27,11 +31,18 @@ interface StudentsTableProps {
 /**
  * Students table component using TanStack Table
  */
-export function StudentsTable({ data, isLoading, onImport, onExport }: StudentsTableProps) {
+export function StudentsTable({ data, isLoading }: Omit<StudentsTableProps, 'onImport' | 'onExport'>) {
   const navigate = useNavigate()
+  const { config } = useSchoolConfig()
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
+  const [classFilter, setClassFilter] = React.useState<string>('all')
 
-  // Custom toolbar with search, filter, status dropdown, and add button
+  const groupedSections = React.useMemo(
+    () => getGroupedByGrade(config.classSections),
+    [config.classSections],
+  )
+
+  // Custom toolbar with search, class filter, status dropdown, and add button
   const renderToolbar = React.useCallback(
     (table: TanStackTable<Student>) => {
       const studentColumn = table.getColumn('student')
@@ -43,15 +54,19 @@ export function StudentsTable({ data, isLoading, onImport, onExport }: StudentsT
         }
       }
 
+      const handleClassChange = (value: string) => {
+        setClassFilter(value)
+        const classColumn = table.getColumn('class')
+        if (classColumn) {
+          classColumn.setFilterValue(value === 'all' ? undefined : value)
+        }
+      }
+
       const handleStatusChange = (value: string) => {
         setStatusFilter(value)
         const statusColumn = table.getColumn('status')
         if (statusColumn) {
-          if (value === 'all') {
-            statusColumn.setFilterValue(undefined)
-          } else {
-            statusColumn.setFilterValue(value)
-          }
+          statusColumn.setFilterValue(value === 'all' ? undefined : value)
         }
       }
 
@@ -68,6 +83,22 @@ export function StudentsTable({ data, isLoading, onImport, onExport }: StudentsT
                 className="h-8 w-full pl-10 bg-white border-default"
               />
             </div>
+            <Select value={classFilter} onValueChange={handleClassChange}>
+              <SelectTrigger className="h-8 w-[140px] bg-accent text-foreground border-0 hover:bg-accent/80">
+                <SelectValue placeholder="All Classes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                {groupedSections.map(([grade, sections]) => (
+                  <SelectGroup key={grade}>
+                    <SelectLabel>Grade {grade}</SelectLabel>
+                    {sections.map(s => (
+                      <SelectItem key={s.id} value={s.label}>{s.label}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-[120px] bg-accent text-foreground border-0 hover:bg-accent/80">
                 <SelectValue placeholder="All Status" />
@@ -78,26 +109,6 @@ export function StudentsTable({ data, isLoading, onImport, onExport }: StudentsT
                 <SelectItem value="On Leave">On Leave</SelectItem>
               </SelectContent>
             </Select>
-            {onExport && (
-              <Button
-                variant="outline"
-                onClick={onExport}
-                className="h-8 gap-1.5"
-              >
-                <Download className="size-3.5" />
-                Export
-              </Button>
-            )}
-            {onImport && (
-              <Button
-                variant="outline"
-                onClick={onImport}
-                className="h-8 gap-1.5"
-              >
-                <Upload className="size-3.5" />
-                Import
-              </Button>
-            )}
             <Button
               onClick={() => navigate('/students/add')}
               className="bg-primary hover:bg-primary/90 text-foreground"
@@ -109,7 +120,7 @@ export function StudentsTable({ data, isLoading, onImport, onExport }: StudentsT
         </div>
       )
     },
-    [navigate, statusFilter],
+    [navigate, statusFilter, classFilter, groupedSections],
   )
 
   // Custom pagination using shared component
