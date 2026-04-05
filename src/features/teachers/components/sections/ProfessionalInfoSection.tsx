@@ -1,6 +1,9 @@
+import * as React from 'react'
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
 import { TextField, SelectField, type SelectOption, GRID_COLS_2 } from '@/components/form/fields'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { getClassLabels } from '@/utils/class-section-helpers'
 import type { TeacherFormValues } from '../../schemas/teacher-schema'
 
 export interface ProfessionalInfoSectionProps {
@@ -8,24 +11,20 @@ export interface ProfessionalInfoSectionProps {
   width?: number
 }
 
-const subjectOptions: SelectOption[] = [
-  { value: 'Mathematics', label: 'Mathematics' },
-  { value: 'English Language', label: 'English Language' },
-  { value: 'Physics', label: 'Physics' },
-  { value: 'Chemistry', label: 'Chemistry' },
-  { value: 'Biology', label: 'Biology' },
-  { value: 'History', label: 'History' },
-  { value: 'Geography', label: 'Geography' },
-  { value: 'Computer Science', label: 'Computer Science' },
-  { value: 'Physical Education', label: 'Physical Education' },
-  { value: 'Art & Design', label: 'Art & Design' },
-  { value: 'Music', label: 'Music' },
-  { value: 'Hindi', label: 'Hindi' },
-  { value: 'Sanskrit', label: 'Sanskrit' },
-  { value: 'General Science', label: 'General Science' },
-]
-
 export function ProfessionalInfoSection({ control, width }: ProfessionalInfoSectionProps) {
+  const { config } = useSchoolConfig()
+  const subjectOptions: SelectOption[] = React.useMemo(
+    () => config.subjects.map(s => ({ value: s.name, label: s.name })),
+    [config.subjects],
+  )
+  const classLabels = React.useMemo(
+    () => getClassLabels(config.classSections),
+    [config.classSections],
+  )
+  const classPlaceholder = React.useMemo(() => {
+    const examples = classLabels.slice(0, 3).map(l => `Grade ${l}`)
+    return `e.g., ${examples.join(', ')}`
+  }, [classLabels])
   return (
     <FormSection
       title="Professional Information"
@@ -58,7 +57,7 @@ export function ProfessionalInfoSection({ control, width }: ProfessionalInfoSect
         name="professionalInfo.classAssignments"
         control={control}
         label="Class Assignments"
-        placeholder="e.g., Grade 7A, Grade 8B, Grade 9A"
+        placeholder={classPlaceholder}
       />
     </FormSection>
   )

@@ -7,8 +7,9 @@
  * This is the SINGLE SOURCE OF TRUTH for configuration shape and defaults.
  */
 
-import type { ClassSection } from '@/features/timetable/types'
-export type { ClassSection }
+import { accent, primary, status, border } from '@/theme/colors'
+import type { ClassSection, Subject } from '@/features/timetable/types'
+export type { ClassSection, Subject }
 
 // ============================================================================
 // Types
@@ -43,9 +44,11 @@ export interface SchoolConfig {
   /** Which days of week have school (0=Mon, 1=Tue, ..., 5=Sat) */
   schoolDays: number[]
 
-  // ── Classes ──
+  // ── Classes & Subjects ──
   /** All class sections in the school (e.g. 1A, 1B, 2A, ...) */
   classSections: ClassSection[]
+  /** All subjects taught in the school */
+  subjects: Subject[]
 
   // ── Grading ──
   /** Grade scale configuration */
@@ -190,6 +193,20 @@ export const DEFAULT_CLASS_SECTIONS: ClassSection[] = [
   { id: 'cls-10b', grade: '10', section: 'B', label: '10B' },
 ]
 
+/** Default subjects — matches typical Indian school curriculum */
+export const DEFAULT_SUBJECTS: Subject[] = [
+  { id: 'math',    name: 'Mathematics',        shortName: 'Math',    color: accent.base },
+  { id: 'eng',     name: 'English',            shortName: 'Eng',     color: primary.base },
+  { id: 'sci',     name: 'Science',            shortName: 'Sci',     color: accent.soft },
+  { id: 'sst',     name: 'Social Studies',     shortName: 'SSt',     color: primary.soft },
+  { id: 'hindi',   name: 'Hindi',              shortName: 'Hin',     color: status.success.soft },
+  { id: 'cs',      name: 'Computer Science',   shortName: 'CS',      color: accent.muted },
+  { id: 'pe',      name: 'Physical Education', shortName: 'PE',      color: status.warning.soft },
+  { id: 'art',     name: 'Art',                shortName: 'Art',     color: primary.muted },
+  { id: 'music',   name: 'Music',              shortName: 'Mus',     color: accent.subtle },
+  { id: 'library', name: 'Library',            shortName: 'Lib',     color: border.default },
+]
+
 /** Default grading config — CBSE preset with 33% pass threshold */
 export const DEFAULT_GRADING_CONFIG: GradingConfig = {
   preset: 'cbse',
@@ -207,6 +224,7 @@ export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   periods: DEFAULT_PERIODS,
   schoolDays: [...DEFAULT_SCHOOL_DAYS],
   classSections: DEFAULT_CLASS_SECTIONS.map(s => ({ ...s })),
+  subjects: DEFAULT_SUBJECTS.map(s => ({ ...s })),
   grading: { ...DEFAULT_GRADING_CONFIG, entries: DEFAULT_GRADING_CONFIG.entries.map(e => ({ ...e })) },
 }
 

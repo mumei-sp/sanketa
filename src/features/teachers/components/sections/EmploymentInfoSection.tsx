@@ -1,6 +1,8 @@
+import * as React from 'react'
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
 import { SelectField, DateField, type SelectOption, GRID_COLS_2 } from '@/components/form/fields'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import type { TeacherFormValues } from '../../schemas/teacher-schema'
 
 export interface EmploymentInfoSectionProps {
@@ -14,20 +16,12 @@ const employmentTypeOptions: SelectOption[] = [
   { value: 'Substitute', label: 'Substitute' },
 ]
 
-const departmentOptions: SelectOption[] = [
-  { value: 'Mathematics', label: 'Mathematics' },
-  { value: 'Science', label: 'Science' },
-  { value: 'English', label: 'English' },
-  { value: 'Social Studies', label: 'Social Studies' },
-  { value: 'Arts', label: 'Arts' },
-  { value: 'Physical Education', label: 'Physical Education' },
-  { value: 'Computer Science', label: 'Computer Science' },
-  { value: 'Languages', label: 'Languages' },
-  { value: 'Music', label: 'Music' },
-  { value: 'Administration', label: 'Administration' },
-]
-
 export function EmploymentInfoSection({ control, width }: EmploymentInfoSectionProps) {
+  const { config } = useSchoolConfig()
+  const departmentOptions: SelectOption[] = React.useMemo(
+    () => config.subjects.map(s => ({ value: s.name, label: s.name })),
+    [config.subjects],
+  )
   return (
     <FormSection
       title="Employment Details"

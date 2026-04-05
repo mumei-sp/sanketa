@@ -63,8 +63,7 @@ import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { TimetableSettingsSection } from './TimetableSettingsSection'
 import { GradingSettingsSection } from './GradingSettingsSection'
-import { subjects as mockSubjects } from '@/data/mocks/timetable'
-import type { Subject } from '@/features/timetable/types'
+import type { Subject } from '@/config/school-config'
 import type { ClassSection } from '@/config/school-config'
 
 // ============================================================================
@@ -259,7 +258,7 @@ function GeneralSection({ draft, setDraft }: SectionProps) {
       </div>
 
       {/* Subjects Management */}
-      <SubjectsCard />
+      <SubjectsCard draft={draft} setDraft={setDraft} />
 
       {/* Class Sections Management */}
       <ClassSectionsCard draft={draft} setDraft={setDraft} />
@@ -271,27 +270,26 @@ function GeneralSection({ draft, setDraft }: SectionProps) {
 // General: Subjects Management (editable)
 // ============================================================================
 
-function SubjectsCard() {
-  const [subjects, setSubjects] = React.useState<Subject[]>([...mockSubjects])
+function SubjectsCard({ draft, setDraft }: SectionProps) {
   const [newName, setNewName] = React.useState('')
   const [newShort, setNewShort] = React.useState('')
+
+  const subjects = draft.subjects
 
   const addSubject = () => {
     if (!newName.trim() || !newShort.trim()) return
     const id = newName.toLowerCase().replace(/\s+/g, '-')
+    if (subjects.some(s => s.id === id)) return
     const colorOptions = [accent.base, primary.base, accent.soft, primary.soft, accent.muted]
     const color = colorOptions[subjects.length % colorOptions.length]
     const newSubject: Subject = { id, name: newName.trim(), shortName: newShort.trim(), color }
-    setSubjects(prev => [...prev, newSubject])
-    mockSubjects.push(newSubject)
+    setDraft(prev => ({ ...prev, subjects: [...prev.subjects, newSubject] }))
     setNewName('')
     setNewShort('')
   }
 
   const removeSubject = (id: string) => {
-    setSubjects(prev => prev.filter(s => s.id !== id))
-    const idx = mockSubjects.findIndex(s => s.id === id)
-    if (idx >= 0) mockSubjects.splice(idx, 1)
+    setDraft(prev => ({ ...prev, subjects: prev.subjects.filter(s => s.id !== id) }))
   }
 
   return (

@@ -19,6 +19,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { colors, baseColors } from '@/theme/colors'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { teacherWorkloadData } from '@/data/mocks/teacher-workload'
 
 interface WorkloadDistributionChartProps {
@@ -152,7 +153,17 @@ const CustomBarTop = (props: any) => {
 export function WorkloadDistributionChart({
   isLoading = false,
 }: WorkloadDistributionChartProps) {
-  const [subject, setSubject] = React.useState('Science')
+  const { config } = useSchoolConfig()
+
+  // Subjects that have workload data available
+  const availableSubjects = React.useMemo(() => {
+    const dataKeys = Object.keys(teacherWorkloadData)
+    return config.subjects
+      .filter(s => dataKeys.includes(s.name))
+      .map(s => s.name)
+  }, [config.subjects])
+
+  const [subject, setSubject] = React.useState(() => availableSubjects[0] ?? 'Science')
   const [timePeriod, setTimePeriod] = React.useState('Weekly')
 
   // Get filtered data based on subject and time period
@@ -220,9 +231,9 @@ export function WorkloadDistributionChart({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Science">Science</SelectItem>
-                  <SelectItem value="Mathematics">Mathematics</SelectItem>
-                  <SelectItem value="Language">Language</SelectItem>
+                  {availableSubjects.map(s => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={timePeriod} onValueChange={setTimePeriod}>
