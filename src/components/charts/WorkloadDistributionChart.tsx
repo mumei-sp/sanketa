@@ -19,7 +19,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { colors, baseColors } from '@/theme/colors'
-import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { teacherWorkloadData } from '@/data/mocks/teacher-workload'
 
 interface WorkloadDistributionChartProps {
@@ -153,15 +152,8 @@ const CustomBarTop = (props: any) => {
 export function WorkloadDistributionChart({
   isLoading = false,
 }: WorkloadDistributionChartProps) {
-  const { config } = useSchoolConfig()
-
-  // Subjects that have workload data available
-  const availableSubjects = React.useMemo(() => {
-    const dataKeys = Object.keys(teacherWorkloadData)
-    return config.subjects
-      .filter(s => dataKeys.includes(s.name))
-      .map(s => s.name)
-  }, [config.subjects])
+  // Subjects available in mock data
+  const availableSubjects = React.useMemo(() => Object.keys(teacherWorkloadData), [])
 
   const [subject, setSubject] = React.useState(() => availableSubjects[0] ?? 'Science')
   const [timePeriod, setTimePeriod] = React.useState('Weekly')
