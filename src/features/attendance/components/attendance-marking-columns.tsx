@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { StudentAvatar } from '@/components/shared/StudentAvatar'
-import { colors } from '@/theme/colors'
 import { AttendanceStatusSelect } from './AttendanceStatusSelect'
 import type { ClassRosterStudent, MarkableAttendanceStatus } from '../types'
 

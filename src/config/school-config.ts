@@ -8,6 +8,7 @@
  */
 
 import type { ClassSection, Subject } from '@/features/timetable/types'
+export type { ClassSection, Subject }
 import { accent, primary, status, border } from '@/theme/colors'
 
 // ============================================================================
