@@ -98,7 +98,7 @@ export interface StudentScholarship {
   id: string
   title: string
   category: string
-  icon: 'globe' | 'award'
+  icon: 'globe' | 'award' | 'book-open' | 'graduation-cap' | 'heart' | 'star' | 'trophy' | 'music' | 'palette' | 'code'
 }
 
 /** Health/Medical record */

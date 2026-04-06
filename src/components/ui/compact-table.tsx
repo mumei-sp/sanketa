@@ -25,6 +25,8 @@ interface CompactTableProps<T> {
   rowKey: (row: T) => string
   /** Max height for vertical scrolling. Default: none */
   maxHeight?: string
+  /** Called when a row is clicked */
+  onRowClick?: (row: T) => void
 }
 
 /**
@@ -37,6 +39,7 @@ export function CompactTable<T>({
   data,
   rowKey,
   maxHeight,
+  onRowClick,
 }: CompactTableProps<T>) {
   return (
     <div
@@ -69,7 +72,12 @@ export function CompactTable<T>({
         </thead>
         <tbody>
           {data.map(row => (
-            <tr key={rowKey(row)}>
+            <tr
+              key={rowKey(row)}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              style={onRowClick ? { cursor: 'pointer' } : undefined}
+              className={onRowClick ? 'group hover:bg-muted/40 transition-colors' : 'group'}
+            >
               {columns.map(col => (
                 <td
                   key={col.key}
