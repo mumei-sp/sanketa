@@ -15,6 +15,7 @@ import Assignments from '../pages/Assignments'
 import FeesCollection from '../pages/FeesCollection'
 import Expenses from '../pages/Expenses'
 import NoticeBoard from '../pages/NoticeBoard'
+import Transport from '../pages/Transport'
 
 /**
  * Type-safe route configuration.
@@ -37,6 +38,7 @@ const routeConfig: Record<LeafPaths<typeof navigationItems>, React.ComponentType
   '/finance/fees-collection': FeesCollection,
   '/finance/expenses': Expenses,
   '/notice-board': NoticeBoard,
+  '/transport': Transport,
 }
 
 /**

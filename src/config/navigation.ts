@@ -17,6 +17,7 @@ import {
   PenLine,
   FileSpreadsheet,
   ArrowUpCircle,
+  Bus,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -145,6 +146,11 @@ export const navigationItems: NavItem[] = [
     title: "Notice Board",
     icon: FileText,
     path: "/notice-board",
+  },
+  {
+    title: "Transport",
+    icon: Bus,
+    path: "/transport",
   },
 ]
 
