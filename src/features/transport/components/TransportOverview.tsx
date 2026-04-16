@@ -122,14 +122,16 @@ export function TransportOverview() {
                           return (
                             <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
                               <p className="text-xs font-semibold mb-1" style={{ color: text.heading }}>{d.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: baseColors.blue }} />
-                                Capacity: <span className="font-medium">{d.capacity}</span>
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: baseColors.pink }} />
-                                Students: <span className="font-medium">{d.students}</span>
-                              </p>
+                              <div className="flex items-center gap-2 text-xs" style={{ color: text.heading }}>
+                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: baseColors.blue }} aria-hidden />
+                                <span>Capacity:</span>
+                                <span className="font-semibold">{d.capacity}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs" style={{ color: text.heading }}>
+                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: baseColors.pink }} aria-hidden />
+                                <span>Students:</span>
+                                <span className="font-semibold">{d.students}</span>
+                              </div>
                             </div>
                           )
                         }}

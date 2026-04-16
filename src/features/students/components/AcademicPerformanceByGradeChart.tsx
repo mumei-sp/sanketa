@@ -43,6 +43,37 @@ function getGradeColor(index: number): { fill: string; stroke: string } {
   return { fill, stroke }
 }
 
+/**
+ * Custom tooltip — renders each series row in dark heading text with a small
+ * colored dot so the values stay readable (the default Recharts tooltip colors
+ * rows with the series fill, which is pastel and invisible on white).
+ */
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null
+  return (
+    <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
+      <p className="text-xs font-semibold mb-1" style={{ color: baseColors.heading }}>
+        {label}
+      </p>
+      {payload.map((entry: any) => (
+        <div
+          key={entry.name}
+          className="flex items-center gap-2 text-xs"
+          style={{ color: baseColors.heading }}
+        >
+          <span
+            className="inline-block w-2 h-2 rounded-full"
+            style={{ backgroundColor: entry.color || entry.fill }}
+            aria-hidden
+          />
+          <span>Grade {gradeKeyToGrade(String(entry.name))}:</span>
+          <span className="font-semibold">{entry.value}%</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** Top-stroke cap on each bar matching the AttendanceOverview pattern */
 const CustomBarShape = (strokeColor: string) => (props: any) => {
   const { x, y, width, height, fill } = props
@@ -183,17 +214,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
               />
               <Tooltip
                 cursor={{ fill: withOpacity(baseColors.blue, 0.12) }}
-                contentStyle={{
-                  background: colors.background.card,
-                  border: `1px solid ${border.default}`,
-                  borderRadius: 8,
-                  fontSize: 11,
-                  color: text.heading,
-                }}
-                formatter={(value: any, name: any) => [
-                  `${value}%`,
-                  `Grade ${gradeKeyToGrade(String(name))}`,
-                ]}
+                content={<CustomTooltip />}
               />
               {activeGradeKeys.map((key, idx) => {
                 const { fill, stroke } = getGradeColor(idx)
