@@ -42,9 +42,19 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
         <p className="text-xs font-semibold mb-1" style={{ color: baseColors.heading }}>{label}</p>
         {payload.map((entry: any) => (
-          <p key={entry.name} className="text-xs" style={{ color: entry.color }}>
-            {entry.name}: ₹{entry.value.toLocaleString('en-IN')}
-          </p>
+          <div
+            key={entry.name}
+            className="flex items-center gap-2 text-xs"
+            style={{ color: baseColors.heading }}
+          >
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ backgroundColor: entry.color }}
+              aria-hidden
+            />
+            <span>{entry.name}:</span>
+            <span className="font-semibold">₹{entry.value.toLocaleString('en-IN')}</span>
+          </div>
         ))}
       </div>
     )
