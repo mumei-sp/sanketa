@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { StatusPill } from '@/components/ui/status-pill'
 import { Tile } from '@/components/tile'
 import { Phone, ShieldCheck, ShieldX, Pencil, Trash2, IdCard, Bus, AlertCircle } from 'lucide-react'
-import { primary, accent, text, status } from '@/theme/colors'
+import { primary, accent, text, status, statusVivid } from '@/theme/colors'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -128,8 +128,8 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
             <StatusPill label={licenseExpiry.label} config={licenseExpiry} />
           </div>
           {driver.backgroundVerified
-            ? <StatusPill label="BG Verified" config={{ bg: status.success.soft, color: status.success.text }} />
-            : <StatusPill label="BG Pending" config={{ bg: status.danger.soft, color: status.danger.text }} />}
+            ? <StatusPill label="BG Verified" config={statusVivid.success} />
+            : <StatusPill label="BG Pending" config={statusVivid.danger} />}
         </div>
         <StatusPill label={driver.status} config={DRIVER_STATUS_COLORS[driver.status]} />
       </div>

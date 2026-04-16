@@ -12,9 +12,10 @@ interface StatusBadgeProps {
  * Lightweight pill with soft background colors
  */
 export function StatusBadge({ status, className, style }: StatusBadgeProps) {
+  // Aligned with the project-wide `statusVivid` palette (Tailwind 50-tint bg / 800-tint text).
   const variants = {
-    Active: 'bg-green-50 text-green-700',
-    'On Leave': 'bg-blue-50 text-blue-700',
+    Active: 'bg-green-50 text-green-800',
+    'On Leave': 'bg-blue-50 text-blue-800',
   }
 
   return (

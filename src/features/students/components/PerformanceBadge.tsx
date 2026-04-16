@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { status } from '@/theme/colors'
+import { statusVivid } from '@/theme/colors'
 import type { StudentPerformance } from '@/features/students/types'
 
 interface PerformanceBadgeProps {
@@ -12,18 +12,19 @@ interface PerformanceBadgeProps {
 /**
  * Badge component for displaying student performance levels.
  *
- * Each level maps to a semantic status color:
- *   Good         → success (green)
+ * Each level maps to the project-wide vivid status palette:
+ *   Good          → success (green)
  *   Needs Support → warning (amber)
- *   At Risk      → danger  (red)
+ *   At Risk       → danger  (red)
  *
- * Uses .soft for background, .text for label, .dot for the indicator circle.
+ * Uses statusVivid.*.bg for pill background and statusVivid.*.color for the
+ * label (and dot). Previously used status.*.soft which desaturated to grey.
  */
 export function PerformanceBadge({ performance, variant = 'default', className }: PerformanceBadgeProps) {
-  const statusMap: Record<StudentPerformance, typeof status.success> = {
-    Good: status.success,
-    'Needs Support': status.warning,
-    'At Risk': status.danger,
+  const statusMap: Record<StudentPerformance, typeof statusVivid.success> = {
+    Good: statusVivid.success,
+    'Needs Support': statusVivid.warning,
+    'At Risk': statusVivid.danger,
   }
 
   const s = statusMap[performance]
@@ -36,14 +37,14 @@ export function PerformanceBadge({ performance, variant = 'default', className }
         className,
       )}
       style={{
-        backgroundColor: s.soft,
-        color: s.text,
+        backgroundColor: s.bg,
+        color: s.color,
       }}
     >
       {variant === 'default' && (
         <div
           className="size-1.5 rounded-full"
-          style={{ backgroundColor: s.dot }}
+          style={{ backgroundColor: s.color }}
         />
       )}
       <span className={variant === 'default' ? 'text-badge' : 'text-[11px] font-medium'}>

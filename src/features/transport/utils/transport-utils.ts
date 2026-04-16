@@ -1,4 +1,4 @@
-import { status } from '@/theme/colors'
+import { status, statusVivid } from '@/theme/colors'
 import { EXPIRY_THRESHOLDS } from '../constants'
 import type { StatusPillConfig } from '@/components/ui/status-pill'
 
@@ -22,15 +22,15 @@ export function getExpiryConfig(dateStr: string): StatusPillConfig & { label: st
   const days = daysUntil(dateStr)
 
   if (days < 0) {
-    return { bg: status.danger.soft, color: status.danger.text, label: 'Expired' }
+    return { ...statusVivid.danger, label: 'Expired' }
   }
   if (days <= EXPIRY_THRESHOLDS.danger) {
-    return { bg: status.danger.soft, color: status.danger.text, label: `${days}d left` }
+    return { ...statusVivid.danger, label: `${days}d left` }
   }
   if (days <= EXPIRY_THRESHOLDS.warning) {
-    return { bg: status.warning.soft, color: status.warning.text, label: `${days}d left` }
+    return { ...statusVivid.warning, label: `${days}d left` }
   }
-  return { bg: status.success.soft, color: status.success.text, label: 'Valid' }
+  return { ...statusVivid.success, label: 'Valid' }
 }
 
 /**

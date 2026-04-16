@@ -10,7 +10,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { CircleDollarSign, FileText, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react'
-import { baseColors, colors } from '@/theme/colors'
+import { baseColors, colors, statusVivid } from '@/theme/colors'
 import type { Reimbursement, ReimbursementStatus } from '../types'
 
 interface ReimbursementsTrackingProps {
@@ -26,9 +26,9 @@ const statusStyles: Record<
   ReimbursementStatus,
   { color: string; bg: string }
 > = {
-  Approved: { color: colors.background.card, bg: colors.status.success.base },
-  Declined: { color: colors.background.card, bg: colors.status.danger.base },
-  Pending: { color: colors.status.warning.text, bg: colors.status.warning.soft },
+  Approved: { bg: statusVivid.success.bg, color: statusVivid.success.color },
+  Declined: { bg: statusVivid.danger.bg,  color: statusVivid.danger.color  },
+  Pending:  { bg: statusVivid.warning.bg, color: statusVivid.warning.color },
 }
 
 /**

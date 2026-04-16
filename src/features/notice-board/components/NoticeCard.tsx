@@ -1,14 +1,14 @@
 import { Calendar, Pin, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { baseColors } from '@/theme/colors'
+import { baseColors, statusVivid } from '@/theme/colors'
 import type { NoticeBoardEntry, NoticeStatus } from '../types'
 
 const statusStyles: Record<NoticeStatus, { bg: string; text: string }> = {
-  Active: { bg: '#D4EDDA', text: '#155724' },
-  Scheduled: { bg: '#CDEAF0', text: '#0C5460' },
-  Draft: { bg: '#E2E3E5', text: '#383D41' },
-  Expired: { bg: '#F8D7DA', text: '#721C24' },
-  Cancelled: { bg: '#FFF3CD', text: '#856404' },
+  Active:    { bg: statusVivid.success.bg, text: statusVivid.success.color },
+  Scheduled: { bg: statusVivid.info.bg,    text: statusVivid.info.color },
+  Draft:     { bg: statusVivid.neutral.bg, text: statusVivid.neutral.color },
+  Expired:   { bg: statusVivid.danger.bg,  text: statusVivid.danger.color },
+  Cancelled: { bg: statusVivid.warning.bg, text: statusVivid.warning.color },
 }
 
 interface NoticeCardProps {

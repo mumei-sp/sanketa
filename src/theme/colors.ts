@@ -248,6 +248,32 @@ export const status = {
 } as const
 
 // ============================================================================
+// Vivid Status Pill Palette (Project-Wide)
+// ============================================================================
+
+/**
+ * Vivid tint palette for status pills/badges — Tailwind 50-tint background
+ * + Tailwind 800-tint text. Produces clearly hued, readable pills that stay
+ * soft but avoid the washed-out greys produced by desaturating `status.*.soft`.
+ *
+ * Use this across the project wherever a status needs a colored pill:
+ *   - success / active / paid / approved → statusVivid.success
+ *   - warning / pending / on-leave       → statusVivid.warning
+ *   - danger / inactive / overdue        → statusVivid.danger
+ *   - info / scheduled / draft           → statusVivid.info
+ *   - neutral / default / n/a            → statusVivid.neutral
+ */
+export const statusVivid = {
+  success: { bg: '#F0FDF4', color: '#166534' }, // green-50 / green-800
+  warning: { bg: '#FFFBEB', color: '#92400E' }, // amber-50 / amber-800
+  danger:  { bg: '#FEF2F2', color: '#991B1B' }, // red-50 / red-800
+  info:    { bg: '#EFF6FF', color: '#1E40AF' }, // blue-50 / blue-800
+  neutral: { bg: '#F9FAFB', color: '#374151' }, // gray-50 / gray-700
+} as const
+
+export type StatusVividKey = keyof typeof statusVivid
+
+// ============================================================================
 // Delete / Destructive Action Colors
 // ============================================================================
 

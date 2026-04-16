@@ -8,7 +8,7 @@
 import * as React from 'react'
 import { Check, Clock, Send } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
-import { text, border, background, baseColors, status as statusColors, darken, withOpacity } from '@/theme/colors'
+import { text, border, background, baseColors, status as statusColors, darken, withOpacity, statusVivid } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fetchPaymentHistory } from '@/api/services/fees-collection-service'
 import { PaymentDialog } from './PaymentDialog'
@@ -21,10 +21,10 @@ import type { FeeCollectionRecord, FeeStatus, PaymentTransaction } from '../type
 // ============================================================================
 
 const STATUS_CONFIG: Record<FeeStatus, { label: string; color: string; bg: string; border?: string }> = {
-  Paid: { label: 'Paid', color: background.card, bg: statusColors.success.base },
-  Pending: { label: 'Pending', color: baseColors.heading, bg: baseColors.pink, border: darken(baseColors.pink, 20) },
-  'Partially Paid': { label: 'Partial', color: baseColors.heading, bg: baseColors.blue, border: darken(baseColors.blue, 15) },
-  Overdue: { label: 'Overdue', color: background.card, bg: statusColors.danger.base },
+  Paid:             { label: 'Paid',    bg: statusVivid.success.bg, color: statusVivid.success.color },
+  Pending:          { label: 'Pending', bg: statusVivid.warning.bg, color: statusVivid.warning.color },
+  'Partially Paid': { label: 'Partial', bg: statusVivid.info.bg,    color: statusVivid.info.color    },
+  Overdue:          { label: 'Overdue', bg: statusVivid.danger.bg,  color: statusVivid.danger.color  },
 }
 
 // ============================================================================
