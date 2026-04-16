@@ -5,6 +5,12 @@
 interface EnvConfig {
   apiBaseUrl: string
   apiTimeout: number
+  /**
+   * When true, service modules route through in-memory mock adapters.
+   * When false, they call the real backend via axios.
+   * Default: true. Flip to false by setting VITE_USE_MOCK_API=false in .env.local.
+   */
+  useMockApi: boolean
 }
 
 /**
@@ -15,6 +21,10 @@ interface EnvConfig {
 export function validateEnv(): EnvConfig {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1'
   const apiTimeout = Number(import.meta.env.VITE_API_TIMEOUT) || 10000
+  // Default to mock API unless explicitly disabled. We treat only the literal
+  // string 'false' as opt-out so accidental values (undefined, '0', '') don't
+  // surprise anyone trying to develop against the mocks.
+  const useMockApi = String(import.meta.env.VITE_USE_MOCK_API ?? 'true').toLowerCase() !== 'false'
 
   if (isNaN(apiTimeout) || apiTimeout <= 0) {
     console.warn(
@@ -30,6 +40,7 @@ export function validateEnv(): EnvConfig {
   return {
     apiBaseUrl: apiBaseUrl.trim(),
     apiTimeout: apiTimeout > 0 ? apiTimeout : 10000,
+    useMockApi,
   }
 }
 
