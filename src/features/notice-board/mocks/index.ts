@@ -119,7 +119,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
     expiryDate: 'Mar 18, 2035',
     createdBy: 'Sports Department',
     status: 'Active',
-    thumbnail: 'https://images.unsplash.com/photo-1461896836934-bd45ba8fcfbb?w=120&h=120&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=120&h=120&fit=crop',
     content:
       'The annual inter-house sports competition will be held from March 15-18, 2035. Students interested in participating should register with their house captains.',
     attachments: [],
