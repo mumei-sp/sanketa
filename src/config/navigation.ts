@@ -126,6 +126,11 @@ export const navigationItems: NavItem[] = [
     path: "/assignments",
   },
   {
+    title: "Transport",
+    icon: Bus,
+    path: "/transport",
+  },
+  {
     title: "Finance",
     icon: DollarSign,
     path: "/finance",
@@ -146,11 +151,6 @@ export const navigationItems: NavItem[] = [
     title: "Notice Board",
     icon: FileText,
     path: "/notice-board",
-  },
-  {
-    title: "Transport",
-    icon: Bus,
-    path: "/transport",
   },
 ]
 
