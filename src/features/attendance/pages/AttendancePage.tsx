@@ -5,7 +5,7 @@ import { AttendanceOverviewAreaChart } from '@/components/charts/AttendanceOverv
 import { fetchAttendanceRecords } from '@/api/services/attendance-service'
 import type { AttendanceRecord } from '../types'
 import { TileWrapper, Tile } from '@/components/tile'
-import { attendanceOverviewMonthlyData } from '@/data/mocks/attendance-overview'
+import { attendanceOverviewMonthlyData } from '@/mocks/attendance/overview'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
 import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
 import { ATTENDANCE_MESSAGES } from '../constants'

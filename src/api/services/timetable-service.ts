@@ -17,7 +17,7 @@ import {
   classTimetables,
   timetableExceptions,
   subjects,
-} from '@/data/mocks/timetable'
+} from '@/mocks/timetable/timetable'
 
 /** Simulated delay helper */
 function delay(min = 200, max = 500): Promise<void> {

@@ -1,6 +1,6 @@
 import { MoreHorizontal } from 'lucide-react'
 import { text, border, accent, withOpacity, baseColors } from '@/theme/colors'
-import { specialProgramsData } from '@/data/mocks/student-programs'
+import { specialProgramsData } from '@/mocks/students/programs'
 
 const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
   'Enrichment': { bg: withOpacity(baseColors.blue, 0.3), color: accent.base },

@@ -9,8 +9,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { text, border, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
-import { subjects } from '@/data/mocks/timetable'
-import { teachersData } from '@/data/mocks/teachers'
+import { subjects } from '@/mocks/timetable/timetable'
+import { teachersData } from '@/mocks/teachers/teachers'
 import type { TimetableSlot } from '../types'
 import { DAY_LABELS } from '../types'
 

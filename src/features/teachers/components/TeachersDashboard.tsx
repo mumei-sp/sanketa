@@ -5,7 +5,7 @@ import { text, colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
 import { useTileSelection } from '@/hooks/use-tile-selection'
-import type { TeacherStatistics } from '@/data/mocks/teacher-statistics'
+import type { TeacherStatistics } from '@/mocks/teachers/statistics'
 import {
   teacherTileRegistry,
   DEFAULT_TEACHER_TILE_IDS,

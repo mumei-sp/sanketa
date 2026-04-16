@@ -1,9 +1,9 @@
 import type { Student, StudentDetailData } from '@/features/students/types'
 import type { PromotionCandidate, ClassPromotionSummary } from '@/features/students/types/promotion'
-import { studentsData } from '@/data/mocks/students'
+import { studentsData } from '@/mocks/students/students'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
-import { enrollmentTrendsData, attendanceOverviewData } from '@/data/mocks/student-dashboard'
-import { studentDetailData } from '@/data/mocks/student-details'
+import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
+import { studentDetailData } from '@/mocks/students/details'
 
 /**
  * Mock API service for fetching students

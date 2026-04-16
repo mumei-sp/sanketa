@@ -1,10 +1,13 @@
 /**
  * Top-level barrel for the mock layer.
  *
- * Feature mocks will be added to this file as they migrate out of
- * `src/data/mocks/` and `src/features/*/mocks/` into the canonical
- * `src/mocks/{feature}/` home. For now only the shared primitives are
- * re-exported so service adapters can start using them immediately.
+ * Import specific feature mocks directly from their subfolder
+ * (e.g. `import { studentsData } from '@/mocks/students'`) rather than the
+ * top-level barrel — that keeps chunk boundaries tight so importing one
+ * feature's mocks doesn't pull in everything.
+ *
+ * The shared helpers are re-exported here because they're stateless and
+ * universally useful.
  */
 
 export * from './_shared'

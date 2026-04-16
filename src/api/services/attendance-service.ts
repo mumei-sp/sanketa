@@ -5,14 +5,14 @@ import type {
   AttendanceHistoryRow,
   ClassRosterStudent,
 } from '@/features/attendance/types'
-import { generateMockAttendanceData } from '@/data/mocks/attendance'
+import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
 import {
   classRosters,
   availableClasses,
   attendanceSubmissions,
   getSubmissionForDate,
   getWeekdaysInMonth,
-} from '@/data/mocks/attendance-daily'
+} from '@/mocks/attendance/daily'
 
 /**
  * Mock API service for fetching attendance records

@@ -19,7 +19,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { baseColors, colors } from '@/theme/colors'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
-import type { TeacherStatistics } from '@/data/mocks/teacher-statistics'
+import type { TeacherStatistics } from '@/mocks/teachers/statistics'
 
 export interface TeacherTileConfig {
   id: string

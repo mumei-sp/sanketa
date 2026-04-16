@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { colors, baseColors } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { teacherWorkloadData } from '@/data/mocks/teacher-workload'
+import { teacherWorkloadData } from '@/mocks/teachers/workload'
 
 interface WorkloadDistributionChartProps {
   isLoading?: boolean

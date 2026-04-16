@@ -20,11 +20,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { text, border, baseColors, withOpacity } from '@/theme/colors'
 import { colors } from '@/theme/colors'
 import { ClassPicker } from '@/components/shared/ClassPicker'
-import type { AcademicPerformanceEntry } from '@/data/mocks/student-academic-performance'
+import type { AcademicPerformanceEntry } from '@/mocks/students/academic-performance'
 import {
   academicPerformanceLastSemester,
   academicPerformanceThisSemester,
-} from '@/data/mocks/student-academic-performance'
+} from '@/mocks/students/academic-performance'
 
 type Period = 'last' | 'this'
 

@@ -1,11 +1,11 @@
 import type { Teacher } from '@/features/teachers/types'
-import { teachersData } from '@/data/mocks/teachers'
+import { teachersData } from '@/mocks/teachers/teachers'
 import {
   teacherStatisticsData,
   departmentDistributionData,
   type TeacherStatistics,
   type DepartmentData,
-} from '@/data/mocks/teacher-statistics'
+} from '@/mocks/teachers/statistics'
 
 /**
  * Mock API service for fetching teachers
