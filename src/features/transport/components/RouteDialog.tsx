@@ -22,7 +22,7 @@ import {
 import { FormSection } from '@/components/form/FormSection'
 import { Plus, Trash2 } from 'lucide-react'
 import { ROUTE_STATUS_OPTIONS, ROUTE_TYPE_OPTIONS } from '../constants'
-import { mockVehicles, mockDrivers } from '../mocks'
+import { mockVehicles, mockDrivers } from '@/mocks/transport'
 import type { TransportRoute } from '../types'
 
 const stopSchema = z.object({

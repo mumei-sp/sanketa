@@ -9,7 +9,7 @@ import {
   expenseBreakdownData,
   reimbursementsData,
   expensesData,
-} from '@/features/expenses/mocks'
+} from '@/mocks/expenses'
 
 export async function fetchExpenseTrend(): Promise<ExpenseTrendData[]> {
   const delay = Math.floor(Math.random() * 500) + 300

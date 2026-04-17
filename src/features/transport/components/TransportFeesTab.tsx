@@ -19,7 +19,7 @@ import { DashboardStatCard } from '@/features/dashboard/components/DashboardStat
 import { text, accent, status } from '@/theme/colors'
 import { generateCsv, downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
-import { mockFeeStructures, mockStudentAssignments } from '../mocks'
+import { mockFeeStructures, mockStudentAssignments } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
 import { formatCurrency } from '../utils/transport-utils'
 import { FeeStructureDialog } from './FeeStructureDialog'

@@ -6,7 +6,7 @@
  * 2. Map the API response to CalendarEvent[] using mapApiEventToCalendarEvent()
  * 3. Remove the mock import and randomDelay()
  */
-import { mockCalendarEvents } from '@/features/calendar/mocks'
+import { mockCalendarEvents } from '@/mocks/calendar'
 import { categoryConfig } from '@/features/calendar/utils/category-config'
 import { baseColors, background } from '@/theme/colors'
 import type { CalendarEvent, EventCategory } from '@/features/calendar/types'

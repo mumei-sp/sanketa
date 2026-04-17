@@ -20,7 +20,7 @@ import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialo
 import { text, accent } from '@/theme/colors'
 import { generateCsv, downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
-import { mockStudentAssignments, mockRoutes, mockVehicles } from '../mocks'
+import { mockStudentAssignments, mockRoutes, mockVehicles } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
 import { AssignStudentDialog } from './AssignStudentDialog'
 import type { StudentTransportAssignment } from '../types'

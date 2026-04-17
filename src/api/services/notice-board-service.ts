@@ -1,4 +1,4 @@
-import { noticeBoardEntries } from '@/features/notice-board/mocks'
+import { noticeBoardEntries } from '@/mocks/notices'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
 

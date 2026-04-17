@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { mockRoutes } from '../mocks'
+import { mockRoutes } from '@/mocks/transport'
 import type { StudentTransportAssignment, TransportType, FeeStatus } from '../types'
 
 const assignmentSchema = z.object({

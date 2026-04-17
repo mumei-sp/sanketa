@@ -23,7 +23,7 @@ import {
   feeCollectionData,
   paymentTransactions,
   findFeeRecord,
-} from '@/features/fees-collection/mocks'
+} from '@/mocks/fees'
 
 // ============================================================================
 // Helpers

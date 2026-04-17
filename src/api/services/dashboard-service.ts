@@ -7,7 +7,7 @@ import {
   calendarEvents,
   todoItems,
   recentActivityItems,
-} from '@/features/dashboard/mocks'
+} from '@/mocks/dashboard'
 import type {
   DashboardStat,
   PerformanceDataset,

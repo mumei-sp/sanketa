@@ -6,7 +6,7 @@ import { DashboardStatCard } from '@/features/dashboard/components/DashboardStat
 import { StatusPill } from '@/components/ui/status-pill'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
 import { text, status, accent, primary, border, baseColors } from '@/theme/colors'
-import { mockVehicles, mockRoutes, mockDrivers, mockStudentAssignments, mockAlerts } from '../mocks'
+import { mockVehicles, mockRoutes, mockDrivers, mockStudentAssignments, mockAlerts } from '@/mocks/transport'
 import { VEHICLE_STATUS_CHART_COLORS, ALERT_SEVERITY_COLORS } from '../constants'
 import { getOccupancyPercent, formatDate } from '../utils/transport-utils'
 import type { TransportStat } from '../types'

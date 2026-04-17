@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FEE_TERMS } from '../constants'
-import { mockRoutes } from '../mocks'
+import { mockRoutes } from '@/mocks/transport'
 import type { TransportFeeStructure } from '../types'
 
 const feeSchema = z.object({
