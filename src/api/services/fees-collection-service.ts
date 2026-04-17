@@ -1,12 +1,14 @@
 /**
- * Fees collection service — mock CRUD operations for fee management.
+ * Fees Collection API Service
  *
- * All functions simulate network delay and operate on in-memory mock data.
- * Replace with real API calls when backend is ready.
+ * Mock path + HTTP path per endpoint. VITE_USE_MOCK_API picks which runs.
  */
 
 import { CircleCheckBig, CircleDashed, OctagonAlert } from 'lucide-react'
 import { baseColors } from '@/theme/colors'
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency, txnId, newId } from '@/mocks/_shared'
 import type {
   FeeStat,
   FeeTrendData,
@@ -25,65 +27,101 @@ import {
   findFeeRecord,
 } from '@/mocks/fees'
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function randomDelay(): number {
-  return Math.floor(Math.random() * 500) + 300
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-// ============================================================================
+// ---------------------------------------------------------------------------
 // Dashboard Stats (computed dynamically from mutable data)
-// ============================================================================
+// ---------------------------------------------------------------------------
 
+/**
+ * Fee summary stats (collected / pending / overdue).
+ *
+ * @apiRoute GET /api/v1/finance/fees/stats
+ */
 export async function fetchFeeStats(): Promise<FeeStat[]> {
-  await delay(randomDelay())
-
-  let collected = 0
-  let pending = 0
-  let overdue = 0
-
-  feeCollectionData.forEach(r => {
-    if (r.status === 'Paid') collected += r.totalAmount
-    else if (r.status === 'Pending' || r.status === 'Partially Paid') pending += r.totalAmount
-    else if (r.status === 'Overdue') overdue += r.totalAmount
-  })
-
-  return [
-    { label: 'Fees Collected', value: collected, icon: CircleCheckBig, iconBg: baseColors.heading, iconColor: '#FFFFFF' },
-    { label: 'Pending Fees', value: pending, icon: CircleDashed, iconBg: baseColors.blue, iconColor: baseColors.heading },
-    { label: 'Overdue Payments', value: overdue, icon: OctagonAlert, iconBg: baseColors.pink, iconColor: baseColors.heading },
-  ]
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      let collected = 0
+      let pending = 0
+      let overdue = 0
+      feeCollectionData.forEach(r => {
+        if (r.status === 'Paid') collected += r.totalAmount
+        else if (r.status === 'Pending' || r.status === 'Partially Paid') pending += r.totalAmount
+        else if (r.status === 'Overdue') overdue += r.totalAmount
+      })
+      return [
+        { label: 'Fees Collected', value: collected, icon: CircleCheckBig, iconBg: baseColors.heading, iconColor: '#FFFFFF' },
+        { label: 'Pending Fees', value: pending, icon: CircleDashed, iconBg: baseColors.blue, iconColor: baseColors.heading },
+        { label: 'Overdue Payments', value: overdue, icon: OctagonAlert, iconBg: baseColors.pink, iconColor: baseColors.heading },
+      ]
+    },
+    async () => {
+      const { data } = await apiClient.get<{ collected: number; pending: number; overdue: number }>(
+        '/finance/fees/stats',
+      )
+      return [
+        { label: 'Fees Collected', value: data.collected, icon: CircleCheckBig, iconBg: baseColors.heading, iconColor: '#FFFFFF' },
+        { label: 'Pending Fees', value: data.pending, icon: CircleDashed, iconBg: baseColors.blue, iconColor: baseColors.heading },
+        { label: 'Overdue Payments', value: data.overdue, icon: OctagonAlert, iconBg: baseColors.pink, iconColor: baseColors.heading },
+      ]
+    },
+  )
 }
 
-// ============================================================================
-// Existing Fetch Functions
-// ============================================================================
+// ---------------------------------------------------------------------------
+// Reads
+// ---------------------------------------------------------------------------
 
+/** @apiRoute GET /api/v1/finance/fees/trend */
 export async function fetchFeeTrend(): Promise<FeeTrendData[]> {
-  await delay(randomDelay())
-  return [...feeTrendData]
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...feeTrendData]
+    },
+    async () => {
+      const { data } = await apiClient.get<FeeTrendData[]>('/finance/fees/trend')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/finance/fees/progress */
 export async function fetchFeeProgress(): Promise<FeeProgressData[]> {
-  await delay(randomDelay())
-  return [...feeProgressData]
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...feeProgressData]
+    },
+    async () => {
+      const { data } = await apiClient.get<FeeProgressData[]>('/finance/fees/progress')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/finance/fees */
 export async function fetchFeeCollection(): Promise<FeeCollectionRecord[]> {
-  await delay(randomDelay())
-  return feeCollectionData.map(r => ({ ...r }))
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return feeCollectionData.map(r => ({ ...r }))
+    },
+    async () => {
+      const { data } = await apiClient.get<FeeCollectionRecord[]>('/finance/fees')
+      return data
+    },
+  )
 }
 
-// ============================================================================
-// Mark as Paid
-// ============================================================================
+// ---------------------------------------------------------------------------
+// Mutations
+// ---------------------------------------------------------------------------
 
+/**
+ * Mark a fee as paid — creates a matching PaymentTransaction.
+ *
+ * @apiRoute POST /api/v1/finance/fees/mark-paid
+ */
 export async function markAsPaid(params: {
   studentId: string
   feeCategory: FeeCategory
@@ -93,74 +131,107 @@ export async function markAsPaid(params: {
   paidDate: string
   notes?: string
 }): Promise<PaymentTransaction> {
-  await delay(400)
-
-  const record = findFeeRecord(params.studentId, params.feeCategory)
-  if (!record) throw new Error('Fee record not found')
-
-  const txnId = params.transactionId || `TXN-${Date.now()}`
-  const receiptId = `REC-${Date.now()}`
-  const paidDate = params.paidDate
-
-  // Update the fee record
-  record.status = 'Paid'
-  record.paidAmount = params.amount
-  record.paidDate = paidDate
-  record.paymentMethod = params.method
-  record.transactionId = txnId
-  record.receiptId = receiptId
-
-  // Create transaction
-  const transaction: PaymentTransaction = {
-    id: txnId,
-    studentId: params.studentId,
-    studentName: record.studentName,
-    class: record.class,
-    feeCategory: record.feeCategory,
-    amount: params.amount,
-    method: params.method,
-    status: 'success',
-    transactionId: txnId,
-    paidDate,
-    receiptId,
-  }
-
-  paymentTransactions.push(transaction)
-  return { ...transaction }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 350, max: 600 })
+      const record = findFeeRecord(params.studentId, params.feeCategory)
+      if (!record) throw new Error('Fee record not found')
+      const transactionId = params.transactionId || txnId(paymentTransactions.length + 1)
+      const receiptId = newId('REC')
+      const paidDate = params.paidDate
+      record.status = 'Paid'
+      record.paidAmount = params.amount
+      record.paidDate = paidDate
+      record.paymentMethod = params.method
+      record.transactionId = transactionId
+      record.receiptId = receiptId
+      const transaction: PaymentTransaction = {
+        id: transactionId,
+        studentId: params.studentId,
+        studentName: record.studentName,
+        class: record.class,
+        feeCategory: record.feeCategory,
+        amount: params.amount,
+        method: params.method,
+        status: 'success',
+        transactionId,
+        paidDate,
+        receiptId,
+      }
+      paymentTransactions.push(transaction)
+      return { ...transaction }
+    },
+    async () => {
+      const { data } = await apiClient.post<PaymentTransaction>(
+        '/finance/fees/mark-paid',
+        params,
+      )
+      return data
+    },
+  )
 }
 
-// ============================================================================
-// Payment History
-// ============================================================================
-
+/**
+ * Payment history, optionally filtered by student.
+ *
+ * @apiRoute GET /api/v1/finance/payments?studentId={studentId}
+ */
 export async function fetchPaymentHistory(studentId?: string): Promise<PaymentTransaction[]> {
-  await delay(randomDelay())
-  const filtered = studentId
-    ? paymentTransactions.filter(t => t.studentId === studentId)
-    : paymentTransactions
-  return filtered.map(t => ({ ...t }))
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      const filtered = studentId
+        ? paymentTransactions.filter(t => t.studentId === studentId)
+        : paymentTransactions
+      return filtered.map(t => ({ ...t }))
+    },
+    async () => {
+      const { data } = await apiClient.get<PaymentTransaction[]>('/finance/payments', {
+        params: studentId ? { studentId } : undefined,
+      })
+      return data
+    },
+  )
 }
 
-// ============================================================================
-// Receipt Generation
-// ============================================================================
-
-export async function generateReceipt(transactionId: string, schoolName: string): Promise<Receipt | null> {
-  await delay(300)
-  const txn = paymentTransactions.find(t => t.transactionId === transactionId)
-  if (!txn) return null
-
-  return {
-    id: txn.receiptId,
-    receiptNumber: txn.receiptId,
-    transactionId: txn.transactionId,
-    studentId: txn.studentId,
-    studentName: txn.studentName,
-    class: txn.class,
-    feeCategory: txn.feeCategory,
-    amount: txn.amount,
-    paidDate: txn.paidDate,
-    paymentMethod: txn.method,
-    schoolName,
-  }
+/**
+ * Generate a printable receipt for a transaction.
+ *
+ * @apiRoute GET /api/v1/finance/receipts?transactionId={transactionId}
+ */
+export async function generateReceipt(
+  transactionId: string,
+  schoolName: string,
+): Promise<Receipt | null> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 450 })
+      const txn = paymentTransactions.find(t => t.transactionId === transactionId)
+      if (!txn) return null
+      return {
+        id: txn.receiptId,
+        receiptNumber: txn.receiptId,
+        transactionId: txn.transactionId,
+        studentId: txn.studentId,
+        studentName: txn.studentName,
+        class: txn.class,
+        feeCategory: txn.feeCategory,
+        amount: txn.amount,
+        paidDate: txn.paidDate,
+        paymentMethod: txn.method,
+        schoolName,
+      }
+    },
+    async () => {
+      try {
+        const { data } = await apiClient.get<Receipt>('/finance/receipts', {
+          params: { transactionId, schoolName },
+        })
+        return data
+      } catch (err: any) {
+        if (err?.status === 404) return null
+        throw err
+      }
+    },
+  )
 }

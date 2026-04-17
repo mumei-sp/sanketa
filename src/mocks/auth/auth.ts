@@ -1,4 +1,4 @@
-import type { AuthResponse, LoginRequest, RegisterRequest } from '../types'
+import type { AuthResponse, LoginRequest, RegisterRequest } from '@/features/auth/types'
 import { authUtils } from '@/api/utils/auth'
 
 const MOCK_DELAY = 1200

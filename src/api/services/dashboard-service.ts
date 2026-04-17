@@ -1,3 +1,11 @@
+/**
+ * Dashboard API Service
+ *
+ * Mock path + HTTP path per endpoint.
+ */
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency, newId } from '@/mocks/_shared'
 import {
   dashboardStats,
   performanceDatasets,
@@ -19,78 +27,178 @@ import type {
   RecentActivityItem,
 } from '@/features/dashboard/types'
 
-function randomDelay(): Promise<void> {
-  const delay = Math.floor(Math.random() * 300) + 200
-  return new Promise(resolve => setTimeout(resolve, delay))
-}
-
+/** @apiRoute GET /api/v1/dashboard/stats */
 export async function fetchDashboardStats(): Promise<DashboardStat[]> {
-  await randomDelay()
-  return [...dashboardStats]
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return [...dashboardStats]
+    },
+    async () => {
+      const { data } = await apiClient.get<DashboardStat[]>('/dashboard/stats')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/dashboard/performance */
 export async function fetchStudentPerformance(): Promise<PerformanceDataset[]> {
-  await randomDelay()
-  return performanceDatasets.map(d => ({ ...d, data: [...d.data] }))
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return performanceDatasets.map(d => ({ ...d, data: [...d.data] }))
+    },
+    async () => {
+      const { data } = await apiClient.get<PerformanceDataset[]>('/dashboard/performance')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/dashboard/earnings */
 export async function fetchEarnings(): Promise<EarningsDataset[]> {
-  await randomDelay()
-  return earningsDatasets.map(d => ({ ...d, data: [...d.data] }))
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return earningsDatasets.map(d => ({ ...d, data: [...d.data] }))
+    },
+    async () => {
+      const { data } = await apiClient.get<EarningsDataset[]>('/dashboard/earnings')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/dashboard/gender-distribution */
 export async function fetchGenderDistribution(): Promise<GenderDataset[]> {
-  await randomDelay()
-  return genderDatasets.map(d => ({ ...d, data: [...d.data] }))
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return genderDatasets.map(d => ({ ...d, data: [...d.data] }))
+    },
+    async () => {
+      const { data } = await apiClient.get<GenderDataset[]>('/dashboard/gender-distribution')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/dashboard/attendance */
 export async function fetchStudentAttendance(): Promise<AttendanceDataset[]> {
-  await randomDelay()
-  return attendanceDatasets.map(d => ({ ...d, data: [...d.data] }))
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return attendanceDatasets.map(d => ({ ...d, data: [...d.data] }))
+    },
+    async () => {
+      const { data } = await apiClient.get<AttendanceDataset[]>('/dashboard/attendance')
+      return data
+    },
+  )
 }
 
+/**
+ * Upcoming events shown on the dashboard.
+ *
+ * Separate from the full calendar service — the dashboard only needs a small
+ * hand-picked list for its sidebar widget.
+ *
+ * @apiRoute GET /api/v1/dashboard/events
+ */
 export async function fetchCalendarEvents(): Promise<CalendarEvent[]> {
-  await randomDelay()
-  return [...calendarEvents]
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return [...calendarEvents]
+    },
+    async () => {
+      const { data } = await apiClient.get<CalendarEvent[]>('/dashboard/events')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/dashboard/todos */
 export async function fetchTodoItems(): Promise<TodoItem[]> {
-  await randomDelay()
-  return [...todoItems]
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return [...todoItems]
+    },
+    async () => {
+      const { data } = await apiClient.get<TodoItem[]>('/dashboard/todos')
+      return data
+    },
+  )
 }
 
+/** @apiRoute GET /api/v1/dashboard/recent-activity */
 export async function fetchRecentActivity(): Promise<RecentActivityItem[]> {
-  await randomDelay()
-  return [...recentActivityItems]
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      return [...recentActivityItems]
+    },
+    async () => {
+      const { data } = await apiClient.get<RecentActivityItem[]>('/dashboard/recent-activity')
+      return data
+    },
+  )
 }
 
+/** @apiRoute POST /api/v1/dashboard/todos */
 export async function createTodoItem(data: { text: string; date: string }): Promise<TodoItem> {
-  await randomDelay()
-  const newItem: TodoItem = {
-    id: `todo-${Date.now()}`,
-    text: data.text,
-    date: data.date,
-    completed: false,
-  }
-  todoItems.push(newItem)
-  return { ...newItem }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      const newItem: TodoItem = {
+        id: newId('todo'),
+        text: data.text,
+        date: data.date,
+        completed: false,
+      }
+      todoItems.push(newItem)
+      return { ...newItem }
+    },
+    async () => {
+      const { data: created } = await apiClient.post<TodoItem>('/dashboard/todos', data)
+      return created
+    },
+  )
 }
 
+/** @apiRoute PUT /api/v1/dashboard/todos/{id} */
 export async function updateTodoItem(
   id: string,
   data: Partial<Pick<TodoItem, 'text' | 'date' | 'completed'>>,
 ): Promise<TodoItem> {
-  await randomDelay()
-  const item = todoItems.find(t => t.id === id)
-  if (!item) throw new Error(`Todo item not found: ${id}`)
-  if (data.text !== undefined) item.text = data.text
-  if (data.date !== undefined) item.date = data.date
-  if (data.completed !== undefined) item.completed = data.completed
-  return { ...item }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      const item = todoItems.find(t => t.id === id)
+      if (!item) throw new Error(`Todo item not found: ${id}`)
+      if (data.text !== undefined) item.text = data.text
+      if (data.date !== undefined) item.date = data.date
+      if (data.completed !== undefined) item.completed = data.completed
+      return { ...item }
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<TodoItem>(`/dashboard/todos/${id}`, data)
+      return updated
+    },
+  )
 }
 
+/** @apiRoute DELETE /api/v1/dashboard/todos/{id} */
 export async function deleteTodoItem(id: string): Promise<void> {
-  await randomDelay()
-  const index = todoItems.findIndex(t => t.id === id)
-  if (index !== -1) todoItems.splice(index, 1)
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 350 })
+      const index = todoItems.findIndex(t => t.id === id)
+      if (index !== -1) todoItems.splice(index, 1)
+    },
+    async () => {
+      await apiClient.delete(`/dashboard/todos/${id}`)
+    },
+  )
 }

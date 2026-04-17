@@ -1,4 +1,4 @@
-import type { AttendanceData, EnrollmentData } from '../dashboard'
+import type { AttendanceData, EnrollmentData } from '@/data/dashboard'
 
 /**
  * Mock attendance overview data for development and testing

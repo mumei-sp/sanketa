@@ -1,4 +1,12 @@
+/**
+ * Teachers API Service
+ *
+ * Mock path (in-memory teachersData) + HTTP path (apiClient). VITE_USE_MOCK_API picks which runs.
+ */
 import type { Teacher } from '@/features/teachers/types'
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
 import { teachersData } from '@/mocks/teachers/teachers'
 import {
   teacherStatisticsData,
@@ -8,139 +16,142 @@ import {
 } from '@/mocks/teachers/statistics'
 
 /**
- * Mock API service for fetching teachers
- * Simulates network delay and returns teacher data
+ * Fetch all teachers.
  *
- * This can be easily replaced with a real API call later
- *
- * @returns Promise resolving to array of teachers
+ * @apiRoute GET /api/v1/teachers
  */
 export async function fetchTeachers(): Promise<Teacher[]> {
-  // Simulate network delay (300-800ms)
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([...teachersData])
-    }, delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...teachersData]
+    },
+    async () => {
+      const { data } = await apiClient.get<Teacher[]>('/teachers')
+      return data
+    },
+  )
 }
 
 /**
- * Mock API service for fetching a single teacher by ID
- * Simulates network delay and returns teacher data
+ * Fetch a single teacher by id.
  *
- * This can be easily replaced with a real API call later
- *
- * @param id - The teacher ID to fetch
- * @returns Promise resolving to teacher data or undefined if not found
+ * @apiRoute GET /api/v1/teachers/{id}
  */
 export async function fetchTeacherById(id: string): Promise<Teacher | undefined> {
-  // Simulate network delay (200-500ms)
-  const delay = Math.floor(Math.random() * 300) + 200
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const teacher = teachersData.find(t => t.id === id)
-      resolve(teacher)
-    }, delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 400 })
+      return teachersData.find(t => t.id === id)
+    },
+    async () => {
+      try {
+        const { data } = await apiClient.get<Teacher>(`/teachers/${id}`)
+        return data
+      } catch (err: any) {
+        if (err?.status === 404) return undefined
+        throw err
+      }
+    },
+  )
 }
 
 /**
- * Mock API service for fetching teacher statistics
- * Simulates network delay and returns teacher statistics data
+ * Fetch aggregated teacher statistics (total, active, new, workload, etc.).
  *
- * This can be easily replaced with a real API call later
- *
- * @returns Promise resolving to teacher statistics
+ * @apiRoute GET /api/v1/teachers/statistics
  */
 export async function fetchTeacherStatistics(): Promise<TeacherStatistics> {
-  // Simulate network delay (300-800ms)
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve({ ...teacherStatisticsData })
-    }, delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return { ...teacherStatisticsData }
+    },
+    async () => {
+      const { data } = await apiClient.get<TeacherStatistics>('/teachers/statistics')
+      return data
+    },
+  )
 }
 
 /**
- * Mock API service for creating a new teacher
+ * Fetch department distribution for the workload chart.
  *
- * Replace with: POST /api/teachers
- */
-export async function createTeacher(data: Partial<Teacher>): Promise<Teacher> {
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const newTeacher: Teacher = {
-        ...data,
-        id: `tch-${Date.now()}`,
-        teacherId: data.teacherId || `T-${Math.floor(1000 + Math.random() * 9000)}`,
-      } as Teacher
-
-      teachersData.unshift(newTeacher)
-      resolve(newTeacher)
-    }, delay)
-  })
-}
-
-/**
- * Mock API service for updating an existing teacher
- *
- * Replace with: PUT /api/teachers/:id
- */
-export async function updateTeacher(id: string, data: Partial<Teacher>): Promise<Teacher> {
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const index = teachersData.findIndex(t => t.id === id)
-      if (index === -1) {
-        reject(new Error('Teacher not found'))
-        return
-      }
-
-      const updated = { ...teachersData[index], ...data }
-      teachersData[index] = updated
-      resolve(updated)
-    }, delay)
-  })
-}
-
-/**
- * Mock API service for deleting a teacher by ID
- * Simulates network delay and removes teacher from mock data
- *
- * @param id - The teacher ID to delete
- */
-export async function deleteTeacher(id: string): Promise<void> {
-  // Simulate network delay (200-500ms)
-  const delay = Math.floor(Math.random() * 300) + 200
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const index = teachersData.findIndex(t => t.id === id)
-      if (index !== -1) {
-        teachersData.splice(index, 1)
-      }
-      resolve()
-    }, delay)
-  })
-}
-
-/**
- * Mock API service for fetching department distribution
+ * @apiRoute GET /api/v1/teachers/departments/distribution
  */
 export async function fetchDepartmentDistribution(): Promise<DepartmentData[]> {
-  const delay = Math.floor(Math.random() * 300) + 200
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 400 })
+      return [...departmentDistributionData]
+    },
+    async () => {
+      const { data } = await apiClient.get<DepartmentData[]>('/teachers/departments/distribution')
+      return data
+    },
+  )
+}
 
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([...departmentDistributionData])
-    }, delay)
-  })
+/**
+ * Create a new teacher.
+ *
+ * @apiRoute POST /api/v1/teachers
+ */
+export async function createTeacher(data: Partial<Teacher>): Promise<Teacher> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      const newTeacher: Teacher = {
+        ...data,
+        id: newId('tch'),
+        teacherId: data.teacherId || makeId('T', ID_BASE.teacher + teachersData.length),
+      } as Teacher
+      teachersData.unshift(newTeacher)
+      return newTeacher
+    },
+    async () => {
+      const { data: created } = await apiClient.post<Teacher>('/teachers', data)
+      return created
+    },
+  )
+}
+
+/**
+ * Update an existing teacher.
+ *
+ * @apiRoute PUT /api/v1/teachers/{id}
+ */
+export async function updateTeacher(id: string, data: Partial<Teacher>): Promise<Teacher> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      const index = teachersData.findIndex(t => t.id === id)
+      if (index === -1) throw new Error('Teacher not found')
+      const updated = { ...teachersData[index], ...data }
+      teachersData[index] = updated
+      return updated
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<Teacher>(`/teachers/${id}`, data)
+      return updated
+    },
+  )
+}
+
+/**
+ * Delete a teacher by id.
+ *
+ * @apiRoute DELETE /api/v1/teachers/{id}
+ */
+export async function deleteTeacher(id: string): Promise<void> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 400 })
+      const index = teachersData.findIndex(t => t.id === id)
+      if (index !== -1) teachersData.splice(index, 1)
+    },
+    async () => {
+      await apiClient.delete(`/teachers/${id}`)
+    },
+  )
 }

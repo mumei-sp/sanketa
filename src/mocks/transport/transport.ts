@@ -5,7 +5,7 @@ import type {
   StudentTransportAssignment,
   TransportFeeStructure,
   TransportAlert,
-} from '../types'
+} from '@/features/transport/types'
 
 // ============================================================================
 // Drivers

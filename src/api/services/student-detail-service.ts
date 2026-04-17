@@ -1,13 +1,12 @@
 /**
  * Student Detail CRUD Service
  *
- * Mock service functions for creating, updating, and deleting
- * student detail records (health, documents, extracurricular,
- * behavior, scholarships). Each function simulates a network
- * delay and returns the result.
+ * Separate from the main student service because it handles the sub-resources
+ * (health, documents, extracurricular, behavior, scholarships) that live under
+ * a student's detail page.
  *
- * When the backend is ready, replace the setTimeout mocks with
- * real API calls — the function signatures stay the same.
+ * Each function pairs an in-memory mock path with an HTTP path via the shared
+ * mockOrHttp adapter. Components call these regardless of which path runs.
  */
 
 import type {
@@ -17,132 +16,266 @@ import type {
   StudentScholarship,
 } from '@/features/students/types'
 import type { DocumentItem } from '@/components/ui/documents-list'
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency, newId } from '@/mocks/_shared'
 
-// ── Helpers ──
+// ---------------------------------------------------------------------------
+// Health Records
+// ---------------------------------------------------------------------------
 
-let counter = Date.now()
-function nextId(prefix: string): string {
-  return `${prefix}-${++counter}`
-}
-
-function mockDelay(): Promise<void> {
-  const ms = Math.floor(Math.random() * 300) + 300
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-// ── Health Records ──
-
+/** @apiRoute POST /api/v1/students/{studentId}/health-records */
 export async function addHealthRecord(
-  _studentId: string,
+  studentId: string,
   data: Omit<StudentHealthRecord, 'id'>,
 ): Promise<StudentHealthRecord> {
-  await mockDelay()
-  return { id: nextId('hr'), ...data }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { id: newId('hr'), ...data }
+    },
+    async () => {
+      const { data: created } = await apiClient.post<StudentHealthRecord>(
+        `/students/${studentId}/health-records`,
+        data,
+      )
+      return created
+    },
+  )
 }
 
+/** @apiRoute PUT /api/v1/students/{studentId}/health-records/{recordId} */
 export async function updateHealthRecord(
-  _studentId: string,
+  studentId: string,
   record: StudentHealthRecord,
 ): Promise<StudentHealthRecord> {
-  await mockDelay()
-  return { ...record }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { ...record }
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<StudentHealthRecord>(
+        `/students/${studentId}/health-records/${record.id}`,
+        record,
+      )
+      return updated
+    },
+  )
 }
 
-export async function deleteHealthRecord(
-  _studentId: string,
-  _recordId: string,
-): Promise<void> {
-  await mockDelay()
+/** @apiRoute DELETE /api/v1/students/{studentId}/health-records/{recordId} */
+export async function deleteHealthRecord(studentId: string, recordId: string): Promise<void> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+    },
+    async () => {
+      await apiClient.delete(`/students/${studentId}/health-records/${recordId}`)
+    },
+  )
 }
 
-// ── Documents ──
+// ---------------------------------------------------------------------------
+// Documents
+// ---------------------------------------------------------------------------
 
+/** @apiRoute POST /api/v1/students/{studentId}/documents */
 export async function addDocument(
-  _studentId: string,
+  studentId: string,
   data: Omit<DocumentItem, 'id'>,
 ): Promise<DocumentItem> {
-  await mockDelay()
-  return { id: nextId('doc'), ...data }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { id: newId('doc'), ...data }
+    },
+    async () => {
+      const { data: created } = await apiClient.post<DocumentItem>(
+        `/students/${studentId}/documents`,
+        data,
+      )
+      return created
+    },
+  )
 }
 
-export async function deleteDocument(
-  _studentId: string,
-  _documentId: string,
-): Promise<void> {
-  await mockDelay()
+/** @apiRoute DELETE /api/v1/students/{studentId}/documents/{documentId} */
+export async function deleteDocument(studentId: string, documentId: string): Promise<void> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+    },
+    async () => {
+      await apiClient.delete(`/students/${studentId}/documents/${documentId}`)
+    },
+  )
 }
 
-// ── Extracurricular Activities ──
+// ---------------------------------------------------------------------------
+// Extracurricular Activities
+// ---------------------------------------------------------------------------
 
+/** @apiRoute POST /api/v1/students/{studentId}/activities */
 export async function addActivity(
-  _studentId: string,
+  studentId: string,
   data: Omit<StudentActivity, 'id'>,
 ): Promise<StudentActivity> {
-  await mockDelay()
-  return { id: nextId('ec'), ...data }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { id: newId('ec'), ...data }
+    },
+    async () => {
+      const { data: created } = await apiClient.post<StudentActivity>(
+        `/students/${studentId}/activities`,
+        data,
+      )
+      return created
+    },
+  )
 }
 
+/** @apiRoute PUT /api/v1/students/{studentId}/activities/{activityId} */
 export async function updateActivity(
-  _studentId: string,
+  studentId: string,
   activity: StudentActivity,
 ): Promise<StudentActivity> {
-  await mockDelay()
-  return { ...activity }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { ...activity }
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<StudentActivity>(
+        `/students/${studentId}/activities/${activity.id}`,
+        activity,
+      )
+      return updated
+    },
+  )
 }
 
-export async function deleteActivity(
-  _studentId: string,
-  _activityId: string,
-): Promise<void> {
-  await mockDelay()
+/** @apiRoute DELETE /api/v1/students/{studentId}/activities/{activityId} */
+export async function deleteActivity(studentId: string, activityId: string): Promise<void> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+    },
+    async () => {
+      await apiClient.delete(`/students/${studentId}/activities/${activityId}`)
+    },
+  )
 }
 
-// ── Behavior Log ──
+// ---------------------------------------------------------------------------
+// Behavior Log
+// ---------------------------------------------------------------------------
 
+/** @apiRoute POST /api/v1/students/{studentId}/behavior */
 export async function addBehaviorEntry(
-  _studentId: string,
+  studentId: string,
   data: Omit<StudentBehaviorEntry, 'id'>,
 ): Promise<StudentBehaviorEntry> {
-  await mockDelay()
-  return { id: nextId('bl'), ...data }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { id: newId('bl'), ...data }
+    },
+    async () => {
+      const { data: created } = await apiClient.post<StudentBehaviorEntry>(
+        `/students/${studentId}/behavior`,
+        data,
+      )
+      return created
+    },
+  )
 }
 
+/** @apiRoute PUT /api/v1/students/{studentId}/behavior/{entryId} */
 export async function updateBehaviorEntry(
-  _studentId: string,
+  studentId: string,
   entry: StudentBehaviorEntry,
 ): Promise<StudentBehaviorEntry> {
-  await mockDelay()
-  return { ...entry }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { ...entry }
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<StudentBehaviorEntry>(
+        `/students/${studentId}/behavior/${entry.id}`,
+        entry,
+      )
+      return updated
+    },
+  )
 }
 
-export async function deleteBehaviorEntry(
-  _studentId: string,
-  _entryId: string,
-): Promise<void> {
-  await mockDelay()
+/** @apiRoute DELETE /api/v1/students/{studentId}/behavior/{entryId} */
+export async function deleteBehaviorEntry(studentId: string, entryId: string): Promise<void> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+    },
+    async () => {
+      await apiClient.delete(`/students/${studentId}/behavior/${entryId}`)
+    },
+  )
 }
 
-// ── Scholarships ──
+// ---------------------------------------------------------------------------
+// Scholarships
+// ---------------------------------------------------------------------------
 
+/** @apiRoute POST /api/v1/students/{studentId}/scholarships */
 export async function addScholarship(
-  _studentId: string,
+  studentId: string,
   data: Omit<StudentScholarship, 'id'>,
 ): Promise<StudentScholarship> {
-  await mockDelay()
-  return { id: nextId('sch'), ...data }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { id: newId('sch'), ...data }
+    },
+    async () => {
+      const { data: created } = await apiClient.post<StudentScholarship>(
+        `/students/${studentId}/scholarships`,
+        data,
+      )
+      return created
+    },
+  )
 }
 
+/** @apiRoute PUT /api/v1/students/{studentId}/scholarships/{scholarshipId} */
 export async function updateScholarship(
-  _studentId: string,
+  studentId: string,
   scholarship: StudentScholarship,
 ): Promise<StudentScholarship> {
-  await mockDelay()
-  return { ...scholarship }
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      return { ...scholarship }
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<StudentScholarship>(
+        `/students/${studentId}/scholarships/${scholarship.id}`,
+        scholarship,
+      )
+      return updated
+    },
+  )
 }
 
-export async function deleteScholarship(
-  _studentId: string,
-  _scholarshipId: string,
-): Promise<void> {
-  await mockDelay()
+/** @apiRoute DELETE /api/v1/students/{studentId}/scholarships/{scholarshipId} */
+export async function deleteScholarship(studentId: string, scholarshipId: string): Promise<void> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+    },
+    async () => {
+      await apiClient.delete(`/students/${studentId}/scholarships/${scholarshipId}`)
+    },
+  )
 }

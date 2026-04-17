@@ -3,7 +3,7 @@ import type {
   ExpenseTrendData,
   ExpenseBreakdownData,
   Reimbursement,
-} from '../types'
+} from '@/features/expenses/types'
 
 export const expenseTrendData: ExpenseTrendData[] = [
   { month: 'Jan', amount: 95000 },

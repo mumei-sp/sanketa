@@ -1,8 +1,7 @@
 /**
- * Timetable Service Layer
+ * Timetable API Service
  *
- * Mock implementations with simulated network delay.
- * Replace with real API calls when backend is ready.
+ * Mock path + HTTP path per endpoint.
  */
 
 import type {
@@ -12,6 +11,9 @@ import type {
   TimetableException,
   Subject,
 } from '@/features/timetable/types'
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency, newId, currentAcademicYear, isoDate } from '@/mocks/_shared'
 import {
   classSections,
   classTimetables,
@@ -19,102 +21,140 @@ import {
   subjects,
 } from '@/mocks/timetable/timetable'
 
-/** Simulated delay helper */
-function delay(min = 200, max = 500): Promise<void> {
-  const ms = Math.floor(Math.random() * (max - min)) + min
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-/**
- * Fetch all available class sections.
- * Replace with: GET /api/classes/sections
- */
+/** @apiRoute GET /api/v1/classes/sections */
 export async function fetchClassSections(): Promise<ClassSection[]> {
-  await delay()
-  return [...classSections]
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 200, max: 450 })
+      return [...classSections]
+    },
+    async () => {
+      const { data } = await apiClient.get<ClassSection[]>('/classes/sections')
+      return data
+    },
+  )
 }
 
-/**
- * Fetch all subjects.
- * Replace with: GET /api/subjects
- */
+/** @apiRoute GET /api/v1/subjects */
 export async function fetchSubjects(): Promise<Subject[]> {
-  await delay(100, 300)
-  return [...subjects]
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 100, max: 250 })
+      return [...subjects]
+    },
+    async () => {
+      const { data } = await apiClient.get<Subject[]>('/subjects')
+      return data
+    },
+  )
 }
 
-/**
- * Fetch timetable template for a specific class section.
- * Replace with: GET /api/timetable/:classSectionId
- */
+/** @apiRoute GET /api/v1/timetable/{classSectionId} */
 export async function fetchClassTimetable(classSectionId: string): Promise<ClassTimetable | null> {
-  await delay()
-  const timetable = classTimetables.find(t => t.classSectionId === classSectionId)
-  return timetable ? { ...timetable, slots: [...timetable.slots] } : null
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 200, max: 450 })
+      const timetable = classTimetables.find(t => t.classSectionId === classSectionId)
+      return timetable ? { ...timetable, slots: [...timetable.slots] } : null
+    },
+    async () => {
+      try {
+        const { data } = await apiClient.get<ClassTimetable>(`/timetable/${classSectionId}`)
+        return data
+      } catch (err: any) {
+        if (err?.status === 404) return null
+        throw err
+      }
+    },
+  )
 }
 
-/**
- * Update a class timetable's slots.
- * Replace with: PUT /api/timetable/:classSectionId
- */
+/** @apiRoute PUT /api/v1/timetable/{classSectionId} */
 export async function updateClassTimetable(
   classSectionId: string,
   slots: TimetableSlot[],
 ): Promise<ClassTimetable> {
-  await delay(300, 600)
-  const idx = classTimetables.findIndex(t => t.classSectionId === classSectionId)
-  if (idx >= 0) {
-    classTimetables[idx] = { ...classTimetables[idx], slots: [...slots] }
-    return classTimetables[idx]
-  }
-  // Create new timetable if none exists
-  const newTimetable: ClassTimetable = {
-    id: `tt-${classSectionId}-${Date.now()}`,
-    classSectionId,
-    academicYear: '2035-36',
-    effectiveFrom: new Date().toISOString().split('T')[0],
-    slots: [...slots],
-  }
-  classTimetables.push(newTimetable)
-  return newTimetable
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 250, max: 500 })
+      const idx = classTimetables.findIndex(t => t.classSectionId === classSectionId)
+      if (idx >= 0) {
+        classTimetables[idx] = { ...classTimetables[idx], slots: [...slots] }
+        return classTimetables[idx]
+      }
+      const newTimetable: ClassTimetable = {
+        id: newId(`tt-${classSectionId}`),
+        classSectionId,
+        academicYear: currentAcademicYear(),
+        effectiveFrom: isoDate(),
+        slots: [...slots],
+      }
+      classTimetables.push(newTimetable)
+      return newTimetable
+    },
+    async () => {
+      const { data } = await apiClient.put<ClassTimetable>(`/timetable/${classSectionId}`, {
+        slots,
+      })
+      return data
+    },
+  )
 }
 
-/**
- * Fetch exceptions for a class section within a date range.
- * Replace with: GET /api/timetable/:classSectionId/exceptions?start=X&end=Y
- */
+/** @apiRoute GET /api/v1/timetable/{classSectionId}/exceptions?start={start}&end={end} */
 export async function fetchExceptions(
   classSectionId: string,
   startDate: string,
   endDate: string,
 ): Promise<TimetableException[]> {
-  await delay(100, 300)
-  return timetableExceptions.filter(
-    e => e.classSectionId === classSectionId && e.date >= startDate && e.date <= endDate,
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 100, max: 250 })
+      return timetableExceptions.filter(
+        e => e.classSectionId === classSectionId && e.date >= startDate && e.date <= endDate,
+      )
+    },
+    async () => {
+      const { data } = await apiClient.get<TimetableException[]>(
+        `/timetable/${classSectionId}/exceptions`,
+        { params: { start: startDate, end: endDate } },
+      )
+      return data
+    },
   )
 }
 
-/**
- * Fetch all class timetables (summary — used for "duplicate from" feature).
- * Replace with: GET /api/timetable
- */
+/** @apiRoute GET /api/v1/timetable */
 export async function fetchAllClassTimetables(): Promise<ClassTimetable[]> {
-  await delay(100, 300)
-  return classTimetables.map(t => ({ ...t, slots: [...t.slots] }))
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 100, max: 250 })
+      return classTimetables.map(t => ({ ...t, slots: [...t.slots] }))
+    },
+    async () => {
+      const { data } = await apiClient.get<ClassTimetable[]>('/timetable')
+      return data
+    },
+  )
 }
 
-/**
- * Create an exception record.
- * Replace with: POST /api/timetable/exceptions
- */
+/** @apiRoute POST /api/v1/timetable/exceptions */
 export async function createException(
   exception: Omit<TimetableException, 'id'>,
 ): Promise<TimetableException> {
-  await delay(200, 400)
-  const newException: TimetableException = {
-    ...exception,
-    id: `exc-${Date.now()}`,
-  }
-  timetableExceptions.push(newException)
-  return newException
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 200, max: 400 })
+      const newException: TimetableException = {
+        ...exception,
+        id: newId('exc'),
+      }
+      timetableExceptions.push(newException)
+      return newException
+    },
+    async () => {
+      const { data } = await apiClient.post<TimetableException>('/timetable/exceptions', exception)
+      return data
+    },
+  )
 }

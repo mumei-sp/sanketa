@@ -15,7 +15,7 @@ import type {
   FeeCollectionRecord,
   PaymentTransaction,
   PaymentMethod,
-} from '../types'
+} from '@/features/fees-collection/types'
 
 // ============================================================================
 // Dashboard Stats (static — service will compute dynamically)

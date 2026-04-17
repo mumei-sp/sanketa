@@ -1,166 +1,186 @@
+/**
+ * Students API Service
+ *
+ * Each public function pairs a mock path (in-memory `studentsData`) with an
+ * HTTP path (backend via apiClient). VITE_USE_MOCK_API picks which runs.
+ */
 import type { Student, StudentDetailData } from '@/features/students/types'
 import type { PromotionCandidate, ClassPromotionSummary } from '@/features/students/types/promotion'
-import { studentsData } from '@/mocks/students/students'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
+import { studentsData } from '@/mocks/students/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
 import { studentDetailData } from '@/mocks/students/details'
 
+// ---------------------------------------------------------------------------
+// Reads
+// ---------------------------------------------------------------------------
+
 /**
- * Mock API service for fetching students
- * Simulates network delay and returns student data
+ * Fetch all students.
  *
- * This can be easily replaced with a real API call later
- *
- * @returns Promise resolving to array of students
+ * @apiRoute GET /api/v1/students
  */
 export async function fetchStudents(): Promise<Student[]> {
-  // Simulate network delay (300-800ms)
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([...studentsData])
-    }, delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...studentsData]
+    },
+    async () => {
+      const { data } = await apiClient.get<Student[]>('/students')
+      return data
+    },
+  )
 }
 
 /**
- * Mock API service for fetching a single student by ID
- * Simulates network delay and returns student data
+ * Fetch a single student by id.
  *
- * This can be easily replaced with a real API call later
- *
- * @param id - The student ID to fetch
- * @returns Promise resolving to student data or undefined if not found
+ * @apiRoute GET /api/v1/students/{id}
  */
 export async function fetchStudentById(id: string): Promise<Student | undefined> {
-  // Simulate network delay (200-500ms)
-  const delay = Math.floor(Math.random() * 300) + 200
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const student = studentsData.find(s => s.id === id)
-      resolve(student)
-    }, delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 400 })
+      return studentsData.find(s => s.id === id)
+    },
+    async () => {
+      try {
+        const { data } = await apiClient.get<Student>(`/students/${id}`)
+        return data
+      } catch (err: any) {
+        if (err?.status === 404) return undefined
+        throw err
+      }
+    },
+  )
 }
 
 /**
- * Mock API service for fetching enrollment trends
- * Simulates network delay and returns enrollment data
+ * Fetch enrollment trend datapoints for the students dashboard.
  *
- * This can be easily replaced with a real API call later
- *
- * @returns Promise resolving to array of enrollment data
+ * @apiRoute GET /api/v1/students/metrics/enrollment
  */
 export async function fetchEnrollmentTrends(): Promise<EnrollmentData[]> {
-  // Simulate network delay (300-800ms)
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([...enrollmentTrendsData])
-    }, delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...enrollmentTrendsData]
+    },
+    async () => {
+      const { data } = await apiClient.get<EnrollmentData[]>('/students/metrics/enrollment')
+      return data
+    },
+  )
 }
 
 /**
- * Mock API service for fetching attendance overview
- * Simulates network delay and returns attendance data
+ * Fetch weekly attendance overview for the students dashboard.
  *
- * This can be easily replaced with a real API call later
- *
- * @returns Promise resolving to array of attendance data
+ * @apiRoute GET /api/v1/students/metrics/attendance
  */
+export async function fetchAttendanceOverview(): Promise<AttendanceData[]> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...attendanceOverviewData]
+    },
+    async () => {
+      const { data } = await apiClient.get<AttendanceData[]>('/students/metrics/attendance')
+      return data
+    },
+  )
+}
+
 /**
- * Mock API service for fetching student detail data (attendance, scholarships, etc.)
+ * Fetch the detail payload for a single student (attendance, scholarships, …).
  *
- * Replace with a real API call: GET /api/students/:id/details
- *
- * @param id - The student ID
- * @returns Promise resolving to student detail data
+ * @apiRoute GET /api/v1/students/{id}/details
  */
+export async function fetchStudentDetailData(_id: string): Promise<StudentDetailData> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 150, max: 400 })
+      // The mock dataset currently ships a single shared detail record.
+      return studentDetailData
+    },
+    async () => {
+      const { data } = await apiClient.get<StudentDetailData>(`/students/${_id}/details`)
+      return data
+    },
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Mutations
+// ---------------------------------------------------------------------------
+
 /**
- * Mock API service for creating a new student
+ * Create a new student.
  *
- * Replace with: POST /api/students
+ * @apiRoute POST /api/v1/students
  */
 export async function createStudent(data: Partial<Student>): Promise<Student> {
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
       const newStudent: Student = {
         ...data,
-        id: `stu-${Date.now()}`,
-        studentId: data.studentId || `S-${Math.floor(1000 + Math.random() * 9000)}`,
+        id: newId('stu'),
+        studentId: data.studentId || makeId('S', ID_BASE.student + studentsData.length),
         gpa: data.gpa ?? 0,
         performance: data.performance ?? 'Good',
         percentage: data.percentage ?? 0,
         status: data.status ?? 'Active',
       } as Student
-
       studentsData.unshift(newStudent)
-      resolve(newStudent)
-    }, delay)
-  })
+      return newStudent
+    },
+    async () => {
+      const { data: created } = await apiClient.post<Student>('/students', data)
+      return created
+    },
+  )
 }
 
 /**
- * Mock API service for updating an existing student
+ * Update an existing student.
  *
- * Replace with: PUT /api/students/:id
+ * @apiRoute PUT /api/v1/students/{id}
  */
 export async function updateStudent(id: string, data: Partial<Student>): Promise<Student> {
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
       const index = studentsData.findIndex(s => s.id === id)
-      if (index === -1) {
-        reject(new Error('Student not found'))
-        return
-      }
-
+      if (index === -1) throw new Error('Student not found')
       const updated = { ...studentsData[index], ...data }
       studentsData[index] = updated
-      resolve(updated)
-    }, delay)
-  })
+      return updated
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<Student>(`/students/${id}`, data)
+      return updated
+    },
+  )
 }
 
-export async function fetchStudentDetailData(_id: string): Promise<StudentDetailData> {
-  const delay = Math.floor(Math.random() * 300) + 200
+// ---------------------------------------------------------------------------
+// Promotion workflow
+// ---------------------------------------------------------------------------
 
-  return new Promise(resolve => {
-    setTimeout(() => {
-      // Currently returns the same mock data for all students.
-      // When the backend is ready, this will fetch per-student detail data.
-      resolve(studentDetailData)
-    }, delay)
-  })
-}
-
-export async function fetchAttendanceOverview(): Promise<AttendanceData[]> {
-  // Simulate network delay (300-800ms)
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([...attendanceOverviewData])
-    }, delay)
-  })
-}
-
-// ============================================================================
-// Student Promotion
-// ============================================================================
-
-/** Get available classes with student counts for promotion */
+/**
+ * Get available classes with student counts for promotion.
+ *
+ * @apiRoute GET /api/v1/students/promotion/classes
+ */
 export async function fetchClassesForPromotion(): Promise<ClassPromotionSummary[]> {
-  const delay = Math.floor(Math.random() * 300) + 200
-  return new Promise(resolve => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 200, max: 500 })
       const classMap = new Map<string, { count: number; totalPct: number }>()
       studentsData.forEach(s => {
         if (!s.class) return
@@ -169,7 +189,6 @@ export async function fetchClassesForPromotion(): Promise<ClassPromotionSummary[
         existing.totalPct += s.percentage ?? 0
         classMap.set(s.class, existing)
       })
-
       const summaries: ClassPromotionSummary[] = []
       classMap.forEach((data, classLabel) => {
         summaries.push({
@@ -178,30 +197,43 @@ export async function fetchClassesForPromotion(): Promise<ClassPromotionSummary[
           avgPercentage: Math.round((data.totalPct / data.count) * 10) / 10,
         })
       })
-
-      // Sort by class label
-      summaries.sort((a, b) => a.classLabel.localeCompare(b.classLabel, undefined, { numeric: true }))
-      resolve(summaries)
-    }, delay)
-  })
+      summaries.sort((a, b) =>
+        a.classLabel.localeCompare(b.classLabel, undefined, { numeric: true }),
+      )
+      return summaries
+    },
+    async () => {
+      const { data } = await apiClient.get<ClassPromotionSummary[]>('/students/promotion/classes')
+      return data
+    },
+  )
 }
 
-/** Get promotion candidates for a specific class */
+/**
+ * Get promotion candidates for a specific class.
+ *
+ * @apiRoute GET /api/v1/students/promotion/candidates?class={classLabel}&threshold={passingThreshold}
+ */
 export async function fetchPromotionCandidates(
   classLabel: string,
   passingThreshold: number,
 ): Promise<PromotionCandidate[]> {
-  const delay = Math.floor(Math.random() * 400) + 300
-  return new Promise(resolve => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 300, max: 700 })
       const students = studentsData.filter(s => s.class === classLabel)
-      const candidates = students.map(s => {
+      return students.map(s => {
         const pct = s.percentage ?? 0
         const isAtRisk = s.performance === 'At Risk'
-        const recommendation = (pct >= passingThreshold && !isAtRisk) ? 'promote' : 'retain'
+        const recommendation = pct >= passingThreshold && !isAtRisk ? 'promote' : 'retain'
         return {
           studentId: s.id,
-          studentName: s.fullName || s.displayName || s.name || [s.firstName, s.lastName].filter(Boolean).join(' ') || 'Unknown',
+          studentName:
+            s.fullName ||
+            s.displayName ||
+            s.name ||
+            [s.firstName, s.lastName].filter(Boolean).join(' ') ||
+            'Unknown',
           rollNumber: s.rollNumber || s.studentId || '',
           class: s.class || classLabel,
           gradeLevel: s.gradeLevel || classLabel.replace(/[A-Z]/g, ''),
@@ -213,30 +245,38 @@ export async function fetchPromotionCandidates(
           avatarUrl: s.avatarUrl ?? s.profilePictureUrl,
           recommendation,
           decision: recommendation,
-        }
+        } as PromotionCandidate
       })
-      resolve(candidates as PromotionCandidate[])
-    }, delay)
-  })
+    },
+    async () => {
+      const { data } = await apiClient.get<PromotionCandidate[]>(
+        '/students/promotion/candidates',
+        { params: { class: classLabel, threshold: passingThreshold } },
+      )
+      return data
+    },
+  )
 }
 
-/** Execute promotion decisions — update student records */
+/**
+ * Execute promotion decisions — update student records.
+ *
+ * @apiRoute POST /api/v1/students/promotion/execute
+ */
 export async function executePromotion(
   sourceClass: string,
   candidates: PromotionCandidate[],
   targetSection: string,
 ): Promise<void> {
-  const delay = Math.floor(Math.random() * 500) + 500
-  return new Promise(resolve => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 500, max: 1000 })
       const sourceGrade = parseInt(sourceClass.replace(/[A-Z]/g, ''))
       const targetGrade = sourceGrade + 1
       const targetClass = `${targetGrade}${targetSection}`
-
       candidates.forEach(c => {
         const student = studentsData.find(s => s.id === c.studentId)
         if (!student) return
-
         if (c.decision === 'promote') {
           student.gradeLevel = String(targetGrade)
           student.section = targetSection
@@ -244,10 +284,14 @@ export async function executePromotion(
         } else if (c.decision === 'transfer') {
           student.status = 'On Leave'
         }
-        // 'retain' → no changes needed
       })
-
-      resolve()
-    }, delay)
-  })
+    },
+    async () => {
+      await apiClient.post('/students/promotion/execute', {
+        sourceClass,
+        candidates,
+        targetSection,
+      })
+    },
+  )
 }

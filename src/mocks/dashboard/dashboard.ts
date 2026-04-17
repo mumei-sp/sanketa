@@ -9,7 +9,7 @@ import type {
   CalendarEvent,
   TodoItem,
   RecentActivityItem,
-} from '../types'
+} from '@/features/dashboard/types'
 
 export const dashboardStats: DashboardStat[] = [
   {

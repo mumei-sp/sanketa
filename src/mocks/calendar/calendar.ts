@@ -1,6 +1,6 @@
-import { categoryConfig } from '../utils/category-config'
+import { categoryConfig } from '@/features/calendar/utils/category-config'
 import { baseColors, background } from '@/theme/colors'
-import type { CalendarEvent, EventCategory, EventPriority, EventReminder } from '../types'
+import type { CalendarEvent, EventCategory, EventPriority, EventReminder } from '@/features/calendar/types'
 
 /**
  * Convert 12-hour time string to 24-hour ISO format

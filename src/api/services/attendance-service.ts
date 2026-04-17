@@ -1,3 +1,8 @@
+/**
+ * Attendance API Service
+ *
+ * Mock path + HTTP path per endpoint.
+ */
 import type {
   AttendanceRecord,
   AttendanceEntry,
@@ -5,6 +10,9 @@ import type {
   AttendanceHistoryRow,
   ClassRosterStudent,
 } from '@/features/attendance/types'
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency, newId } from '@/mocks/_shared'
 import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
 import {
   classRosters,
@@ -15,83 +23,92 @@ import {
 } from '@/mocks/attendance/daily'
 
 /**
- * Mock API service for fetching attendance records
- * Simulates network delay and returns attendance data
+ * Fetch attendance history records (N most recent business days).
  *
- * This can be easily replaced with a real API call later
- *
- * @param days - Number of days to fetch attendance for (default: 21)
- * @returns Promise resolving to array of attendance records
+ * @apiRoute GET /api/v1/attendance/records?days={days}
  */
 export async function fetchAttendanceRecords(days: number = 21): Promise<AttendanceRecord[]> {
-  // Simulate network delay (300-800ms)
-  const delay = Math.floor(Math.random() * 500) + 300
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(generateMockAttendanceData(days))
-    }, delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return generateMockAttendanceData(days)
+    },
+    async () => {
+      const { data } = await apiClient.get<AttendanceRecord[]>('/attendance/records', {
+        params: { days },
+      })
+      return data
+    },
+  )
 }
 
-// ============================================================================
-// Daily Attendance Marking Services
-// ============================================================================
+// ---------------------------------------------------------------------------
+// Daily attendance marking
+// ---------------------------------------------------------------------------
 
-/**
- * Fetch the list of available class IDs
- *
- * Replace with: GET /api/classes
- */
+/** @apiRoute GET /api/v1/classes */
 export async function fetchAvailableClasses(): Promise<string[]> {
-  const delay = Math.floor(Math.random() * 200) + 100
-  return new Promise(resolve => {
-    setTimeout(() => resolve([...availableClasses]), delay)
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 100, max: 250 })
+      return [...availableClasses]
+    },
+    async () => {
+      const { data } = await apiClient.get<string[]>('/classes')
+      return data
+    },
+  )
 }
 
-/**
- * Fetch student roster for a specific class
- *
- * Replace with: GET /api/classes/:classId/roster
- */
+/** @apiRoute GET /api/v1/classes/{classId}/roster */
 export async function fetchClassRoster(classId: string): Promise<ClassRosterStudent[]> {
-  const delay = Math.floor(Math.random() * 300) + 200
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 200, max: 400 })
       const roster = classRosters[classId]
-      if (!roster) {
-        reject(new Error(`Class "${classId}" not found`))
-        return
-      }
-      resolve([...roster])
-    }, delay)
-  })
+      if (!roster) throw new Error(`Class "${classId}" not found`)
+      return [...roster]
+    },
+    async () => {
+      const { data } = await apiClient.get<ClassRosterStudent[]>(`/classes/${classId}/roster`)
+      return data
+    },
+  )
 }
 
 /**
- * Fetch an existing attendance submission for a class + date
- * Returns null if not yet submitted
+ * Fetch an existing attendance submission for a class + date (null when not submitted).
  *
- * Replace with: GET /api/attendance/submissions?classId=X&date=Y
+ * @apiRoute GET /api/v1/attendance/submissions?classId={classId}&date={date}
  */
 export async function fetchAttendanceSubmission(
   classId: string,
   date: string,
 ): Promise<AttendanceSubmission | null> {
-  const delay = Math.floor(Math.random() * 300) + 200
-  return new Promise(resolve => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 200, max: 400 })
       const submission = getSubmissionForDate(classId, date)
-      resolve(submission ? { ...submission, entries: [...submission.entries] } : null)
-    }, delay)
-  })
+      return submission ? { ...submission, entries: [...submission.entries] } : null
+    },
+    async () => {
+      try {
+        const { data } = await apiClient.get<AttendanceSubmission>('/attendance/submissions', {
+          params: { classId, date },
+        })
+        return data
+      } catch (err: any) {
+        if (err?.status === 404) return null
+        throw err
+      }
+    },
+  )
 }
 
 /**
- * Submit or update attendance for a class + date
+ * Submit or update attendance for a class + date.
  *
- * Replace with: POST /api/attendance/submissions
+ * @apiRoute POST /api/v1/attendance/submissions
  */
 export async function submitAttendance(
   classId: string,
@@ -99,12 +116,12 @@ export async function submitAttendance(
   entries: AttendanceEntry[],
   submittedBy: string,
 ): Promise<AttendanceSubmission> {
-  const delay = Math.floor(Math.random() * 500) + 300
-  return new Promise(resolve => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
       const existing = getSubmissionForDate(classId, date)
       const submission: AttendanceSubmission = {
-        id: existing?.id ?? `sub-${classId}-${date}-${Date.now()}`,
+        id: existing?.id ?? newId(`sub-${classId}-${date}`),
         classId,
         date,
         entries: [...entries],
@@ -113,37 +130,39 @@ export async function submitAttendance(
         lastEditedBy: existing ? submittedBy : undefined,
         lastEditedAt: existing ? new Date().toISOString() : undefined,
       }
-
-      // Update in-memory mock store
       const idx = attendanceSubmissions.findIndex(s => s.classId === classId && s.date === date)
-      if (idx >= 0) {
-        attendanceSubmissions[idx] = submission
-      } else {
-        attendanceSubmissions.push(submission)
-      }
-
-      resolve(submission)
-    }, delay)
-  })
+      if (idx >= 0) attendanceSubmissions[idx] = submission
+      else attendanceSubmissions.push(submission)
+      return submission
+    },
+    async () => {
+      const { data } = await apiClient.post<AttendanceSubmission>('/attendance/submissions', {
+        classId,
+        date,
+        entries,
+        submittedBy,
+      })
+      return data
+    },
+  )
 }
 
 /**
- * Fetch attendance history rows for a class in a given month
+ * Fetch attendance history rows for a class in a given month.
  *
- * Replace with: GET /api/attendance/history?classId=X&year=Y&month=Z
+ * @apiRoute GET /api/v1/attendance/history?classId={classId}&year={year}&month={month}
  */
 export async function fetchAttendanceHistory(
   classId: string,
   year: number,
   month: number,
 ): Promise<AttendanceHistoryRow[]> {
-  const delay = Math.floor(Math.random() * 300) + 200
-  return new Promise(resolve => {
-    setTimeout(() => {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 200, max: 400 })
       const weekdays = getWeekdaysInMonth(year, month)
       const roster = classRosters[classId]
       const total = roster?.length ?? 0
-
       const rows: AttendanceHistoryRow[] = weekdays.map(date => {
         const sub = getSubmissionForDate(classId, date)
         if (sub) {
@@ -172,9 +191,14 @@ export async function fetchAttendanceHistory(
           isSubmitted: false,
         }
       })
-
-      // Reverse so most recent first
-      resolve(rows.reverse())
-    }, delay)
-  })
+      // Reverse so most recent first.
+      return rows.reverse()
+    },
+    async () => {
+      const { data } = await apiClient.get<AttendanceHistoryRow[]>('/attendance/history', {
+        params: { classId, year, month },
+      })
+      return data
+    },
+  )
 }

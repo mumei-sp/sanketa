@@ -1,4 +1,4 @@
-import type { NoticeBoardEntry } from '../types'
+import type { NoticeBoardEntry } from '@/features/notice-board/types'
 
 export const noticeBoardEntries: NoticeBoardEntry[] = [
   {

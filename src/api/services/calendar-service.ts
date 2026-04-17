@@ -1,81 +1,156 @@
 /**
  * Calendar API Service
  *
- * Currently uses mock data. To connect to a backend:
- * 1. Replace the mock import with an API call (e.g., axios.get('/api/calendar/events'))
- * 2. Map the API response to CalendarEvent[] using mapApiEventToCalendarEvent()
- * 3. Remove the mock import and randomDelay()
+ * Each public function pairs a mock path (in-memory mockCalendarEvents) with
+ * an HTTP path (backend via apiClient). The env flag VITE_USE_MOCK_API picks
+ * which runs at call time.
  */
+import apiClient from '@/api/client'
+import { mockOrHttp } from './_adapter'
+import { withLatency } from '@/mocks/_shared'
 import { mockCalendarEvents } from '@/mocks/calendar'
 import { categoryConfig } from '@/features/calendar/utils/category-config'
 import { baseColors, background } from '@/theme/colors'
 import type { CalendarEvent, EventCategory } from '@/features/calendar/types'
 import type { EventFormValues } from '@/features/calendar/schemas/event-schema'
 
-function randomDelay(): Promise<void> {
-  const delay = Math.floor(Math.random() * 300) + 200
-  return new Promise(resolve => setTimeout(resolve, delay))
-}
+// ---------------------------------------------------------------------------
+// Reads
+// ---------------------------------------------------------------------------
 
 /**
  * Fetch all calendar events.
  *
- * Backend replacement:
- *   const { data } = await axios.get('/api/calendar/events', { params: { start, end } })
- *   return data.map(mapApiEventToCalendarEvent)
+ * @apiRoute GET /api/v1/calendar/events
  */
 export async function fetchCalendarEvents(): Promise<CalendarEvent[]> {
-  await randomDelay()
-  return [...mockCalendarEvents]
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...mockCalendarEvents]
+    },
+    async () => {
+      const { data } = await apiClient.get<CalendarEvent[]>('/calendar/events')
+      return data
+    },
+  )
 }
 
 /**
  * Fetch calendar events filtered by category.
  *
- * Backend replacement:
- *   const { data } = await axios.get('/api/calendar/events', { params: { category } })
- *   return data.map(mapApiEventToCalendarEvent)
+ * @apiRoute GET /api/v1/calendar/events?category={category}
  */
 export async function fetchCalendarEventsByCategory(
   category: EventCategory,
 ): Promise<CalendarEvent[]> {
-  await randomDelay()
-  return mockCalendarEvents.filter(e => e.extendedProps.category === category)
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return mockCalendarEvents.filter(e => e.extendedProps.category === category)
+    },
+    async () => {
+      const { data } = await apiClient.get<CalendarEvent[]>('/calendar/events', {
+        params: { category },
+      })
+      return data
+    },
+  )
 }
 
 /**
  * Fetch calendar events within a date range.
  *
- * Backend replacement:
- *   const { data } = await axios.get('/api/calendar/events', { params: { start, end } })
- *   return data.map(mapApiEventToCalendarEvent)
+ * @apiRoute GET /api/v1/calendar/events?start={startDate}&end={endDate}
  */
 export async function fetchCalendarEventsByRange(
   startDate: string,
   endDate: string,
 ): Promise<CalendarEvent[]> {
-  await randomDelay()
-  return mockCalendarEvents.filter(e => {
-    const eventDate = e.start.split('T')[0]
-    return eventDate >= startDate && eventDate <= endDate
-  })
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return mockCalendarEvents.filter(e => {
+        const eventDate = e.start.split('T')[0]
+        return eventDate >= startDate && eventDate <= endDate
+      })
+    },
+    async () => {
+      const { data } = await apiClient.get<CalendarEvent[]>('/calendar/events', {
+        params: { start: startDate, end: endDate },
+      })
+      return data
+    },
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Mutations
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a new calendar event from form values.
+ *
+ * @apiRoute POST /api/v1/calendar/events
+ */
+export async function createCalendarEvent(data: EventFormValues): Promise<CalendarEvent> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return formValuesToCalendarEvent(data)
+    },
+    async () => {
+      const { data: created } = await apiClient.post<CalendarEvent>('/calendar/events', data)
+      return created
+    },
+  )
 }
 
 /**
- * Helper to map a raw API response object to a CalendarEvent.
- * Use this when connecting to a backend.
+ * Update an existing calendar event by id.
  *
- * Example API response shape:
- * {
- *   id: "evt-01",
- *   title: "Graphic Project Submission",
- *   category: "Academic",
- *   date: "2035-03-05",
- *   start_time: "09:00 AM",
- *   end_time: "10:00 AM",
- *   location: "Room 101",
- *   notes: "Submit all graphic design projects..."
- * }
+ * @apiRoute PUT /api/v1/calendar/events/{id}
+ */
+export async function updateCalendarEvent(
+  id: string,
+  data: EventFormValues,
+): Promise<CalendarEvent> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return formValuesToCalendarEvent(data, id)
+    },
+    async () => {
+      const { data: updated } = await apiClient.put<CalendarEvent>(`/calendar/events/${id}`, data)
+      return updated
+    },
+  )
+}
+
+/**
+ * Delete a calendar event by id.
+ *
+ * @apiRoute DELETE /api/v1/calendar/events/{id}
+ */
+export async function deleteCalendarEvent(id: string): Promise<void> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+    },
+    async () => {
+      await apiClient.delete(`/calendar/events/${id}`)
+    },
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Pure format helpers (no network, no mocks) — exported so the calendar
+// feature can marshal its own data without re-creating the translations.
+// ---------------------------------------------------------------------------
+
+/**
+ * Helper to map a raw API response object to a CalendarEvent.
+ * Use this when connecting to a backend that returns a different event shape.
  */
 export function mapApiEventToCalendarEvent(apiEvent: {
   id: string
@@ -181,20 +256,6 @@ function formValuesToCalendarEvent(data: EventFormValues, id?: string): Calendar
       endTimeDisplay: endDisplay,
     },
   }
-}
-
-export async function createCalendarEvent(data: EventFormValues): Promise<CalendarEvent> {
-  await randomDelay()
-  return formValuesToCalendarEvent(data)
-}
-
-export async function updateCalendarEvent(id: string, data: EventFormValues): Promise<CalendarEvent> {
-  await randomDelay()
-  return formValuesToCalendarEvent(data, id)
-}
-
-export async function deleteCalendarEvent(_id: string): Promise<void> {
-  await randomDelay()
 }
 
 export function calendarEventToFormValues(event: CalendarEvent): EventFormValues {

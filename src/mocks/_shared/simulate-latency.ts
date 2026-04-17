@@ -25,15 +25,32 @@ export function simulateLatency(options: LatencyOptions = {}): Promise<void> {
 }
 
 /**
- * Thin wrapper that runs `producer()` after a simulated delay and resolves
- * with its return value. Keeps mock adapter bodies tiny:
+ * Wait a simulated-network-delay amount, then (optionally) run `producer`.
  *
- *   return withLatency(() => ({ data: [...students], pagination: ... }))
+ * Two call shapes are supported so mock adapters can stay terse:
+ *
+ *   // a) Plain delay — used when the adapter wants to do its work inline.
+ *   await withLatency()
+ *   return [...students]
+ *
+ *   // b) With producer — returns producer()'s value after the delay.
+ *   return withLatency(() => ({ data: [...students] }))
+ *
+ * Both produce the same wire-latency behaviour; pick whichever reads cleanest
+ * at the call site. Options (min/max ms) may be supplied in either shape —
+ * as the first arg if there's no producer, or as the second arg otherwise.
  */
-export async function withLatency<T>(
+export function withLatency(options?: LatencyOptions): Promise<void>
+export function withLatency<T>(
   producer: () => T | Promise<T>,
   options?: LatencyOptions,
-): Promise<T> {
+): Promise<T>
+export async function withLatency<T>(
+  producerOrOptions?: LatencyOptions | (() => T | Promise<T>),
+  maybeOptions?: LatencyOptions,
+): Promise<T | void> {
+  const producer = typeof producerOrOptions === 'function' ? producerOrOptions : undefined
+  const options = typeof producerOrOptions === 'function' ? maybeOptions : producerOrOptions
   await simulateLatency(options)
-  return producer()
+  if (producer) return producer()
 }

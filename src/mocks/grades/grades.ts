@@ -7,7 +7,7 @@
  * Uses student rosters from attendance-daily.ts for consistency.
  */
 
-import { classRosters } from './attendance-daily'
+import { classRosters } from '@/mocks/attendance/daily'
 import { GRADEABLE_SUBJECT_IDS, EXAMS } from '@/features/grades/constants'
 import type { GradeSubmission, GradeEntry } from '@/features/grades/types'
 
