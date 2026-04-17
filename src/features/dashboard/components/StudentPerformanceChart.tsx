@@ -92,12 +92,17 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
   const allGrades = activeDataset?.grades ?? []
 
-  // Filter grades to only those selected via ClassPicker
-  // If none of the picked grades match data, show all (graceful fallback)
+  // Filter grades to only those selected via ClassPicker. Fallback is the
+  // first 3 grades (matches ClassPicker's default max=3) — showing *all*
+  // grades when nothing is picked crowds the chart with 10+ series and
+  // makes it unreadable. This also protects against stale localStorage
+  // values from previous picker modes.
   const grades = React.useMemo(() => {
-    if (pickedGrades.length === 0) return allGrades
-    const filtered = allGrades.filter(g => pickedGrades.some(p => g.key === `grade${p}`))
-    return filtered.length > 0 ? filtered : allGrades
+    const filtered = allGrades.filter(g =>
+      pickedGrades.some(p => g.key === `grade${p}`),
+    )
+    if (filtered.length > 0) return filtered
+    return allGrades.slice(0, 3)
   }, [allGrades, pickedGrades])
   const rawData = activeDataset?.data ?? []
   const data = React.useMemo(

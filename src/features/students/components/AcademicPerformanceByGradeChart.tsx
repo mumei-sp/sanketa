@@ -127,13 +127,16 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
   // All grade keys available in the data
   const allGradeKeys = React.useMemo(() => extractGradeKeys(data), [data])
 
-  // Filter to only the selected grades that exist in data
-  const activeGradeKeys = React.useMemo(
-    () => selectedGrades
+  // Filter to only the selected grades that exist in data. When the picker
+  // returns nothing (empty selection, or stale labels from a previous
+  // picker mode), fall back to the first 3 grades so the chart stays
+  // readable instead of rendering every admin-configured grade.
+  const activeGradeKeys = React.useMemo(() => {
+    const picked = selectedGrades
       .map(gradeToGradeKey)
-      .filter(k => allGradeKeys.includes(k)),
-    [selectedGrades, allGradeKeys],
-  )
+      .filter(k => allGradeKeys.includes(k))
+    return picked.length > 0 ? picked : allGradeKeys.slice(0, 3)
+  }, [selectedGrades, allGradeKeys])
 
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 300

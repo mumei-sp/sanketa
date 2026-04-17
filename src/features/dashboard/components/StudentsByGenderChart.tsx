@@ -23,12 +23,16 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
   const [selected, setSelected] = React.useState('')
   const [pickedGrades, setPickedGrades] = React.useState<string[]>([])
 
-  // Filter datasets to only show grades selected via ClassPicker
-  // If none match, show all (graceful fallback for mismatched defaults)
+  // Filter datasets to the grades picked via ClassPicker. Fallback to the
+  // first 3 grades (matches ClassPicker's default max=3) rather than the
+  // full admin-configured list — otherwise the grade dropdown shows every
+  // grade 1–10, which is noisy for what's meant to be a single-grade donut.
   const filteredDatasets = React.useMemo(() => {
-    if (pickedGrades.length === 0) return datasets
-    const filtered = datasets.filter(ds => pickedGrades.some(g => ds.value === `grade-${g}`))
-    return filtered.length > 0 ? filtered : datasets
+    const filtered = datasets.filter(ds =>
+      pickedGrades.some(g => ds.value === `grade-${g}`),
+    )
+    if (filtered.length > 0) return filtered
+    return datasets.slice(0, 3)
   }, [datasets, pickedGrades])
 
   React.useEffect(() => {
