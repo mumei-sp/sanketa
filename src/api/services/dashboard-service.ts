@@ -8,9 +8,9 @@ import { mockOrHttp } from './_adapter'
 import { withLatency, newId } from '@/mocks/_shared'
 import {
   dashboardStats,
-  performanceDatasets,
+  buildPerformanceDatasets,
   earningsDatasets,
-  genderDatasets,
+  buildGenderDatasets,
   attendanceDatasets,
   calendarEvents,
   todoItems,
@@ -46,7 +46,8 @@ export async function fetchStudentPerformance(): Promise<PerformanceDataset[]> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 350 })
-      return performanceDatasets.map(d => ({ ...d, data: [...d.data] }))
+      // Rebuild each call so admin-configured grades appear live.
+      return buildPerformanceDatasets().map(d => ({ ...d, data: [...d.data] }))
     },
     async () => {
       const { data } = await apiClient.get<PerformanceDataset[]>('/dashboard/performance')
@@ -74,7 +75,7 @@ export async function fetchGenderDistribution(): Promise<GenderDataset[]> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 350 })
-      return genderDatasets.map(d => ({ ...d, data: [...d.data] }))
+      return buildGenderDatasets().map(d => ({ ...d, data: [...d.data] }))
     },
     async () => {
       const { data } = await apiClient.get<GenderDataset[]>('/dashboard/gender-distribution')

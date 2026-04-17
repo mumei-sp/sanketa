@@ -14,6 +14,8 @@ import { relativeDate, displayDate } from '@/mocks/_shared/date-helpers'
 import { studentsData } from '@/mocks/students/students'
 import { teachersData } from '@/mocks/teachers/teachers'
 import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
+import { loadSchoolConfig } from '@/api/services/school-config-service'
+import { getUniqueGrades } from '@/utils/class-section-helpers'
 
 /**
  * Single source of truth for enrolment counts. Every widget on the Dashboard
@@ -82,41 +84,74 @@ export const dashboardStats: DashboardStat[] = [
   },
 ]
 
-export const performanceDatasets: PerformanceDataset[] = [
-  {
-    label: 'Last Semester',
-    value: 'last-semester',
-    grades: [
-      { key: 'grade7', label: 'Grade 7', color: baseColors.blue },
-      { key: 'grade8', label: 'Grade 8', color: baseColors.pink },
-      { key: 'grade9', label: 'Grade 9', color: baseColors.heading },
-    ],
-    data: [
-      { month: 'May', grade7: 65, grade8: 70, grade9: 82 },
-      { month: 'Jun', grade7: 55, grade8: 60, grade9: 97 },
-      { month: 'Jul', grade7: 45, grade8: 40, grade9: 60 },
-      { month: 'Aug', grade7: 75, grade8: 85, grade9: 78 },
-      { month: 'Sep', grade7: 52, grade8: 56, grade9: 60 },
-    ],
-  },
-  {
-    label: 'Current',
-    value: 'current',
-    grades: [
-      { key: 'grade7', label: 'Grade 7', color: baseColors.blue },
-      { key: 'grade8', label: 'Grade 8', color: baseColors.pink },
-      { key: 'grade9', label: 'Grade 9', color: baseColors.heading },
-    ],
-    data: [
-      { month: 'Oct', grade7: 70, grade8: 75, grade9: 88 },
-      { month: 'Nov', grade7: 68, grade8: 72, grade9: 85 },
-      { month: 'Dec', grade7: 74, grade8: 78, grade9: 90 },
-      { month: 'Jan', grade7: 62, grade8: 68, grade9: 82 },
-      { month: 'Feb', grade7: 76, grade8: 80, grade9: 92 },
-      { month: 'Mar', grade7: 71, grade8: 77, grade9: 87 },
-    ],
-  },
-]
+// ---------------------------------------------------------------------------
+// Grade-keyed datasets (performance, gender) are generated from the live
+// school config so admin-configured grades always appear in the selectors
+// rather than a hardcoded 7/8/9 slice. Services call the generator functions
+// at request time; a stale module-level export would miss config changes
+// made after page load.
+// ---------------------------------------------------------------------------
+
+/** Colors cycled through grade series so bars/cells always have distinct hues. */
+const GRADE_PALETTE = [baseColors.blue, baseColors.pink, baseColors.heading] as const
+
+/** Deterministic pseudo-random 0..1 from a grade+bucket string (stable across reloads). */
+function seededFraction(seed: string): number {
+  let h = 2166136261
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619)
+  return ((h >>> 0) % 1000) / 1000
+}
+
+/** Nice performance number for a grade/month: 55..95%. */
+function performanceFor(grade: string, month: string): number {
+  return Math.round(55 + seededFraction(`${grade}|${month}`) * 40)
+}
+
+/**
+ * Build performance datasets (Last Semester / Current) for the grades the
+ * admin has configured. Each dataset has one series per grade.
+ */
+export function buildPerformanceDatasets(): PerformanceDataset[] {
+  const config = loadSchoolConfig()
+  const grades = getUniqueGrades(config.classSections)
+
+  const toSeries = (monthList: string[]): PerformanceDataset['data'] =>
+    monthList.map(month => {
+      const row: Record<string, number | string> = { month }
+      grades.forEach(g => {
+        row[`grade${g}`] = performanceFor(g, month)
+      })
+      return row as PerformanceDataset['data'][number]
+    })
+
+  const gradeDefs = grades.map((g, i) => ({
+    key: `grade${g}`,
+    label: `Grade ${g}`,
+    color: GRADE_PALETTE[i % GRADE_PALETTE.length],
+  }))
+
+  return [
+    {
+      label: 'Last Semester',
+      value: 'last-semester',
+      grades: gradeDefs,
+      data: toSeries(['May', 'Jun', 'Jul', 'Aug', 'Sep']),
+    },
+    {
+      label: 'Current',
+      value: 'current',
+      grades: gradeDefs,
+      data: toSeries(['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar']),
+    },
+  ]
+}
+
+/**
+ * Module-level export kept for backwards compatibility with anything that
+ * imports `performanceDatasets` directly. Services should call
+ * `buildPerformanceDatasets()` each request to pick up live config changes.
+ */
+export const performanceDatasets: PerformanceDataset[] = buildPerformanceDatasets()
 
 export const earningsDatasets: EarningsDataset[] = [
   {
@@ -153,43 +188,37 @@ export const earningsDatasets: EarningsDataset[] = [
   },
 ]
 
-// Each grade cohort is a slice of TOTAL_ENROLLMENT; the three grades shown
-// here roughly sum to 3 × AVG_PER_GRADE and never exceed the total.
-export const genderDatasets: GenderDataset[] = [
-  {
-    label: 'Grade 9',
-    value: 'grade-9',
-    data: (() => {
-      const { boys, girls } = gradeGenderSplit(Math.round(AVG_PER_GRADE * 1.05), 0.48)
-      return [
+/**
+ * Build gender datasets for every grade the admin has configured.
+ * Each cohort is a slice of AVG_PER_GRADE with a small deterministic
+ * per-grade size + boys/girls offset so the donut doesn't look identical
+ * across grades. Values are clamped to never exceed TOTAL_ENROLLMENT.
+ */
+export function buildGenderDatasets(): GenderDataset[] {
+  const config = loadSchoolConfig()
+  const grades = getUniqueGrades(config.classSections)
+  return grades.map(grade => {
+    // Stable 0.90..1.10 size multiplier + 0.46..0.54 boys share per grade.
+    const sizeMul = 0.9 + seededFraction(`size|${grade}`) * 0.2
+    const boysPct = 0.46 + seededFraction(`boys|${grade}`) * 0.08
+    const cohort = Math.min(
+      TOTAL_ENROLLMENT,
+      Math.max(10, Math.round(AVG_PER_GRADE * sizeMul)),
+    )
+    const { boys, girls } = gradeGenderSplit(cohort, boysPct)
+    return {
+      label: `Grade ${grade}`,
+      value: `grade-${grade}`,
+      data: [
         { label: 'Boys', value: boys, color: baseColors.heading },
         { label: 'Girls', value: girls, color: baseColors.pink },
-      ]
-    })(),
-  },
-  {
-    label: 'Grade 8',
-    value: 'grade-8',
-    data: (() => {
-      const { boys, girls } = gradeGenderSplit(Math.round(AVG_PER_GRADE * 0.95), 0.52)
-      return [
-        { label: 'Boys', value: boys, color: baseColors.heading },
-        { label: 'Girls', value: girls, color: baseColors.pink },
-      ]
-    })(),
-  },
-  {
-    label: 'Grade 7',
-    value: 'grade-7',
-    data: (() => {
-      const { boys, girls } = gradeGenderSplit(Math.round(AVG_PER_GRADE * 1.0), 0.5)
-      return [
-        { label: 'Boys', value: boys, color: baseColors.heading },
-        { label: 'Girls', value: girls, color: baseColors.pink },
-      ]
-    })(),
-  },
-]
+      ],
+    }
+  })
+}
+
+/** Backwards-compatible module-level export. Prefer the builder in services. */
+export const genderDatasets: GenderDataset[] = buildGenderDatasets()
 
 // Daily/weekly attendance counts derive from TOTAL_ENROLLMENT × attendance
 // rate, with small per-day jitter so the bars aren't uniform. Values are
