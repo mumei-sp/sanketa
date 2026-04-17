@@ -8,6 +8,7 @@ import { useDailyAttendance } from '../hooks/use-daily-attendance'
 import { useAttendanceHistory } from '../hooks/use-attendance-history'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
+import { ClassPicker } from '@/components/shared/ClassPicker'
 import { AttendanceMarkingTable } from '../components/AttendanceMarkingTable'
 import { AttendanceMarkingCards } from '../components/AttendanceMarkingCards'
 import { AttendanceDailySummaryBar } from '../components/AttendanceDailySummaryBar'
@@ -47,8 +48,21 @@ export function DailyAttendancePage() {
   const { config } = useSchoolConfig()
   const classes = React.useMemo(() => getClassLabels(config.classSections), [config.classSections])
 
-  // Selected class and date from URL params or defaults
-  const selectedClass = searchParams.get('class') ?? classes[0] ?? ''
+  /**
+   * `loadedClasses` is the multi-section workspace the teacher has "picked up"
+   * via ClassPicker — e.g. [9A, 9B]. They can flip between these without
+   * re-opening the picker. Picker manages this via its own localStorage key.
+   */
+  const [loadedClasses, setLoadedClasses] = React.useState<string[]>([])
+
+  // Selected class and date from URL params or defaults.
+  // If the URL class isn't in the loaded set, fall back to the first loaded
+  // one (or, if nothing is loaded yet, the first class from config).
+  const urlClass = searchParams.get('class')
+  const selectedClass =
+    urlClass && (loadedClasses.length === 0 || loadedClasses.includes(urlClass))
+      ? urlClass
+      : loadedClasses[0] ?? classes[0] ?? ''
   const selectedDate = searchParams.get('date') ?? getTodayStr()
 
   // Derived month/year for history
@@ -211,21 +225,58 @@ export function DailyAttendancePage() {
           }}
         >
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Class selector */}
-            <select
-              value={selectedClass}
-              onChange={e => handleClassChange(e.target.value)}
-              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+            {/* ── Class workspace ─────────────────────────────────────
+             *  1. Segmented chips show the classes the teacher has loaded
+             *     (e.g. 9A, 9B). Clicking a chip switches the visible roster.
+             *  2. The ClassPicker (gear icon) opens the tree cascader for
+             *     adding / removing loaded classes. The picker owns its own
+             *     localStorage so a teacher's workspace survives reloads.
+             */}
+            <div
+              className="flex items-center gap-1 rounded-md border"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
                 backgroundColor: colors.background.card,
+                padding: 3,
               }}
             >
-              {classes.map(cls => (
-                <option key={cls} value={cls}>Class {cls}</option>
-              ))}
-            </select>
+              {loadedClasses.length === 0 ? (
+                <span
+                  className="text-xs px-2"
+                  style={{ color: colors.text.muted, paddingBlock: 4 }}
+                >
+                  Pick one or more classes
+                </span>
+              ) : (
+                loadedClasses.map(cls => {
+                  const active = cls === selectedClass
+                  return (
+                    <button
+                      key={cls}
+                      type="button"
+                      onClick={() => handleClassChange(cls)}
+                      className="text-xs font-medium rounded transition-colors"
+                      style={{
+                        padding: `4px 10px`,
+                        backgroundColor: active
+                          ? withOpacity(baseColors.blue, 0.55)
+                          : 'transparent',
+                        color: colors.text.heading,
+                      }}
+                    >
+                      {cls}
+                    </button>
+                  )
+                })
+              )}
+              <ClassPicker
+                storageKey="daily-attendance-workspace"
+                mode="section"
+                max={6}
+                defaultSelected={classes.slice(0, 1)}
+                onChange={setLoadedClasses}
+              />
+            </div>
 
             {/* Date picker */}
             <input

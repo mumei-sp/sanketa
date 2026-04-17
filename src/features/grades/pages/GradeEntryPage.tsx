@@ -25,6 +25,8 @@ import { getGradeBreadcrumbs } from '../utils/breadcrumbs'
 import { EXAMS_BY_TERM } from '../constants'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
+import { ClassPicker } from '@/components/shared/ClassPicker'
+import { withOpacity, baseColors } from '@/theme/colors'
 import {
   fetchGradeableSubjects,
   fetchGradeSubmission,
@@ -46,8 +48,18 @@ export function GradeEntryPage() {
     fetchGradeableSubjects().then(setSubjects)
   }, [])
 
+  // ── Class workspace ──
+  // Teachers often enter the same exam+subject across several sections
+  // (e.g. "UT1 Math for 9A, 9B, 9C"). `loadedClasses` tracks their picked
+  // set; `selectedClass` is the one currently being edited.
+  const [loadedClasses, setLoadedClasses] = React.useState<string[]>([])
+
   // ── Selections from URL params ──
-  const selectedClass = searchParams.get('class') ?? classes[0] ?? ''
+  const urlClass = searchParams.get('class')
+  const selectedClass =
+    urlClass && (loadedClasses.length === 0 || loadedClasses.includes(urlClass))
+      ? urlClass
+      : loadedClasses[0] ?? classes[0] ?? ''
   const selectedExam = searchParams.get('exam') ?? 'ut1'
   const selectedSubject = searchParams.get('subject') ?? subjects[0]?.id ?? 'math'
 
@@ -166,21 +178,52 @@ export function GradeEntryPage() {
           }}
         >
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Class selector */}
-            <select
-              value={selectedClass}
-              onChange={e => handleParamChange('class', e.target.value)}
-              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+            {/* Class workspace — see DailyAttendancePage for the same pattern. */}
+            <div
+              className="flex items-center gap-1 rounded-md border"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
                 backgroundColor: colors.background.card,
+                padding: 3,
               }}
             >
-              {classes.map(cls => (
-                <option key={cls} value={cls}>Class {cls}</option>
-              ))}
-            </select>
+              {loadedClasses.length === 0 ? (
+                <span
+                  className="text-xs px-2"
+                  style={{ color: colors.text.muted, paddingBlock: 4 }}
+                >
+                  Pick one or more classes
+                </span>
+              ) : (
+                loadedClasses.map(cls => {
+                  const active = cls === selectedClass
+                  return (
+                    <button
+                      key={cls}
+                      type="button"
+                      onClick={() => handleParamChange('class', cls)}
+                      className="text-xs font-medium rounded transition-colors"
+                      style={{
+                        padding: '4px 10px',
+                        backgroundColor: active
+                          ? withOpacity(baseColors.blue, 0.55)
+                          : 'transparent',
+                        color: colors.text.heading,
+                      }}
+                    >
+                      {cls}
+                    </button>
+                  )
+                })
+              )}
+              <ClassPicker
+                storageKey="grade-entry-workspace"
+                mode="section"
+                max={6}
+                defaultSelected={classes.slice(0, 1)}
+                onChange={setLoadedClasses}
+              />
+            </div>
 
             {/* Exam selector (grouped by term) */}
             <select

@@ -52,6 +52,19 @@ export const studentColumns: ColumnDef<Student>[] = [
     cell: ({ row }) => {
       return <span className="font-medium">{row.original.class}</span>
     },
+    /**
+     * Accepts either a single class label ("7A") or an array of labels
+     * (["7A", "8B"]) so the toolbar can plug in a multi-select picker.
+     * Undefined / empty array = no filter.
+     */
+    filterFn: (row, _id, value) => {
+      if (value === undefined || value === null) return true
+      if (Array.isArray(value)) {
+        if (value.length === 0) return true
+        return value.includes(row.original.class ?? '')
+      }
+      return row.original.class === value
+    },
     enableSorting: true,
   },
   {

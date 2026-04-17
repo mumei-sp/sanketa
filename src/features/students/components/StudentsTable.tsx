@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Table as TanStackTable, Row } from '@tanstack/react-table'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import { DataTable, DataTableCell } from '@/components/table'
 import { studentColumns } from './student-columns'
 import type { Student } from '@/features/students/types'
@@ -9,17 +9,15 @@ import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { getGroupedByGrade } from '@/utils/class-section-helpers'
+import { ClassPicker } from '@/components/shared/ClassPicker'
 import { TableRow } from '@/components/ui/table'
 import { DataTablePaginationCustom } from '@/components/table/DataTablePaginationCustom'
+import { colors, withOpacity, baseColors } from '@/theme/colors'
 
 interface StudentsTableProps {
   data: Student[]
@@ -33,32 +31,33 @@ interface StudentsTableProps {
  */
 export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTableProps, 'onImport' | 'onExport'>) {
   const navigate = useNavigate()
-  const { config } = useSchoolConfig()
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
-  const [classFilter, setClassFilter] = React.useState<string>('all')
+  // Section-level filter: empty array = "All Classes", otherwise only rows
+  // whose `class` label matches one of these pass the filter.
+  const [selectedSections, setSelectedSections] = React.useState<string[]>([])
+  const tableRef = React.useRef<TanStackTable<Student> | null>(null)
 
-  const groupedSections = React.useMemo(
-    () => getGroupedByGrade(config.classSections),
-    [config.classSections],
-  )
+  /** Push the current class filter into the table whenever the picker changes. */
+  const applySectionFilter = React.useCallback((labels: string[]) => {
+    setSelectedSections(labels)
+    const classColumn = tableRef.current?.getColumn('class')
+    classColumn?.setFilterValue(labels.length === 0 ? undefined : labels)
+  }, [])
 
-  // Custom toolbar with search, class filter, status dropdown, and add button
+  const clearSections = React.useCallback(() => {
+    applySectionFilter([])
+  }, [applySectionFilter])
+
+  // Custom toolbar with search, class picker, status dropdown, and add button
   const renderToolbar = React.useCallback(
     (table: TanStackTable<Student>) => {
+      tableRef.current = table
       const studentColumn = table.getColumn('student')
       const searchValue = (studentColumn?.getFilterValue() as string) || ''
 
       const handleSearchChange = (value: string) => {
         if (studentColumn) {
           studentColumn.setFilterValue(value || undefined)
-        }
-      }
-
-      const handleClassChange = (value: string) => {
-        setClassFilter(value)
-        const classColumn = table.getColumn('class')
-        if (classColumn) {
-          classColumn.setFilterValue(value === 'all' ? undefined : value)
         }
       }
 
@@ -69,6 +68,13 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
           statusColumn.setFilterValue(value === 'all' ? undefined : value)
         }
       }
+
+      const filterLabel =
+        selectedSections.length === 0
+          ? 'All Classes'
+          : selectedSections.length === 1
+          ? selectedSections[0]
+          : `${selectedSections.length} classes`
 
       return (
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -83,22 +89,36 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
                 className="h-8 w-full pl-10 bg-white border-default"
               />
             </div>
-            <Select value={classFilter} onValueChange={handleClassChange}>
-              <SelectTrigger className="h-8 w-[140px] bg-accent text-foreground border-0 hover:bg-accent/80">
-                <SelectValue placeholder="All Classes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {groupedSections.map(([grade, sections]) => (
-                  <SelectGroup key={grade}>
-                    <SelectLabel>Grade {grade}</SelectLabel>
-                    {sections.map(s => (
-                      <SelectItem key={s.id} value={s.label}>{s.label}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
-              </SelectContent>
-            </Select>
+
+            {/* Class filter pill: label on the left + ClassPicker trigger (gear). */}
+            <div
+              className="flex items-center gap-1.5 rounded-md h-8 px-2.5"
+              style={{
+                backgroundColor: withOpacity(baseColors.blue, 0.35),
+                color: colors.text.heading,
+              }}
+            >
+              <span className="text-xs font-medium">{filterLabel}</span>
+              {selectedSections.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearSections}
+                  className="flex items-center justify-center rounded hover:bg-black/5 transition-colors"
+                  style={{ width: 18, height: 18 }}
+                  aria-label="Clear class filter"
+                >
+                  <X className="w-3 h-3" style={{ color: colors.text.muted }} />
+                </button>
+              )}
+              <ClassPicker
+                storageKey="students-table"
+                mode="section"
+                max={10}
+                defaultSelected={[]}
+                onChange={applySectionFilter}
+              />
+            </div>
+
             <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-[120px] bg-accent text-foreground border-0 hover:bg-accent/80">
                 <SelectValue placeholder="All Status" />
@@ -120,7 +140,7 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
         </div>
       )
     },
-    [navigate, statusFilter, classFilter, groupedSections],
+    [navigate, statusFilter, selectedSections, applySectionFilter, clearSections],
   )
 
   // Custom pagination using shared component

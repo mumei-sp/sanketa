@@ -54,8 +54,12 @@ export function useClassPick(
       if (stored) {
         const parsed = JSON.parse(stored)
         if (Array.isArray(parsed) && parsed.every((g: unknown) => typeof g === 'string')) {
+          // Accept stored empty arrays — some consumers (table filters) treat
+          // "nothing selected" as the intentional "All" state and must be
+          // allowed to persist that. Previous value was `> 0` which silently
+          // coerced an empty persistence back into defaults on reload.
           const valid = (parsed as string[]).filter(g => allItems.includes(g))
-          if (valid.length > 0) return valid.slice(0, max)
+          return valid.slice(0, max)
         }
       }
     } catch {

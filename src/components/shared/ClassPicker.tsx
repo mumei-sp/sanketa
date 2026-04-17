@@ -55,6 +55,12 @@ interface ClassPickerProps {
   max?: number
   /** Grade → student count map for showing counts on grade cards */
   gradeCounts?: Map<string, number>
+  /**
+   * Override the default initial selection. Pass `[]` for consumers that
+   * treat "no selection" as "show all" (e.g. table filters). Without this,
+   * the picker preselects the first `max` items.
+   */
+  defaultSelected?: string[]
   /** Called when selection changes. Grade strings in grade mode, section labels in section mode. */
   onChange: (selected: string[]) => void
 }
@@ -354,6 +360,7 @@ export function ClassPicker({
   mode,
   max = 3,
   gradeCounts,
+  defaultSelected,
   onChange,
 }: ClassPickerProps) {
   const { config } = useSchoolConfig()
@@ -372,8 +379,11 @@ export function ClassPicker({
 
   const allItems = mode === 'grade' ? allGrades : allSectionLabels
 
-  // Compute sensible defaults
+  // Compute sensible defaults.
+  // Consumer-provided `defaultSelected` wins (empty array = start with nothing,
+  // which is how table filters express "show all").
   const defaultItems = React.useMemo(() => {
+    if (defaultSelected !== undefined) return defaultSelected
     if (mode === 'grade') {
       if (gradeCounts && gradeCounts.size > 0) {
         return [...gradeCounts.entries()]
@@ -385,7 +395,7 @@ export function ClassPicker({
     }
     // Section mode: default to first N sections
     return allSectionLabels.slice(0, max)
-  }, [mode, gradeCounts, allGrades, allSectionLabels, max])
+  }, [defaultSelected, mode, gradeCounts, allGrades, allSectionLabels, max])
 
   const { selected, toggle, setSelected, reset, isMaxed, isDefault } = useClassPick(
     allItems,

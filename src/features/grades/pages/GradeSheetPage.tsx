@@ -27,6 +27,8 @@ import { EXAMS_BY_TERM, GRADE_MESSAGES } from '../constants'
 import { useGradeCalculator } from '../hooks/use-grade-calculator'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
+import { ClassPicker } from '@/components/shared/ClassPicker'
+import { withOpacity, baseColors } from '@/theme/colors'
 import {
   fetchGradeableSubjects,
   fetchGradeSheet,
@@ -49,8 +51,19 @@ export function GradeSheetPage() {
     fetchGradeableSubjects().then(setSubjectList)
   }, [])
 
+  // ── Class workspace ──
+  // Principals + class teachers often compare sections of the same grade
+  // (e.g. "9A vs 9B average GPA on UT1"). `loadedClasses` holds the set
+  // they've picked; `selectedClass` is the one currently rendered in the
+  // sheet. Switching is a single click on the workspace chips.
+  const [loadedClasses, setLoadedClasses] = React.useState<string[]>([])
+
   // ── Selections ──
-  const selectedClass = searchParams.get('class') ?? classes[0] ?? ''
+  const urlClass = searchParams.get('class')
+  const selectedClass =
+    urlClass && (loadedClasses.length === 0 || loadedClasses.includes(urlClass))
+      ? urlClass
+      : loadedClasses[0] ?? classes[0] ?? ''
   const selectedExam = searchParams.get('exam') ?? 'ut1'
 
   const handleParamChange = React.useCallback((key: string, value: string) => {
@@ -138,20 +151,53 @@ export function GradeSheetPage() {
           }}
         >
           <div className="flex items-center gap-3 flex-wrap">
-            <select
-              value={selectedClass}
-              onChange={e => handleParamChange('class', e.target.value)}
-              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+            {/* Class workspace — flip between loaded classes with one click. */}
+            <div
+              className="flex items-center gap-1 rounded-md border"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
                 backgroundColor: colors.background.card,
+                padding: 3,
               }}
             >
-              {classes.map(cls => (
-                <option key={cls} value={cls}>Class {cls}</option>
-              ))}
-            </select>
+              {loadedClasses.length === 0 ? (
+                <span
+                  className="text-xs px-2"
+                  style={{ color: colors.text.muted, paddingBlock: 4 }}
+                >
+                  Pick one or more classes
+                </span>
+              ) : (
+                loadedClasses.map(cls => {
+                  const active = cls === selectedClass
+                  return (
+                    <button
+                      key={cls}
+                      type="button"
+                      onClick={() => handleParamChange('class', cls)}
+                      className="text-xs font-medium rounded transition-colors"
+                      style={{
+                        padding: '4px 10px',
+                        backgroundColor: active
+                          ? withOpacity(baseColors.blue, 0.55)
+                          : 'transparent',
+                        color: colors.text.heading,
+                      }}
+                    >
+                      {cls}
+                    </button>
+                  )
+                })
+              )}
+              <ClassPicker
+                storageKey="grade-sheet-workspace"
+                mode="section"
+                max={6}
+                defaultSelected={classes.slice(0, 1)}
+                onChange={setLoadedClasses}
+              />
+            </div>
+
 
             <select
               value={selectedExam}
