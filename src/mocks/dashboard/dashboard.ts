@@ -13,6 +13,24 @@ import type {
 import { relativeDate, displayDate } from '@/mocks/_shared/date-helpers'
 import { studentsData } from '@/mocks/students/students'
 import { teachersData } from '@/mocks/teachers/teachers'
+import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
+
+/**
+ * Single source of truth for enrolment counts. Every widget on the Dashboard
+ * (stat tiles, gender donut, attendance bars) derives its numbers from these
+ * so the Grade-9 total can never exceed total enrolment, attendance can
+ * never exceed total enrolment, etc.
+ */
+const TOTAL_ENROLLMENT = studentsData.length * SCHOOL_SCALE.enrollmentMultiplier
+const AVG_PER_GRADE = Math.round(TOTAL_ENROLLMENT / SCHOOL_SCALE.gradeCount)
+const DAILY_PRESENT_AVG = Math.round(TOTAL_ENROLLMENT * SCHOOL_SCALE.attendanceRate)
+
+/** Split a grade cohort into boys/girls with a small offset from 50/50. */
+function gradeGenderSplit(total: number, boysPct = 0.5) {
+  const boys = Math.round(total * boysPct)
+  const girls = total - boys
+  return { boys, girls }
+}
 
 /** Format an absolute-date activity timestamp like "Apr 14, 2026 – 09:15 AM". */
 function activityTimestamp(daysAgo: number, hh: number, mm: number, ampm: 'AM' | 'PM'): string {
@@ -29,19 +47,11 @@ function verboseDate(daysFromToday: number): string {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
-// Student / teacher counts derive from the canonical mocks so the dashboard
-// stats stay in sync with the underlying data. A small inflation factor makes
-// the numbers match a realistic school size — the mocks only ship ~40 students
-// for tables and ~18 teachers for cards, but a real Sanketa campus would have
-// ~1,200 enrolled students and ~85 teachers.
-const ENROLLMENT_MULTIPLIER = 30 // 40 × 30 ≈ 1,200
-const FACULTY_MULTIPLIER = 5     // 18 × 5  ≈ 90
-
 export const dashboardStats: DashboardStat[] = [
   {
     id: 'enrolled-students',
     label: 'Enrolled Students',
-    value: studentsData.length * ENROLLMENT_MULTIPLIER,
+    value: TOTAL_ENROLLMENT,
     icon: GraduationCap,
     iconBg: baseColors.pink,
     iconColor: baseColors.heading,
@@ -49,7 +59,7 @@ export const dashboardStats: DashboardStat[] = [
   {
     id: 'active-teachers',
     label: 'Active Teachers',
-    value: teachersData.length * FACULTY_MULTIPLIER,
+    value: teachersData.length * SCHOOL_SCALE.facultyMultiplier,
     icon: Users,
     iconBg: baseColors.blue,
     iconColor: baseColors.heading,
@@ -143,53 +153,71 @@ export const earningsDatasets: EarningsDataset[] = [
   },
 ]
 
+// Each grade cohort is a slice of TOTAL_ENROLLMENT; the three grades shown
+// here roughly sum to 3 × AVG_PER_GRADE and never exceed the total.
 export const genderDatasets: GenderDataset[] = [
   {
     label: 'Grade 9',
     value: 'grade-9',
-    data: [
-      { label: 'Boys', value: 560, color: baseColors.heading },
-      { label: 'Girls', value: 685, color: baseColors.pink },
-    ],
+    data: (() => {
+      const { boys, girls } = gradeGenderSplit(Math.round(AVG_PER_GRADE * 1.05), 0.48)
+      return [
+        { label: 'Boys', value: boys, color: baseColors.heading },
+        { label: 'Girls', value: girls, color: baseColors.pink },
+      ]
+    })(),
   },
   {
     label: 'Grade 8',
     value: 'grade-8',
-    data: [
-      { label: 'Boys', value: 420, color: baseColors.heading },
-      { label: 'Girls', value: 390, color: baseColors.pink },
-    ],
+    data: (() => {
+      const { boys, girls } = gradeGenderSplit(Math.round(AVG_PER_GRADE * 0.95), 0.52)
+      return [
+        { label: 'Boys', value: boys, color: baseColors.heading },
+        { label: 'Girls', value: girls, color: baseColors.pink },
+      ]
+    })(),
   },
   {
     label: 'Grade 7',
     value: 'grade-7',
-    data: [
-      { label: 'Boys', value: 310, color: baseColors.heading },
-      { label: 'Girls', value: 345, color: baseColors.pink },
-    ],
+    data: (() => {
+      const { boys, girls } = gradeGenderSplit(Math.round(AVG_PER_GRADE * 1.0), 0.5)
+      return [
+        { label: 'Boys', value: boys, color: baseColors.heading },
+        { label: 'Girls', value: girls, color: baseColors.pink },
+      ]
+    })(),
   },
 ]
+
+// Daily/weekly attendance counts derive from TOTAL_ENROLLMENT × attendance
+// rate, with small per-day jitter so the bars aren't uniform. Values are
+// clamped to never exceed total enrolment.
+function attn(factor: number): number {
+  return Math.min(TOTAL_ENROLLMENT, Math.round(DAILY_PRESENT_AVG * factor))
+}
 
 export const attendanceDatasets: AttendanceDataset[] = [
   {
     label: 'Weekly',
     value: 'weekly',
     data: [
-      { day: 'Mon', count: 1243 },
-      { day: 'Tue', count: 1051 },
-      { day: 'Wed', count: 1190 },
-      { day: 'Thu', count: 1100 },
-      { day: 'Fri', count: 1245 },
+      { day: 'Mon', count: attn(1.00) },
+      { day: 'Tue', count: attn(0.92) },
+      { day: 'Wed', count: attn(0.98) },
+      { day: 'Thu', count: attn(0.95) },
+      { day: 'Fri', count: attn(1.02) },
     ],
   },
   {
     label: 'Monthly',
     value: 'monthly',
     data: [
-      { day: 'Week 1', count: 5829 },
-      { day: 'Week 2', count: 5540 },
-      { day: 'Week 3', count: 5915 },
-      { day: 'Week 4', count: 5210 },
+      { day: 'Week 1', count: attn(1.00) * 5 },
+      { day: 'Week 2', count: attn(0.95) * 5 },
+      { day: 'Week 3', count: attn(1.02) * 5 },
+      { day: 'Week 4', count: attn(0.90) * 5 },
     ],
   },
 ]
