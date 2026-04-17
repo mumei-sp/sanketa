@@ -25,7 +25,7 @@
  */
 
 import * as React from 'react'
-import { Check, RotateCcw, Settings2 } from 'lucide-react'
+import { Check, ChevronRight, RotateCcw, Settings2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -151,10 +151,25 @@ function GradeGrid({
 }
 
 // ============================================================================
-// Section Mode — Grouped Grade Headers + Section Chips
+// Section Mode — Tree Cascader (expandable Grade rows with section children)
 // ============================================================================
 
-function SectionGrid({
+/**
+ * A hierarchical checklist:
+ *
+ *   ┌─ Select classes ───────────────────────┐
+ *   │ ▸ ☐ Grade 7   (3 sections)             │
+ *   │ ▾ ☒ Grade 8   (2 of 2)                 │
+ *   │      ☑ 8A   ☑ 8B                       │
+ *   │ ▸ ■ Grade 9   (1 of 3)                 │
+ *   └────────────────────────────────────────┘
+ *
+ * The grade checkbox is tri-state — clicking it selects all sections of
+ * that grade in one go (or clears them if all were already selected).
+ * The expand chevron toggles whether the child section checkboxes render.
+ * Grades that already have selections are auto-expanded on open.
+ */
+function SectionTree({
   selected,
   isMaxed,
   onToggle,
@@ -171,91 +186,158 @@ function SectionGrid({
     [config.classSections],
   )
 
+  // Auto-expand any grade that has at least one selected section.
+  const initialExpanded = React.useMemo(() => {
+    const map: Record<string, boolean> = {}
+    grouped.forEach(([grade, sections]) => {
+      if (sections.some(s => selected.includes(s.label))) map[grade] = true
+    })
+    return map
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grouped.length])
+  const [expanded, setExpanded] = React.useState<Record<string, boolean>>(initialExpanded)
+
+  const toggleExpanded = (grade: string) =>
+    setExpanded(prev => ({ ...prev, [grade]: !prev[grade] }))
+
   return (
     <div
-      className="overflow-y-auto flex-1"
+      className="overflow-y-auto flex-1 rounded-md border"
       style={{
         maxHeight: '50vh',
-        padding: spacing['1.5'],
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing['4'],
+        borderColor: colors.border.default,
+        backgroundColor: colors.background.card,
       }}
     >
-      {grouped.map(([grade, sections]) => {
+      {grouped.map(([grade, sections], idx) => {
         const sectionLabels = sections.map(s => s.label)
         const selectedInGrade = sectionLabels.filter(l => selected.includes(l))
         const allSelected = selectedInGrade.length === sectionLabels.length
         const someSelected = selectedInGrade.length > 0 && !allSelected
+        const isOpen = !!expanded[grade]
 
         return (
-          <div key={grade}>
-            {/* Grade group header */}
+          <div
+            key={grade}
+            style={{
+              borderTop: idx === 0 ? 'none' : `1px solid ${colors.border.subtle}`,
+            }}
+          >
+            {/* Grade row — clicking the chevron/row toggles expanded state. */}
             <div
-              className="flex items-center justify-between mb-2"
-              style={{ paddingLeft: spacing['1'], paddingRight: spacing['1'] }}
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleExpanded(grade)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  toggleExpanded(grade)
+                }
+              }}
+              className="flex items-center gap-2 cursor-pointer select-none transition-colors"
+              style={{
+                padding: `${spacing['2.5']} ${spacing['3']}`,
+                backgroundColor: isOpen ? colors.accent.soft : 'transparent',
+              }}
+              onMouseEnter={e => {
+                if (!isOpen) e.currentTarget.style.backgroundColor = colors.background.highlight
+              }}
+              onMouseLeave={e => {
+                if (!isOpen) e.currentTarget.style.backgroundColor = 'transparent'
+              }}
             >
+              <ChevronRight
+                className="w-4 h-4 shrink-0 transition-transform"
+                style={{
+                  color: colors.text.muted,
+                  transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                }}
+              />
+
+              {/* Tri-state parent checkbox — select all / none of the grade's sections. */}
               <span
-                className="text-xs font-semibold"
-                style={{ color: colors.text.heading }}
+                onClick={e => e.stopPropagation()}
+                onKeyDown={e => e.stopPropagation()}
+                className="flex items-center"
               >
-                Grade {grade}
-              </span>
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-[10px] font-medium"
-                  style={{ color: colors.text.muted }}
-                >
-                  {selectedInGrade.length}/{sectionLabels.length}
-                </span>
                 <Checkbox
                   checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                   onCheckedChange={() => onToggleGrade(sectionLabels)}
                   className="cursor-pointer"
+                  aria-label={
+                    allSelected
+                      ? `Deselect all sections of Grade ${grade}`
+                      : `Select all sections of Grade ${grade}`
+                  }
                 />
-              </div>
+              </span>
+
+              <span
+                className="flex-1 text-xs font-semibold"
+                style={{ color: colors.text.heading }}
+              >
+                Grade {grade}
+              </span>
+
+              <span
+                className="text-[10px] font-medium tabular-nums"
+                style={{ color: colors.text.muted }}
+              >
+                {selectedInGrade.length > 0
+                  ? `${selectedInGrade.length} of ${sectionLabels.length}`
+                  : `${sectionLabels.length} section${sectionLabels.length !== 1 ? 's' : ''}`}
+              </span>
             </div>
 
-            {/* Section chips */}
-            <div className="flex flex-wrap" style={{ gap: spacing['2'] }}>
-              {sections.map(section => {
-                const isSelected = selected.includes(section.label)
-                const isDisabled = !isSelected && isMaxed
+            {/* Section children — render only when expanded. */}
+            {isOpen && (
+              <div
+                className="flex flex-wrap"
+                style={{
+                  gap: spacing['2'],
+                  // Indent so children visibly belong to the parent row.
+                  padding: `${spacing['2']} ${spacing['3']} ${spacing['3']} ${spacing['9']}`,
+                }}
+              >
+                {sections.map(section => {
+                  const isSelected = selected.includes(section.label)
+                  const isDisabled = !isSelected && isMaxed
 
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => !isDisabled && onToggle(section.label)}
-                    disabled={isDisabled}
-                    className="relative flex items-center justify-center rounded-lg border-2 transition-all"
-                    style={{
-                      minWidth: 56,
-                      padding: `${spacing['2']} ${spacing['3']}`,
-                      borderColor: isSelected ? colors.accent.base : colors.border.default,
-                      backgroundColor: isSelected ? colors.accent.soft : colors.background.card,
-                      opacity: isDisabled ? 0.45 : 1,
-                      cursor: isDisabled ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {isSelected && (
-                      <div
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: colors.text.heading }}
-                      >
-                        <Check className="w-2.5 h-2.5" style={{ color: colors.background.card }} />
-                      </div>
-                    )}
-                    <span
-                      className="text-xs font-semibold"
-                      style={{ color: colors.text.heading }}
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => !isDisabled && onToggle(section.label)}
+                      disabled={isDisabled}
+                      className="relative flex items-center justify-center rounded-md border transition-all"
+                      style={{
+                        minWidth: 48,
+                        padding: `${spacing['1.5']} ${spacing['3']}`,
+                        borderColor: isSelected ? colors.accent.base : colors.border.default,
+                        backgroundColor: isSelected
+                          ? withOpacity(baseColors.blue, 0.4)
+                          : colors.background.card,
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      }}
                     >
-                      {section.label}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+                      {isSelected && (
+                        <Check
+                          className="w-3 h-3 mr-1"
+                          style={{ color: colors.text.heading }}
+                        />
+                      )}
+                      <span
+                        className="text-xs font-semibold tabular-nums"
+                        style={{ color: colors.text.heading }}
+                      >
+                        {section.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )
       })}
@@ -387,7 +469,7 @@ export function ClassPicker({
               onToggle={toggle}
             />
           ) : (
-            <SectionGrid
+            <SectionTree
               selected={selected}
               isMaxed={isMaxed}
               onToggle={toggle}
