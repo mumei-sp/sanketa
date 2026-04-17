@@ -63,14 +63,22 @@ export function StudentsPage() {
   // Grades the user has flipped into "compare sections" mode in the picker.
   // Those grades get split into per-section stat cards (Class 9A, Class 9B, …).
   const [compareGrades, setCompareGrades] = React.useState<string[]>([])
+  // Section labels currently ticked in the picker popovers. When a grade's
+  // set is a strict subset of its sections, the stat group narrows to just
+  // those picked sections (e.g. only "Class 9A Students" when 9B is unticked).
+  const [pickedSections, setPickedSections] = React.useState<string[]>([])
   const { config } = useSchoolConfig()
   const allSections = React.useMemo(
     () => config.classSections.map(s => ({ grade: s.grade, label: s.label })),
     [config.classSections],
   )
   const stats = React.useMemo(
-    () => getStudentStats(students, selectedGrades, { compareGrades, allSections }),
-    [students, selectedGrades, compareGrades, allSections],
+    () => getStudentStats(students, selectedGrades, {
+      compareGrades,
+      pickedSections,
+      allSections,
+    }),
+    [students, selectedGrades, compareGrades, pickedSections, allSections],
   )
 
   // ── Import / Export ──
@@ -160,6 +168,7 @@ export function StudentsPage() {
                     max={3}
                     gradeCounts={gradeCounts}
                     onChange={setSelectedGrades}
+                    onSectionsChange={setPickedSections}
                     onCompareGradesChange={setCompareGrades}
                   />
                 }

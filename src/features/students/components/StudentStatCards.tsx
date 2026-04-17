@@ -124,14 +124,17 @@ export function getGradeCounts(students: { gradeLevel?: string }[]): Map<string,
 /**
  * Returns stat card definitions for the given selected grades.
  *
- * First card is always "Total Students". The rest depends on whether a grade
- * is in "compare sections" mode:
+ * First card is always "Total Students". The rest is resolved per-grade
+ * against the picker's drill-down state:
  *
- *   - Normal pick:  one card per grade → "Grade 9 Students".
- *   - Compare mode: one card per section → "Class 9A Students", "Class 9B …".
+ *   - Compare mode ON for this grade      → one card per section of the
+ *                                            grade (e.g. Class 9A, Class 9B).
+ *   - Partial section pick for this grade → one card per PICKED section
+ *                                            only (e.g. only Class 9A).
+ *   - Otherwise (all sections ticked)     → single "Grade N Students" card.
  *
- * This keeps the stat group honest about the picker's drill-down state so
- * toggling Compare sections actually produces a visible change.
+ * So deselecting 9B in the popover narrows the stat group to just Class 9A,
+ * and re-ticking it collapses back to the grade aggregate.
  */
 export function getStudentStats(
   students: { gradeLevel?: string; class?: string }[],
@@ -139,6 +142,13 @@ export function getStudentStats(
   options?: {
     /** Grades the user flipped into compare-sections mode. Defaults to none. */
     compareGrades?: string[]
+    /**
+     * Section labels the user currently has ticked in their popovers. When a
+     * grade's set is a strict subset of its admin-configured sections, the
+     * stat tiles narrow to only those picked sections instead of showing the
+     * grade aggregate. Omit and "all sections on" is assumed.
+     */
+    pickedSections?: string[]
     /**
      * All class sections from admin config, so we know which sections to
      * emit cards for even when no students currently belong to them.
@@ -158,6 +168,8 @@ export function getStudentStats(
   })
 
   const compareSet = new Set(options?.compareGrades ?? [])
+  const pickedSectionsSet = new Set(options?.pickedSections ?? [])
+  const hasPickedSections = pickedSectionsSet.size > 0
   const sectionsByGrade = new Map<string, string[]>()
   ;(options?.allSections ?? []).forEach(s => {
     const list = sectionsByGrade.get(s.grade) ?? []
@@ -185,23 +197,56 @@ export function getStudentStats(
   }
 
   const restCards: StudentStatCardProps[] = []
+
+  // Render one section card, used whether we're in compare-mode or in a
+  // partial-pick drill-down. Kept local so both branches stay consistent.
+  const pushSectionCard = (label: string) => {
+    restCards.push({
+      label: `Class ${label} Students`,
+      value: classCounts.get(label) ?? 0,
+      // Show the section letter in the icon circle (e.g. "A") so it's
+      // visually distinct from the grade number used elsewhere.
+      iconContent: label.replace(/^\d+/, '') || label,
+      iconBg: withOpacity(baseColors.pink, 0.4),
+      iconColor: baseColors.heading,
+      cardBg: '#ffffff',
+    })
+  }
+
   selectedGrades.forEach(grade => {
     const gradeSections = sectionsByGrade.get(grade) ?? []
-    const expand = compareSet.has(grade) && gradeSections.length > 1
-    if (expand) {
-      gradeSections.forEach(label => {
-        restCards.push({
-          label: `Class ${label} Students`,
-          value: classCounts.get(label) ?? 0,
-          // Show the section letter in the icon circle (e.g. "A") so it's
-          // visually distinct from the grade number used elsewhere.
-          iconContent: label.replace(/^\d+/, '') || label,
-          iconBg: withOpacity(baseColors.pink, 0.4),
-          iconColor: baseColors.heading,
-          cardBg: '#ffffff',
-        })
+    if (gradeSections.length === 0) {
+      // No section data — fall back to the grade aggregate card.
+      restCards.push({
+        label: `Grade ${grade} Students`,
+        value: gradeCounts.get(grade) ?? 0,
+        iconContent: grade,
+        iconBg: withOpacity(baseColors.blue, 0.5),
+        iconColor: baseColors.heading,
+        cardBg: '#ffffff',
       })
+      return
+    }
+
+    // How many of this grade's sections are currently ticked? When the caller
+    // didn't supply pickedSections we assume "all ticked" (backwards-compat
+    // with older consumers).
+    const activeSections = hasPickedSections
+      ? gradeSections.filter(l => pickedSectionsSet.has(l))
+      : gradeSections
+    const allSectionsOn = activeSections.length === gradeSections.length
+
+    const inCompareMode = compareSet.has(grade) && gradeSections.length > 1
+    const partiallyPicked = !allSectionsOn && activeSections.length > 0
+
+    if (inCompareMode || partiallyPicked) {
+      // Drill-down: one card per currently-active section. Falls back to
+      // all grade sections when compare mode is on with an empty pick set
+      // (shouldn't happen in practice, but keeps the card group non-empty).
+      const cards = activeSections.length > 0 ? activeSections : gradeSections
+      cards.forEach(pushSectionCard)
     } else {
+      // Default: grade aggregate.
       restCards.push({
         label: `Grade ${grade} Students`,
         value: gradeCounts.get(grade) ?? 0,
