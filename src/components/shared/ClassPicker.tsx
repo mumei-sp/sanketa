@@ -63,42 +63,78 @@ interface ClassPickerProps {
   defaultSelected?: string[]
   /** Called when selection changes. Grade strings in grade mode, section labels in section mode. */
   onChange: (selected: string[]) => void
+  /**
+   * (grade mode only) Fires with the current section-level selection whenever
+   * the user toggles a specific section chip inside a selected grade card.
+   *
+   * The primary `onChange` still emits grade strings so existing consumers
+   * keep working. Opt into this callback to drive charts that can render at
+   * section granularity. When omitted, section chips act as a visual preview
+   * only and toggling them still emits the parent grade via `onChange`.
+   */
+  onSectionsChange?: (sectionLabels: string[]) => void
 }
 
 // ============================================================================
-// Grade Mode — Grid of Grade Cards
+// Grade Mode — Grid of Grade Cards (cards expand with section chips when picked)
 // ============================================================================
 
+/**
+ * The selected grade cards reveal their sections as small pill buttons inline,
+ * keeping the grade-grid aesthetic while also letting the user drill into a
+ * specific section (e.g. "only 7A" instead of "all of Grade 7"). Unselected
+ * cards stay compact, so the UI is only dense where it needs to be.
+ *
+ * Interaction:
+ *   - Click the grade card body  → toggle the whole grade (all sections).
+ *   - Click a section chip       → toggle that specific section.
+ *   - Deselecting all sections of a grade implicitly deselects the grade.
+ *   - Re-selecting a grade restores "all sections" of that grade.
+ */
 function GradeGrid({
   allGrades,
   selected,
   isMaxed,
   gradeCounts,
+  sectionsByGrade,
+  selectedSections,
   onToggle,
+  onSectionToggle,
 }: {
   allGrades: string[]
   selected: string[]
   isMaxed: boolean
   gradeCounts?: Map<string, number>
+  sectionsByGrade: Map<string, string[]>
+  selectedSections: Set<string>
   onToggle: (grade: string) => void
+  onSectionToggle: (grade: string, sectionLabel: string) => void
 }) {
   return (
     <div
-      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 overflow-y-auto flex-1"
+      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 overflow-y-auto flex-1 items-start"
       style={{ gap: spacing['3'], maxHeight: '50vh', padding: spacing['1.5'] }}
     >
       {allGrades.map(grade => {
         const isSelected = selected.includes(grade)
         const isDisabled = !isSelected && isMaxed
         const count = gradeCounts?.get(grade)
+        const gradeSections = sectionsByGrade.get(grade) ?? []
+        const hasMultipleSections = gradeSections.length > 1
 
         return (
-          <button
+          <div
             key={grade}
-            type="button"
             onClick={() => !isDisabled && onToggle(grade)}
-            disabled={isDisabled}
-            className="relative flex flex-col items-center text-center rounded-lg border-2 transition-all"
+            role="button"
+            tabIndex={isDisabled ? -1 : 0}
+            onKeyDown={e => {
+              if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault()
+                onToggle(grade)
+              }
+            }}
+            className="relative flex flex-col items-center text-center rounded-lg border-2 transition-all focus:outline-none"
             style={{
               padding: `${spacing['3']} ${spacing['2']}`,
               borderColor: isSelected ? colors.accent.base : colors.border.default,
@@ -149,7 +185,58 @@ function GradeGrid({
                 {count.toLocaleString('en-US')} student{count !== 1 ? 's' : ''}
               </span>
             )}
-          </button>
+
+            {/* Section chips — only render inside a selected card with >1 section.
+             *  Single-section grades stay compact (nothing meaningful to drill into). */}
+            {isSelected && hasMultipleSections && (
+              <div
+                className="flex flex-wrap justify-center"
+                style={{
+                  marginTop: spacing['2'],
+                  paddingTop: spacing['2'],
+                  borderTop: `1px dashed ${colors.border.default}`,
+                  width: '100%',
+                  gap: 4,
+                }}
+              >
+                {gradeSections.map(label => {
+                  const sectionActive = selectedSections.has(label)
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={e => {
+                        // Stop propagation so clicking a chip doesn't also
+                        // trigger the card-level onToggle above.
+                        e.stopPropagation()
+                        onSectionToggle(grade, label)
+                      }}
+                      className="inline-flex items-center rounded-full transition-colors"
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: colors.text.heading,
+                        backgroundColor: sectionActive
+                          ? withOpacity(baseColors.blue, 0.7)
+                          : colors.background.card,
+                        border: `1px solid ${sectionActive ? colors.accent.base : colors.border.default}`,
+                      }}
+                      aria-pressed={sectionActive}
+                    >
+                      {sectionActive && (
+                        <Check
+                          className="w-2.5 h-2.5 mr-0.5"
+                          style={{ color: colors.text.heading }}
+                        />
+                      )}
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )
       })}
     </div>
@@ -362,6 +449,7 @@ export function ClassPicker({
   gradeCounts,
   defaultSelected,
   onChange,
+  onSectionsChange,
 }: ClassPickerProps) {
   const { config } = useSchoolConfig()
   const [open, setOpen] = React.useState(false)
@@ -376,6 +464,17 @@ export function ClassPicker({
     () => config.classSections.map(s => s.label),
     [config.classSections],
   )
+
+  // Lookup: grade → its section labels (in admin-defined order).
+  const sectionsByGrade = React.useMemo(() => {
+    const map = new Map<string, string[]>()
+    config.classSections.forEach(s => {
+      const list = map.get(s.grade) ?? []
+      list.push(s.label)
+      map.set(s.grade, list)
+    })
+    return map
+  }, [config.classSections])
 
   const allItems = mode === 'grade' ? allGrades : allSectionLabels
 
@@ -403,7 +502,51 @@ export function ClassPicker({
     { storageKey, max },
   )
 
-  // Notify parent on mount and when selection changes
+  /**
+   * Section-level selection (grade mode only).
+   *
+   * Whenever a grade is "selected" in the primary `selected` array, by default
+   * ALL of that grade's sections count as picked. The user can drill in by
+   * toggling individual section chips — doing so may implicitly remove the
+   * parent grade (if the last section is turned off) or re-add it (if a
+   * section from an unselected grade is turned on).
+   *
+   * Computed as a Set for O(1) membership checks in the grid render.
+   */
+  const derivedSections = React.useMemo(() => {
+    if (mode !== 'grade') return new Set<string>()
+    const out = new Set<string>()
+    selected.forEach(grade => {
+      (sectionsByGrade.get(grade) ?? []).forEach(label => out.add(label))
+    })
+    return out
+  }, [mode, selected, sectionsByGrade])
+
+  /**
+   * `selectedSections` holds the user-driven overrides on top of the
+   * grade-implied defaults. Initialised to the full derived set so the first
+   * open mirrors what `selected` already says.
+   */
+  const [selectedSections, setSelectedSections] = React.useState<Set<string>>(derivedSections)
+
+  // When `selected` changes via the grade-card click, resync the section set
+  // so newly-picked grades contribute all their sections, and newly-dropped
+  // grades have their sections removed.
+  React.useEffect(() => {
+    setSelectedSections(prev => {
+      const next = new Set<string>()
+      selected.forEach(grade => {
+        const gradeSections = sectionsByGrade.get(grade) ?? []
+        // Keep any user overrides for this grade; if none were set, take all.
+        const overrides = gradeSections.filter(l => prev.has(l))
+        const effective = overrides.length > 0 ? overrides : gradeSections
+        effective.forEach(l => next.add(l))
+      })
+      return next
+    })
+  }, [selected, sectionsByGrade])
+
+  // Notify parent on mount and when selection changes.
   const prevSelectedRef = React.useRef(selected)
   React.useEffect(() => {
     if (prevSelectedRef.current !== selected) {
@@ -416,6 +559,20 @@ export function ClassPicker({
     onChange(selected)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Emit the section-level selection whenever it changes. Callers only opt in
+  // via `onSectionsChange`; the primary `onChange` contract (grade strings) is
+  // preserved for existing consumers.
+  const prevSectionsRef = React.useRef<Set<string>>(selectedSections)
+  React.useEffect(() => {
+    if (!onSectionsChange) return
+    // Skip emits when the set is unchanged to avoid render loops.
+    const a = prevSectionsRef.current
+    const b = selectedSections
+    if (a.size === b.size && [...a].every(x => b.has(x))) return
+    prevSectionsRef.current = b
+    onSectionsChange([...b])
+  }, [selectedSections, onSectionsChange])
 
   // Section mode: toggle all sections in a grade at once
   const handleToggleGrade = React.useCallback((sectionLabels: string[]) => {
@@ -431,6 +588,42 @@ export function ClassPicker({
       return [...prev, ...toAdd.slice(0, available)]
     })
   }, [max, setSelected])
+
+  /**
+   * Grade-mode section toggle. The primary source of truth stays the grade
+   * array (so `onChange(grades)` keeps working), but we adjust:
+   *   - Turning OFF the last section of a selected grade → drop that grade.
+   *   - Turning ON a section of an unselected grade → add that grade (if
+   *     under max). Newly-added grade keeps the single-chip selection.
+   */
+  const handleSectionToggle = React.useCallback((grade: string, sectionLabel: string) => {
+    setSelectedSections(prev => {
+      const gradeSections = sectionsByGrade.get(grade) ?? []
+      const next = new Set(prev)
+      if (next.has(sectionLabel)) next.delete(sectionLabel)
+      else next.add(sectionLabel)
+
+      // Count how many of this grade's sections are now selected.
+      const activeForGrade = gradeSections.filter(l => next.has(l))
+      const gradeIsSelected = selected.includes(grade)
+
+      if (activeForGrade.length === 0 && gradeIsSelected) {
+        // Dropped the last section — remove the grade from the primary
+        // selection so the card collapses back to compact form.
+        setSelected(prevGrades => prevGrades.filter(g => g !== grade))
+      } else if (activeForGrade.length > 0 && !gradeIsSelected) {
+        // Section of an unselected grade turned on — add the grade if we're
+        // not already at the cap. Otherwise undo the section toggle.
+        if (selected.length >= max) {
+          // Revert: can't pull in another grade right now.
+          if (next.has(sectionLabel)) next.delete(sectionLabel)
+          return next
+        }
+        setSelected(prevGrades => [...prevGrades, grade])
+      }
+      return next
+    })
+  }, [selected, max, sectionsByGrade, setSelected])
 
   const title = mode === 'grade' ? 'Select Grades' : 'Select Classes'
   const description = mode === 'grade'
@@ -476,7 +669,10 @@ export function ClassPicker({
               selected={selected}
               isMaxed={isMaxed}
               gradeCounts={gradeCounts}
+              sectionsByGrade={sectionsByGrade}
+              selectedSections={selectedSections}
               onToggle={toggle}
+              onSectionToggle={handleSectionToggle}
             />
           ) : (
             <SectionTree
