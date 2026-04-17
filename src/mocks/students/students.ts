@@ -11,18 +11,18 @@ export const studentsData: Student[] = [
     userId: 1001,
     profileType: 0, // STUDENT
     // Personal Information (from user_profiles)
-    firstName: 'Michael',
-    lastName: 'Chen',
-    fullName: 'Michael Chen',
-    displayName: 'Michael Chen',
-    preferredName: 'Mike',
+    firstName: 'Aarav',
+    lastName: 'Sharma',
+    fullName: 'Aarav Sharma',
+    displayName: 'Aarav Sharma',
+    preferredName: 'Aarav',
     dateOfBirth: '2010-03-15',
     gender: 0, // MALE
     // Contact Information
-    primaryPhone: '9876543210',
-    phoneCountryCode: '+1',
-    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-    address: '123 Oak Street, San Francisco, CA 94102, USA',
+    primaryPhone: '9845123456',
+    phoneCountryCode: '+91',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aarav',
+    address: '42, 7th A Cross, HSR Layout, Bangalore, Karnataka 560102, India',
     // Student-specific (from students table)
     studentId: 'S-2101',
     admissionNumber: 'ADM-2023-001',
@@ -36,10 +36,10 @@ export const studentsData: Student[] = [
     performance: 'Good',
     percentage: 95,
     status: 'Active',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aarav',
     // Student info JSON (hobbies, medical info)
     studentInfo: {
-      hobbies: 'Basketball, Reading, Coding',
+      hobbies: 'Cricket, Reading, Coding',
       specialNeedsSupport: false,
       medicalConditionAlert: false,
       medicalInfo: 'No known allergies',
@@ -47,40 +47,39 @@ export const studentsData: Student[] = [
     // Guardian Information
     guardians: {
       father: {
-        name: 'David Chen',
-        phoneCountryCode: '+1',
-        phone: '9876543211',
+        name: 'Rohan Sharma',
+        phoneCountryCode: '+91',
+        phone: '9845123457',
       },
       mother: {
-        name: 'Sarah Chen',
-        phoneCountryCode: '+1',
-        phone: '9876543212',
+        name: 'Meera Sharma',
+        phoneCountryCode: '+91',
+        phone: '9845123458',
       },
     },
     // Sync metadata
     syncedAt: '2024-01-15T10:30:00.000Z',
     syncVersion: 1,
     // Legacy field for backward compatibility
-    name: 'Michael Chen',
+    name: 'Aarav Sharma',
   },
   {
     id: '2',
     userId: 1002,
     profileType: 0,
     // Personal Information
-    firstName: 'Emma',
-    middleName: 'Rose',
-    lastName: 'Williams',
-    fullName: 'Emma Rose Williams',
-    displayName: 'Emma Williams',
-    preferredName: 'Emma',
+    firstName: 'Ananya',
+    lastName: 'Verma',
+    fullName: 'Ananya Verma',
+    displayName: 'Ananya Verma',
+    preferredName: 'Ananya',
     dateOfBirth: '2010-07-22',
     gender: 1, // FEMALE
     // Contact Information
-    primaryPhone: '8765432109',
-    phoneCountryCode: '+1',
-    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
-    address: '456 Maple Avenue, New York, NY 10001, USA',
+    primaryPhone: '8861234567',
+    phoneCountryCode: '+91',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya',
+    address: '17, 12th Main Road, Indiranagar, Bangalore, Karnataka 560038, India',
     // Student-specific
     studentId: 'S-2102',
     admissionNumber: 'ADM-2023-002',
@@ -94,7 +93,7 @@ export const studentsData: Student[] = [
     performance: 'Needs Support',
     percentage: 87,
     status: 'Active',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya',
     // Student info JSON
     studentInfo: {
       hobbies: 'Dancing, Art, Music',
@@ -105,19 +104,19 @@ export const studentsData: Student[] = [
     // Guardian Information
     guardians: {
       father: {
-        name: 'James Williams',
-        phoneCountryCode: '+1',
-        phone: '8765432110',
+        name: 'Raghav Verma',
+        phoneCountryCode: '+91',
+        phone: '8861234568',
       },
       mother: {
-        name: 'Lisa Williams',
-        phoneCountryCode: '+1',
-        phone: '8765432111',
+        name: 'Sunita Verma',
+        phoneCountryCode: '+91',
+        phone: '8861234569',
       },
     },
     syncedAt: '2024-01-15T10:31:00.000Z',
     syncVersion: 1,
-    name: 'Emma Williams',
+    name: 'Ananya Verma',
   },
   {
     id: '3',
@@ -184,18 +183,18 @@ export const studentsData: Student[] = [
     userId: 1004,
     profileType: 0,
     // Personal Information
-    firstName: 'Hannah',
-    lastName: 'Lee',
-    fullName: 'Hannah Lee',
-    displayName: 'Hannah Lee',
-    preferredName: 'Hannah',
+    firstName: 'Ishita',
+    lastName: 'Reddy',
+    fullName: 'Ishita Reddy',
+    displayName: 'Ishita Reddy',
+    preferredName: 'Ishita',
     dateOfBirth: '2009-05-12',
     gender: 1, // FEMALE
     // Contact Information
-    primaryPhone: '7654321098',
-    phoneCountryCode: '+1',
-    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hannah',
-    address: '321 Pine Street, Seattle, WA 98101, USA',
+    primaryPhone: '7338112233',
+    phoneCountryCode: '+91',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ishita',
+    address: '88, 2nd Main, Koramangala 4th Block, Bangalore, Karnataka 560034, India',
     // Student-specific
     studentId: 'S-2104',
     admissionNumber: 'ADM-2022-045',
@@ -209,7 +208,7 @@ export const studentsData: Student[] = [
     performance: 'Good',
     percentage: 93,
     status: 'Active',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hannah',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ishita',
     // Student info JSON
     studentInfo: {
       hobbies: 'Swimming, Science experiments, Photography',
@@ -220,38 +219,37 @@ export const studentsData: Student[] = [
     // Guardian Information
     guardians: {
       father: {
-        name: 'Robert Lee',
-        phoneCountryCode: '+1',
-        phone: '7654321099',
+        name: 'Ravi Reddy',
+        phoneCountryCode: '+91',
+        phone: '7338112234',
       },
       mother: {
-        name: 'Jennifer Lee',
-        phoneCountryCode: '+1',
-        phone: '7654321100',
+        name: 'Deepa Reddy',
+        phoneCountryCode: '+91',
+        phone: '7338112235',
       },
     },
     syncedAt: '2024-01-15T10:33:00.000Z',
     syncVersion: 2,
-    name: 'Hannah Lee',
+    name: 'Ishita Reddy',
   },
   {
     id: '5',
     userId: 1005,
     profileType: 0,
     // Personal Information
-    firstName: 'Thomas',
-    middleName: 'James',
-    lastName: 'Green',
-    fullName: 'Thomas James Green',
-    displayName: 'Thomas Green',
-    preferredName: 'Tom',
+    firstName: 'Karan',
+    lastName: 'Menon',
+    fullName: 'Karan Menon',
+    displayName: 'Karan Menon',
+    preferredName: 'Karan',
     dateOfBirth: '2009-09-30',
     gender: 0, // MALE
     // Contact Information
-    primaryPhone: '6543210987',
-    phoneCountryCode: '+1',
-    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas',
-    address: '654 Elm Drive, Boston, MA 02101, USA',
+    primaryPhone: '9972114455',
+    phoneCountryCode: '+91',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Karan',
+    address: '206, Whitefield Main Road, Bangalore, Karnataka 560066, India',
     // Student-specific
     studentId: 'S-2105',
     admissionNumber: 'ADM-2022-078',
@@ -265,10 +263,10 @@ export const studentsData: Student[] = [
     performance: 'Needs Support',
     percentage: 81,
     status: 'Active',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Karan',
     // Student info JSON
     studentInfo: {
-      hobbies: 'Soccer, Video games, Robotics',
+      hobbies: 'Football, Video games, Robotics',
       specialNeedsSupport: true,
       medicalConditionAlert: false,
       medicalInfo: 'ADHD - benefits from structured learning environment',
@@ -276,25 +274,25 @@ export const studentsData: Student[] = [
     // Guardian Information
     guardians: {
       father: {
-        name: 'Michael Green',
-        phoneCountryCode: '+1',
-        phone: '6543210988',
+        name: 'Arjun Menon',
+        phoneCountryCode: '+91',
+        phone: '9972114456',
       },
       mother: {
-        name: 'Patricia Green',
-        phoneCountryCode: '+1',
-        phone: '6543210989',
+        name: 'Radha Menon',
+        phoneCountryCode: '+91',
+        phone: '9972114457',
       },
     },
     syncedAt: '2024-01-15T10:34:00.000Z',
     syncVersion: 1,
-    name: 'Thomas Green',
+    name: 'Karan Menon',
   },
   {
     id: '6',
     userId: 6,
     profileType: 0,
-    name: 'Isabella Rossi',
+    name: 'Kavya Patel',
     studentId: 'S-2106',
     class: '8C',
     gpa: 3.9,
@@ -303,33 +301,33 @@ export const studentsData: Student[] = [
     status: 'Active',
     avatarUrl: '',
     // Extended fields for profile card
-    firstName: 'Isabella',
-    lastName: 'Rossi',
-    fullName: 'Isabella Rossi',
-    displayName: 'Isabella Rossi',
-    dateOfBirth: '2022-05-18',
+    firstName: 'Kavya',
+    lastName: 'Patel',
+    fullName: 'Kavya Patel',
+    displayName: 'Kavya Patel',
+    dateOfBirth: '2010-05-18',
     gender: 1, // Female
-    primaryPhone: '812 9988 7766',
-    phoneCountryCode: '+62',
-    address: '14 Via Milano, Rome, Italy',
+    primaryPhone: '9844556677',
+    phoneCountryCode: '+91',
+    address: '301, Outer Ring Road, Marathahalli, Bangalore, Karnataka 560037, India',
     gradeLevel: '8',
     section: 'C',
     guardians: {
       father: {
-        name: 'Marco Rossi',
-        phoneCountryCode: '+39',
-        phone: '331 222 5566',
+        name: 'Nikhil Patel',
+        phoneCountryCode: '+91',
+        phone: '9844556678',
       },
       mother: {
-        name: 'Elena Rossi',
-        phoneCountryCode: '+39',
-        phone: '331 444 7788',
+        name: 'Shreya Patel',
+        phoneCountryCode: '+91',
+        phone: '9844556679',
       },
       alternativeGuardian: {
-        name: 'Lucia Bianchi',
+        name: 'Nisha Patel',
         relation: 'Aunt',
-        phoneCountryCode: '+39',
-        phone: '331 555 6677',
+        phoneCountryCode: '+91',
+        phone: '9844556680',
       },
     },
   },

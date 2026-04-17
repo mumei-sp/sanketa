@@ -1,4 +1,5 @@
 import type { Teacher } from '../types'
+import { PHONE_COUNTRY_CODE } from '@/mocks/_shared/constants'
 
 /**
  * Helper function to get display name from teacher
@@ -18,33 +19,27 @@ export function getDisplayName(teacher: Teacher): string {
 }
 
 /**
- * Helper function to format phone number
- * Formats Indonesian phone numbers with +62 prefix
+ * Format a bare phone number for display.
+ *
+ * Accepts either:
+ *   - an already-formatted string with a leading '+<country>' prefix
+ *   - a bare 10-digit number (assumed Indian)
+ *   - a number with leading 0 (strip it, then prefix +91)
+ *
+ * Returns "N/A" when input is undefined/empty.
  */
 export function formatPhone(phone?: string): string {
   if (!phone) return 'N/A'
 
-  // If phone already starts with +, return as is
-  if (phone.startsWith('+')) {
-    return phone
-  }
+  // Already prefixed? leave untouched.
+  if (phone.startsWith('+')) return phone
 
-  // Format Indonesian phone numbers (add +62 if not present)
-  if (phone.startsWith('62')) {
-    return `+${phone}`
-  }
+  // Explicit "91…" without the '+'.
+  if (phone.startsWith('91') && phone.length === 12) return `+${phone}`
 
-  // If phone starts with 0, replace with +62
-  if (phone.startsWith('0')) {
-    return `+62 ${phone.slice(1)}`
-  }
+  // Leading-zero local format → strip the zero and prefix country code.
+  if (phone.startsWith('0')) return `${PHONE_COUNTRY_CODE} ${phone.slice(1)}`
 
-  // If phone starts with 8 (common Indonesian mobile), add +62
-  if (phone.startsWith('8')) {
-    return `+62 ${phone}`
-  }
-
-  // Otherwise, add +62 prefix
-  return `+62 ${phone}`
+  // Bare 10-digit Indian mobile number.
+  return `${PHONE_COUNTRY_CODE} ${phone}`
 }
-
