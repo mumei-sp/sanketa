@@ -258,5 +258,11 @@ export function getStudentStats(
     }
   })
 
-  return [totalCard, ...restCards]
+  // Hard cap the total at 4 (1 Total + 3 customisable) — the tile grid
+  // is laid out for exactly this shape (2×2 mobile, 1×4 tablet, 2×2
+  // desktop). The picker already enforces an effective-series max of 3
+  // via its compareGrades-aware isMaxed check, so this cap is defensive:
+  // it stops any caller that forgets to pass the picker's max value from
+  // breaking the layout.
+  return [totalCard, ...restCards.slice(0, 3)]
 }
