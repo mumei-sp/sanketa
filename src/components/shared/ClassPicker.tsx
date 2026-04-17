@@ -78,6 +78,17 @@ interface ClassPickerProps {
    * only and toggling them still emits the parent grade via `onChange`.
    */
   onSectionsChange?: (sectionLabels: string[]) => void
+  /**
+   * (grade mode only) Fires with the list of grades the user has flagged as
+   * "compare sections" — meaning the chart should draw one bar per picked
+   * section of that grade instead of a single grade-average bar.
+   *
+   * Driven by the explicit "Compare sections" toggle inside each grade's
+   * section popover. Keeping this as its own signal (rather than inferring
+   * from "some sections off") lets the user also compare grades that have
+   * only 2 sections, where picking both wouldn't otherwise trigger a split.
+   */
+  onCompareGradesChange?: (grades: string[]) => void
 }
 
 // ============================================================================
@@ -103,8 +114,10 @@ function GradeGrid({
   gradeCounts,
   sectionsByGrade,
   selectedSections,
+  compareGrades,
   onToggle,
   onSectionToggle,
+  onCompareToggle,
 }: {
   allGrades: string[]
   selected: string[]
@@ -112,8 +125,10 @@ function GradeGrid({
   gradeCounts?: Map<string, number>
   sectionsByGrade: Map<string, string[]>
   selectedSections: Set<string>
+  compareGrades: Set<string>
   onToggle: (grade: string) => void
   onSectionToggle: (grade: string, sectionLabel: string) => void
+  onCompareToggle: (grade: string) => void
 }) {
   return (
     <div
@@ -207,6 +222,8 @@ function GradeGrid({
                 sections={gradeSections}
                 selectedSections={selectedSections}
                 onSectionToggle={onSectionToggle}
+                compareMode={compareGrades.has(grade)}
+                onCompareToggle={onCompareToggle}
               />
             )}
           </div>
@@ -227,14 +244,21 @@ function SectionsPopover({
   sections,
   selectedSections,
   onSectionToggle,
+  compareMode,
+  onCompareToggle,
 }: {
   grade: string
   sections: string[]
   selectedSections: Set<string>
   onSectionToggle: (grade: string, sectionLabel: string) => void
+  compareMode: boolean
+  onCompareToggle: (grade: string) => void
 }) {
   const activeCount = sections.filter(l => selectedSections.has(l)).length
   const partial = activeCount > 0 && activeCount < sections.length
+  // The card's corner badge is "interesting" if the user is either viewing a
+  // subset of sections OR has explicitly asked to compare them side-by-side.
+  const highlighted = partial || compareMode
 
   return (
     <Popover>
@@ -251,25 +275,31 @@ function SectionsPopover({
             fontSize: 10,
             fontWeight: 600,
             color: colors.text.heading,
-            backgroundColor: partial
+            backgroundColor: highlighted
               ? withOpacity(baseColors.pink, 0.55)
               : withOpacity(baseColors.blue, 0.55),
-            border: `1px solid ${partial ? colors.accent.base : 'transparent'}`,
+            border: `1px solid ${highlighted ? colors.accent.base : 'transparent'}`,
           }}
           aria-label={
-            partial
+            compareMode
+              ? `Grade ${grade} — comparing ${activeCount} sections`
+              : partial
               ? `Grade ${grade} — ${activeCount} of ${sections.length} sections active`
               : `Pick specific sections of Grade ${grade}`
           }
         >
           <Layers className="w-2.5 h-2.5" />
-          {partial ? `${activeCount}/${sections.length}` : sections.length}
+          {compareMode
+            ? `${activeCount}×`
+            : partial
+            ? `${activeCount}/${sections.length}`
+            : sections.length}
         </button>
       </PopoverTrigger>
       <PopoverContent
         align="center"
         sideOffset={6}
-        className="w-auto min-w-[160px] p-2"
+        className="w-auto min-w-[200px] p-2"
         // Prevent the outer card onClick from firing when the user clicks
         // anywhere inside the popover content.
         onClick={e => e.stopPropagation()}
@@ -280,6 +310,35 @@ function SectionsPopover({
         >
           Grade {grade} sections
         </div>
+
+        {/*
+         * Compare-sections toggle — explicit signal that the user wants to
+         * see each picked section as its OWN bar, even when all sections are
+         * ticked. Without this, picking "both 9A and 9B" is indistinguishable
+         * from "Grade 9 as a whole" (which is exactly the ambiguity that
+         * prevented comparing grades with only 2 sections).
+         */}
+        <label
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 mb-1.5 cursor-pointer transition-colors"
+          style={{
+            backgroundColor: compareMode
+              ? withOpacity(baseColors.pink, 0.25)
+              : 'transparent',
+            border: `1px solid ${compareMode ? colors.accent.base : colors.border.subtle}`,
+          }}
+        >
+          <Checkbox
+            checked={compareMode}
+            onCheckedChange={() => onCompareToggle(grade)}
+            className="cursor-pointer"
+          />
+          <span
+            className="text-[11px] font-medium flex-1"
+            style={{ color: colors.text.heading }}
+          >
+            Compare sections
+          </span>
+        </label>
         <div className="flex flex-wrap gap-1.5">
           {sections.map(label => {
             const active = selectedSections.has(label)
@@ -524,6 +583,7 @@ export function ClassPicker({
   defaultSelected,
   onChange,
   onSectionsChange,
+  onCompareGradesChange,
 }: ClassPickerProps) {
   const { config } = useSchoolConfig()
   const [open, setOpen] = React.useState(false)
@@ -603,6 +663,14 @@ export function ClassPicker({
    */
   const [selectedSections, setSelectedSections] = React.useState<Set<string>>(derivedSections)
 
+  /**
+   * `compareGrades` is the set of grades the user has flipped into "compare
+   * sections" mode via the toggle inside each popover. When a grade is in
+   * this set, its chart consumers should render one series per picked
+   * section instead of a single grade-average series.
+   */
+  const [compareGrades, setCompareGrades] = React.useState<Set<string>>(new Set())
+
   // When `selected` changes via the grade-card click, resync the section set
   // so newly-picked grades contribute all their sections, and newly-dropped
   // grades have their sections removed.
@@ -647,6 +715,41 @@ export function ClassPicker({
     prevSectionsRef.current = b
     onSectionsChange([...b])
   }, [selectedSections, onSectionsChange])
+
+  // Emit compare-mode changes to consumers that opted in. Also keep the set
+  // pruned — if a grade gets deselected elsewhere, it drops out of compare
+  // mode automatically.
+  React.useEffect(() => {
+    setCompareGrades(prev => {
+      const pruned = new Set<string>()
+      prev.forEach(g => {
+        if (selected.includes(g)) pruned.add(g)
+      })
+      return pruned.size === prev.size ? prev : pruned
+    })
+  }, [selected])
+
+  const prevCompareRef = React.useRef<Set<string>>(compareGrades)
+  React.useEffect(() => {
+    if (!onCompareGradesChange) return
+    const a = prevCompareRef.current
+    const b = compareGrades
+    if (a.size === b.size && [...a].every(x => b.has(x))) return
+    prevCompareRef.current = b
+    onCompareGradesChange([...b])
+  }, [compareGrades, onCompareGradesChange])
+
+  /**
+   * Flip a grade in/out of "compare sections" mode.
+   */
+  const handleCompareToggle = React.useCallback((grade: string) => {
+    setCompareGrades(prev => {
+      const next = new Set(prev)
+      if (next.has(grade)) next.delete(grade)
+      else next.add(grade)
+      return next
+    })
+  }, [])
 
   // Section mode: toggle all sections in a grade at once
   const handleToggleGrade = React.useCallback((sectionLabels: string[]) => {
@@ -745,8 +848,10 @@ export function ClassPicker({
               gradeCounts={gradeCounts}
               sectionsByGrade={sectionsByGrade}
               selectedSections={selectedSections}
+              compareGrades={compareGrades}
               onToggle={toggle}
               onSectionToggle={handleSectionToggle}
+              onCompareToggle={handleCompareToggle}
             />
           ) : (
             <SectionTree

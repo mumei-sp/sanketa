@@ -87,6 +87,13 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
    * grade-level series instead.
    */
   const [pickedSections, setPickedSections] = React.useState<string[]>([])
+  /**
+   * Grades the user has explicitly flipped into "compare sections" mode from
+   * the popover toggle. Arrives from ClassPicker.onCompareGradesChange. This
+   * is the escape hatch that lets you compare 9A vs 9B even when both are
+   * ticked (which would otherwise look identical to "Grade 9 average").
+   */
+  const [compareGrades, setCompareGrades] = React.useState<string[]>([])
 
   // Sync selected to first dataset when datasets load
   React.useEffect(() => {
@@ -118,6 +125,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
    */
   const grades = React.useMemo(() => {
     const pickedSectionSet = new Set(pickedSections)
+    const compareSet = new Set(compareGrades)
 
     // The set of grades the chart should consider. `pickedGrades` is the
     // primary signal — empty pick falls back to first 3 grades so the
@@ -133,12 +141,18 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
         out.push(gradeDef)
         return
       }
-      // Count how many of the grade's sections are explicitly picked.
       const pickedInGrade = sections.filter(s => pickedSectionSet.has(s.key))
-      const isDrilledDown =
+      // Two ways to trigger drill-down:
+      //   1. User has explicit compare-sections mode on for this grade.
+      //   2. User has turned OFF at least one of the grade's sections,
+      //      so the remaining subset is clearly an intentional drill.
+      const gradeKey = gradeDef.key.replace(/^grade/, '')
+      const compareMode = compareSet.has(gradeKey)
+      const partialSelection =
         pickedInGrade.length > 0 && pickedInGrade.length < sections.length
-      if (isDrilledDown) {
-        // Render only the picked sections as their own series.
+      if (compareMode || partialSelection) {
+        // Render each picked section as its own series so the bars sit
+        // side-by-side for easy comparison.
         pickedInGrade.forEach(s => out.push(s))
       } else {
         // All sections on (or none explicitly on) = treat as grade average.
@@ -146,7 +160,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
       }
     })
     return out
-  }, [allGrades, pickedGrades, pickedSections])
+  }, [allGrades, pickedGrades, pickedSections, compareGrades])
   const rawData = activeDataset?.data ?? []
   const data = React.useMemo(
     () => reorderByAcademicMonth(rawData, 'month', startMonth),
@@ -183,6 +197,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
                   max={3}
                   onChange={setPickedGrades}
                   onSectionsChange={setPickedSections}
+                  onCompareGradesChange={setCompareGrades}
                 />
               </div>
               <Select value={selected} onValueChange={setSelected}>
