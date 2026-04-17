@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { StudentsTable } from '../components/StudentsTable'
 import { StudentStatGroup, getStudentStats, getGradeCounts } from '../components/StudentStatCards'
 import { ClassPicker } from '@/components/shared/ClassPicker'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { AcademicPerformanceByGradeChart } from '../components/AcademicPerformanceByGradeChart'
 import { RecentActivity } from '@/features/dashboard/components/RecentActivity'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
@@ -59,9 +60,17 @@ export function StudentsPage() {
 
   const gradeCounts = React.useMemo(() => getGradeCounts(students), [students])
   const [selectedGrades, setSelectedGrades] = React.useState<string[]>([])
+  // Grades the user has flipped into "compare sections" mode in the picker.
+  // Those grades get split into per-section stat cards (Class 9A, Class 9B, …).
+  const [compareGrades, setCompareGrades] = React.useState<string[]>([])
+  const { config } = useSchoolConfig()
+  const allSections = React.useMemo(
+    () => config.classSections.map(s => ({ grade: s.grade, label: s.label })),
+    [config.classSections],
+  )
   const stats = React.useMemo(
-    () => getStudentStats(students, selectedGrades),
-    [students, selectedGrades],
+    () => getStudentStats(students, selectedGrades, { compareGrades, allSections }),
+    [students, selectedGrades, compareGrades, allSections],
   )
 
   // ── Import / Export ──
@@ -151,6 +160,7 @@ export function StudentsPage() {
                     max={3}
                     gradeCounts={gradeCounts}
                     onChange={setSelectedGrades}
+                    onCompareGradesChange={setCompareGrades}
                   />
                 }
               />
