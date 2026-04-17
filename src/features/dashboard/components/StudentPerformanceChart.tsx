@@ -80,6 +80,13 @@ const CustomLegend = ({ payload }: any) => {
 export function StudentPerformanceChart({ datasets, isLoading = false }: StudentPerformanceChartProps) {
   const [selected, setSelected] = React.useState('')
   const [pickedGrades, setPickedGrades] = React.useState<string[]>([])
+  /**
+   * Section labels the user has drilled into via the grade card popovers.
+   * Arrives from ClassPicker.onSectionsChange. When a grade has all its
+   * sections present here we treat it as "no drill-down" and render the
+   * grade-level series instead.
+   */
+  const [pickedSections, setPickedSections] = React.useState<string[]>([])
 
   // Sync selected to first dataset when datasets load
   React.useEffect(() => {
@@ -92,18 +99,54 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
   const allGrades = activeDataset?.grades ?? []
 
-  // Filter grades to only those selected via ClassPicker. Fallback is the
-  // first 3 grades (matches ClassPicker's default max=3) — showing *all*
-  // grades when nothing is picked crowds the chart with 10+ series and
-  // makes it unreadable. This also protects against stale localStorage
-  // values from previous picker modes.
+  /**
+   * Resolve which series to actually render. For each picked grade we look
+   * at how many of its sections the user has toggled in the popover:
+   *
+   *   - All sections on (or no drill-down)  → render `grade{N}` (grade avg)
+   *   - Strict subset on                    → render the picked sections as
+   *                                           individual series so the user
+   *                                           can compare 9A vs 9B vs 9C
+   *
+   * This is what makes "compare sections of a single class" work — pick
+   * the grade card, then open its popover and uncheck the sections you
+   * don't want to see. The moment you drop below the full set the chart
+   * switches from grade-average to per-section bars.
+   *
+   * Fallback: if no grades are picked at all, show the first 3 grades so
+   * the chart is readable instead of rendering 10+ overlapping series.
+   */
   const grades = React.useMemo(() => {
-    const filtered = allGrades.filter(g =>
-      pickedGrades.some(p => g.key === `grade${p}`),
-    )
-    if (filtered.length > 0) return filtered
-    return allGrades.slice(0, 3)
-  }, [allGrades, pickedGrades])
+    const pickedSectionSet = new Set(pickedSections)
+
+    // The set of grades the chart should consider. `pickedGrades` is the
+    // primary signal — empty pick falls back to first 3 grades so the
+    // chart always has something to draw.
+    const activeGrades = pickedGrades.length > 0
+      ? allGrades.filter(g => pickedGrades.some(p => g.key === `grade${p}`))
+      : allGrades.slice(0, 3)
+
+    const out: typeof allGrades = []
+    activeGrades.forEach(gradeDef => {
+      const sections = gradeDef.sections ?? []
+      if (sections.length === 0) {
+        out.push(gradeDef)
+        return
+      }
+      // Count how many of the grade's sections are explicitly picked.
+      const pickedInGrade = sections.filter(s => pickedSectionSet.has(s.key))
+      const isDrilledDown =
+        pickedInGrade.length > 0 && pickedInGrade.length < sections.length
+      if (isDrilledDown) {
+        // Render only the picked sections as their own series.
+        pickedInGrade.forEach(s => out.push(s))
+      } else {
+        // All sections on (or none explicitly on) = treat as grade average.
+        out.push(gradeDef)
+      }
+    })
+    return out
+  }, [allGrades, pickedGrades, pickedSections])
   const rawData = activeDataset?.data ?? []
   const data = React.useMemo(
     () => reorderByAcademicMonth(rawData, 'month', startMonth),
@@ -139,6 +182,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
                   mode="grade"
                   max={3}
                   onChange={setPickedGrades}
+                  onSectionsChange={setPickedSections}
                 />
               </div>
               <Select value={selected} onValueChange={setSelected}>

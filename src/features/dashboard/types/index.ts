@@ -13,9 +13,27 @@ export interface DashboardStat {
 }
 
 export interface GradeConfig {
+  /** Data-row key (e.g. "grade7") */
   key: string
+  /** Display label (e.g. "Grade 7") */
   label: string
+  /** Series color */
   color: string
+  /**
+   * Optional per-section breakdown. When present, consumers that opt into
+   * section-level drill-down can render these series in place of the parent
+   * grade series. Each entry's `key` is the section label ("7A", "7B", ...)
+   * and must also appear as a column in the sibling `PerformanceDataset.data`
+   * rows so the chart can bind to it.
+   */
+  sections?: {
+    /** Data-row key (same as the section label, e.g. "7A") */
+    key: string
+    /** Display label (e.g. "Class 7A") */
+    label: string
+    /** Series color (distinct from the parent grade so bars read apart) */
+    color: string
+  }[]
 }
 
 export interface PerformanceDataset {
