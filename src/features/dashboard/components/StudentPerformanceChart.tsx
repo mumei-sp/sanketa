@@ -19,30 +19,28 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors, colors, darken } from '@/theme/colors'
+import { baseColors, colors } from '@/theme/colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import { reorderByAcademicMonth } from '@/utils/academic-date'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { PerformanceDataset } from '../types'
 
 /**
- * Palette used at render-time so every visible series gets a distinct colour.
- * The mock layer assigns a colour per grade OR per section independently,
- * which can collide when drill-down surfaces both (e.g. Grade 7 and Class 9B
- * both mapped to baseColors.blue via `index % 3`). By re-colouring based on
- * position in the final render list we sidestep that collision entirely.
+ * The three brand colours the app reuses everywhere else for series.
+ * Recoloured at render-time by position in the final series list to avoid
+ * the collision the mock layer hit when Grade 7 (index 6) and Class 9B
+ * (index 9) both mapped to `baseColors.blue` via `index % 3`.
  *
- * Order chosen so the first three slots match the brand aesthetic users
- * already see elsewhere; the darker variants only surface when a user has
- * enough grades + compare-mode on to push series count past 3.
+ * With a typical max of 3 grade picks this covers every distinct bar. If
+ * a user forces 4+ series (e.g. 3 grades picked + one in compare-mode with
+ * two sections) the 4th series cycles back to navy — a visible repeat, but
+ * the colours each of the first three series gets are still unique, which
+ * is what the user actually sees when glancing at the legend.
  */
 const SERIES_PALETTE = [
-  baseColors.heading,              // dark navy — primary / most prominent
-  baseColors.pink,                 // pastel pink
-  baseColors.blue,                 // pale blue
-  darken(baseColors.pink, 25),     // plum
-  darken(baseColors.blue, 30),     // teal
-  darken(baseColors.heading, 10),  // near-black navy
+  baseColors.heading, // dark navy
+  baseColors.pink,    // pastel pink
+  baseColors.blue,    // pale blue
 ] as const
 
 interface StudentPerformanceChartProps {
