@@ -630,7 +630,7 @@ export function ClassPicker({
     return allSectionLabels.slice(0, max)
   }, [defaultSelected, mode, gradeCounts, allGrades, allSectionLabels, max])
 
-  const { selected, toggle, setSelected, reset, isMaxed, isDefault } = useClassPick(
+  const { selected, toggle, setSelected, reset, isMaxed: rawIsMaxed, isDefault } = useClassPick(
     allItems,
     defaultItems,
     { storageKey, max },
@@ -742,14 +742,45 @@ export function ClassPicker({
   /**
    * Flip a grade in/out of "compare sections" mode.
    */
+  /**
+   * "Effective series count" — how many bars/slices the chart will actually
+   * draw given the current picks. A grade contributes 1 slot normally, OR
+   * `sections.length` slots if compare-mode is on (and it has >1 section).
+   *
+   * Used instead of raw `selected.length` to enforce the `max` cap — so the
+   * picker disables additional grade cards when compare-mode on an existing
+   * grade has already consumed the series budget.
+   */
+  const effectiveCount = React.useMemo(() => {
+    if (mode !== 'grade') return selected.length
+    return selected.reduce((sum, grade) => {
+      const sections = sectionsByGrade.get(grade) ?? []
+      const expanded = compareGrades.has(grade) && sections.length > 1
+      return sum + (expanded ? sections.length : 1)
+    }, 0)
+  }, [mode, selected, sectionsByGrade, compareGrades])
+
+  // Override the hook's raw isMaxed with one that respects compare-mode's
+  // series multiplication. In section mode this equals rawIsMaxed.
+  const isMaxed = mode === 'grade' ? effectiveCount >= max : rawIsMaxed
+
   const handleCompareToggle = React.useCallback((grade: string) => {
     setCompareGrades(prev => {
       const next = new Set(prev)
-      if (next.has(grade)) next.delete(grade)
-      else next.add(grade)
+      if (next.has(grade)) {
+        // Turning compare OFF always frees slots — safe.
+        next.delete(grade)
+        return next
+      }
+      // Turning compare ON adds (sectionCount - 1) extra effective slots.
+      const sections = sectionsByGrade.get(grade) ?? []
+      if (sections.length <= 1) return prev // nothing to compare
+      const extraSlots = sections.length - 1
+      if (effectiveCount + extraSlots > max) return prev // would exceed budget
+      next.add(grade)
       return next
     })
-  }, [])
+  }, [effectiveCount, max, sectionsByGrade])
 
   // Section mode: toggle all sections in a grade at once
   const handleToggleGrade = React.useCallback((sectionLabels: string[]) => {
@@ -834,7 +865,7 @@ export function ClassPicker({
             <DialogDescription>
               {description}{' '}
               <span className="font-medium" style={{ color: colors.text.heading }}>
-                {selected.length}/{max}
+                {mode === 'grade' ? effectiveCount : selected.length}/{max}
               </span>{' '}
               selected.
             </DialogDescription>
