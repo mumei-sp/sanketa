@@ -10,6 +10,22 @@ import type {
   TodoItem,
   RecentActivityItem,
 } from '@/features/dashboard/types'
+import { relativeDate, displayDate } from '@/mocks/_shared/date-helpers'
+
+/** Format an absolute-date activity timestamp like "Apr 14, 2026 – 09:15 AM". */
+function activityTimestamp(daysAgo: number, hh: number, mm: number, ampm: 'AM' | 'PM'): string {
+  const d = relativeDate(-daysAgo)
+  const dateStr = displayDate(d)
+  const h = String(hh).padStart(2, '0')
+  const m = String(mm).padStart(2, '0')
+  return `${dateStr} – ${h}:${m} ${ampm}`
+}
+
+/** Verbose "March 11, 2035" style date used by todos on the Dashboard. */
+function verboseDate(daysFromToday: number): string {
+  const d = relativeDate(daysFromToday)
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
 
 export const dashboardStats: DashboardStat[] = [
   {
@@ -235,19 +251,19 @@ export const todoItems: TodoItem[] = [
   {
     id: 'todo-1',
     text: 'Review Teacher Attendance Records',
-    date: 'March 11, 2035',
+    date: verboseDate(-1),
     completed: true,
   },
   {
     id: 'todo-2',
     text: 'Prepare Science Fair Guidelines',
-    date: 'March 13, 2035',
+    date: verboseDate(2),
     completed: false,
   },
   {
     id: 'todo-3',
     text: 'Update Library Book Inventory',
-    date: 'March 14, 2035',
+    date: verboseDate(4),
     completed: false,
   },
 ]
@@ -256,7 +272,7 @@ export const recentActivityItems: RecentActivityItem[] = [
   {
     id: 'act-1',
     text: 'New student Alicia Gomez (Class 8B) enrolled by Registrar.',
-    timestamp: 'March 7, 2035 – 09:15 AM',
+    timestamp: activityTimestamp(1, 9, 15, 'AM'),
     dotColor: status.info.base,
     icon: 'user-plus',
     iconBg: baseColors.blue,
@@ -264,8 +280,8 @@ export const recentActivityItems: RecentActivityItem[] = [
   },
   {
     id: 'act-2',
-    text: 'Attendance for Class 7A marked by Teacher John Smith.',
-    timestamp: 'March 7, 2035 – 11:30 AM',
+    text: 'Attendance for Class 7A marked by Meera Iyengar.',
+    timestamp: activityTimestamp(1, 11, 30, 'AM'),
     dotColor: status.success.base,
     icon: 'check-square',
     iconBg: baseColors.pink,
@@ -274,7 +290,7 @@ export const recentActivityItems: RecentActivityItem[] = [
   {
     id: 'act-3',
     text: 'Monthly fee payments verified for Grade 9 students.',
-    timestamp: 'March 8, 2035 – 02:45 PM',
+    timestamp: activityTimestamp(2, 2, 45, 'PM'),
     dotColor: status.warning.base,
     icon: 'receipt',
     iconBg: baseColors.heading,
@@ -283,7 +299,7 @@ export const recentActivityItems: RecentActivityItem[] = [
   {
     id: 'act-4',
     text: 'Exam timetable for Term 2 updated by Academic Coordinator.',
-    timestamp: 'March 9, 2035 – 10:20 AM',
+    timestamp: activityTimestamp(3, 10, 20, 'AM'),
     dotColor: status.danger.base,
     icon: 'pencil',
     iconBg: baseColors.pink,

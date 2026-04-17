@@ -16,6 +16,7 @@ import type {
   PaymentTransaction,
   PaymentMethod,
 } from '@/features/fees-collection/types'
+import { yyyymm, displayDate, relativeDate } from '@/mocks/_shared/date-helpers'
 
 // ============================================================================
 // Dashboard Stats (static — service will compute dynamically)
@@ -72,8 +73,8 @@ export const feeProgressData: FeeProgressData[] = [
 // ============================================================================
 
 let txnCounter = 0
-function nextTxnId(): string { return `TXN-2035-${String(++txnCounter).padStart(4, '0')}` }
-function nextReceiptId(): string { return `REC-2035-${String(txnCounter).padStart(4, '0')}` }
+function nextTxnId(): string { return `TXN-${yyyymm()}-${String(++txnCounter).padStart(4, '0')}` }
+function nextReceiptId(): string { return `REC-${yyyymm()}-${String(txnCounter).padStart(4, '0')}` }
 
 interface FeeInput {
   amount: number
@@ -178,6 +179,27 @@ export const feeCollectionData: FeeCollectionRecord[] = [
     misc: { amount: 145, date: 'Mar 19, 2035', status: 'Paid', paid: { method: 'cheque', paidDate: 'Mar 14, 2035' } },
   }),
 ]
+
+// ---------------------------------------------------------------------------
+// Overwrite hardcoded Mar-2035 due / paid dates with dynamic values.
+//
+// Due dates scatter across the current quarter (next 90 days) so the fee
+// ledger always shows current-quarter items. Paid dates land roughly 5 days
+// before the due date so the "paid early" pattern stays plausible.
+// Runs before paymentTransactions is derived so the transaction rows pick
+// up the new dates.
+// ---------------------------------------------------------------------------
+
+feeCollectionData.forEach((record, i) => {
+  // Group fees by student so each student's four categories share a window.
+  const studentIndex = Math.floor(i / 4)
+  const dueOffset = -10 + (studentIndex % 10) * 6 // -10..+44 days relative to today
+  const dueDate = relativeDate(dueOffset)
+  record.dueDate = displayDate(dueDate)
+  if (record.paidDate) {
+    record.paidDate = displayDate(relativeDate(dueOffset - 5))
+  }
+})
 
 // ============================================================================
 // Payment Transactions (mutable — built from paid records)

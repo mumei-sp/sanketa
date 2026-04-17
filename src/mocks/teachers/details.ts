@@ -1,6 +1,7 @@
 import type { TeacherDetail, EmploymentType, ScheduleBlock, WorkloadDataPoint, TrainingEvent, LeaveRequest, PerformanceMetric, CalendarHighlight, MonthlyAttendance, TeacherDocument } from '@/features/teachers/types/teacher-detail'
 import type { Teacher } from '@/features/teachers/types'
 import { teachersData } from './teachers'
+import { relativeDisplay } from '@/mocks/_shared/date-helpers'
 
 // ── Seed-based helpers (deterministic per teacher) ──────────────────────────
 
@@ -43,18 +44,18 @@ const CLASS_POOLS = [
   ['SC - 2A'], ['EN - 1B', 'EN - 2B'],
 ]
 
+// Training events: a mix of upcoming (positive offsets) and completed (negative),
+// dated relative to today so the detail view always has plausible recent history.
 const TRAINING_POOL: Omit<TrainingEvent, 'id'>[] = [
-  // This Semester (Jan–Jun 2035)
-  { event: 'Digital Learning Tools Training', type: 'Training', date: 'Apr 2, 2035', location: 'Zoom – International Education Network', status: 'Upcoming' },
-  { event: 'Classroom Management Certification', type: 'Certification', date: 'Feb 8, 2035', location: 'Cambridge University Online (UK)', status: 'Completed' },
-  { event: 'Advanced English Teaching Methods', type: 'Workshop', date: 'Jan 12, 2035', location: 'London, UK – British Council', status: 'Completed' },
-  { event: 'Inclusive Education Practices', type: 'Workshop', date: 'Mar 15, 2035', location: 'UNESCO HQ – Paris', status: 'Upcoming' },
-  { event: 'Student Assessment Strategies', type: 'Seminar', date: 'May 20, 2035', location: 'EdTech Global – Online', status: 'Upcoming' },
-  // Last Semester (Jul–Dec 2034)
-  { event: 'Curriculum Design Fundamentals', type: 'Training', date: 'Sep 14, 2034', location: 'Stanford Online – EdX', status: 'Completed' },
-  { event: 'Child Psychology in Education', type: 'Seminar', date: 'Oct 5, 2034', location: 'Singapore – National Institute of Education', status: 'Completed' },
-  { event: 'Data-Driven Instruction Workshop', type: 'Workshop', date: 'Nov 22, 2034', location: 'Melbourne, AU – Education Conference', status: 'Completed' },
-  { event: 'First Aid & Safety Certification', type: 'Certification', date: 'Aug 10, 2034', location: 'Red Cross – Jakarta Chapter', status: 'Completed' },
+  { event: 'Digital Learning Tools Training', type: 'Training', date: relativeDisplay(20), location: 'Zoom – International Education Network', status: 'Upcoming' },
+  { event: 'Classroom Management Certification', type: 'Certification', date: relativeDisplay(-60), location: 'Cambridge University Online (UK)', status: 'Completed' },
+  { event: 'Advanced English Teaching Methods', type: 'Workshop', date: relativeDisplay(-90), location: 'London, UK – British Council', status: 'Completed' },
+  { event: 'Inclusive Education Practices', type: 'Workshop', date: relativeDisplay(35), location: 'UNESCO HQ – Paris', status: 'Upcoming' },
+  { event: 'Student Assessment Strategies', type: 'Seminar', date: relativeDisplay(55), location: 'EdTech Global – Online', status: 'Upcoming' },
+  { event: 'Curriculum Design Fundamentals', type: 'Training', date: relativeDisplay(-200), location: 'Stanford Online – EdX', status: 'Completed' },
+  { event: 'Child Psychology in Education', type: 'Seminar', date: relativeDisplay(-170), location: 'Singapore – National Institute of Education', status: 'Completed' },
+  { event: 'Data-Driven Instruction Workshop', type: 'Workshop', date: relativeDisplay(-140), location: 'Melbourne, AU – Education Conference', status: 'Completed' },
+  { event: 'First Aid & Safety Certification', type: 'Certification', date: relativeDisplay(-240), location: 'Red Cross – Bangalore Chapter', status: 'Completed' },
 ]
 
 const LEAVE_REASONS = [
@@ -285,14 +286,15 @@ function generateMonthAttendance(year: number, month: number, rand: () => number
 }
 
 /**
- * Generate monthly attendance data for 12 months (Jan–Dec of 2035).
- * Keys are "YYYY-M" where M is 0-indexed (e.g. "2035-0" = Jan, "2035-2" = March).
+ * Generate monthly attendance data for the 12 months of the current calendar
+ * year. Keys are "YYYY-M" where M is 0-indexed (e.g. "2026-0" = Jan 2026).
  */
 function generateMonthlyAttendance(seed: number): Record<string, MonthlyAttendance> {
   const rand = seededRandom(seed)
+  const year = new Date().getFullYear()
   const data: Record<string, MonthlyAttendance> = {}
   for (let m = 0; m < 12; m++) {
-    data[`2035-${m}`] = generateMonthAttendance(2035, m, rand)
+    data[`${year}-${m}`] = generateMonthAttendance(year, m, rand)
   }
   return data
 }

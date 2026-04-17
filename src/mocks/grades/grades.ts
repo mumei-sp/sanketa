@@ -9,6 +9,7 @@
 
 import { classRosters } from '@/mocks/attendance/daily'
 import { GRADEABLE_SUBJECT_IDS, EXAMS } from '@/features/grades/constants'
+import { relativeDate } from '@/mocks/_shared/date-helpers'
 import type { GradeSubmission, GradeEntry } from '@/features/grades/types'
 
 // ============================================================================
@@ -51,8 +52,9 @@ function make9AUT1Submission(subjectId: string): GradeSubmission {
       remarks: '',
     })),
     status: 'submitted',
-    submittedBy: 'Ms. Lee',
-    submittedAt: '2035-05-16T10:30:00Z',
+    submittedBy: 'Priya Nair',
+    // Unit Test 1 was submitted ~60 days ago.
+    submittedAt: relativeDate(-60).toISOString(),
   }
 }
 
@@ -76,8 +78,9 @@ seededSubmissions.push({
     remarks: '',
   })),
   status: 'draft',
-  submittedBy: 'Ms. Lee',
-  submittedAt: '2035-09-18T14:00:00Z',
+  submittedBy: 'Priya Nair',
+  // Half Yearly draft saved ~30 days ago.
+  submittedAt: relativeDate(-30).toISOString(),
 })
 
 // ============================================================================

@@ -18,6 +18,11 @@ import type {
   TimetableSlot,
   TimetableException,
 } from '@/features/timetable/types'
+import { currentAcademicYear, academicYearStart, relativeIso, isoDate } from '@/mocks/_shared/date-helpers'
+
+/** Dynamic academic year + effective-from date (Apr 1 of current AY). */
+const ACADEMIC_YEAR = currentAcademicYear()
+const EFFECTIVE_FROM = isoDate(academicYearStart())
 
 // ============================================================================
 // Subjects Registry — colors from theme tokens, never hardcoded hex
@@ -214,24 +219,24 @@ const class7ASlots: TimetableSlot[] = [
 
 export const classTimetables: ClassTimetable[] = [
   {
-    id: 'tt-9a-2035',
+    id: `tt-9a-${ACADEMIC_YEAR}`,
     classSectionId: 'cls-9a',
-    academicYear: '2035-36',
-    effectiveFrom: '2035-04-01',
+    academicYear: ACADEMIC_YEAR,
+    effectiveFrom: EFFECTIVE_FROM,
     slots: class9ASlots,
   },
   {
-    id: 'tt-8b-2035',
+    id: `tt-8b-${ACADEMIC_YEAR}`,
     classSectionId: 'cls-8b',
-    academicYear: '2035-36',
-    effectiveFrom: '2035-04-01',
+    academicYear: ACADEMIC_YEAR,
+    effectiveFrom: EFFECTIVE_FROM,
     slots: class8BSlots,
   },
   {
-    id: 'tt-7a-2035',
+    id: `tt-7a-${ACADEMIC_YEAR}`,
     classSectionId: 'cls-7a',
-    academicYear: '2035-36',
-    effectiveFrom: '2035-04-01',
+    academicYear: ACADEMIC_YEAR,
+    effectiveFrom: EFFECTIVE_FROM,
     slots: class7ASlots,
   },
 ]
@@ -244,7 +249,7 @@ export const timetableExceptions: TimetableException[] = [
   {
     id: 'exc-1',
     classSectionId: 'cls-9a',
-    date: '2035-03-10',
+    date: relativeIso(-6),
     periodId: 'p1',
     type: 'substitution',
     originalSubject: 'Mathematics',
@@ -257,7 +262,7 @@ export const timetableExceptions: TimetableException[] = [
   {
     id: 'exc-2',
     classSectionId: 'cls-9a',
-    date: '2035-03-14',
+    date: relativeIso(-2),
     periodId: 'p5',
     type: 'cancellation',
     originalSubject: 'Hindi',
@@ -267,7 +272,7 @@ export const timetableExceptions: TimetableException[] = [
   {
     id: 'exc-3',
     classSectionId: 'cls-9a',
-    date: '2035-03-18',
+    date: relativeIso(2),
     periodId: 'p6',
     type: 'extra-class',
     newSubject: 'Mathematics',
@@ -278,7 +283,7 @@ export const timetableExceptions: TimetableException[] = [
   {
     id: 'exc-4',
     classSectionId: 'cls-8b',
-    date: '2035-03-12',
+    date: relativeIso(-4),
     periodId: 'p3',
     type: 'substitution',
     originalSubject: 'Mathematics',

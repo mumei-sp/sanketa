@@ -2,11 +2,20 @@ import type {
   StudentDetailData,
   StudentAttendanceMonth,
 } from '@/features/students/types'
+import { relativeDisplay } from '@/mocks/_shared/date-helpers'
+
+/** Key for the current calendar month in the `monthlyAttendance` map ("YYYY-M", M zero-indexed). */
+const CURRENT_MONTH_KEY = (() => {
+  const d = new Date()
+  return `${d.getFullYear()}-${d.getMonth()}`
+})()
 
 /**
- * Mock attendance data for March 2035 (matching Figma reference)
+ * Mock attendance snapshot for the current calendar month.
+ * Uses a fixed pattern (matches Figma reference) regardless of which month
+ * the app is viewed in, so the detail view always has plausible data.
  */
-const marchAttendance: StudentAttendanceMonth = {
+const currentMonthAttendance: StudentAttendanceMonth = {
   highlights: [
     // Present days (green) — 14 days
     { date: 3, variant: 'present' },
@@ -46,7 +55,7 @@ const marchAttendance: StudentAttendanceMonth = {
  */
 export const studentDetailData: StudentDetailData = {
   monthlyAttendance: {
-    '2035-2': marchAttendance,
+    [CURRENT_MONTH_KEY]: currentMonthAttendance,
   },
 
   scholarships: [
@@ -118,15 +127,15 @@ export const studentDetailData: StudentDetailData = {
   behaviorLog: [
     {
       id: 'bl-1',
-      date: 'Jan 10, 2035',
+      date: relativeDisplay(-90),
       type: 'Positive Note',
       details: 'Helped classmates during group project',
-      reportedBy: 'Ms. Lee Record',
+      reportedBy: 'Priya Nair',
       statusAction: 'Record Recognition',
     },
     {
       id: 'bl-2',
-      date: 'Feb 02, 2035',
+      date: relativeDisplay(-60),
       type: 'Positive Note',
       details: 'Volunteered in school event organization',
       reportedBy: 'Admin Office',
@@ -134,15 +143,15 @@ export const studentDetailData: StudentDetailData = {
     },
     {
       id: 'bl-3',
-      date: 'Feb 18, 2035',
+      date: relativeDisplay(-40),
       type: 'Minor Issue',
       details: 'Late submission of homework',
-      reportedBy: 'Mr. Maulie',
+      reportedBy: 'Aditi Sharma',
       statusAction: 'Issue Warning',
     },
     {
       id: 'bl-4',
-      date: 'Mar 05, 2035',
+      date: relativeDisplay(-15),
       type: 'Minor Issue',
       details: 'Absent without prior notice',
       reportedBy: 'Homeroom Teacher',

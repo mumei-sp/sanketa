@@ -4,6 +4,7 @@ import type {
   ExpenseBreakdownData,
   Reimbursement,
 } from '@/features/expenses/types'
+import { scatterPastDates, displayDate } from '@/mocks/_shared/date-helpers'
 
 export const expenseTrendData: ExpenseTrendData[] = [
   { month: 'Jan', amount: 95000 },
@@ -511,3 +512,24 @@ export const expensesData: Expense[] = [
     amount: 48000,
   },
 ]
+
+// ---------------------------------------------------------------------------
+// Overwrite hardcoded dates with dynamic ones at module load.
+//
+// The records above ship with "Mar X, 2035" placeholders that were fine when
+// the app was demoed in early 2035 but read as badly-dated in 2026. Rather
+// than re-seed every record on every calendar rollover, we rewrite the
+// `date` / `dateSubmitted` fields once at import time using the shared
+// scatterPastDates helper — expenses fan out across the last 240 days
+// (~8 months of trend data), reimbursements across the last 45 days.
+// ---------------------------------------------------------------------------
+
+const _expenseOffsets = scatterPastDates(expensesData.length, 240)
+expensesData.forEach((exp, i) => {
+  exp.date = displayDate(_expenseOffsets[i])
+})
+
+const _reimbursementOffsets = scatterPastDates(reimbursementsData.length, 45)
+reimbursementsData.forEach((req, i) => {
+  req.dateSubmitted = displayDate(_reimbursementOffsets[i])
+})

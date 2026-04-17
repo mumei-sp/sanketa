@@ -73,7 +73,7 @@ export const classRosters: Record<string, ClassRosterStudent[]> = {
 export const availableClasses = Object.keys(classRosters)
 
 // ============================================================================
-// Pre-filled Attendance Submissions (March 2035)
+// Pre-filled Attendance Submissions (current month, generated at module load)
 // ============================================================================
 
 /** Helper to check if a date is a weekend */
@@ -104,22 +104,32 @@ function generateRandomEntries(roster: ClassRosterStudent[]): AttendanceEntry[] 
   })
 }
 
-/** Generate submissions for a class for all weekdays in March 2035 up to day 24 */
+/**
+ * Generate submissions for a class for every weekday of the current calendar
+ * month up to today (inclusive). A couple of days are intentionally skipped
+ * per class to simulate "not yet marked" entries — common in a real roster.
+ */
 function generateClassSubmissions(classId: string, roster: ClassRosterStudent[]): AttendanceSubmission[] {
   const submissions: AttendanceSubmission[] = []
   const teachers: Record<string, string> = {
-    '9A': 'Ms. Lee',
-    '8B': 'Mr. Sharma',
-    '7A': 'Ms. Rivera',
+    '9A': 'Priya Nair',
+    '8B': 'Rahul Iyer',
+    '7A': 'Meera Iyengar',
   }
   const teacher = teachers[classId] ?? 'Admin'
 
-  // Generate for March 1-24 (skip weekends and a few days to simulate "not yet marked")
-  for (let day = 1; day <= 24; day++) {
-    const dateStr = `2035-03-${String(day).padStart(2, '0')}`
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() // 0-indexed
+  const lastDay = now.getDate()
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  for (let day = 1; day <= lastDay; day++) {
+    const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
     if (isWeekend(dateStr)) continue
 
-    // Skip a couple of days to create "missing" entries
+    // Preserve the "missing" pattern: skip a couple of days per class so the
+    // history view has some unsubmitted rows to render.
     if (classId === '9A' && (day === 17 || day === 21)) continue
     if (classId === '8B' && day === 10) continue
 
@@ -129,7 +139,7 @@ function generateClassSubmissions(classId: string, roster: ClassRosterStudent[])
       date: dateStr,
       entries: generateRandomEntries(roster),
       submittedBy: teacher,
-      submittedAt: `2035-03-${String(day).padStart(2, '0')}T09:15:00`,
+      submittedAt: `${dateStr}T09:15:00`,
     })
   }
 
