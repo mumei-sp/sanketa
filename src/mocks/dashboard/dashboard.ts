@@ -11,6 +11,8 @@ import type {
   RecentActivityItem,
 } from '@/features/dashboard/types'
 import { relativeDate, displayDate } from '@/mocks/_shared/date-helpers'
+import { studentsData } from '@/mocks/students/students'
+import { teachersData } from '@/mocks/teachers/teachers'
 
 /** Format an absolute-date activity timestamp like "Apr 14, 2026 – 09:15 AM". */
 function activityTimestamp(daysAgo: number, hh: number, mm: number, ampm: 'AM' | 'PM'): string {
@@ -27,11 +29,19 @@ function verboseDate(daysFromToday: number): string {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
+// Student / teacher counts derive from the canonical mocks so the dashboard
+// stats stay in sync with the underlying data. A small inflation factor makes
+// the numbers match a realistic school size — the mocks only ship ~40 students
+// for tables and ~18 teachers for cards, but a real Sanketa campus would have
+// ~1,200 enrolled students and ~85 teachers.
+const ENROLLMENT_MULTIPLIER = 30 // 40 × 30 ≈ 1,200
+const FACULTY_MULTIPLIER = 5     // 18 × 5  ≈ 90
+
 export const dashboardStats: DashboardStat[] = [
   {
     id: 'enrolled-students',
     label: 'Enrolled Students',
-    value: 1245,
+    value: studentsData.length * ENROLLMENT_MULTIPLIER,
     icon: GraduationCap,
     iconBg: baseColors.pink,
     iconColor: baseColors.heading,
@@ -39,7 +49,7 @@ export const dashboardStats: DashboardStat[] = [
   {
     id: 'active-teachers',
     label: 'Active Teachers',
-    value: 86,
+    value: teachersData.length * FACULTY_MULTIPLIER,
     icon: Users,
     iconBg: baseColors.blue,
     iconColor: baseColors.heading,

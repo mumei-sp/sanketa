@@ -5,6 +5,7 @@ import type {
   Reimbursement,
 } from '@/features/expenses/types'
 import { scatterPastDates, displayDate } from '@/mocks/_shared/date-helpers'
+import { teachersData } from '@/mocks/teachers/teachers'
 
 export const expenseTrendData: ExpenseTrendData[] = [
   { month: 'Jan', amount: 95000 },
@@ -532,4 +533,19 @@ expensesData.forEach((exp, i) => {
 const _reimbursementOffsets = scatterPastDates(reimbursementsData.length, 45)
 reimbursementsData.forEach((req, i) => {
   req.dateSubmitted = displayDate(_reimbursementOffsets[i])
+})
+
+// ---------------------------------------------------------------------------
+// Map reimbursement staff names onto real teachers so the list stays in sync
+// with the teachers mock. If we run out of teachers (more reimbursements than
+// staff), later entries wrap around from the beginning.
+// ---------------------------------------------------------------------------
+
+reimbursementsData.forEach((req, i) => {
+  const teacher = teachersData[i % teachersData.length]
+  const fullName =
+    teacher.fullName ||
+    teacher.displayName ||
+    [teacher.firstName, teacher.lastName].filter(Boolean).join(' ')
+  if (fullName) req.staffName = fullName
 })

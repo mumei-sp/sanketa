@@ -17,6 +17,25 @@ import type {
   PaymentMethod,
 } from '@/features/fees-collection/types'
 import { yyyymm, displayDate, relativeDate } from '@/mocks/_shared/date-helpers'
+import { studentsData } from '@/mocks/students/students'
+
+/**
+ * Look up a student by their `studentId` (e.g. "S-2101") and return the name
+ * + class from the canonical studentsData array. Falls back to the caller-
+ * supplied defaults if the id isn't found (keeps the mock resilient to
+ * student-list edits that drop someone).
+ */
+function resolveStudent(id: string, fallbackName: string, fallbackClass: string): { name: string; cls: string } {
+  const match = studentsData.find(s => s.studentId === id)
+  if (!match) return { name: fallbackName, cls: fallbackClass }
+  const name =
+    match.fullName ||
+    match.displayName ||
+    match.name ||
+    [match.firstName, match.lastName].filter(Boolean).join(' ') ||
+    fallbackName
+  return { name, cls: match.class || fallbackClass }
+}
 
 // ============================================================================
 // Dashboard Stats (static — service will compute dynamically)
@@ -85,10 +104,13 @@ interface FeeInput {
 
 function studentFees(
   id: string,
-  name: string,
-  cls: string,
+  fallbackName: string,
+  fallbackClass: string,
   fees: { tuition: FeeInput; books: FeeInput; activities: FeeInput; misc: FeeInput },
 ): FeeCollectionRecord[] {
+  // Prefer the canonical student record — falls through to the caller's defaults
+  // if the id was dropped / renamed upstream.
+  const { name, cls } = resolveStudent(id, fallbackName, fallbackClass)
   function makeRecord(category: FeeCollectionRecord['feeCategory'], f: FeeInput): FeeCollectionRecord {
     const rec: FeeCollectionRecord = {
       studentId: id, studentName: name, class: cls,

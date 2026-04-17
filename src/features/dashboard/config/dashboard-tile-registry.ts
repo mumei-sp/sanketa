@@ -28,6 +28,16 @@ import {
 import { baseColors } from '@/theme/colors'
 import type { DashboardStat } from '../types'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
+import { studentsData } from '@/mocks/students/students'
+import { teachersData } from '@/mocks/teachers/teachers'
+
+// Student / teacher counts derive from the canonical mocks. The mocks ship
+// small demo datasets (~40 students, ~18 teachers); these multipliers scale
+// them up to what a real Sanketa campus would report (~1,200 students, ~90
+// faculty), so the dashboard reads plausibly without losing the link to the
+// underlying seed data.
+const ENROLLMENT_MULTIPLIER = 30
+const FACULTY_MULTIPLIER = 5
 
 /**
  * Full registry of available dashboard stat tiles (15 options).
@@ -38,7 +48,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'enrolled-students',
     label: 'Enrolled Students',
-    value: 1245,
+    value: studentsData.length * ENROLLMENT_MULTIPLIER,
     description: 'Total active students',
     icon: GraduationCap,
     iconBg: baseColors.pink,
@@ -67,7 +77,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'active-teachers',
     label: 'Active Teachers',
-    value: 86,
+    value: teachersData.length * FACULTY_MULTIPLIER,
     description: 'Full & part-time',
     icon: Users,
     iconBg: baseColors.blue,
