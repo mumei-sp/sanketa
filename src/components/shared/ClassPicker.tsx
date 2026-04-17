@@ -25,7 +25,7 @@
  */
 
 import * as React from 'react'
-import { Check, ChevronRight, RotateCcw, Settings2 } from 'lucide-react'
+import { Check, ChevronRight, Layers, RotateCcw, Settings2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
@@ -112,7 +117,7 @@ function GradeGrid({
 }) {
   return (
     <div
-      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 overflow-y-auto flex-1 items-start"
+      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 overflow-y-auto flex-1"
       style={{ gap: spacing['3'], maxHeight: '50vh', padding: spacing['1.5'] }}
     >
       {allGrades.map(grade => {
@@ -186,60 +191,129 @@ function GradeGrid({
               </span>
             )}
 
-            {/* Section chips — only render inside a selected card with >1 section.
-             *  Single-section grades stay compact (nothing meaningful to drill into). */}
+            {/*
+             * Section drill-down trigger — small, in-corner, only on a selected
+             * card with more than one section. Clicking the trigger opens a
+             * Popover anchored to the card, so the card itself stays compact
+             * and the grid row keeps its uniform height.
+             *
+             * Shows a count badge (e.g. "2/3") when the user has narrowed
+             * the grade down to a subset of its sections — so from the outer
+             * grid you can tell at a glance that Grade 7 is partially filtered.
+             */}
             {isSelected && hasMultipleSections && (
-              <div
-                className="flex flex-wrap justify-center"
-                style={{
-                  marginTop: spacing['2'],
-                  paddingTop: spacing['2'],
-                  borderTop: `1px dashed ${colors.border.default}`,
-                  width: '100%',
-                  gap: 4,
-                }}
-              >
-                {gradeSections.map(label => {
-                  const sectionActive = selectedSections.has(label)
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={e => {
-                        // Stop propagation so clicking a chip doesn't also
-                        // trigger the card-level onToggle above.
-                        e.stopPropagation()
-                        onSectionToggle(grade, label)
-                      }}
-                      className="inline-flex items-center rounded-full transition-colors"
-                      style={{
-                        padding: '2px 8px',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: colors.text.heading,
-                        backgroundColor: sectionActive
-                          ? withOpacity(baseColors.blue, 0.7)
-                          : colors.background.card,
-                        border: `1px solid ${sectionActive ? colors.accent.base : colors.border.default}`,
-                      }}
-                      aria-pressed={sectionActive}
-                    >
-                      {sectionActive && (
-                        <Check
-                          className="w-2.5 h-2.5 mr-0.5"
-                          style={{ color: colors.text.heading }}
-                        />
-                      )}
-                      {label}
-                    </button>
-                  )
-                })}
-              </div>
+              <SectionsPopover
+                grade={grade}
+                sections={gradeSections}
+                selectedSections={selectedSections}
+                onSectionToggle={onSectionToggle}
+              />
             )}
           </div>
         )
       })}
     </div>
+  )
+}
+
+/**
+ * Floating section-chip panel anchored to a selected grade card. Rendered
+ * inside the card but absolutely-positioned trigger so the card's overall
+ * box stays compact. Stops click propagation so section toggles never fire
+ * the parent card's grade-toggle.
+ */
+function SectionsPopover({
+  grade,
+  sections,
+  selectedSections,
+  onSectionToggle,
+}: {
+  grade: string
+  sections: string[]
+  selectedSections: Set<string>
+  onSectionToggle: (grade: string, sectionLabel: string) => void
+}) {
+  const activeCount = sections.filter(l => selectedSections.has(l)).length
+  const partial = activeCount > 0 && activeCount < sections.length
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          // Keep the trigger click inside the popover's own context — without
+          // stopPropagation it would also fire the grade card's onClick.
+          onClick={e => e.stopPropagation()}
+          onKeyDown={e => e.stopPropagation()}
+          className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-full transition-colors"
+          style={{
+            padding: '1px 6px',
+            fontSize: 10,
+            fontWeight: 600,
+            color: colors.text.heading,
+            backgroundColor: partial
+              ? withOpacity(baseColors.pink, 0.55)
+              : withOpacity(baseColors.blue, 0.55),
+            border: `1px solid ${partial ? colors.accent.base : 'transparent'}`,
+          }}
+          aria-label={
+            partial
+              ? `Grade ${grade} — ${activeCount} of ${sections.length} sections active`
+              : `Pick specific sections of Grade ${grade}`
+          }
+        >
+          <Layers className="w-2.5 h-2.5" />
+          {partial ? `${activeCount}/${sections.length}` : sections.length}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="center"
+        sideOffset={6}
+        className="w-auto min-w-[160px] p-2"
+        // Prevent the outer card onClick from firing when the user clicks
+        // anywhere inside the popover content.
+        onClick={e => e.stopPropagation()}
+      >
+        <div
+          className="text-[10px] font-semibold uppercase tracking-wide mb-1.5"
+          style={{ color: colors.text.muted }}
+        >
+          Grade {grade} sections
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {sections.map(label => {
+            const active = selectedSections.has(label)
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => onSectionToggle(grade, label)}
+                className="inline-flex items-center rounded-full transition-colors"
+                style={{
+                  padding: '3px 10px',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: colors.text.heading,
+                  backgroundColor: active
+                    ? withOpacity(baseColors.blue, 0.7)
+                    : colors.background.card,
+                  border: `1px solid ${active ? colors.accent.base : colors.border.default}`,
+                }}
+                aria-pressed={active}
+              >
+                {active && (
+                  <Check
+                    className="w-2.5 h-2.5 mr-1"
+                    style={{ color: colors.text.heading }}
+                  />
+                )}
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
 
