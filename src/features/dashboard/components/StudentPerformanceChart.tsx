@@ -19,11 +19,31 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors, colors } from '@/theme/colors'
+import { baseColors, colors, darken } from '@/theme/colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import { reorderByAcademicMonth } from '@/utils/academic-date'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { PerformanceDataset } from '../types'
+
+/**
+ * Palette used at render-time so every visible series gets a distinct colour.
+ * The mock layer assigns a colour per grade OR per section independently,
+ * which can collide when drill-down surfaces both (e.g. Grade 7 and Class 9B
+ * both mapped to baseColors.blue via `index % 3`). By re-colouring based on
+ * position in the final render list we sidestep that collision entirely.
+ *
+ * Order chosen so the first three slots match the brand aesthetic users
+ * already see elsewhere; the darker variants only surface when a user has
+ * enough grades + compare-mode on to push series count past 3.
+ */
+const SERIES_PALETTE = [
+  baseColors.heading,              // dark navy — primary / most prominent
+  baseColors.pink,                 // pastel pink
+  baseColors.blue,                 // pale blue
+  darken(baseColors.pink, 25),     // plum
+  darken(baseColors.blue, 30),     // teal
+  darken(baseColors.heading, 10),  // near-black navy
+] as const
 
 interface StudentPerformanceChartProps {
   datasets: PerformanceDataset[]
@@ -159,7 +179,13 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
         out.push(gradeDef)
       }
     })
-    return out
+    // Re-colour every series by its position in the final list — guarantees
+    // no two visible bars share a hue even if the mock layer's per-grade
+    // and per-section palettes happen to collide.
+    return out.map((s, i) => ({
+      ...s,
+      color: SERIES_PALETTE[i % SERIES_PALETTE.length],
+    }))
   }, [allGrades, pickedGrades, pickedSections, compareGrades])
   const rawData = activeDataset?.data ?? []
   const data = React.useMemo(
