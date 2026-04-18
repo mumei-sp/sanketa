@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tile } from '@/components/tile'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { primary, accent, text, border } from '@/theme/colors'
+import { text, border } from '@/theme/colors'
 
 export interface ProfileBadge {
   label: string
@@ -64,7 +64,7 @@ export function ProfileCard({
       avatarUrl.startsWith('/'))
 
   // Pink for female, Blue for male
-  const avatarBackground = gender === 1 ? primary.base : accent.base
+  const avatarBackground = gender === 1 ? 'var(--primary)' : 'var(--accent)'
 
   const content = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['3'] }}>
@@ -122,7 +122,7 @@ export function ProfileCard({
         {/* Name */}
         <h2
           className="font-semibold text-center"
-          style={{ fontSize: fontSizes.xl, color: text.heading, margin: 0 }}
+          style={{ fontSize: fontSizes.xl, color: 'var(--heading)', margin: 0 }}
         >
           {name}
         </h2>
@@ -142,7 +142,7 @@ export function ProfileCard({
                   fontSize: fontSizes.xs,
                   display: 'inline-flex',
                   alignItems: 'center',
-                  backgroundColor: badge.variant === 'primary' ? primary.base : border.default,
+                  backgroundColor: badge.variant === 'primary' ? 'var(--primary)' : border.default,
                   color: text.body,
                 }}
               >

@@ -40,8 +40,8 @@ export function TeacherLeaveRequest({ leaveRequests }: TeacherLeaveRequestProps)
             borderRadius: '999rem',
             fontSize: fontSizes.xs,
             fontWeight: 500,
-            backgroundColor: accent.base,
-            color: text.heading,
+            backgroundColor: 'var(--accent)',
+            color: 'var(--heading)',
           }}
         >
           {request.type}

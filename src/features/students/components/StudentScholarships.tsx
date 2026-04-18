@@ -65,17 +65,17 @@ export function StudentScholarships({ scholarships, onAdd, onEdit, onDelete }: S
                       width: '2.5rem',
                       height: '2.5rem',
                       borderRadius: spacing['2'],
-                      backgroundColor: accent.base,
+                      backgroundColor: 'var(--accent)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
                     }}
                   >
-                    <Icon className="w-4 h-4" style={{ color: text.heading }} />
+                    <Icon className="w-4 h-4" style={{ color: 'var(--heading)' }} />
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <p style={{ fontSize: fontSizes.sm, fontWeight: 600, color: text.heading, margin: 0 }}>
+                    <p style={{ fontSize: fontSizes.sm, fontWeight: 600, color: 'var(--heading)', margin: 0 }}>
                       {scholarship.title}
                     </p>
                     <p style={{ fontSize: fontSizes.xs, color: text.body, margin: 0, marginTop: spacing['0.5'] }}>

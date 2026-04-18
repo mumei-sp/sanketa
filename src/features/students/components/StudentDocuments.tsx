@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, border, primary } from '@/theme/colors'
+import { text, border } from '@/theme/colors'
 import type { DocumentItem } from '@/components/ui/documents-list'
 
 interface StudentDocumentsProps {
@@ -46,19 +46,19 @@ export function StudentDocuments({ documents, onAdd, onDelete }: StudentDocument
                     width: '2.5rem',
                     height: '2.5rem',
                     borderRadius: spacing['2'],
-                    backgroundColor: primary.base,
+                    backgroundColor: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
                   }}
                 >
-                  <FileText className="w-4 h-4" style={{ color: text.heading }} />
+                  <FileText className="w-4 h-4" style={{ color: 'var(--heading)' }} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <p
                     className="truncate"
-                    style={{ fontSize: fontSizes.sm, fontWeight: 500, color: text.heading, margin: 0 }}
+                    style={{ fontSize: fontSizes.sm, fontWeight: 500, color: 'var(--heading)', margin: 0 }}
                   >
                     {doc.name}
                   </p>

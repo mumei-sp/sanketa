@@ -82,11 +82,11 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
               onClick={e => { e.stopPropagation(); onEdit(teacher) }}
               className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
               style={{ backgroundColor: accent.soft }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = accent.base }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--accent)' }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
               aria-label="Edit teacher"
             >
-              <Pencil className="w-3.5 h-3.5" style={{ color: text.heading }} />
+              <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
             </button>
           )}
           {onDelete && (
@@ -100,12 +100,12 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
                   onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
                   aria-label="Delete teacher"
                 >
-                  <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
+                  <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent onClick={e => e.stopPropagation()}>
                 <AlertDialogHeader>
-                  <AlertDialogTitle style={{ color: text.heading }}>Delete Teacher</AlertDialogTitle>
+                  <AlertDialogTitle style={{ color: 'var(--heading)' }}>Delete Teacher</AlertDialogTitle>
                   <AlertDialogDescription>
                     Are you sure you want to delete &ldquo;{displayName}&rdquo;? This action cannot be undone.
                   </AlertDialogDescription>
@@ -152,14 +152,14 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
           />
           <AvatarFallback
             className="text-sm font-semibold"
-            style={{ backgroundColor: primary.soft, color: text.heading }}
+            style={{ backgroundColor: primary.soft, color: 'var(--heading)' }}
           >
             {initials}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex flex-col min-w-0">
-          <h3 className="text-sm font-semibold truncate" style={{ color: text.heading }}>
+          <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--heading)' }}>
             {displayName}
           </h3>
           <p className="text-xs text-muted-foreground truncate">
@@ -204,7 +204,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
           className="h-7 text-xs px-3 hover:opacity-90 border-0"
           style={{
             backgroundColor: 'var(--accent)',
-            color: text.heading,
+            color: 'var(--heading)',
           }}
         >
           Message

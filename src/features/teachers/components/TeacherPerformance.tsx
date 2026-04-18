@@ -59,8 +59,8 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
           padding: `${spacing['2']} ${spacing['4']}`,
           borderRadius: spacing['3'],
           border: 'none',
-          backgroundColor: accent.base,
-          color: text.heading,
+          backgroundColor: 'var(--accent)',
+          color: 'var(--heading)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -105,8 +105,8 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
                 padding: `${spacing['2']} ${spacing['3']}`,
                 fontSize: fontSizes.xs,
                 fontWeight: period === selectedPeriod ? 600 : 400,
-                color: period === selectedPeriod ? text.heading : text.body,
-                backgroundColor: period === selectedPeriod ? accent.base : 'transparent',
+                color: period === selectedPeriod ? 'var(--heading)' : text.body,
+                backgroundColor: period === selectedPeriod ? 'var(--accent)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -150,10 +150,10 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
                   justifyContent: 'space-between',
                 }}
               >
-                <span style={{ fontSize: fontSizes.sm, fontWeight: 600, color: text.heading }}>
+                <span style={{ fontSize: fontSizes.sm, fontWeight: 600, color: 'var(--heading)' }}>
                   {metric.label}
                 </span>
-                <span style={{ fontSize: fontSizes.sm, fontWeight: 700, color: text.heading }}>
+                <span style={{ fontSize: fontSizes.sm, fontWeight: 700, color: 'var(--heading)' }}>
                   {metric.value}%<span style={{ fontWeight: 400, color: text.body }}>/{metric.max}%</span>
                 </span>
               </div>
@@ -186,7 +186,7 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
                       width: `${percentage}%`,
                       height: '100%',
                       borderRadius: '3px',
-                      backgroundColor: primary.base,
+                      backgroundColor: 'var(--primary)',
                       transition: 'width 0.5s ease',
                     }}
                   />
@@ -200,7 +200,7 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
                       width: '3px',
                       height: '10px',
                       borderRadius: '1.5px',
-                      backgroundColor: text.heading,
+                      backgroundColor: 'var(--heading)',
                     }}
                   />
                 </div>

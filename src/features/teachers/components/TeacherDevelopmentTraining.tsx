@@ -108,8 +108,8 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
           padding: `${spacing['2']} ${spacing['4']}`,
           borderRadius: spacing['3'],
           border: 'none',
-          backgroundColor: accent.base,
-          color: text.heading,
+          backgroundColor: 'var(--accent)',
+          color: 'var(--heading)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -154,8 +154,8 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
                 padding: `${spacing['2']} ${spacing['3']}`,
                 fontSize: fontSizes.xs,
                 fontWeight: s === semester ? 600 : 400,
-                color: s === semester ? text.heading : text.body,
-                backgroundColor: s === semester ? accent.base : 'transparent',
+                color: s === semester ? 'var(--heading)' : text.body,
+                backgroundColor: s === semester ? 'var(--accent)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -200,9 +200,9 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
                     {header.label}
                     {sortKey === header.key ? (
                       sortDir === 'asc' ? (
-                        <ArrowUp className="w-3 h-3" style={{ color: text.heading }} />
+                        <ArrowUp className="w-3 h-3" style={{ color: 'var(--heading)' }} />
                       ) : (
-                        <ArrowDown className="w-3 h-3" style={{ color: text.heading }} />
+                        <ArrowDown className="w-3 h-3" style={{ color: 'var(--heading)' }} />
                       )
                     ) : (
                       <ArrowUpDown className="w-3 h-3" style={{ opacity: 0.4 }} />
@@ -250,7 +250,7 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
                     style={{
                       padding: `${spacing['3']} ${spacing['2']}`,
                       borderBottom: `1px solid ${border.subtle}`,
-                      color: text.heading,
+                      color: 'var(--heading)',
                       whiteSpace: 'nowrap',
                       verticalAlign: 'top',
                       fontSize: fontSizes.sm,

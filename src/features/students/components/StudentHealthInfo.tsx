@@ -57,7 +57,7 @@ export function StudentHealthInfo({ records, onAdd, onEdit, onDelete }: StudentH
                     style={{
                       fontSize: fontSizes.sm,
                       fontWeight: 600,
-                      color: text.heading,
+                      color: 'var(--heading)',
                       margin: 0,
                     }}
                   >

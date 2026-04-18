@@ -7,7 +7,7 @@ export interface AttendanceBadgeItem {
   value: number
   /** Background fill color */
   color: string
-  /** Text color — defaults to text.heading (dark) */
+  /** Text color — defaults to 'var(--heading)' (dark) */
   textColor?: string
 }
 
@@ -30,7 +30,7 @@ export function AttendanceSummaryBadges({ items }: AttendanceSummaryBadgesProps)
       }}
     >
       {items.map(item => {
-        const color = item.textColor ?? text.heading
+        const color = item.textColor ?? 'var(--heading)'
         return (
           <div
             key={item.label}

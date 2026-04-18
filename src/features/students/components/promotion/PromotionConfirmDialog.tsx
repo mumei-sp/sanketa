@@ -51,27 +51,27 @@ export function PromotionConfirmDialog({
     <Dialog open={open} onOpenChange={isExecuting ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle style={{ color: text.heading }}>Confirm Promotion</DialogTitle>
+          <DialogTitle style={{ color: 'var(--heading)' }}>Confirm Promotion</DialogTitle>
         </DialogHeader>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
           {/* Source → Target */}
           <div
             className="flex items-center justify-center gap-3"
-            style={{ padding: spacing['4'], backgroundColor: accent.base, borderRadius: '10px' }}
+            style={{ padding: spacing['4'], backgroundColor: 'var(--accent)', borderRadius: '10px' }}
           >
-            <span style={{ fontSize: '20px', fontWeight: 700, color: text.heading }}>
+            <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--heading)' }}>
               Class {sourceClass}
             </span>
-            <ArrowRight className="w-5 h-5" style={{ color: text.heading }} />
-            <span style={{ fontSize: '20px', fontWeight: 700, color: text.heading }}>
+            <ArrowRight className="w-5 h-5" style={{ color: 'var(--heading)' }} />
+            <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--heading)' }}>
               Class {targetGrade}
             </span>
           </div>
 
           {/* Target section selector */}
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: text.heading, display: 'block', marginBottom: spacing['2'] }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--heading)', display: 'block', marginBottom: spacing['2'] }}>
               Target Section
             </label>
             <div style={{ display: 'flex', gap: spacing['2'] }}>
@@ -82,9 +82,9 @@ export function PromotionConfirmDialog({
                   onClick={() => setTargetSection(s)}
                   className="flex-1 text-sm font-medium rounded-lg py-2 cursor-pointer transition-all text-center"
                   style={{
-                    border: `2px solid ${targetSection === s ? text.heading : border.default}`,
-                    backgroundColor: targetSection === s ? accent.base : 'transparent',
-                    color: text.heading,
+                    border: `2px solid ${targetSection === s ? 'var(--heading)' : border.default}`,
+                    backgroundColor: targetSection === s ? 'var(--accent)' : 'transparent',
+                    color: 'var(--heading)',
                   }}
                 >
                   {targetGrade}{s}
@@ -119,7 +119,7 @@ export function PromotionConfirmDialog({
 
             {transferred.length > 0 && (
               <div>
-                <p style={{ fontSize: '11px', fontWeight: 600, color: text.heading, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: spacing['1'] }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--heading)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: spacing['1'] }}>
                   Transferring Out ({transferred.length})
                 </p>
                 <p style={{ fontSize: '12px', color: text.muted, lineHeight: 1.5 }}>
@@ -138,7 +138,7 @@ export function PromotionConfirmDialog({
             onClick={() => onExecute(targetSection)}
             disabled={isExecuting}
             className="gap-1.5"
-            style={{ backgroundColor: text.heading, color: background.card }}
+            style={{ backgroundColor: 'var(--heading)', color: background.card }}
           >
             <CheckCircle className="w-3.5 h-3.5" />
             {isExecuting ? 'Processing...' : 'Execute Promotion'}

@@ -103,9 +103,9 @@ export default function TeacherDetails() {
                 <div style={{ marginTop: spacing['8'] }}>
                   <AttendanceSummaryBadges
                     items={[
-                      { label: 'Present', value: attendanceSummary.present, color: accent.base },
-                      { label: 'Late', value: attendanceSummary.late, color: primary.base },
-                      { label: 'On Leave', value: attendanceSummary.onLeave, color: text.heading },
+                      { label: 'Present', value: attendanceSummary.present, color: 'var(--accent)' },
+                      { label: 'Late', value: attendanceSummary.late, color: 'var(--primary)' },
+                      { label: 'On Leave', value: attendanceSummary.onLeave, color: 'var(--heading)' },
                     ]}
                   />
                 </div>
@@ -120,7 +120,7 @@ export default function TeacherDetails() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing['3'] }}>
-                      <h3 style={{ fontSize: fontSizes.lg, fontWeight: 600, color: text.heading, margin: 0 }}>
+                      <h3 style={{ fontSize: fontSizes.lg, fontWeight: 600, color: 'var(--heading)', margin: 0 }}>
                         Leave Request
                       </h3>
                       <span style={{ fontSize: fontSizes.base, color: text.body, cursor: 'pointer' }}>···</span>
@@ -156,8 +156,8 @@ export default function TeacherDetails() {
                               borderRadius: spacing['2'],
                               fontSize: fontSizes.xs,
                               fontWeight: 500,
-                              backgroundColor: primary.base,
-                              color: text.heading,
+                              backgroundColor: 'var(--primary)',
+                              color: 'var(--heading)',
                             }}
                           >
                             {request.type}
@@ -176,7 +176,7 @@ export default function TeacherDetails() {
                                   borderRadius: '999rem',
                                   border: `1px solid ${border.default}`,
                                   backgroundColor: background.card,
-                                  color: text.heading,
+                                  color: 'var(--heading)',
                                   cursor: 'pointer',
                                 }}
                               >
@@ -191,7 +191,7 @@ export default function TeacherDetails() {
                                   borderRadius: '999rem',
                                   border: `1px solid ${border.default}`,
                                   backgroundColor: background.card,
-                                  color: text.heading,
+                                  color: 'var(--heading)',
                                   cursor: 'pointer',
                                 }}
                               >

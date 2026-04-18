@@ -36,12 +36,12 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
       className="flex items-center justify-between"
     >
       <div className="flex flex-col gap-1">
-        <h3 className="text-body-muted font-medium" style={{ color: text.heading }}>
+        <h3 className="text-body-muted font-medium" style={{ color: 'var(--heading)' }}>
           {label}
         </h3>
         <span
           className="text-numeric text-2xl"
-          style={{ color: text.heading, fontWeight: fontWeights.bold }}
+          style={{ color: 'var(--heading)', fontWeight: fontWeights.bold }}
         >
           {value.toLocaleString('en-IN')}
         </span>

@@ -2,7 +2,7 @@ import { MiniCalendar } from '@/components/ui/mini-calendar'
 import type { CalendarHighlight } from '@/components/ui/mini-calendar'
 import { AttendanceSummaryBadges } from '@/components/ui/attendance-summary-badges'
 import { spacing } from '@/config/spacing'
-import { accent, primary, text, border, background } from '@/theme/colors'
+import { border, background } from '@/theme/colors'
 
 interface AttendanceSummary {
   present: number
@@ -44,9 +44,9 @@ export function StudentAttendanceCalendar({
         <div style={{ marginTop: spacing['8'] }}>
           <AttendanceSummaryBadges
             items={[
-              { label: 'Present', value: summary.present, color: accent.base },
-              { label: 'Late', value: summary.late, color: primary.base },
-              { label: 'Sick', value: summary.sick, color: text.heading, textColor: background.card },
+              { label: 'Present', value: summary.present, color: 'var(--accent)' },
+              { label: 'Late', value: summary.late, color: 'var(--primary)' },
+              { label: 'Sick', value: summary.sick, color: 'var(--heading)', textColor: background.card },
               { label: 'Absent', value: summary.absent, color: border.default },
             ]}
           />

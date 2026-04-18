@@ -37,7 +37,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
       }}
     >
-      <p style={{ fontSize: fontSizes.sm, fontWeight: 600, color: text.heading, margin: 0, marginBottom: spacing['1'] }}>
+      <p style={{ fontSize: fontSizes.sm, fontWeight: 600, color: 'var(--heading)', margin: 0, marginBottom: spacing['1'] }}>
         {label} {new Date().getFullYear()}
       </p>
       {payload.map((entry, index) => (
@@ -93,8 +93,8 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
           padding: `${spacing['2']} ${spacing['4']}`,
           borderRadius: spacing['3'],
           border: 'none',
-          backgroundColor: accent.base,
-          color: text.heading,
+          backgroundColor: 'var(--accent)',
+          color: 'var(--heading)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -139,8 +139,8 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
                 padding: `${spacing['2']} ${spacing['3']}`,
                 fontSize: fontSizes.xs,
                 fontWeight: period === selectedPeriod ? 600 : 400,
-                color: period === selectedPeriod ? text.heading : text.body,
-                backgroundColor: period === selectedPeriod ? accent.base : 'transparent',
+                color: period === selectedPeriod ? 'var(--heading)' : text.body,
+                backgroundColor: period === selectedPeriod ? 'var(--accent)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -158,9 +158,9 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
     <SectionCard title="Workload Summary" action={dropdownButton}>
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing['4'], fontSize: fontSizes.xs, color: text.body, marginBottom: spacing['2'] }}>
         {[
-          { label: 'Total Classes', color: text.heading, dashed: true },
-          { label: 'Teaching Hours', color: accent.base, dashed: false },
-          { label: 'Extra Duties', color: primary.base, dashed: false },
+          { label: 'Total Classes', color: 'var(--heading)', dashed: true },
+          { label: 'Teaching Hours', color: 'var(--accent)', dashed: false },
+          { label: 'Extra Duties', color: 'var(--primary)', dashed: false },
         ].map(item => (
           <span key={item.label} style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['1.5'] }}>
             <span
@@ -182,12 +182,12 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
           <AreaChart data={activeData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="teachingHoursGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={accent.base} stopOpacity={0.4} />
-                <stop offset="95%" stopColor={accent.base} stopOpacity={0.05} />
+                <stop offset="5%" stopColor={'var(--accent)'} stopOpacity={0.4} />
+                <stop offset="95%" stopColor={'var(--accent)'} stopOpacity={0.05} />
               </linearGradient>
               <linearGradient id="extraDutiesGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={primary.base} stopOpacity={0.4} />
-                <stop offset="95%" stopColor={primary.base} stopOpacity={0.05} />
+                <stop offset="5%" stopColor={'var(--primary)'} stopOpacity={0.4} />
+                <stop offset="95%" stopColor={'var(--primary)'} stopOpacity={0.05} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={border.subtle} />
@@ -207,7 +207,7 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
               type="monotone"
               dataKey="totalClasses"
               name="Total Classes"
-              stroke={text.heading}
+              stroke={'var(--heading)'}
               strokeWidth={1.5}
               strokeDasharray="4 4"
               fill="none"
@@ -217,7 +217,7 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
               type="monotone"
               dataKey="teachingHours"
               name="Teaching Hours"
-              stroke={accent.base}
+              stroke={'var(--accent)'}
               strokeWidth={1.5}
               fill="url(#teachingHoursGrad)"
               dot={false}
@@ -226,7 +226,7 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
               type="monotone"
               dataKey="extraDuties"
               name="Extra Duties"
-              stroke={primary.base}
+              stroke={'var(--primary)'}
               strokeWidth={1.5}
               fill="url(#extraDutiesGrad)"
               dot={false}

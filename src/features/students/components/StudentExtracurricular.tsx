@@ -37,18 +37,18 @@ function getColumns(onDelete?: (id: string) => void): CompactTableColumn<Student
                   width: '36px',
                   height: '36px',
                   borderRadius: '50%',
-                  backgroundColor: accent.base,
+                  backgroundColor: 'var(--accent)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <Icon size={16} color={text.heading} />
+                <Icon size={16} color={'var(--heading)'} />
               </div>
             )}
             <div>
-              <p style={{ fontSize: fontSizes.sm, fontWeight: 600, color: text.heading, margin: 0 }}>
+              <p style={{ fontSize: fontSizes.sm, fontWeight: 600, color: 'var(--heading)', margin: 0 }}>
                 {activity.club}
               </p>
               <p style={{ fontSize: fontSizes.xs, color: text.muted, margin: 0, marginTop: spacing['0.5'] }}>

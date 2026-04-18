@@ -70,7 +70,7 @@ export function StudentStatCard({
         style={{
           fontSize: 26,
           fontWeight: 700,
-          color: inverted ? '#fff' : text.heading,
+          color: inverted ? '#fff' : 'var(--heading)',
           lineHeight: 1.15,
         }}
       >

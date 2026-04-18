@@ -3,7 +3,7 @@ import { text, border, accent, withOpacity, baseColors } from '@/theme/colors'
 import { specialProgramsData } from '@/mocks/students/programs'
 
 const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
-  'Enrichment': { bg: withOpacity('var(--accent)', 0.3), color: accent.base },
+  'Enrichment': { bg: withOpacity('var(--accent)', 0.3), color: 'var(--accent)' },
   'Academic Support': { bg: withOpacity('#C7E5C8', 0.5), color: '#3A7D44' },
   'Finance': { bg: withOpacity('var(--primary)', 0.3), color: '#8B2B6E' },
 }
@@ -21,7 +21,7 @@ export function SpecialPrograms() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: text.heading }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--heading)' }}>
           Special Programs
         </span>
         <button
@@ -61,7 +61,7 @@ export function SpecialPrograms() {
                 justifyContent: 'center',
                 fontSize: 11,
                 fontWeight: 700,
-                color: text.heading,
+                color: 'var(--heading)',
                 flexShrink: 0,
               }}
             >
@@ -71,7 +71,7 @@ export function SpecialPrograms() {
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: text.heading, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--heading)', whiteSpace: 'nowrap' }}>
                   {entry.name}
                 </span>
                 <span style={{ fontSize: 11, color: text.muted }}>

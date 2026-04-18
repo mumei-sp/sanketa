@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, primary, accent, background, border } from '@/theme/colors'
+import { text, background, border } from '@/theme/colors'
 
 export interface CalendarHighlight {
   date: number
@@ -106,7 +106,7 @@ export function MiniCalendar({
         style={{
           fontSize: fontSizes.lg,
           fontWeight: 600,
-          color: text.heading,
+          color: 'var(--heading)',
           margin: 0,
         }}
       >
@@ -173,24 +173,24 @@ export function MiniCalendar({
 
             if (highlight) {
               if (highlight.variant === 'present') {
-                bgColor = accent.base
+                bgColor = 'var(--accent)'
               } else if (highlight.variant === 'late') {
-                bgColor = primary.base
+                bgColor = 'var(--primary)'
               } else if (highlight.variant === 'onLeave') {
-                bgColor = text.heading
+                bgColor = 'var(--heading)'
                 textColor = background.card
               } else if (highlight.variant === 'absent') {
                 bgColor = border.default
-                textColor = text.heading
+                textColor = 'var(--heading)'
               } else if (highlight.variant === 'sick') {
-                bgColor = text.heading
+                bgColor = 'var(--heading)'
                 textColor = background.card
               }
               fontWeight = 600
             }
 
             if (isToday && !highlight) {
-              bgColor = text.heading
+              bgColor = 'var(--heading)'
               textColor = background.card
               fontWeight = 700
             }

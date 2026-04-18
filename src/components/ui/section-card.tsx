@@ -71,7 +71,7 @@ export function SectionCard({
                 style={{
                   fontSize: fontSizes.lg,
                   fontWeight: 600,
-                  color: text.heading,
+                  color: 'var(--heading)',
                   margin: 0,
                 }}
               >

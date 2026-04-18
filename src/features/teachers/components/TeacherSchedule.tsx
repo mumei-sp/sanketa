@@ -31,11 +31,11 @@ function getHourRange(schedule: ScheduleBlock[]): number[] {
 function getBlockStyles(variant: ScheduleBlock['variant']): { backgroundColor: string; color: string } {
   switch (variant) {
     case 'accent':
-      return { backgroundColor: accent.base, color: text.heading }
+      return { backgroundColor: 'var(--accent)', color: 'var(--heading)' }
     case 'dark':
-      return { backgroundColor: text.heading, color: background.card }
+      return { backgroundColor: 'var(--heading)', color: background.card }
     case 'primary':
-      return { backgroundColor: primary.base, color: text.heading }
+      return { backgroundColor: 'var(--primary)', color: 'var(--heading)' }
   }
 }
 
@@ -91,8 +91,8 @@ export function TeacherSchedule({ schedule, scheduleByView }: TeacherSchedulePro
           padding: `${spacing['2']} ${spacing['4']}`,
           borderRadius: spacing['3'],
           border: 'none',
-          backgroundColor: accent.base,
-          color: text.heading,
+          backgroundColor: 'var(--accent)',
+          color: 'var(--heading)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -137,8 +137,8 @@ export function TeacherSchedule({ schedule, scheduleByView }: TeacherSchedulePro
                 padding: `${spacing['2']} ${spacing['3']}`,
                 fontSize: fontSizes.xs,
                 fontWeight: view === selectedView ? 600 : 400,
-                color: view === selectedView ? text.heading : text.body,
-                backgroundColor: view === selectedView ? accent.base : 'transparent',
+                color: view === selectedView ? 'var(--heading)' : text.body,
+                backgroundColor: view === selectedView ? 'var(--accent)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 textAlign: 'left',
