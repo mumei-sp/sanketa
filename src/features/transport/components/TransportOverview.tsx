@@ -21,7 +21,7 @@ export function TransportOverview() {
       value: mockVehicles.length,
       icon: Bus,
       iconBg: 'var(--accent)',
-      iconColor: text.heading,
+      iconColor: 'var(--accent-foreground)',
     },
     {
       id: 'active-routes',
@@ -29,7 +29,7 @@ export function TransportOverview() {
       value: mockRoutes.filter(r => r.status === 'Active').length,
       icon: Route,
       iconBg: 'var(--primary)',
-      iconColor: text.heading,
+      iconColor: 'var(--primary-foreground)',
     },
     {
       id: 'students-transported',

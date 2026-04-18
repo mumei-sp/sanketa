@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { baseColors, withOpacity, colors } from '@/theme/colors'
+import { withOpacity } from '@/theme/colors'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { categoryConfig, allCategories } from '../utils/category-config'
 import type { CalendarEvent, EventCategory } from '../types'
@@ -52,11 +52,14 @@ export function CalendarCategoryTabs({
       bgColor: 'var(--accent)',
       borderColor: 'var(--heading)',
       iconBgColor: 'var(--accent)',
-      iconColor: 'var(--heading)',
+      iconColor: 'var(--accent-foreground)',
     },
     ...allCategories.map(cat => {
       const config = categoryConfig[cat]
       const isFinance = cat === 'Finance'
+      // config.backgroundColor is either var(--primary) or var(--accent), so we
+      // match its foreground so icons stay legible as the palette changes.
+      const isAccentBg = config.backgroundColor.includes('--accent')
       return {
         key: cat as EventCategory,
         label: config.label,
@@ -65,7 +68,11 @@ export function CalendarCategoryTabs({
         bgColor: config.backgroundColor,
         borderColor: config.borderColor,
         iconBgColor: isFinance ? 'var(--heading)' : config.backgroundColor,
-        iconColor: isFinance ? colors.background.card : 'var(--heading)',
+        iconColor: isFinance
+          ? 'var(--card)'
+          : isAccentBg
+            ? 'var(--accent-foreground)'
+            : 'var(--primary-foreground)',
       }
     })
     // Sort categories by event count (busiest first)

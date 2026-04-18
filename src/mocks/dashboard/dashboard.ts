@@ -56,7 +56,7 @@ export const dashboardStats: DashboardStat[] = [
     value: TOTAL_ENROLLMENT,
     icon: GraduationCap,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'active-teachers',
@@ -64,7 +64,7 @@ export const dashboardStats: DashboardStat[] = [
     value: teachersData.length * SCHOOL_SCALE.facultyMultiplier,
     icon: Users,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
   {
     id: 'support-staff',
@@ -72,7 +72,7 @@ export const dashboardStats: DashboardStat[] = [
     value: 34,
     icon: UserCog,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'total-awards',
@@ -80,7 +80,7 @@ export const dashboardStats: DashboardStat[] = [
     value: 152,
     icon: Award,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
 ]
 
@@ -389,7 +389,7 @@ export const recentActivityItems: RecentActivityItem[] = [
     dotColor: status.info.base,
     icon: 'user-plus',
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
   {
     id: 'act-2',
@@ -398,7 +398,7 @@ export const recentActivityItems: RecentActivityItem[] = [
     dotColor: status.success.base,
     icon: 'check-square',
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'act-3',
@@ -407,7 +407,7 @@ export const recentActivityItems: RecentActivityItem[] = [
     dotColor: status.warning.base,
     icon: 'receipt',
     iconBg: 'var(--heading)',
-    iconColor: '#FFFFFF',
+    iconColor: 'var(--card)',
   },
   {
     id: 'act-4',
@@ -416,6 +416,6 @@ export const recentActivityItems: RecentActivityItem[] = [
     dotColor: status.danger.base,
     icon: 'pencil',
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
 ]

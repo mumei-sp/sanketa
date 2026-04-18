@@ -49,9 +49,9 @@ export async function fetchFeeStats(): Promise<FeeStat[]> {
         else if (r.status === 'Overdue') overdue += r.totalAmount
       })
       return [
-        { label: 'Fees Collected', value: collected, icon: CircleCheckBig, iconBg: 'var(--heading)', iconColor: '#FFFFFF' },
-        { label: 'Pending Fees', value: pending, icon: CircleDashed, iconBg: 'var(--accent)', iconColor: 'var(--heading)' },
-        { label: 'Overdue Payments', value: overdue, icon: OctagonAlert, iconBg: 'var(--primary)', iconColor: 'var(--heading)' },
+        { label: 'Fees Collected', value: collected, icon: CircleCheckBig, iconBg: 'var(--heading)', iconColor: 'var(--card)' },
+        { label: 'Pending Fees', value: pending, icon: CircleDashed, iconBg: 'var(--accent)', iconColor: 'var(--accent-foreground)' },
+        { label: 'Overdue Payments', value: overdue, icon: OctagonAlert, iconBg: 'var(--primary)', iconColor: 'var(--primary-foreground)' },
       ]
     },
     async () => {
@@ -59,9 +59,9 @@ export async function fetchFeeStats(): Promise<FeeStat[]> {
         '/finance/fees/stats',
       )
       return [
-        { label: 'Fees Collected', value: data.collected, icon: CircleCheckBig, iconBg: 'var(--heading)', iconColor: '#FFFFFF' },
-        { label: 'Pending Fees', value: data.pending, icon: CircleDashed, iconBg: 'var(--accent)', iconColor: 'var(--heading)' },
-        { label: 'Overdue Payments', value: data.overdue, icon: OctagonAlert, iconBg: 'var(--primary)', iconColor: 'var(--heading)' },
+        { label: 'Fees Collected', value: data.collected, icon: CircleCheckBig, iconBg: 'var(--heading)', iconColor: 'var(--card)' },
+        { label: 'Pending Fees', value: data.pending, icon: CircleDashed, iconBg: 'var(--accent)', iconColor: 'var(--accent-foreground)' },
+        { label: 'Overdue Payments', value: data.overdue, icon: OctagonAlert, iconBg: 'var(--primary)', iconColor: 'var(--primary-foreground)' },
       ]
     },
   )

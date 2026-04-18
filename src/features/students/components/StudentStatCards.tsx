@@ -189,9 +189,9 @@ export function getStudentStats(
   const totalCard: StudentStatCardProps = {
     label: 'Total Students',
     value: total,
-    iconContent: <Users className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />,
+    iconContent: <Users className="w-3.5 h-3.5" style={{ color: 'var(--primary-foreground)' }} />,
     iconBg: withOpacity('var(--primary)', 0.7),
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
     cardBg: withOpacity('var(--accent)', 0.35),
     inverted: false,
   }
@@ -208,8 +208,8 @@ export function getStudentStats(
       // visually distinct from the grade number used elsewhere.
       iconContent: label.replace(/^\d+/, '') || label,
       iconBg: withOpacity('var(--primary)', 0.4),
-      iconColor: 'var(--heading)',
-      cardBg: '#ffffff',
+      iconColor: 'var(--primary-foreground)',
+      cardBg: 'var(--card)',
     })
   }
 
@@ -222,8 +222,8 @@ export function getStudentStats(
         value: gradeCounts.get(grade) ?? 0,
         iconContent: grade,
         iconBg: withOpacity('var(--accent)', 0.5),
-        iconColor: 'var(--heading)',
-        cardBg: '#ffffff',
+        iconColor: 'var(--accent-foreground)',
+        cardBg: 'var(--card)',
       })
       return
     }
@@ -252,8 +252,8 @@ export function getStudentStats(
         value: gradeCounts.get(grade) ?? 0,
         iconContent: grade,
         iconBg: withOpacity('var(--accent)', 0.5),
-        iconColor: 'var(--heading)',
-        cardBg: '#ffffff',
+        iconColor: 'var(--accent-foreground)',
+        cardBg: 'var(--card)',
       })
     }
   })

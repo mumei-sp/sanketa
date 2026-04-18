@@ -47,21 +47,21 @@ export const feeStats: FeeStat[] = [
     value: 92500,
     icon: CircleCheckBig,
     iconBg: 'var(--heading)',
-    iconColor: '#FFFFFF',
+    iconColor: 'var(--card)',
   },
   {
     label: 'Pending Fees',
     value: 12300,
     icon: CircleDashed,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
   {
     label: 'Overdue Payments',
     value: 4750,
     icon: OctagonAlert,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
 ]
 
