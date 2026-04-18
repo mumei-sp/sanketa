@@ -30,12 +30,13 @@ type Period = 'last' | 'this'
 
 /**
  * Rotating palette for grade bars — cycles if more than 3 grades are shown.
- * Each entry: [fillColor, strokeCapColor].
+ * Each entry: [fillColor, strokeCapColor]. Caps are a darker sibling of the
+ * fill via color-mix so they track whichever preset is active.
  */
 const GRADE_PALETTE: [string, string][] = [
-  ['var(--accent)', '#9BCFDB'],
+  ['var(--accent)',  'color-mix(in srgb, var(--accent) 65%, black)'],
   ['var(--heading)', 'var(--heading)'],
-  ['var(--primary)', '#E0A0D0'],
+  ['var(--primary)', 'color-mix(in srgb, var(--primary) 65%, black)'],
 ]
 
 function getGradeColor(index: number): { fill: string; stroke: string } {
