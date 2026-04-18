@@ -152,7 +152,10 @@ export function CalendarView({
   }
 
   return (
-    <div className={cn('flex-1 min-w-0 bg-white rounded-xl p-4', className)}>
+    <div
+      className={cn('flex-1 min-w-0 rounded-xl p-4', className)}
+      style={{ backgroundColor: 'var(--card)' }}
+    >
       {/* Custom Toolbar */}
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         {/* Left: Month/Year navigation */}
@@ -258,7 +261,7 @@ export function CalendarView({
             style={{
               backgroundColor: 'var(--primary)',
               borderColor: 'var(--primary)',
-              color: 'var(--heading)',
+              color: 'var(--primary-foreground)',
             }}
             onClick={onAddAgenda}
           >

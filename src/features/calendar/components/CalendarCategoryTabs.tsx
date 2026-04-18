@@ -86,9 +86,13 @@ export function CalendarCategoryTabs({
             'flex items-center justify-between p-3 rounded-xl border transition-all w-full',
             allActive
               ? 'border-current shadow-sm'
-              : 'border-border bg-white hover:shadow-sm',
+              : 'border-border hover:shadow-sm',
           )}
-          style={allActive ? { borderColor: allTab.borderColor, backgroundColor: allTab.bgColor + '30' } : undefined}
+          style={
+            allActive
+              ? { borderColor: allTab.borderColor, backgroundColor: allTab.bgColor + '30' }
+              : { backgroundColor: 'var(--card)' }
+          }
         >
           <div className="flex flex-col items-start gap-1">
             <span className="text-xs font-medium text-muted-foreground">{allTab.label}</span>
@@ -118,9 +122,13 @@ export function CalendarCategoryTabs({
                   'flex items-center justify-between p-3 rounded-xl border transition-all',
                   isActive
                     ? 'border-current shadow-sm'
-                    : 'border-border bg-white hover:shadow-sm',
+                    : 'border-border hover:shadow-sm',
                 )}
-                style={isActive ? { borderColor: tab.borderColor, backgroundColor: tab.bgColor + '30' } : undefined}
+                style={
+                  isActive
+                    ? { borderColor: tab.borderColor, backgroundColor: tab.bgColor + '30' }
+                    : { backgroundColor: 'var(--card)' }
+                }
               >
                 <div className="flex flex-col items-start gap-1">
                   <span className="text-xs font-medium text-muted-foreground">{tab.label}</span>
@@ -160,12 +168,12 @@ export function CalendarCategoryTabs({
               'flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all',
               isActive
                 ? 'shadow-sm'
-                : 'border-border bg-white hover:shadow-sm',
+                : 'border-border hover:shadow-sm',
             )}
             style={
               isActive
                 ? { borderColor: tab.borderColor, backgroundColor: withOpacity(tab.bgColor, 0.2) }
-                : undefined
+                : { backgroundColor: 'var(--card)' }
             }
           >
             <div

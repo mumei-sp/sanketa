@@ -1,16 +1,22 @@
 /* ============================================================================
  * FullCalendar Theme Overrides
- * Matches the Sanketa UI pastel pink/blue design system
+ * Matches the Sanketa UI pastel pink/blue design system.
+ *
+ * All colors route through the app's CSS variables so the grid, day cells,
+ * borders, and popover follow light/dark mode automatically. `--heading-accent`
+ * holds the user-picked heading color (which stays dark in light mode and is
+ * what pastel event pills want); `--heading` falls back to the near-white dark
+ * foreground when the `.dark` class is active.
  * ============================================================================ */
 
 .fc {
-  /* Core color variables */
-  --fc-border-color: #E5E5E5;
-  --fc-page-bg-color: #FFFFFF;
-  --fc-neutral-bg-color: #FFFFFF;
-  --fc-today-bg-color: rgba(205, 234, 240, 0.15);
+  /* Core color variables — bound to app tokens so dark mode flips them */
+  --fc-border-color: var(--border);
+  --fc-page-bg-color: var(--card);
+  --fc-neutral-bg-color: var(--card);
+  --fc-today-bg-color: color-mix(in srgb, var(--accent) 18%, transparent);
   --fc-event-border-color: transparent;
-  --fc-now-indicator-color: #15446E;
+  --fc-now-indicator-color: var(--heading);
 
   /* Ensure calendar fits within flex container */
   width: 100%;
@@ -20,6 +26,7 @@
   /* Typography */
   font-family: 'Inter Variable', Inter, system-ui, sans-serif;
   font-size: 0.875rem;
+  color: var(--foreground);
 }
 
 /* ── Toolbar ── */
@@ -30,7 +37,7 @@
 .fc .fc-toolbar-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #15446E;
+  color: var(--heading);
 }
 
 /* Hide default toolbar - we use our own custom toolbar */
@@ -40,15 +47,15 @@
 
 /* ── Day Header Cells (Sun, Mon, ...) ── */
 .fc .fc-col-header-cell {
-  background-color: #FFFFFF;
-  border-bottom: 1px solid #E5E5E5;
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
 }
 
 .fc .fc-col-header-cell-cushion {
   padding: 0.5rem 0;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #15446E;
+  color: var(--heading);
   text-decoration: none;
   text-transform: capitalize;
 }
@@ -63,7 +70,7 @@
   padding: 0.375rem 0.5rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #15446E;
+  color: var(--heading);
   text-decoration: none;
 }
 
@@ -72,10 +79,11 @@
   color: #FC5859;
 }
 
-/* Today's day number */
+/* Today's day number — primary pill with auto-contrast foreground so it reads
+   in both light and dark mode (heading would collapse to white on dark bg) */
 .fc .fc-day-today .fc-daygrid-day-number {
-  background-color: #15446E;
-  color: #FFFFFF;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
   border-radius: 9999px;
   width: 1.625rem;
   height: 1.625rem;
@@ -95,9 +103,9 @@
   min-height: 100%;
 }
 
-/* Other month days – shaded background */
+/* Other month days — a hair darker than the card so they recede in both modes */
 .fc .fc-day-other {
-  background-color: #F8F8F8;
+  background-color: color-mix(in srgb, var(--foreground) 4%, var(--card));
 }
 
 .fc .fc-day-other .fc-daygrid-day-number {
@@ -146,7 +154,7 @@
 /* ── More link (+N more) ── */
 .fc .fc-daygrid-more-link {
   font-size: 0.6875rem;
-  color: #15446E;
+  color: var(--heading);
   font-weight: 500;
   padding: 0.125rem 0.375rem;
 }
@@ -158,7 +166,7 @@
 
 .fc .fc-timegrid-slot-label-cushion {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--muted-foreground);
 }
 
 .fc .fc-timegrid-event {
@@ -182,7 +190,7 @@
 }
 
 .fc .fc-scroller::-webkit-scrollbar-thumb {
-  background-color: #ccc;
+  background-color: var(--border);
   border-radius: 2px;
 }
 
@@ -214,22 +222,27 @@
 /* ── Grid Lines ── */
 .fc td,
 .fc th {
-  border-color: #E5E5E5;
+  border-color: var(--border);
 }
 
 /* ── Max events popover ── */
 .fc .fc-popover {
   border-radius: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #E5E5E5;
+  border: 1px solid var(--border);
+  background-color: var(--popover);
 }
 
 .fc .fc-popover-header {
-  background-color: #F8F8F8;
+  background-color: color-mix(in srgb, var(--foreground) 4%, var(--popover));
   padding: 0.5rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #15446E;
+  color: var(--heading);
+}
+
+.fc .fc-popover-body {
+  background-color: var(--popover);
 }
 
 /* ── Responsive: Mobile ── */

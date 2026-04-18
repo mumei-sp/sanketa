@@ -57,7 +57,9 @@ function createEvent(
     end: endTime ? `${date}T${to24h(endTime)}` : `${date}T${to24h(startTime)}`,
     backgroundColor: config.backgroundColor,
     borderColor: config.borderColor,
-    textColor: 'var(--heading)',
+    // Pill backgrounds stay pastel in both modes, so lock text to the
+    // user-picked heading color (which remains dark in dark mode).
+    textColor: 'var(--heading-accent, var(--heading))',
     extendedProps: {
       category,
       location,
