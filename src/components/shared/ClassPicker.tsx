@@ -158,7 +158,12 @@ function GradeGrid({
             style={{
               padding: `${spacing['3']} ${spacing['2']}`,
               borderColor: isSelected ? 'var(--accent)' : colors.border.default,
-              backgroundColor: isSelected ? colors.accent.soft : colors.background.card,
+              // Mix against var(--card) instead of a frozen pastel token so the
+              // selected tint stays legible in dark mode (pure pastel bg would
+              // collide with near-white foreground).
+              backgroundColor: isSelected
+                ? 'color-mix(in srgb, var(--accent) 40%, var(--card))'
+                : colors.background.card,
               opacity: isDisabled ? 0.45 : 1,
               cursor: isDisabled ? 'not-allowed' : 'pointer',
             }}
@@ -188,7 +193,7 @@ function GradeGrid({
                 style={{
                   fontSize: 16,
                   fontWeight: 700,
-                  color: 'var(--heading)',
+                  color: 'var(--foreground)',
                   lineHeight: 1,
                 }}
               >
@@ -274,7 +279,9 @@ function SectionsPopover({
             padding: '1px 6px',
             fontSize: 10,
             fontWeight: 600,
-            color: 'var(--heading)',
+            // Pastel pill bg stays pastel in both modes — anchor text to the
+            // user's dark heading so it doesn't collapse to white in dark mode.
+            color: 'var(--heading-accent, var(--heading))',
             backgroundColor: highlighted
               ? withOpacity('var(--primary)', 0.55)
               : withOpacity('var(--accent)', 0.55),
@@ -334,7 +341,7 @@ function SectionsPopover({
           />
           <span
             className="text-[11px] font-medium flex-1"
-            style={{ color: 'var(--heading)' }}
+            style={{ color: 'var(--foreground)' }}
           >
             Compare sections
           </span>
@@ -352,7 +359,11 @@ function SectionsPopover({
                   padding: '3px 10px',
                   fontSize: 11,
                   fontWeight: 600,
-                  color: 'var(--heading)',
+                  // Active chip sits on pastel accent → heading-accent stays dark.
+                  // Inactive chip sits on card → foreground follows theme.
+                  color: active
+                    ? 'var(--heading-accent, var(--heading))'
+                    : 'var(--foreground)',
                   backgroundColor: active
                     ? withOpacity('var(--accent)', 0.7)
                     : colors.background.card,
@@ -363,7 +374,7 @@ function SectionsPopover({
                 {active && (
                   <Check
                     className="w-2.5 h-2.5 mr-1"
-                    style={{ color: 'var(--heading)' }}
+                    style={{ color: 'var(--heading-accent, var(--heading))' }}
                   />
                 )}
                 {label}
@@ -463,10 +474,12 @@ function SectionTree({
               className="flex items-center gap-2 cursor-pointer select-none transition-colors"
               style={{
                 padding: `${spacing['2.5']} ${spacing['3']}`,
-                backgroundColor: isOpen ? colors.accent.soft : 'transparent',
+                backgroundColor: isOpen
+                  ? 'color-mix(in srgb, var(--accent) 30%, var(--card))'
+                  : 'transparent',
               }}
               onMouseEnter={e => {
-                if (!isOpen) e.currentTarget.style.backgroundColor = colors.background.highlight
+                if (!isOpen) e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--accent) 15%, var(--card))'
               }}
               onMouseLeave={e => {
                 if (!isOpen) e.currentTarget.style.backgroundColor = 'transparent'
@@ -550,12 +563,18 @@ function SectionTree({
                       {isSelected && (
                         <Check
                           className="w-3 h-3 mr-1"
-                          style={{ color: 'var(--heading)' }}
+                          style={{
+                            color: 'var(--heading-accent, var(--heading))',
+                          }}
                         />
                       )}
                       <span
                         className="text-xs font-semibold tabular-nums"
-                        style={{ color: 'var(--heading)' }}
+                        style={{
+                          color: isSelected
+                            ? 'var(--heading-accent, var(--heading))'
+                            : 'var(--foreground)',
+                        }}
                       >
                         {section.label}
                       </span>
