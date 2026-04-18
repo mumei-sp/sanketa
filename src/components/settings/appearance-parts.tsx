@@ -9,7 +9,7 @@
  */
 
 import * as React from 'react'
-import { Sun, Moon, Monitor } from 'lucide-react'
+import { Sun, Moon, Monitor, Check } from 'lucide-react'
 import type { AppearancePreset } from '@/theme/appearance'
 import type { ThemeMode } from '@/theme/appearance'
 
@@ -36,12 +36,11 @@ export function ThemeModeToggle({
     <div
       role="radiogroup"
       aria-label="Theme mode"
-      className="relative grid rounded-full p-1 border"
+      className="relative grid rounded-full p-1 border w-full"
       style={{
         gridTemplateColumns: `repeat(${MODE_ITEMS.length}, minmax(0, 1fr))`,
         backgroundColor: 'var(--background)',
         borderColor: 'var(--border)',
-        width: 'fit-content',
       }}
     >
       {/* Sliding active indicator — covers exactly one column */}
@@ -66,10 +65,10 @@ export function ThemeModeToggle({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(item.value)}
-            className="relative z-10 flex items-center justify-center gap-1.5 rounded-full px-5 py-2 text-xs font-semibold cursor-pointer transition-colors"
+            className="relative z-10 flex-1 flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold cursor-pointer transition-colors"
             style={{
               color: active ? 'var(--heading)' : 'var(--muted-foreground)',
-              minWidth: '96px',
+              minWidth: '72px',
             }}
           >
             <Icon
@@ -107,13 +106,29 @@ export function PresetCard({
       type="button"
       onClick={onSelect}
       aria-pressed={active}
-      className="group relative flex flex-col rounded-xl overflow-hidden border text-left transition-all cursor-pointer"
+      className="group relative flex flex-col w-full rounded-xl overflow-hidden border text-left cursor-pointer hover:-translate-y-[1px]"
       style={{
         borderColor: active ? preset.heading : 'var(--border)',
-        boxShadow: active ? `0 0 0 1px ${preset.heading}` : 'none',
+        boxShadow: active ? `0 0 0 1.5px ${preset.heading}` : 'none',
         backgroundColor: 'var(--card)',
+        transition: 'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
       }}
     >
+      {/* Active check badge */}
+      {active && (
+        <div
+          className="absolute z-10 rounded-full flex items-center justify-center shadow-sm"
+          style={{
+            top: '8px',
+            right: '8px',
+            width: '18px',
+            height: '18px',
+            backgroundColor: preset.heading,
+          }}
+        >
+          <Check size={11} strokeWidth={3} style={{ color: '#ffffff' }} />
+        </div>
+      )}
       {/* Mini mockup */}
       <div
         className="relative h-24 w-full flex"
@@ -257,4 +272,196 @@ function hexToRgb(hex: string): [number, number, number] {
   const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h
   const int = parseInt(full, 16)
   return [(int >> 16) & 255, (int >> 8) & 255, int & 255]
+}
+
+// ============================================================================
+// LivePreviewPanel — faux Sanketa slice that reads live CSS vars so the draft
+// appearance renders here the moment the user drags a handle or picks a preset.
+// ============================================================================
+
+export function LivePreviewPanel() {
+  const attendanceBars = [40, 72, 55, 88, 64, 92, 76]
+  const perfBars = [35, 55, 42, 70, 58, 82, 65]
+
+  return (
+    <div
+      className="rounded-xl border overflow-hidden"
+      style={{
+        borderColor: 'color-mix(in srgb, var(--border) 60%, transparent)',
+        backgroundColor: 'var(--card)',
+        transition: 'background-color 200ms ease',
+      }}
+    >
+      {/* Header strip */}
+      <div
+        className="flex items-center justify-between px-3 py-2 border-b"
+        style={{
+          backgroundColor: 'color-mix(in srgb, var(--accent) 35%, white)',
+          borderColor: 'var(--border)',
+          transition: 'background-color 200ms ease',
+        }}
+      >
+        <span
+          className="text-[10px] font-bold uppercase tracking-wider"
+          style={{ color: 'var(--heading)' }}
+        >
+          Live preview
+        </span>
+        <div className="flex gap-1">
+          {[0.6, 0.35, 0.2].map((op, i) => (
+            <div
+              key={i}
+              className="rounded-full"
+              style={{
+                width: '6px',
+                height: '6px',
+                backgroundColor: 'var(--heading)',
+                opacity: op,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-col gap-2.5 p-3">
+        {/* Stat tile row */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* Plain stat */}
+          <div
+            className="border p-2.5 flex flex-col"
+            style={{
+              borderColor: 'var(--border)',
+              borderRadius: 'var(--radius)',
+              transition: 'border-radius 200ms ease',
+            }}
+          >
+            <span
+              className="text-[9px] font-medium uppercase tracking-wide"
+              style={{ color: 'var(--muted-foreground, #00110B)', opacity: 0.7 }}
+            >
+              Students
+            </span>
+            <span
+              className="text-lg font-bold leading-tight"
+              style={{ color: 'var(--heading)' }}
+            >
+              1,284
+            </span>
+            <span
+              className="inline-flex items-center rounded-full w-fit mt-1"
+              style={{
+                padding: '1px 6px',
+                fontSize: '9px',
+                fontWeight: 600,
+                backgroundColor: 'color-mix(in srgb, var(--primary) 45%, white)',
+                color: 'var(--heading)',
+                transition: 'background-color 200ms ease',
+              }}
+            >
+              +24 this term
+            </span>
+          </div>
+          {/* Primary-filled stat */}
+          <div
+            className="p-2.5 flex flex-col"
+            style={{
+              backgroundColor: 'var(--primary)',
+              borderRadius: 'var(--radius)',
+              transition: 'background-color 200ms ease, border-radius 200ms ease',
+            }}
+          >
+            <span
+              className="text-[9px] font-medium uppercase tracking-wide"
+              style={{ color: 'var(--heading)', opacity: 0.7 }}
+            >
+              Attendance
+            </span>
+            <span
+              className="text-lg font-bold leading-tight"
+              style={{ color: 'var(--heading)' }}
+            >
+              94.6%
+            </span>
+            <div className="mt-1 flex items-end gap-0.5 h-3">
+              {attendanceBars.map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-sm"
+                  style={{
+                    height: `${h}%`,
+                    backgroundColor: 'var(--heading)',
+                    opacity: 0.45,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Mini chart */}
+        <div
+          className="border p-2.5"
+          style={{
+            borderColor: 'var(--border)',
+            borderRadius: 'var(--radius)',
+            transition: 'border-radius 200ms ease',
+          }}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-semibold" style={{ color: 'var(--heading)' }}>
+              Performance
+            </span>
+            <span
+              className="text-[9px]"
+              style={{ color: 'var(--muted-foreground, #00110B)', opacity: 0.7 }}
+            >
+              Last 7 days
+            </span>
+          </div>
+          <div className="flex items-end gap-1 h-10">
+            {perfBars.map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-t"
+                style={{
+                  height: `${h}%`,
+                  backgroundColor: i % 2 ? 'var(--accent)' : 'var(--primary)',
+                  transition: 'background-color 200ms ease',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Button + chip row */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            tabIndex={-1}
+            className="text-[11px] font-semibold px-3 py-1.5 cursor-default"
+            style={{
+              backgroundColor: 'var(--primary)',
+              color: 'var(--heading)',
+              borderRadius: 'var(--radius)',
+              transition: 'background-color 200ms ease, border-radius 200ms ease',
+            }}
+          >
+            + Add Student
+          </button>
+          <span
+            className="text-[10px] font-medium rounded-full"
+            style={{
+              padding: '2px 8px',
+              backgroundColor: 'var(--accent)',
+              color: 'var(--heading)',
+              transition: 'background-color 200ms ease',
+            }}
+          >
+            12 pending
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 }
