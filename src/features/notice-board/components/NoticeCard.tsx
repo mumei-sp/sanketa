@@ -28,8 +28,8 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
       onClick={() => onClick(notice)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notice) }}
       className={cn(
-        'group/notice relative w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50 cursor-pointer',
-        isSelected && 'ring-2 ring-[color:var(--primary)] bg-[color:color-mix(in_srgb,var(--primary)_15%,white)]',
+        'group/notice relative w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-card text-left transition-colors hover:bg-muted/50 cursor-pointer',
+        isSelected && 'ring-2 ring-[color:var(--primary)] bg-[color:color-mix(in_srgb,var(--primary)_15%,var(--card))]',
       )}
     >
       {/* Pin toggle button */}
@@ -43,7 +43,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
           'absolute top-2 right-2 size-7 flex items-center justify-center rounded-md transition-all cursor-pointer z-10',
           notice.pinned
             ? 'opacity-100'
-            : 'opacity-0 group-hover/notice:opacity-100 hover:bg-gray-100',
+            : 'opacity-0 group-hover/notice:opacity-100 hover:bg-muted',
         )}
         aria-label={notice.pinned ? 'Unpin notice' : 'Pin notice'}
       >
@@ -71,7 +71,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
             <span
               key={tag.label}
               className="text-badge px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: tag.color, color: 'var(--heading)' }}
+              style={{ backgroundColor: tag.color, color: 'var(--heading-accent, var(--heading))' }}
             >
               {tag.label}
             </span>

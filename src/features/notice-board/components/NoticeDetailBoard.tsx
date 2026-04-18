@@ -65,7 +65,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
           <button
             type="button"
             onClick={() => onTogglePin?.(notice.id)}
-            className="size-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
+            className="size-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors cursor-pointer"
             aria-label={notice.pinned ? 'Unpin notice' : 'Pin notice'}
           >
             <Pin
@@ -80,7 +80,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
             <button
               type="button"
               onClick={onClose}
-              className="size-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
+              className="size-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
             >
               <X className="size-4" />
             </button>
@@ -105,7 +105,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
           >
             {notice.status}
           </span>
-          <span className="text-badge px-2.5 py-1 rounded-full bg-gray-100 text-muted-foreground flex items-center gap-1">
+          <span className="text-badge px-2.5 py-1 rounded-full bg-muted text-muted-foreground flex items-center gap-1">
             <Eye className="size-3" />
             {notice.views}
           </span>
@@ -179,7 +179,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
               {notice.attachments.slice(0, 3).map(att => (
                 <div
                   key={att.name}
-                  className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-50 border"
+                  className="flex items-center gap-3 p-2.5 rounded-lg bg-muted border"
                 >
                   <FileText className="size-5 text-red-500 flex-shrink-0" />
                   <div className="min-w-0">

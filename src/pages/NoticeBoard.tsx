@@ -332,7 +332,7 @@ export default function NoticeBoard() {
               padding="p-3"
             >
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                <h2 className="text-section-title" style={{ color: text.heading }}>
+                <h2 className="text-section-title" style={{ color: 'var(--heading)' }}>
                   Notice Board
                 </h2>
                 <div className="flex items-center gap-3 flex-wrap">
