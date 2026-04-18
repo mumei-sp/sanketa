@@ -152,14 +152,16 @@ export function applyAppearance(
     clear('--popover-foreground')
     clear('--secondary-foreground')
     clear('--sidebar-foreground')
-    clear('--sidebar-primary-foreground')
-    clear('--sidebar-accent-foreground')
     set('--heading-accent', heading)
     // Rings still track accent so focus states stay on-brand
     set('--ring', accent)
     set('--sidebar-primary', primary)
     set('--sidebar-accent', primary)
     set('--sidebar-ring', accent)
+    // Active-nav sits on primary pink → auto-contrast foreground keeps the
+    // label legible regardless of the user's picked palette.
+    set('--sidebar-primary-foreground', primaryFg)
+    set('--sidebar-accent-foreground', primaryFg)
   } else {
     set('--heading', heading)
     set('--foreground', heading)
