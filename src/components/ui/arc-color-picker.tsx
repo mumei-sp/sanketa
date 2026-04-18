@@ -287,13 +287,17 @@ function ActionButton({
       onClick={onClick}
       className={cn(
         'h-9 rounded-lg flex items-center justify-center transition-colors border',
-        active
-          ? 'text-white border-transparent'
-          : 'hover:bg-[color:var(--secondary)]',
+        active ? 'border-transparent' : 'hover:bg-[color:var(--secondary)]',
       )}
       style={
         active
-          ? { backgroundColor: 'var(--heading)', borderColor: 'var(--heading)' }
+          ? {
+              backgroundColor: 'var(--heading)',
+              borderColor: 'var(--heading)',
+              // --heading flips to near-white in dark mode, so a white glyph
+              // disappears. Pair with --card so the icon inverts with the bg.
+              color: 'var(--card)',
+            }
           : { backgroundColor: 'var(--secondary)', borderColor: 'var(--border)', color: 'var(--muted-foreground)' }
       }
     >

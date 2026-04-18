@@ -858,13 +858,18 @@ export function SchoolSettingsPanel() {
                       style={{
                         width: '18px',
                         height: '18px',
-                        color: isActive ? 'var(--heading)' : text.muted,
+                        // Active item sits on var(--accent); pair with accent-fg
+                        // so the glyph contrasts in both light and dark mode.
+                        color: isActive ? 'var(--accent-foreground)' : text.muted,
                       }}
                     />
                     <div className="flex-1 min-w-0">
                       <span
                         className="text-sm block truncate"
-                        style={{ color: isActive ? 'var(--heading)' : text.body, fontWeight: isActive ? 600 : 400 }}
+                        style={{
+                          color: isActive ? 'var(--accent-foreground)' : text.body,
+                          fontWeight: isActive ? 600 : 400,
+                        }}
                       >
                         {section.label}
                       </span>
