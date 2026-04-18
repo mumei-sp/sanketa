@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { text, background, accent } from '@/theme/colors'
+import { text, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { TimetableSlotCell } from './TimetableSlotCell'
 import { resolveScheduleForDay } from '../utils/timetable-helpers'
@@ -74,7 +74,7 @@ export function TimetableGrid({
                 className={`text-center text-[11px] font-semibold ${idx === schoolDays.length - 1 ? 'rounded-tr-lg' : ''}`}
                 style={{
                   backgroundColor: background['table-header'],
-                  color: text.heading,
+                  color: 'var(--heading)',
                   padding: `${spacing['2.5']} ${spacing['2']}`,
                 }}
               >
@@ -100,8 +100,8 @@ export function TimetableGrid({
                         className="inline-flex items-center rounded-full text-[11px] font-medium whitespace-nowrap"
                         style={{
                           padding: `${spacing['1']} ${spacing['4']}`,
-                          backgroundColor: accent.base,
-                          color: text.heading,
+                          backgroundColor: 'var(--accent)',
+                          color: 'var(--heading)',
                         }}
                       >
                         {period.label} · {period.startTime} – {period.endTime}
@@ -128,7 +128,7 @@ export function TimetableGrid({
                 >
                   <div
                     className="text-xs font-bold leading-tight"
-                    style={{ color: text.heading }}
+                    style={{ color: 'var(--heading)' }}
                   >
                     P{periodNumber}
                   </div>

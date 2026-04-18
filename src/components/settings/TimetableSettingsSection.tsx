@@ -59,7 +59,7 @@ export function TimetableSettingsSection({ draft, setDraft }: TimetableSettingsS
             className="flex-1 text-xs font-medium rounded-md px-3 py-2 transition-all cursor-pointer"
             style={{
               backgroundColor: activeTab === tab.id ? background.card : 'transparent',
-              color: activeTab === tab.id ? text.heading : text.muted,
+              color: activeTab === tab.id ? 'var(--heading)' : text.muted,
               boxShadow: activeTab === tab.id ? '0 1px 2px rgba(0,0,0,0.05)' : undefined,
             }}
           >
@@ -95,7 +95,7 @@ function SchoolDaysTab({ draft, setDraft }: TimetableSettingsSectionProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
       <div>
-        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+        <Label className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
           Working Days
         </Label>
         <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
@@ -113,9 +113,9 @@ function SchoolDaysTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               onClick={() => toggleDay(day)}
               className="flex flex-col items-center gap-1 rounded-lg px-3 py-3 transition-all cursor-pointer"
               style={{
-                backgroundColor: isSelected ? accent.base : background.card,
-                border: `1.5px solid ${isSelected ? text.heading : border.default}`,
-                color: isSelected ? text.heading : text.muted,
+                backgroundColor: isSelected ? 'var(--accent)' : background.card,
+                border: `1.5px solid ${isSelected ? 'var(--heading)' : border.default}`,
+                color: isSelected ? 'var(--heading)' : text.muted,
               }}
             >
               <span className="text-sm font-semibold">{DAY_LABELS[day].slice(0, 3)}</span>
@@ -189,7 +189,7 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
       <div>
-        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+        <Label className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
           Periods & Breaks
         </Label>
         <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
@@ -231,7 +231,7 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               style={{
                 maxWidth: '140px',
                 borderColor: border.default,
-                color: text.heading,
+                color: 'var(--heading)',
               }}
             />
 
@@ -243,7 +243,7 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               className="text-xs rounded-md border px-2 py-1.5 outline-none"
               style={{
                 borderColor: border.default,
-                color: text.heading,
+                color: 'var(--heading)',
                 backgroundColor: background.card,
                 width: '100px',
               }}
@@ -259,7 +259,7 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               className="text-xs rounded-md border px-2 py-1.5 outline-none"
               style={{
                 borderColor: border.default,
-                color: text.heading,
+                color: 'var(--heading)',
                 backgroundColor: background.card,
                 width: '100px',
               }}
@@ -274,7 +274,7 @@ function BellScheduleTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
             >
-              <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
+              <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
             </button>
           </SortableItem>
         )}

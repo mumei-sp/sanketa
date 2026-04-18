@@ -222,7 +222,7 @@ function HexReadout({ label, value }: { label: string; value: string }) {
         </span>
         <span
           className="text-xs font-mono tabular-nums"
-          style={{ color: text.heading, lineHeight: 1.3, marginTop: '2px' }}
+          style={{ color: 'var(--heading)', lineHeight: 1.3, marginTop: '2px' }}
         >
           {value.toUpperCase()}
         </span>
@@ -238,7 +238,7 @@ function HexReadout({ label, value }: { label: string; value: string }) {
 function SectionHeading({ title, description }: { title: string; description: string }) {
   return (
     <div style={{ marginBottom: spacing['2'] }}>
-      <h3 className="text-lg font-bold" style={{ color: text.heading }}>
+      <h3 className="text-lg font-bold" style={{ color: 'var(--heading)' }}>
         {title}
       </h3>
       <p className="text-sm" style={{ color: text.muted, lineHeight: 1.5, marginTop: spacing['1'] }}>
@@ -261,7 +261,7 @@ function FieldGroup({
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
       <label
         className="text-sm font-semibold"
-        style={{ color: text.heading }}
+        style={{ color: 'var(--heading)' }}
       >
         {label}
       </label>
@@ -312,7 +312,7 @@ function SegmentedControl({
               padding: `${spacing['1.5']} ${spacing['3']}`,
               gap: spacing['1.5'],
               backgroundColor: active ? background.card : 'transparent',
-              color: active ? text.heading : text.muted,
+              color: active ? 'var(--heading)' : text.muted,
               boxShadow: active ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
             }}
           >

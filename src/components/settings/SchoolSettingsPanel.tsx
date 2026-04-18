@@ -99,7 +99,7 @@ function FieldGroup({ label, hint, children }: {
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['2'] }}>
-      <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+      <Label className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
         {label}
       </Label>
       {children}
@@ -280,7 +280,7 @@ function SubjectsCard({ draft, setDraft }: SectionProps) {
     if (!newName.trim() || !newShort.trim()) return
     const id = newName.toLowerCase().replace(/\s+/g, '-')
     if (subjects.some(s => s.id === id)) return
-    const colorOptions = [accent.base, primary.base, accent.soft, primary.soft, accent.muted]
+    const colorOptions = ['var(--accent)', 'var(--primary)', accent.soft, primary.soft, accent.muted]
     const color = colorOptions[subjects.length % colorOptions.length]
     const newSubject: Subject = { id, name: newName.trim(), shortName: newShort.trim(), color }
     setDraft(prev => ({ ...prev, subjects: [...prev.subjects, newSubject] }))
@@ -316,7 +316,7 @@ function SubjectsCard({ draft, setDraft }: SectionProps) {
                 className="w-3 h-3 rounded-full flex-shrink-0"
                 style={{ backgroundColor: subject.color }}
               />
-              <span className="text-sm font-medium flex-1" style={{ color: text.heading }}>
+              <span className="text-sm font-medium flex-1" style={{ color: 'var(--heading)' }}>
                 {subject.name}
               </span>
               <span
@@ -334,7 +334,7 @@ function SubjectsCard({ draft, setDraft }: SectionProps) {
                 onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
                 onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
               >
-                <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
+                <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
               </button>
             </div>
           ))}
@@ -432,7 +432,7 @@ function ClassSectionsCard({ draft, setDraft }: SectionProps) {
               }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold" style={{ color: text.heading }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
                   Grade {grade}
                 </span>
                 <span className="text-[10px]" style={{ color: text.muted }}>
@@ -444,7 +444,7 @@ function ClassSectionsCard({ draft, setDraft }: SectionProps) {
                   <span
                     key={section.id}
                     className="inline-flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1.5"
-                    style={{ backgroundColor: accent.base, color: text.heading }}
+                    style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
                   >
                     {section.label}
                     <button
@@ -455,7 +455,7 @@ function ClassSectionsCard({ draft, setDraft }: SectionProps) {
                       onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
                       onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
                     >
-                      <Trash2 className="w-3 h-3" style={{ color: text.heading }} />
+                      <Trash2 className="w-3 h-3" style={{ color: 'var(--heading)' }} />
                     </button>
                   </span>
                 ))}
@@ -571,13 +571,13 @@ function AcademicSection({ draft, setDraft }: SectionProps) {
                   style={{
                     padding: `${spacing['3']} ${spacing['4']}`,
                     maxWidth: '460px',
-                    border: `2px solid ${isSelected ? text.heading : border.default}`,
+                    border: `2px solid ${isSelected ? 'var(--heading)' : border.default}`,
                     backgroundColor: isSelected ? accent.soft : background.surface,
                   }}
                 >
                   <RadioGroupItem value={opt.value} id={`term-${opt.value}`} className="mr-4 shrink-0" />
                   <div className="flex-1">
-                    <span className="text-sm font-semibold" style={{ color: text.heading }}>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
                       {opt.label}
                     </span>
                     <span className="text-xs block" style={{ color: text.muted, marginTop: '2px' }}>
@@ -587,7 +587,7 @@ function AcademicSection({ draft, setDraft }: SectionProps) {
                   {isSelected && (
                     <div
                       className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-3"
-                      style={{ backgroundColor: text.heading }}
+                      style={{ backgroundColor: 'var(--heading)' }}
                     >
                       <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                         <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -607,16 +607,16 @@ function AcademicSection({ draft, setDraft }: SectionProps) {
         style={{
           backgroundColor: accent.soft,
           padding: spacing['6'],
-          border: `1px solid ${accent.base}`,
+          border: `1px solid ${'var(--accent)'}`,
         }}
       >
         <div className="flex items-center" style={{ gap: spacing['2'], marginBottom: spacing['3'] }}>
-          <Calendar className="w-4 h-4" style={{ color: text.heading }} />
+          <Calendar className="w-4 h-4" style={{ color: 'var(--heading)' }} />
           <p
             style={{
               fontSize: fontSizes.xs,
               fontWeight: 700,
-              color: text.heading,
+              color: 'var(--heading)',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}
@@ -625,7 +625,7 @@ function AcademicSection({ draft, setDraft }: SectionProps) {
           </p>
         </div>
 
-        <p className="text-sm font-semibold" style={{ color: text.heading, marginBottom: spacing['4'] }}>
+        <p className="text-sm font-semibold" style={{ color: 'var(--heading)', marginBottom: spacing['4'] }}>
           {MONTH_LABELS[draft.academicYearStartMonth]} {previewYear.startYear}
           {' — '}
           {MONTH_LABELS[(draft.academicYearStartMonth + 11) % 12]} {previewYear.endYear}
@@ -643,7 +643,7 @@ function AcademicSection({ draft, setDraft }: SectionProps) {
                 minWidth: '140px',
               }}
             >
-              <p className="text-xs font-bold" style={{ color: text.heading }}>
+              <p className="text-xs font-bold" style={{ color: 'var(--heading)' }}>
                 {term.label}
               </p>
               <p className="text-xs" style={{ color: text.muted, marginTop: spacing['1'] }}>
@@ -667,7 +667,7 @@ function AcademicSection({ draft, setDraft }: SectionProps) {
 function SectionHeading({ title, description }: { title: string; description: string }) {
   return (
     <div style={{ marginBottom: spacing['2'] }}>
-      <h3 className="text-lg font-bold" style={{ color: text.heading }}>
+      <h3 className="text-lg font-bold" style={{ color: 'var(--heading)' }}>
         {title}
       </h3>
       <p className="text-sm" style={{ color: text.muted, lineHeight: 1.5, marginTop: spacing['1'] }}>
@@ -701,7 +701,7 @@ function ComingSoonSection({ section }: { section: SettingsSection }) {
         >
           <Icon className="w-6 h-6" style={{ color: text.muted }} />
         </div>
-        <p className="text-sm font-semibold" style={{ color: text.heading }}>
+        <p className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
           Coming Soon
         </p>
         <p
@@ -826,7 +826,7 @@ export function SchoolSettingsPanel() {
                   </div>
                 )}
                 <div>
-                  <h2 className="text-lg font-bold" style={{ color: text.heading }}>
+                  <h2 className="text-lg font-bold" style={{ color: 'var(--heading)' }}>
                     Settings
                   </h2>
                   <p className="text-xs" style={{ color: text.muted, marginTop: spacing['0.5'] }}>
@@ -848,7 +848,7 @@ export function SchoolSettingsPanel() {
                     style={{
                       padding: `${spacing['2.5']} ${spacing['3']}`,
                       gap: spacing['2.5'],
-                      backgroundColor: isActive ? accent.base : 'transparent',
+                      backgroundColor: isActive ? 'var(--accent)' : 'transparent',
                       opacity: section.enabled ? 1 : 0.45,
                       cursor: section.enabled ? 'pointer' : 'not-allowed',
                     }}
@@ -858,13 +858,13 @@ export function SchoolSettingsPanel() {
                       style={{
                         width: '18px',
                         height: '18px',
-                        color: isActive ? text.heading : text.muted,
+                        color: isActive ? 'var(--heading)' : text.muted,
                       }}
                     />
                     <div className="flex-1 min-w-0">
                       <span
                         className="text-sm block truncate"
-                        style={{ color: isActive ? text.heading : text.body, fontWeight: isActive ? 600 : 400 }}
+                        style={{ color: isActive ? 'var(--heading)' : text.body, fontWeight: isActive ? 600 : 400 }}
                       >
                         {section.label}
                       </span>
@@ -923,8 +923,8 @@ export function SchoolSettingsPanel() {
                   style={{
                     padding: `${spacing['2']} ${spacing['3']}`,
                     gap: spacing['1.5'],
-                    backgroundColor: isActive ? accent.base : 'transparent',
-                    color: isActive ? text.heading : text.muted,
+                    backgroundColor: isActive ? 'var(--accent)' : 'transparent',
+                    color: isActive ? 'var(--heading)' : text.muted,
                   }}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -967,7 +967,7 @@ export function SchoolSettingsPanel() {
                   <div className="flex items-center" style={{ gap: spacing['2'] }}>
                     <div
                       className="rounded-full animate-pulse"
-                      style={{ width: '6px', height: '6px', backgroundColor: accent.base }}
+                      style={{ width: '6px', height: '6px', backgroundColor: 'var(--accent)' }}
                     />
                     <span className="text-xs font-medium" style={{ color: text.muted }}>
                       You have unsaved changes
@@ -984,7 +984,7 @@ export function SchoolSettingsPanel() {
                   onClick={handleSave}
                   className="text-sm relative"
                   style={{
-                    backgroundColor: hasChanges ? text.heading : border.default,
+                    backgroundColor: hasChanges ? 'var(--heading)' : border.default,
                     color: background.card,
                   }}
                 >

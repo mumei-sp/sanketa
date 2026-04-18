@@ -82,7 +82,7 @@ export function TimetableSlotEditor({
 
   const inputStyle = {
     borderColor: border.default,
-    color: text.heading,
+    color: 'var(--heading)',
     backgroundColor: background.card,
   }
 
@@ -90,7 +90,7 @@ export function TimetableSlotEditor({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle style={{ color: text.heading }}>
+          <DialogTitle style={{ color: 'var(--heading)' }}>
             {DAY_LABELS[dayOfWeek]} — {periodLabel}
           </DialogTitle>
         </DialogHeader>
@@ -174,7 +174,7 @@ export function TimetableSlotEditor({
               disabled={!subjectId || !teacherId}
               className="text-sm"
               style={{
-                backgroundColor: text.heading,
+                backgroundColor: 'var(--heading)',
                 color: background.card,
               }}
             >

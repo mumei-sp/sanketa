@@ -194,7 +194,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
           border: `1px solid ${border.default}`,
         }}
       >
-        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+        <Label className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
           Grading System
         </Label>
         <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
@@ -216,7 +216,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                 className="flex items-center rounded-xl cursor-pointer transition-all"
                 style={{
                   padding: `${spacing['3']} ${spacing['4']}`,
-                  border: `2px solid ${isSelected ? text.heading : border.default}`,
+                  border: `2px solid ${isSelected ? 'var(--heading)' : border.default}`,
                   backgroundColor: isSelected ? accent.soft : background.surface,
                 }}
               >
@@ -226,7 +226,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                   className="sr-only"
                 />
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold" style={{ color: text.heading }}>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
                     {opt.label}
                   </span>
                   <span
@@ -239,7 +239,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                 {isSelected && (
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-3"
-                    style={{ backgroundColor: text.heading }}
+                    style={{ backgroundColor: 'var(--heading)' }}
                   >
                     <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                       <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -262,7 +262,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
             border: `1px solid ${border.default}`,
           }}
         >
-          <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+          <Label className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
             Grade Scale
           </Label>
           <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
@@ -319,7 +319,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                     onChange={e => updateEntry(entry.id, 'label', e.target.value)}
                     placeholder="A1"
                     className="text-xs h-8"
-                    style={{ width: '72px', borderColor: border.default, color: text.heading }}
+                    style={{ width: '72px', borderColor: border.default, color: 'var(--heading)' }}
                   />
 
                   {/* Min % */}
@@ -330,7 +330,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                     min={0}
                     max={100}
                     className="text-xs h-8"
-                    style={{ width: '64px', borderColor: border.default, color: text.heading }}
+                    style={{ width: '64px', borderColor: border.default, color: 'var(--heading)' }}
                   />
 
                   {/* Max % */}
@@ -341,7 +341,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                     min={0}
                     max={100}
                     className="text-xs h-8"
-                    style={{ width: '64px', borderColor: border.default, color: text.heading }}
+                    style={{ width: '64px', borderColor: border.default, color: 'var(--heading)' }}
                   />
 
                   {/* Points */}
@@ -351,7 +351,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                     onChange={e => updateEntry(entry.id, 'gradePoints', parseInt(e.target.value) || 0)}
                     min={0}
                     className="text-xs h-8"
-                    style={{ width: '64px', borderColor: border.default, color: text.heading }}
+                    style={{ width: '64px', borderColor: border.default, color: 'var(--heading)' }}
                   />
 
                   {/* Description */}
@@ -360,7 +360,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                     onChange={e => updateEntry(entry.id, 'description', e.target.value)}
                     placeholder="Outstanding"
                     className="text-xs h-8 flex-1 min-w-0"
-                    style={{ borderColor: border.default, color: text.heading }}
+                    style={{ borderColor: border.default, color: 'var(--heading)' }}
                   />
 
                   {/* Delete */}
@@ -372,7 +372,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                     onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
                     onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
                   >
-                    <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
+                    <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
                   </button>
                 </SortableItem>
               )}
@@ -412,13 +412,13 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
           className="flex items-start gap-3 rounded-xl"
           style={{
             backgroundColor: accent.soft,
-            border: `1px solid ${accent.base}`,
+            border: `1px solid ${'var(--accent)'}`,
             padding: spacing['4'],
           }}
         >
-          <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: text.heading }} />
+          <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--heading)' }} />
           <div>
-            <p className="text-sm font-medium" style={{ color: text.heading }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--heading)' }}>
               Percentage-based grading
             </p>
             <p className="text-xs mt-1" style={{ color: text.muted }}>
@@ -438,7 +438,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
           border: `1px solid ${border.default}`,
         }}
       >
-        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+        <Label className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
           Passing Threshold
         </Label>
         <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
@@ -453,13 +453,13 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
             min={0}
             max={100}
             className="text-sm h-9"
-            style={{ width: '100px', borderColor: border.default, color: text.heading }}
+            style={{ width: '100px', borderColor: border.default, color: 'var(--heading)' }}
           />
           <span className="text-sm" style={{ color: text.muted }}>%</span>
           {passingGrade && (
             <span
               className="text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: accent.soft, color: text.heading }}
+              style={{ backgroundColor: accent.soft, color: 'var(--heading)' }}
             >
               Grade {passingGrade}
             </span>
@@ -476,7 +476,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
           border: `1px solid ${border.default}`,
         }}
       >
-        <Label className="text-sm font-semibold" style={{ color: text.heading }}>
+        <Label className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
           Report Card Theme
         </Label>
         <p style={{ fontSize: fontSizes.xs, color: text.muted, marginTop: spacing['1'] }}>
@@ -498,8 +498,8 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                 className="flex items-center rounded-xl cursor-pointer transition-all"
                 style={{
                   padding: `${spacing['3']} ${spacing['4']}`,
-                  border: `2px solid ${isSelected ? text.heading : border.default}`,
-                  backgroundColor: isSelected ? accent.base : background.surface,
+                  border: `2px solid ${isSelected ? 'var(--heading)' : border.default}`,
+                  backgroundColor: isSelected ? 'var(--accent)' : background.surface,
                 }}
               >
                 <RadioGroupItem
@@ -508,7 +508,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                   className="sr-only"
                 />
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold" style={{ color: text.heading }}>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
                     {theme.label}
                   </span>
                   <span className="text-xs block mt-0.5" style={{ color: text.muted }}>
@@ -518,7 +518,7 @@ export function GradingSettingsSection({ draft, setDraft }: GradingSettingsSecti
                 {isSelected && (
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-3"
-                    style={{ backgroundColor: text.heading }}
+                    style={{ backgroundColor: 'var(--heading)' }}
                   >
                     <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                       <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

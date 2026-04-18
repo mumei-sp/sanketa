@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Pencil, Eye, Printer, GraduationCap, Copy } from 'lucide-react'
-import { text, border, background, accent } from '@/theme/colors'
+import { text, border, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import type { ClassSection } from '../types'
 
@@ -63,21 +63,21 @@ export function TimetableToolbar({
         <div
           className="flex items-center justify-center rounded-full overflow-hidden flex-shrink-0"
           style={{
-            backgroundColor: accent.base,
+            backgroundColor: 'var(--accent)',
             width: '36px',
             height: '36px',
             minWidth: '36px',
             minHeight: '36px',
           }}
         >
-          <GraduationCap className="w-4 h-4" style={{ color: text.heading }} />
+          <GraduationCap className="w-4 h-4" style={{ color: 'var(--heading)' }} />
         </div>
         <select
           value={selectedClassId}
           onChange={e => onClassChange(e.target.value)}
           className="text-sm font-semibold rounded-lg border-0 px-2 py-1.5 outline-none cursor-pointer"
           style={{
-            color: text.heading,
+            color: 'var(--heading)',
             backgroundColor: 'transparent',
           }}
         >
@@ -141,7 +141,7 @@ export function TimetableToolbar({
                     className="w-full text-left text-xs px-3 py-2 cursor-pointer hover:opacity-80 transition-all"
                     style={{ color: text.body }}
                     onMouseEnter={e => {
-                      ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = accent.base
+                      ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--accent)'
                     }}
                     onMouseLeave={e => {
                       ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
@@ -166,8 +166,8 @@ export function TimetableToolbar({
           disabled={isSaving}
           className="flex items-center gap-1.5 text-xs font-semibold rounded-lg px-4 py-2 transition-all cursor-pointer hover:opacity-90"
           style={{
-            backgroundColor: isEditMode ? text.heading : accent.base,
-            color: isEditMode ? background.card : text.heading,
+            backgroundColor: isEditMode ? 'var(--heading)' : 'var(--accent)',
+            color: isEditMode ? background.card : 'var(--heading)',
           }}
         >
           {isEditMode ? (

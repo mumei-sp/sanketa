@@ -1,5 +1,5 @@
 import { Pencil } from 'lucide-react'
-import { text, border, status, accent, withOpacity } from '@/theme/colors'
+import { text, border, status, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { getSubjectById } from '@/mocks/timetable/timetable'
 import type { TimetableSlot, TimetableException } from '../types'
@@ -52,15 +52,15 @@ export function TimetableSlotCell({
         <div
           className="flex items-center justify-center rounded-xl h-full min-h-[60px] transition-all"
           style={{
-            backgroundColor: isEditMode ? withOpacity(accent.base, 0.15) : 'transparent',
-            border: isEditMode ? `1.5px dashed ${accent.base}` : undefined,
+            backgroundColor: isEditMode ? withOpacity('var(--accent)', 0.15) : 'transparent',
+            border: isEditMode ? `1.5px dashed var(--accent)` : undefined,
             cursor: isEditMode ? 'pointer' : 'default',
             color: text.muted,
           }}
           onClick={isEditMode ? onClick : undefined}
         >
           {isEditMode && (
-            <span className="text-[11px] font-medium" style={{ color: text.heading }}>+ Add</span>
+            <span className="text-[11px] font-medium" style={{ color: 'var(--heading)' }}>+ Add</span>
           )}
         </div>
       </td>
@@ -68,13 +68,13 @@ export function TimetableSlotCell({
   }
 
   // Subject color for card tint
-  const subjectColor = slot ? (getSubjectById(slot.subjectId)?.color ?? accent.base) : accent.base
+  const subjectColor = slot ? (getSubjectById(slot.subjectId)?.color ?? 'var(--accent)') : 'var(--accent)'
 
   // Opacity for cancelled
   const cardOpacity = isCancelled ? 0.35 : 1
 
   // Tint color — substitutions and extra classes use heading color
-  const tintColor = (isSubstitution || isExtraClass) ? text.heading : subjectColor
+  const tintColor = (isSubstitution || isExtraClass) ? 'var(--heading)' : subjectColor
 
   return (
     <td style={{ padding: `${spacing['0.5']}` }}>
@@ -97,7 +97,7 @@ export function TimetableSlotCell({
             className="absolute top-1.5 right-1.5 rounded-full flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity"
             style={{ width: '18px', height: '18px', backgroundColor: withOpacity(tintColor, 0.2) }}
           >
-            <Pencil className="w-2.5 h-2.5" style={{ color: text.heading }} />
+            <Pencil className="w-2.5 h-2.5" style={{ color: 'var(--heading)' }} />
           </div>
         )}
         <div style={{ padding: `${spacing['2.5']} ${spacing['3']}` }}>
@@ -105,7 +105,7 @@ export function TimetableSlotCell({
           <div
             className="text-[13px] font-semibold truncate leading-tight"
             style={{
-              color: text.heading,
+              color: 'var(--heading)',
               textDecoration: isCancelled ? 'line-through' : undefined,
             }}
           >
@@ -125,7 +125,7 @@ export function TimetableSlotCell({
             <span
               className="inline-block text-[9px] font-medium rounded-full mt-1.5 leading-tight"
               style={{
-                color: text.heading,
+                color: 'var(--heading)',
                 backgroundColor: withOpacity(tintColor, 0.15),
                 padding: '1px 6px',
               }}
@@ -139,7 +139,7 @@ export function TimetableSlotCell({
             <div
               className="absolute top-2 right-2 w-2 h-2 rounded-full"
               style={{
-                backgroundColor: isCancelled ? status.danger.base : text.heading,
+                backgroundColor: isCancelled ? status.danger.base : 'var(--heading)',
               }}
               title={exception?.reason}
             />
