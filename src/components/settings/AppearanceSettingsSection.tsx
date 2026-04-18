@@ -120,16 +120,28 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
           layoutMode="block"
           background="card"
           borderRadius="lg"
-          padding="p-4"
-          className="border"
+          padding="p-0"
+          className="border overflow-hidden"
           style={{ borderColor: border.default }}
         >
+          {/* Palette gradient banner — flows primary → accent → heading so the tile
+              visually carries the active theme */}
+          <div
+            aria-hidden
+            style={{
+              height: '4px',
+              background:
+                'linear-gradient(90deg, var(--primary) 0%, var(--accent) 50%, var(--heading) 100%)',
+              transition: 'background 200ms ease',
+            }}
+          />
           <div
             className="grid"
             style={{
               gridTemplateColumns: 'minmax(0, 1.55fr) minmax(280px, 1fr)',
               gap: spacing['4'],
               alignItems: 'stretch',
+              padding: spacing['4'],
             }}
           >
             {/* LEFT — Brand colors */}
@@ -287,7 +299,7 @@ function CustomPaletteChip() {
       className="inline-flex items-center gap-1 rounded-full text-[10px] font-semibold uppercase tracking-wide"
       style={{
         padding: '2px 8px',
-        backgroundColor: 'color-mix(in srgb, var(--primary) 35%, white)',
+        backgroundColor: 'color-mix(in srgb, var(--primary) 30%, var(--card))',
         color: 'var(--heading)',
       }}
       title="You've drifted from a preset. Saving keeps this custom palette."
@@ -414,8 +426,34 @@ function HexReadout({
           {value.toUpperCase()}
         </span>
       </div>
+      {showContrast && <LegibilityDemo color={value} />}
       {showContrast && <ContrastBadge fg={value} />}
     </div>
+  )
+}
+
+// ============================================================================
+// Legibility demo — tiny "Aa Aa Aa" sample in the heading color at 3 sizes, so
+// the AAA contrast claim is visually self-evident on the chip itself.
+// ============================================================================
+
+function LegibilityDemo({ color }: { color: string }) {
+  return (
+    <span
+      aria-hidden
+      className="shrink-0 inline-flex items-baseline"
+      style={{
+        gap: '6px',
+        color,
+        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+        lineHeight: 1,
+      }}
+      title="Heading color rendered at 12 / 14 / 16 px"
+    >
+      <span style={{ fontSize: '12px', fontWeight: 400 }}>Aa</span>
+      <span style={{ fontSize: '14px', fontWeight: 600 }}>Aa</span>
+      <span style={{ fontSize: '16px', fontWeight: 700 }}>Aa</span>
+    </span>
   )
 }
 

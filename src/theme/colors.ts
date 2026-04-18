@@ -202,34 +202,50 @@ export const accent = generateColorVariants(baseColors.blue)
 // Text Colors
 // ============================================================================
 
+/**
+ * Text colors. `body` and `muted` resolve via CSS variables so dark mode can
+ * swap them without every consumer re-rendering. `heading` stays hex-valued
+ * for backwards-compatibility; callers that want the theme-reactive version
+ * should use `'var(--heading)'` directly (as migrated across the app).
+ */
 export const text = {
   heading: baseColors.heading, // #15446E
-  body: '#262626', // neutral-800 equivalent
-  muted: '#00110B', // neutral-500 equivalent
+  body: 'var(--text-body, #262626)',
+  muted: 'var(--text-muted, #00110B)',
 } as const
 
 // ============================================================================
 // Background Colors
 // ============================================================================
 
+/**
+ * Background tokens resolve through CSS variables so dark mode flips every
+ * surface without every consumer re-rendering. Fallbacks keep SSR / early
+ * renders byte-identical to the previous hex values.
+ */
 export const background = {
-  page: '#F8F8F8', // Very light neutral background
-  card: '#FFFFFF', // Pure white for cards
-  surface: '#FFFFFF', // Surface elements
-  highlight: lighten(desaturate(baseColors.blue, 40), 30), // Subtle highlight for selected rows
-  sidebar: '#FFFFFF', // Sidebar background
-  'sidebar-active': lighten(desaturate(baseColors.blue, 50), 25), // Active sidebar item
-  'table-header': lighten(desaturate(baseColors.blue, 50), 28), // Table header background
+  page: 'var(--background, #F8F8F8)',
+  card: 'var(--card, #FFFFFF)',
+  surface: 'var(--card, #FFFFFF)',
+  highlight: lighten(desaturate(baseColors.blue, 40), 30), // selected-row wash; stays brand-tinted
+  sidebar: 'var(--sidebar, #FFFFFF)',
+  'sidebar-active': lighten(desaturate(baseColors.blue, 50), 25),
+  'table-header': lighten(desaturate(baseColors.blue, 50), 28),
 } as const
 
 // ============================================================================
 // Border Colors
 // ============================================================================
 
+/**
+ * Border tokens resolve through CSS variables so dark mode can darken the
+ * hairlines without every consumer re-rendering. Fallbacks match the
+ * original hex values for light mode.
+ */
 export const border = {
-  default: '#E5E5E5', // neutral-200 equivalent
-  subtle: '#F5F5F5', // neutral-100 equivalent
-  muted: '#FAFAFA', // neutral-50 equivalent
+  default: 'var(--border, #E5E5E5)',
+  subtle: 'var(--border-subtle, #F5F5F5)',
+  muted: 'var(--border-muted, #FAFAFA)',
 } as const
 
 // ============================================================================

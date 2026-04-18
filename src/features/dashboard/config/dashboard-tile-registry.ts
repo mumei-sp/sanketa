@@ -52,7 +52,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Total active students',
     icon: GraduationCap,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'new-admissions',
@@ -61,7 +61,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'This month',
     icon: UserPlus,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
   {
     id: 'students-on-leave',
@@ -70,7 +70,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Currently on leave',
     icon: UserX,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
 
   // ── Teachers ──
@@ -81,7 +81,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Full & part-time',
     icon: Users,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
   {
     id: 'full-time-teachers',
@@ -90,7 +90,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Permanent staff',
     icon: Briefcase,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'substitute-teachers',
@@ -99,7 +99,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Temporary staff',
     icon: UserCheck,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
 
   // ── Finance ──
@@ -110,7 +110,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'This month',
     icon: DollarSign,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
   {
     id: 'pending-fees',
@@ -119,7 +119,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Outstanding amount',
     icon: CreditCard,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'monthly-expenses',
@@ -128,7 +128,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'This month',
     icon: TrendingDown,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
 
   // ── Attendance ──
@@ -139,7 +139,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Percentage present',
     icon: CheckCircle,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'absent-today',
@@ -148,7 +148,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Students absent',
     icon: XCircle,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
 
   // ── General ──
@@ -159,7 +159,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Non-teaching staff',
     icon: UserCog,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'total-awards',
@@ -168,7 +168,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'All-time awards',
     icon: Award,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
   {
     id: 'upcoming-events',
@@ -177,7 +177,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'Next 7 days',
     icon: Calendar,
     iconBg: 'var(--primary)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--primary-foreground)',
   },
   {
     id: 'assignments-due',
@@ -186,7 +186,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
     description: 'This week',
     icon: ClipboardList,
     iconBg: 'var(--accent)',
-    iconColor: 'var(--heading)',
+    iconColor: 'var(--accent-foreground)',
   },
 ]
 

@@ -180,6 +180,8 @@
   --heading: #15446e; /* user-tunable heading anchor — runtime-overridable */
   --card-foreground: #15446e; /* text.heading */
   --popover-foreground: #15446e; /* text.heading */
+  --text-body: #262626; /* body copy — neutral-800 */
+  --text-muted: #00110B; /* secondary / muted text */
   /* Primary colors (pink-based) */
   --primary: #feccfd; /* primary.base - converted to oklch: oklch(0.95 0.08 320) */
   --primary-foreground: #15446e; /* text.heading for contrast */
@@ -201,6 +203,8 @@
   --delete-action-soft: #FADCDC; /* status.danger.soft */
   /* Border colors */
   --border: #e5e5e5; /* border.default */
+  --border-subtle: #f5f5f5; /* border.subtle */
+  --border-muted: #fafafa; /* border.muted */
   --input: #e5e5e5; /* border.default */
   --ring: #cdeaf0; /* accent.base for focus rings */
   /* Chart colors - using theme colors */
@@ -221,25 +225,33 @@
 }
 
 .dark {
-  /* Dark mode - keeping existing values for now, can be extended later */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --heading: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  /* Dark mode — Radix/Linear-inspired layered palette.
+   * Surfaces step bg < card < popover/muted for clear elevation, with hairline
+   * borders tuned as low-alpha white so the edges disappear against tinted bgs.
+   * Slight cool tint (~265° hue, 0.004 chroma) keeps the neutrals from reading
+   * as "dead" pure grey. */
+  --background: oklch(0.155 0.004 265);        /* app shell — deepest layer */
+  --foreground: oklch(0.96 0.002 265);          /* primary text */
+  --heading: oklch(0.96 0.002 265);
+  --card: oklch(0.205 0.004 265);               /* tiles / sheets */
+  --card-foreground: oklch(0.96 0.002 265);
+  --popover: oklch(0.235 0.004 265);            /* elevated surfaces */
+  --popover-foreground: oklch(0.96 0.002 265);
+  --text-body: oklch(0.87 0.003 265);           /* secondary copy */
+  --text-muted: oklch(0.7 0.005 265);           /* tertiary / labels */
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.235 0.004 265);
+  --secondary-foreground: oklch(0.96 0.002 265);
+  --muted: oklch(0.235 0.004 265);
+  --muted-foreground: oklch(0.7 0.005 265);
+  --accent: oklch(0.235 0.004 265);
+  --accent-foreground: oklch(0.96 0.002 265);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: oklch(1 0 0 / 7%);                  /* hairline, barely there */
+  --border-subtle: oklch(1 0 0 / 4%);
+  --border-muted: oklch(1 0 0 / 2.5%);
+  --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);

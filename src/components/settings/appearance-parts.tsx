@@ -292,11 +292,12 @@ export function LivePreviewPanel() {
         transition: 'background-color 200ms ease',
       }}
     >
-      {/* Header strip */}
+      {/* Header strip — mix against the card surface so the tint reads as a
+          wash of accent in both light and dark mode */}
       <div
         className="flex items-center justify-between px-3 py-2 border-b"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--accent) 35%, white)',
+          backgroundColor: 'color-mix(in srgb, var(--accent) 28%, var(--card))',
           borderColor: 'var(--border)',
           transition: 'background-color 200ms ease',
         }}
@@ -354,7 +355,7 @@ export function LivePreviewPanel() {
                 padding: '1px 6px',
                 fontSize: '9px',
                 fontWeight: 600,
-                backgroundColor: 'color-mix(in srgb, var(--primary) 45%, white)',
+                backgroundColor: 'color-mix(in srgb, var(--primary) 40%, var(--card))',
                 color: 'var(--heading)',
                 transition: 'background-color 200ms ease',
               }}
@@ -373,13 +374,13 @@ export function LivePreviewPanel() {
           >
             <span
               className="text-[9px] font-medium uppercase tracking-wide"
-              style={{ color: 'var(--heading)', opacity: 0.7 }}
+              style={{ color: 'var(--primary-foreground)', opacity: 0.75 }}
             >
               Attendance
             </span>
             <span
               className="text-lg font-bold leading-tight"
-              style={{ color: 'var(--heading)' }}
+              style={{ color: 'var(--primary-foreground)' }}
             >
               94.6%
             </span>
@@ -390,7 +391,7 @@ export function LivePreviewPanel() {
                   className="flex-1 rounded-sm"
                   style={{
                     height: `${h}%`,
-                    backgroundColor: 'var(--heading)',
+                    backgroundColor: 'var(--primary-foreground)',
                     opacity: 0.45,
                   }}
                 />
@@ -442,7 +443,7 @@ export function LivePreviewPanel() {
             className="text-[11px] font-semibold px-3 py-1.5 cursor-default"
             style={{
               backgroundColor: 'var(--primary)',
-              color: 'var(--heading)',
+              color: 'var(--primary-foreground)',
               borderRadius: 'var(--radius)',
               transition: 'background-color 200ms ease, border-radius 200ms ease',
             }}
@@ -454,7 +455,7 @@ export function LivePreviewPanel() {
             style={{
               padding: '2px 8px',
               backgroundColor: 'var(--accent)',
-              color: 'var(--heading)',
+              color: 'var(--accent-foreground)',
               transition: 'background-color 200ms ease',
             }}
           >

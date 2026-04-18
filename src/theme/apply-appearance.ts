@@ -119,6 +119,11 @@ export function applyAppearance(
   const accentFg = pickForegroundFor(accent)
 
   const set = (name: string, value: string) => target.style.setProperty(name, value)
+  const clear = (name: string) => target.style.removeProperty(name)
+
+  // Resolve dark mode FIRST — the foreground writes below branch on it so the
+  // user's (dark) heading color doesn't get painted over dark surfaces.
+  const isDark = resolveDarkMode(mode)
 
   // Radius
   set('--radius', `${radius}rem`)
@@ -128,33 +133,53 @@ export function applyAppearance(
   set('--primary-foreground', primaryFg)
   set('--accent', accent)
   set('--accent-foreground', accentFg)
-  set('--heading', heading)
-
-  // Foreground family — tied to heading so text stays on-brand
-  set('--foreground', heading)
-  set('--card-foreground', heading)
-  set('--popover-foreground', heading)
-  set('--secondary-foreground', heading)
-  set('--sidebar-foreground', heading)
-
-  // Rings + sidebar mirrors
-  set('--ring', accent)
-  set('--sidebar-primary', primary)
-  set('--sidebar-primary-foreground', heading)
-  set('--sidebar-accent', primary)
-  set('--sidebar-accent-foreground', heading)
-  set('--sidebar-ring', accent)
 
   // Chart palette — respect the existing 3-color limit (chart 1/2/3 are brand)
   set('--chart-1', primary)
   set('--chart-2', accent)
   set('--chart-3', heading)
 
+  // Foreground family
+  //  - Light mode: anchor every text surface to the user's picked heading color.
+  //  - Dark mode:  clear the inline overrides so the `.dark` CSS rule in
+  //                index.css (near-white foregrounds) wins and text remains
+  //                legible on dark backgrounds. `--heading-accent` keeps the
+  //                user's chosen color around for accent surfaces that want it.
+  if (isDark) {
+    clear('--heading')
+    clear('--foreground')
+    clear('--card-foreground')
+    clear('--popover-foreground')
+    clear('--secondary-foreground')
+    clear('--sidebar-foreground')
+    clear('--sidebar-primary-foreground')
+    clear('--sidebar-accent-foreground')
+    set('--heading-accent', heading)
+    // Rings still track accent so focus states stay on-brand
+    set('--ring', accent)
+    set('--sidebar-primary', primary)
+    set('--sidebar-accent', primary)
+    set('--sidebar-ring', accent)
+  } else {
+    set('--heading', heading)
+    set('--foreground', heading)
+    set('--card-foreground', heading)
+    set('--popover-foreground', heading)
+    set('--secondary-foreground', heading)
+    set('--sidebar-foreground', heading)
+    set('--ring', accent)
+    set('--sidebar-primary', primary)
+    set('--sidebar-primary-foreground', heading)
+    set('--sidebar-accent', primary)
+    set('--sidebar-accent-foreground', heading)
+    set('--sidebar-ring', accent)
+    set('--heading-accent', heading)
+  }
+
   // Density attribute — consumed by CSS rules in index.css
   target.setAttribute('data-density', density)
 
   // Dark mode class toggle
-  const isDark = resolveDarkMode(mode)
   target.classList.toggle('dark', isDark)
 }
 

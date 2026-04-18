@@ -156,8 +156,8 @@ export default function Dashboard() {
               onClick={() => setCustomizeOpen(true)}
               className="flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
               style={{
-                color: 'var(--heading)',
-                backgroundColor: colors.accent.soft,
+                color: 'var(--foreground)',
+                backgroundColor: 'color-mix(in srgb, var(--accent) 35%, var(--card))',
                 border: `1px solid ${colors.border.default}`,
               }}
             >
@@ -193,7 +193,9 @@ export default function Dashboard() {
         >
           <Card
             className="pt-4 pb-2 flex flex-col gap-3 h-full"
-            style={{ backgroundColor: 'var(--accent)' }}
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--accent) 45%, var(--card))',
+            }}
           >
             <DashboardCalendar
               embedded
@@ -202,7 +204,10 @@ export default function Dashboard() {
               currentDate={calendarDate}
               onMonthChange={setCalendarDate}
             />
-            <div className="bg-white rounded-xl mx-2 px-2 pt-3 pb-3 flex-1 min-h-0 flex flex-col">
+            <div
+              className="rounded-xl mx-2 px-2 pt-3 pb-3 flex-1 min-h-0 flex flex-col"
+              style={{ backgroundColor: 'var(--card)' }}
+            >
               <EventsList embedded events={filteredEvents} isLoading={isLoading} />
             </div>
           </Card>

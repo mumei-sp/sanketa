@@ -283,6 +283,7 @@ function ActionButton({
     <button
       type="button"
       aria-label={label}
+      title={label}
       onClick={onClick}
       className={cn(
         'h-9 rounded-lg flex items-center justify-center transition-colors border',
