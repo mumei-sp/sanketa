@@ -11,7 +11,12 @@ interface AttendanceSummaryCardProps {
 }
 
 /**
- * Get card configuration based on type
+ * Get card configuration based on type.
+ *
+ * `textColor` is a CSS expression rather than a Tailwind token because the
+ * pill bgs (primary / accent / heading) rotate with the theme and need their
+ * paired auto-contrast foreground — Tailwind `text-foreground` collapses to
+ * near-white in dark mode and disappears on pastel pink.
  */
 function getCardConfig(type: AttendanceRecordType) {
   switch (type) {
@@ -19,21 +24,21 @@ function getCardConfig(type: AttendanceRecordType) {
       return {
         title: 'Students',
         backgroundColor: 'var(--primary)',
-        textColor: 'text-foreground',
+        textColor: 'var(--primary-foreground)',
         patternColor: withOpacity('var(--primary)', 0.3),
       }
     case 'teacher':
       return {
         title: 'Teachers',
         backgroundColor: 'var(--accent)',
-        textColor: 'text-foreground',
+        textColor: 'var(--accent-foreground)',
         patternColor: withOpacity('var(--accent)', 0.3),
       }
     case 'staff':
       return {
         title: 'Staff',
         backgroundColor: 'var(--heading)',
-        textColor: 'text-white',
+        textColor: 'var(--card)',
         patternColor: withOpacity(colors.background.card, 0.1),
       }
   }
@@ -53,13 +58,11 @@ function formatPercentage(num: number): string {
 function ColoredSection({
   config,
   statistics,
-  isDark,
   clipPathId,
   isMobile,
 }: {
   config: ReturnType<typeof getCardConfig>
   statistics: AttendanceStatistics
-  isDark: boolean
   clipPathId: string
   isMobile: boolean
 }) {
@@ -67,11 +70,11 @@ function ColoredSection({
     <div
       className={cn(
         'relative flex flex-col',
-        isDark ? 'text-white' : 'text-foreground',
         isMobile ? 'p-3.5 rounded-xl justify-center h-full' : 'p-4 pb-6 flex-[2.5] -mb-3 min-h-0',
       )}
       style={{
         backgroundColor: config.backgroundColor,
+        color: config.textColor,
         ...(!isMobile
           ? { clipPath: `url(#${clipPathId})`, WebkitClipPath: `url(#${clipPathId})` }
           : {}),
@@ -87,17 +90,12 @@ function ColoredSection({
         }}
       />
 
-      <h3 className={cn('text-section-title mb-1 relative z-10', config.textColor)}>
+      <h3 className="text-section-title mb-1 relative z-10">
         {config.title}
       </h3>
 
       <div className="flex items-baseline gap-2 mb-1 relative z-10">
-        <span
-          className={cn(
-            'text-numeric text-2xl',
-            isDark ? 'text-white' : 'text-foreground',
-          )}
-        >
+        <span className="text-numeric text-2xl">
           {formatNumber(statistics.totalPresent)}
         </span>
         <div
@@ -111,12 +109,7 @@ function ColoredSection({
         </div>
       </div>
 
-      <p
-        className={cn(
-          'text-body-muted relative z-10',
-          isDark ? 'text-white/80' : 'text-muted-foreground',
-        )}
-      >
+      <p className="text-body-muted relative z-10" style={{ opacity: 0.8 }}>
         Total Present
       </p>
     </div>
@@ -196,7 +189,6 @@ export function AttendanceSummaryCard({
   isMobile = false,
 }: AttendanceSummaryCardProps) {
   const config = getCardConfig(type)
-  const isDark = type === 'staff'
   const clipPathId = `attendance-card-clip-${type}`
 
   if (isMobile) {
@@ -207,7 +199,6 @@ export function AttendanceSummaryCard({
           <ColoredSection
             config={config}
             statistics={statistics}
-            isDark={isDark}
             clipPathId={clipPathId}
             isMobile={true}
           />
@@ -234,7 +225,6 @@ export function AttendanceSummaryCard({
       <ColoredSection
         config={config}
         statistics={statistics}
-        isDark={isDark}
         clipPathId={clipPathId}
         isMobile={false}
       />

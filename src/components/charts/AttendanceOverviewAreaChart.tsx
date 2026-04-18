@@ -42,7 +42,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
     return (
-      <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
+      <div className="rounded-md border bg-popover px-3 py-2 shadow-sm">
         <p className="text-caption font-medium text-heading mb-1">{data.month}</p>
         <div className="space-y-1">
           <p className="text-caption text-foreground">
