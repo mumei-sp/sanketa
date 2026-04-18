@@ -1,17 +1,7 @@
 import { Eye } from 'lucide-react'
 import { baseColors, statusVivid } from '@/theme/colors'
+import { getNoticeCategoryColor } from '../utils/category-colors'
 import type { NoticeFormValues } from '../schemas/notice-schema'
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Academic: '#E8D5F5',
-  Events: '#D4EDDA',
-  Maintenance: '#CDEAF0',
-  Arts: '#FFE0CC',
-  Finance: '#FFF3CD',
-  Notice: '#E2E3E5',
-  Training: '#D4EDDA',
-  Announcement: '#CDEAF0',
-}
 
 const statusStyles: Record<string, { bg: string; text: string }> = {
   Active:    { bg: statusVivid.success.bg, text: statusVivid.success.color },
@@ -34,7 +24,7 @@ interface NoticePreviewCardProps {
 
 export function NoticePreviewCard({ values }: NoticePreviewCardProps) {
   const status = statusStyles[values.status || ''] || statusStyles.Draft
-  const categoryColor = CATEGORY_COLORS[values.category || ''] || '#E2E3E5'
+  const categoryColor = getNoticeCategoryColor(values.category)
 
   return (
     <div className="rounded-xl border bg-background shadow-sm overflow-hidden flex flex-col">
@@ -61,7 +51,7 @@ export function NoticePreviewCard({ values }: NoticePreviewCardProps) {
           {values.category && (
             <span
               className="text-badge px-2.5 py-1 rounded-full"
-              style={{ backgroundColor: categoryColor, color: baseColors.heading }}
+              style={{ backgroundColor: categoryColor, color: 'var(--heading)' }}
             >
               {values.category}
             </span>
@@ -75,7 +65,7 @@ export function NoticePreviewCard({ values }: NoticePreviewCardProps) {
         {/* Title */}
         <h4
           className="text-body font-semibold leading-snug line-clamp-2"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           {values.title || 'Notice Title'}
         </h4>
@@ -105,7 +95,7 @@ export function NoticePreviewCard({ values }: NoticePreviewCardProps) {
           <div className="pt-1">
             <p
               className="text-body-muted font-medium mb-1.5"
-              style={{ color: baseColors.heading }}
+              style={{ color: 'var(--heading)' }}
             >
               Content
             </p>
@@ -123,7 +113,7 @@ function PreviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <span className="text-body-muted text-muted-foreground w-[90px] flex-shrink-0">{label}</span>
-      <span className="text-body-muted font-medium min-w-0" style={{ color: baseColors.heading }}>
+      <span className="text-body-muted font-medium min-w-0" style={{ color: 'var(--heading)' }}>
         {value}
       </span>
     </div>

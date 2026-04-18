@@ -41,13 +41,13 @@ export function AttendanceMarkingCards({
         let borderColor: string = colors.border.default
         let bgColor: string = colors.background.card
         if (status === 'present') {
-          borderColor = darken(baseColors.blue, 15)
+          borderColor = 'color-mix(in srgb, var(--accent) 85%, black)'
           bgColor = colors.accent.soft
         } else if (status === 'late') {
-          borderColor = darken(baseColors.pink, 20)
+          borderColor = 'color-mix(in srgb, var(--primary) 80%, black)'
           bgColor = colors.primary.soft
         } else if (status === 'absent') {
-          borderColor = colors.text.heading
+          borderColor = 'var(--heading)'
           bgColor = colors.accent.muted
         }
 
@@ -64,7 +64,7 @@ export function AttendanceMarkingCards({
               <div className="flex-1 min-w-0">
                 <div
                   className="text-sm font-medium truncate"
-                  style={{ color: colors.text.heading }}
+                  style={{ color: 'var(--heading)' }}
                 >
                   {student.name}
                 </div>

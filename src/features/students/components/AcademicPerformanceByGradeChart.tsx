@@ -33,9 +33,9 @@ type Period = 'last' | 'this'
  * Each entry: [fillColor, strokeCapColor].
  */
 const GRADE_PALETTE: [string, string][] = [
-  [baseColors.blue, '#9BCFDB'],
-  [baseColors.heading, baseColors.heading],
-  [baseColors.pink, '#E0A0D0'],
+  ['var(--accent)', '#9BCFDB'],
+  ['var(--heading)', 'var(--heading)'],
+  ['var(--primary)', '#E0A0D0'],
 ]
 
 function getGradeColor(index: number): { fill: string; stroke: string } {
@@ -52,14 +52,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null
   return (
     <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-      <p className="text-xs font-semibold mb-1" style={{ color: baseColors.heading }}>
+      <p className="text-xs font-semibold mb-1" style={{ color: 'var(--heading)' }}>
         {label}
       </p>
       {payload.map((entry: any) => (
         <div
           key={entry.name}
           className="flex items-center gap-2 text-xs"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           <span
             className="inline-block w-2 h-2 rounded-full"
@@ -216,7 +216,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
                 width={36}
               />
               <Tooltip
-                cursor={{ fill: withOpacity(baseColors.blue, 0.12) }}
+                cursor={{ fill: withOpacity('var(--accent)', 0.12) }}
                 content={<CustomTooltip />}
               />
               {activeGradeKeys.map((key, idx) => {

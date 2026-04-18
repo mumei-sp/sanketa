@@ -119,7 +119,7 @@ const CustomLabel = ({ x, y, width, value }: any) => {
     <text
       x={centerX}
       y={y}
-      fill={colors.text.heading}
+      fill={'var(--heading)'}
       textAnchor="middle"
       fontSize={12}
       fontWeight={fontWeights.medium}
@@ -150,7 +150,7 @@ const CustomBar = (props: any) => {
         rx={radius}
         ry={radius}
       />
-      <line x1={x} y1={y} x2={x + width} y2={y} stroke={colors.text.heading} strokeWidth={1.5} />
+      <line x1={x} y1={y} x2={x + width} y2={y} stroke={'var(--heading)'} strokeWidth={1.5} />
     </g>
   )
 }
@@ -278,7 +278,7 @@ export function AttendanceOverviewChart({
                 <Bar
                   dataKey="attendance"
                   shape={CustomBar}
-                  fill={colors.primary.base}
+                  fill={'var(--primary)'}
                   activeBar={false}
                 >
                   <LabelList content={<CustomLabel />} />

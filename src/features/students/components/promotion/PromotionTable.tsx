@@ -58,7 +58,7 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
       accessorKey: 'percentage',
       header: ({ column }) => <DataTableColumnHeader column={column} title="%" />,
       cell: ({ row }) => (
-        <span className="text-sm font-semibold" style={{ color: colors.text.heading, fontVariantNumeric: 'tabular-nums' }}>
+        <span className="text-sm font-semibold" style={{ color: 'var(--heading)', fontVariantNumeric: 'tabular-nums' }}>
           {row.original.percentage}%
         </span>
       ),
@@ -68,7 +68,7 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
       accessorKey: 'gpa',
       header: ({ column }) => <DataTableColumnHeader column={column} title="GPA" />,
       cell: ({ row }) => (
-        <span className="text-sm font-medium" style={{ color: colors.text.heading, fontVariantNumeric: 'tabular-nums' }}>
+        <span className="text-sm font-medium" style={{ color: 'var(--heading)', fontVariantNumeric: 'tabular-nums' }}>
           {row.original.gpa}
         </span>
       ),

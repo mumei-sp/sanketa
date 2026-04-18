@@ -46,22 +46,22 @@ export const feeStats: FeeStat[] = [
     label: 'Fees Collected',
     value: 92500,
     icon: CircleCheckBig,
-    iconBg: baseColors.heading,
+    iconBg: 'var(--heading)',
     iconColor: '#FFFFFF',
   },
   {
     label: 'Pending Fees',
     value: 12300,
     icon: CircleDashed,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
   {
     label: 'Overdue Payments',
     value: 4750,
     icon: OctagonAlert,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
 ]
 
@@ -81,10 +81,10 @@ export const feeTrendData: FeeTrendData[] = [
 ]
 
 export const feeProgressData: FeeProgressData[] = [
-  { category: 'Tuition Fee', percentage: 87.5, collected: 70000, total: 80000, color: baseColors.heading },
-  { category: 'Books & Supplies', percentage: 87.5, collected: 10500, total: 12000, color: baseColors.heading },
-  { category: 'Activities', percentage: 90, collected: 7200, total: 8000, color: baseColors.heading },
-  { category: 'Miscellaneous', percentage: 86.5, collected: 4800, total: 5550, color: baseColors.heading },
+  { category: 'Tuition Fee', percentage: 87.5, collected: 70000, total: 80000, color: 'var(--heading)' },
+  { category: 'Books & Supplies', percentage: 87.5, collected: 10500, total: 12000, color: 'var(--heading)' },
+  { category: 'Activities', percentage: 90, collected: 7200, total: 8000, color: 'var(--heading)' },
+  { category: 'Miscellaneous', percentage: 86.5, collected: 4800, total: 5550, color: 'var(--heading)' },
 ]
 
 // ============================================================================

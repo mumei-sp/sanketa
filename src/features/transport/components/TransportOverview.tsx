@@ -5,7 +5,7 @@ import { TileWrapper, Tile } from '@/components/tile'
 import { DashboardStatCard } from '@/features/dashboard/components/DashboardStatCard'
 import { StatusPill } from '@/components/ui/status-pill'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
-import { text, status, accent, primary, border, baseColors } from '@/theme/colors'
+import { text, status, border, baseColors } from '@/theme/colors'
 import { mockVehicles, mockRoutes, mockDrivers, mockStudentAssignments, mockAlerts } from '@/mocks/transport'
 import { VEHICLE_STATUS_CHART_COLORS, ALERT_SEVERITY_COLORS } from '../constants'
 import { getOccupancyPercent, formatDate } from '../utils/transport-utils'
@@ -20,7 +20,7 @@ export function TransportOverview() {
       label: 'Total Vehicles',
       value: mockVehicles.length,
       icon: Bus,
-      iconBg: accent.base,
+      iconBg: 'var(--accent)',
       iconColor: text.heading,
     },
     {
@@ -28,7 +28,7 @@ export function TransportOverview() {
       label: 'Active Routes',
       value: mockRoutes.filter(r => r.status === 'Active').length,
       icon: Route,
-      iconBg: primary.base,
+      iconBg: 'var(--primary)',
       iconColor: text.heading,
     },
     {
@@ -100,11 +100,11 @@ export function TransportOverview() {
               <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0 flex flex-col">
                 <div className="flex-shrink-0 flex items-center gap-4 mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: baseColors.blue }} />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent)' }} />
                     <span className="text-xs text-muted-foreground">Capacity</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: baseColors.pink }} />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--primary)' }} />
                     <span className="text-xs text-muted-foreground">Students</span>
                   </div>
                 </div>
@@ -123,12 +123,12 @@ export function TransportOverview() {
                             <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
                               <p className="text-xs font-semibold mb-1" style={{ color: text.heading }}>{d.name}</p>
                               <div className="flex items-center gap-2 text-xs" style={{ color: text.heading }}>
-                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: baseColors.blue }} aria-hidden />
+                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent)' }} aria-hidden />
                                 <span>Capacity:</span>
                                 <span className="font-semibold">{d.capacity}</span>
                               </div>
                               <div className="flex items-center gap-2 text-xs" style={{ color: text.heading }}>
-                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: baseColors.pink }} aria-hidden />
+                                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary)' }} aria-hidden />
                                 <span>Students:</span>
                                 <span className="font-semibold">{d.students}</span>
                               </div>
@@ -136,8 +136,8 @@ export function TransportOverview() {
                           )
                         }}
                       />
-                      <Bar dataKey="capacity" fill={baseColors.blue} radius={[4, 4, 0, 0]} name="Capacity" />
-                      <Bar dataKey="students" fill={baseColors.pink} radius={[4, 4, 0, 0]} name="Students" />
+                      <Bar dataKey="capacity" fill={'var(--accent)'} radius={[4, 4, 0, 0]} name="Capacity" />
+                      <Bar dataKey="students" fill={'var(--primary)'} radius={[4, 4, 0, 0]} name="Students" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

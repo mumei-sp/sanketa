@@ -51,7 +51,7 @@ export function ScheduleDetails({
         <div className="flex items-center justify-between mb-3">
           <h3
             className="text-sm font-semibold"
-            style={{ color: baseColors.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             Schedule Details
           </h3>
@@ -78,7 +78,7 @@ export function ScheduleDetails({
         <div className="flex items-center justify-between">
           <h3
             className="text-sm font-semibold"
-            style={{ color: baseColors.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             Schedule Details
           </h3>

@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { colors } from './colors'
 
 /**
  * Chart gradient configuration
@@ -27,7 +26,7 @@ interface ChartGradientProps {
 
 export function ChartGradient({
   id,
-  color = colors.primary.base,
+  color = 'var(--primary)',
   topOpacity = chartGradientConfig.topOpacity,
   bottomOpacity = chartGradientConfig.bottomOpacity,
 }: ChartGradientProps): React.ReactElement {

@@ -74,7 +74,7 @@ export function createFeeCollectionColumns(
           <div className="flex items-center gap-2">
             <span
               className="text-[11px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: baseColors.blue, color: baseColors.heading }}
+              style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
             >
               {record.studentId}
             </span>
@@ -125,7 +125,7 @@ export function createFeeCollectionColumns(
       accessorKey: 'totalAmount',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Total Amount" />,
       cell: ({ row }) => (
-        <span className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+        <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
           ₹{row.original.totalAmount.toLocaleString('en-IN')}
         </span>
       ),

@@ -16,7 +16,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       {/* ── Hero panel ── */}
       <div
         className="relative flex flex-col items-center justify-center px-6 py-10 lg:w-1/2 lg:py-0"
-        style={{ backgroundColor: baseColors.heading }}
+        style={{ backgroundColor: 'var(--heading)' }}
       >
         {/* Subtle pattern overlay */}
         <div

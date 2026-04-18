@@ -58,7 +58,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b">
-        <h3 className="text-section-title" style={{ color: baseColors.heading }}>
+        <h3 className="text-section-title" style={{ color: 'var(--heading)' }}>
           Detail Board
         </h3>
         <div className="flex items-center gap-1">
@@ -73,7 +73,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
                 'size-4 transition-transform duration-200',
                 notice.pinned && '-rotate-45 fill-current',
               )}
-              style={{ color: baseColors.heading }}
+              style={{ color: 'var(--heading)' }}
             />
           </button>
           {showClose && (
@@ -114,7 +114,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
         {/* Title — max 2 lines */}
         <h4
           className="text-body font-semibold leading-snug line-clamp-2"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           {notice.title}
         </h4>
@@ -144,7 +144,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
         <div className="pt-1">
           <p
             className="text-body-muted font-medium mb-1.5"
-            style={{ color: baseColors.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             Content
           </p>
@@ -159,7 +159,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
               type="button"
               onClick={() => setIsContentExpanded(prev => !prev)}
               className="text-caption font-medium mt-1 hover:underline"
-              style={{ color: baseColors.heading }}
+              style={{ color: 'var(--heading)' }}
             >
               {isContentExpanded ? 'Show less' : 'Show more'}
             </button>
@@ -171,7 +171,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
           <div className="pt-1">
             <p
               className="text-body-muted font-medium mb-2"
-              style={{ color: baseColors.heading }}
+              style={{ color: 'var(--heading)' }}
             >
               Attachment{notice.attachments.length > 1 ? `s (${notice.attachments.length})` : ''}
             </p>
@@ -183,7 +183,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
                 >
                   <FileText className="size-5 text-red-500 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-body-muted font-medium truncate" style={{ color: baseColors.heading }}>
+                    <p className="text-body-muted font-medium truncate" style={{ color: 'var(--heading)' }}>
                       {att.name}
                     </p>
                     <p className="text-caption text-muted-foreground">
@@ -255,7 +255,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <span className="text-body-muted text-muted-foreground w-[90px] flex-shrink-0">{label}</span>
-      <span className="text-body-muted font-medium min-w-0 truncate" style={{ color: baseColors.heading }}>
+      <span className="text-body-muted font-medium min-w-0 truncate" style={{ color: 'var(--heading)' }}>
         {value}
       </span>
     </div>

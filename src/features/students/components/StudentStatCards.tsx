@@ -189,10 +189,10 @@ export function getStudentStats(
   const totalCard: StudentStatCardProps = {
     label: 'Total Students',
     value: total,
-    iconContent: <Users className="w-3.5 h-3.5" style={{ color: baseColors.heading }} />,
-    iconBg: withOpacity(baseColors.pink, 0.7),
-    iconColor: baseColors.heading,
-    cardBg: withOpacity(baseColors.blue, 0.35),
+    iconContent: <Users className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />,
+    iconBg: withOpacity('var(--primary)', 0.7),
+    iconColor: 'var(--heading)',
+    cardBg: withOpacity('var(--accent)', 0.35),
     inverted: false,
   }
 
@@ -207,8 +207,8 @@ export function getStudentStats(
       // Show the section letter in the icon circle (e.g. "A") so it's
       // visually distinct from the grade number used elsewhere.
       iconContent: label.replace(/^\d+/, '') || label,
-      iconBg: withOpacity(baseColors.pink, 0.4),
-      iconColor: baseColors.heading,
+      iconBg: withOpacity('var(--primary)', 0.4),
+      iconColor: 'var(--heading)',
       cardBg: '#ffffff',
     })
   }
@@ -221,8 +221,8 @@ export function getStudentStats(
         label: `Grade ${grade} Students`,
         value: gradeCounts.get(grade) ?? 0,
         iconContent: grade,
-        iconBg: withOpacity(baseColors.blue, 0.5),
-        iconColor: baseColors.heading,
+        iconBg: withOpacity('var(--accent)', 0.5),
+        iconColor: 'var(--heading)',
         cardBg: '#ffffff',
       })
       return
@@ -251,8 +251,8 @@ export function getStudentStats(
         label: `Grade ${grade} Students`,
         value: gradeCounts.get(grade) ?? 0,
         iconContent: grade,
-        iconBg: withOpacity(baseColors.blue, 0.5),
-        iconColor: baseColors.heading,
+        iconBg: withOpacity('var(--accent)', 0.5),
+        iconColor: 'var(--heading)',
         cardBg: '#ffffff',
       })
     }

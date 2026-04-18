@@ -78,7 +78,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 const CustomBar = (props: any) => {
   const { x, y, width, height } = props
   // Use light pink color for bars (matching the theme)
-  const fillColor = colors.primary.base
+  const fillColor = 'var(--primary)'
 
   return (
     <g>
@@ -96,7 +96,7 @@ const CustomLabel = (props: any) => {
     <text
       x={x + width / 2}
       y={y - 4}
-      fill={colors.text.heading}
+      fill={'var(--heading)'}
       textAnchor="middle"
       fontSize={11}
       fontWeight={fontWeights.semibold}
@@ -124,8 +124,8 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
   const arcLength = circumference * percentage
 
   // Colors: dark blue for filled, light pink for unfilled
-  const filledColor = colors.text.heading // Dark blue (heading color)
-  const unfilledColor = colors.primary.base // Light pink
+  const filledColor = 'var(--heading)' // Dark blue (heading color)
+  const unfilledColor = 'var(--primary)' // Light pink
 
   // Start and end points for the semi-circle (from left to right, bottom)
   // The arc sits at the bottom of the gauge
@@ -182,7 +182,7 @@ function GaugeChart({ value, maxValue = 100 }: { value: number; maxValue?: numbe
           textAnchor="middle"
           fontSize={28}
           fontWeight={fontWeights.bold}
-          fill={colors.text.heading}
+          fill={'var(--heading)'}
           dominantBaseline="middle"
         >
           {maxValue <= 10 ? `${value.toFixed(1)}/${maxValue.toFixed(1)}` : `${value.toFixed(1)}/${maxValue}`}

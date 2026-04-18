@@ -340,9 +340,9 @@ export default function NoticeBoard() {
                     <SelectTrigger
                       className="h-8 w-[140px]"
                       style={{
-                        backgroundColor: baseColors.blue,
+                        backgroundColor: 'var(--accent)',
                         color: text.heading,
-                        borderColor: baseColors.blue,
+                        borderColor: 'var(--accent)',
                       }}
                     >
                       <SelectValue />
@@ -363,9 +363,9 @@ export default function NoticeBoard() {
                       <SelectTrigger
                         className="h-8 w-[100px]"
                         style={{
-                          backgroundColor: baseColors.blue,
+                          backgroundColor: 'var(--accent)',
                           color: text.heading,
-                          borderColor: baseColors.blue,
+                          borderColor: 'var(--accent)',
                         }}
                       >
                         <SelectValue />

@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fontWeights } from '@/config/typography'
 import { Tile } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
-import { colors, baseColors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 
 interface TeacherAttendanceChartProps {
   data: AttendanceData[]
@@ -111,7 +111,7 @@ const CustomActiveBar = (props: any) => {
         y={y}
         width={width}
         height={height}
-        fill={baseColors.pink}
+        fill={'var(--primary)'}
         rx={radius}
         ry={radius}
         opacity={0.8}
@@ -122,7 +122,7 @@ const CustomActiveBar = (props: any) => {
         y={labelY}
         width={labelWidth}
         height={18}
-        fill={baseColors.heading}
+        fill={'var(--heading)'}
         rx={4}
       />
       <text
@@ -154,7 +154,7 @@ const CustomBar = (props: any) => {
       y={y}
       width={width}
       height={height}
-      fill={baseColors.pink}
+      fill={'var(--primary)'}
       rx={radius}
       ry={radius}
     />
@@ -278,17 +278,17 @@ export function TeacherAttendanceChart({
                 <Bar
                   dataKey="attendance"
                   shape={CustomBar}
-                  fill={baseColors.pink}
+                  fill={'var(--primary)'}
                   activeBar={<CustomActiveBar />}
                   barSize={32}
                 />
                 <Line
                   type="monotone"
                   dataKey="attendance"
-                  stroke={baseColors.heading}
+                  stroke={'var(--heading)'}
                   strokeWidth={1.75}
-                  dot={{ r: 4, fill: baseColors.heading }}
-                  activeDot={{ r: 5, fill: baseColors.heading }}
+                  dot={{ r: 4, fill: 'var(--heading)' }}
+                  activeDot={{ r: 5, fill: 'var(--heading)' }}
                 />
               </ComposedChart>
             </ResponsiveContainer>

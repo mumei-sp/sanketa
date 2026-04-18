@@ -126,7 +126,7 @@ export function PromotionPage() {
               className="text-sm rounded-md border px-3 py-1.5 outline-none"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
+                color: 'var(--heading)',
                 backgroundColor: colors.background.card,
               }}
             >
@@ -156,9 +156,9 @@ export function PromotionPage() {
             className="rounded-lg border flex items-center gap-3 text-sm flex-wrap"
             style={{
               padding: `${spacing['2.5']} ${spacing['3']}`,
-              borderColor: colors.accent.base,
-              backgroundColor: colors.accent.base,
-              color: colors.text.heading,
+              borderColor: 'var(--accent)',
+              backgroundColor: 'var(--accent)',
+              color: 'var(--heading)',
             }}
           >
             <span>

@@ -47,7 +47,7 @@ export function GradeSummaryBar({
 
   const stats = [
     { label: 'Entered', value: `${entered}/${totalStudents}`, icon: AlertCircle, color: colors.text.muted },
-    { label: 'Average', value: `${average}%`, icon: BarChart3, color: darken(baseColors.blue, 15) },
+    { label: 'Average', value: `${average}%`, icon: BarChart3, color: 'color-mix(in srgb, var(--accent) 85%, black)' },
     { label: 'Pass', value: String(passCount), icon: Check, color: colors.status.success.text },
     { label: 'Fail', value: String(failCount), icon: X, color: colors.status.danger.text },
   ]
@@ -81,7 +81,7 @@ export function GradeSummaryBar({
           style={{
             borderColor: colors.border.default,
             backgroundColor: colors.background.card,
-            color: colors.text.heading,
+            color: 'var(--heading)',
             opacity: entered === 0 || isSaving ? 0.5 : 1,
             cursor: entered === 0 || isSaving ? 'not-allowed' : 'pointer',
           }}
@@ -94,7 +94,7 @@ export function GradeSummaryBar({
           disabled={!allEntered || isSaving}
           className="px-5 py-2 rounded-lg text-sm font-semibold transition-opacity"
           style={{
-            backgroundColor: allEntered ? colors.text.heading : colors.border.default,
+            backgroundColor: allEntered ? 'var(--heading)' : colors.border.default,
             color: colors.background.card,
             opacity: !allEntered || isSaving ? 0.6 : 1,
             cursor: !allEntered || isSaving ? 'not-allowed' : 'pointer',

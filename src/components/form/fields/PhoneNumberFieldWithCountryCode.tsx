@@ -89,7 +89,7 @@ function CountryCodeSelect<_T extends FieldValues>({
           countryCodeClassName,
         )}
         style={{
-          color: colors.text.heading,
+          color: 'var(--heading)',
           backgroundColor: colors.accent.soft,
           width: '96px',
           minWidth: '96px',

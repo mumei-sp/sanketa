@@ -10,6 +10,8 @@
 import type { ClassSection, Subject } from '@/features/timetable/types'
 export type { ClassSection, Subject }
 import { accent, primary, status, border } from '@/theme/colors'
+import { DEFAULT_APPEARANCE, type AppearanceConfig } from '@/theme/appearance'
+export type { AppearanceConfig } from '@/theme/appearance'
 
 // ============================================================================
 // Types
@@ -53,6 +55,10 @@ export interface SchoolConfig {
   // ── Grading ──
   /** Grade scale configuration */
   grading: GradingConfig
+
+  // ── Appearance ──
+  /** Theme, colors, density, radius — see src/theme/appearance.ts */
+  appearance: AppearanceConfig
 }
 
 /** A single period/break slot in the school day (re-exported from timetable types for convenience) */
@@ -193,10 +199,17 @@ export const DEFAULT_CLASS_SECTIONS: ClassSection[] = [
   { id: 'cls-10b', grade: '10', section: 'B', label: '10B' },
 ]
 
-/** Default subjects — matches typical Indian school curriculum */
+/**
+ * Default subjects — matches typical Indian school curriculum.
+ *
+ * Brand-derived colors (Math/English/Sci/SSt/CS/Music) use CSS var strings so
+ * subject tiles shift with the user's chosen preset. Semantic greens/yellows
+ * (Hindi/PE) keep their static hex — those aren't brand colors and shouldn't
+ * shift when the theme changes.
+ */
 export const DEFAULT_SUBJECTS: Subject[] = [
-  { id: 'math',    name: 'Mathematics',        shortName: 'Math',    color: accent.base },
-  { id: 'eng',     name: 'English',            shortName: 'Eng',     color: primary.base },
+  { id: 'math',    name: 'Mathematics',        shortName: 'Math',    color: 'var(--accent)' },
+  { id: 'eng',     name: 'English',            shortName: 'Eng',     color: 'var(--primary)' },
   { id: 'sci',     name: 'Science',            shortName: 'Sci',     color: accent.soft },
   { id: 'sst',     name: 'Social Studies',     shortName: 'SSt',     color: primary.soft },
   { id: 'hindi',   name: 'Hindi',              shortName: 'Hin',     color: status.success.soft },
@@ -226,6 +239,7 @@ export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   classSections: DEFAULT_CLASS_SECTIONS.map(s => ({ ...s })),
   subjects: DEFAULT_SUBJECTS.map(s => ({ ...s })),
   grading: { ...DEFAULT_GRADING_CONFIG, entries: DEFAULT_GRADING_CONFIG.entries.map(e => ({ ...e })) },
+  appearance: { ...DEFAULT_APPEARANCE },
 }
 
 // ============================================================================

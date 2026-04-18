@@ -19,29 +19,12 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors, colors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
+import { useBrandColors } from '@/hooks/use-brand-colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import { reorderByAcademicMonth } from '@/utils/academic-date'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { PerformanceDataset } from '../types'
-
-/**
- * The three brand colours the app reuses everywhere else for series.
- * Recoloured at render-time by position in the final series list to avoid
- * the collision the mock layer hit when Grade 7 (index 6) and Class 9B
- * (index 9) both mapped to `baseColors.blue` via `index % 3`.
- *
- * With a typical max of 3 grade picks this covers every distinct bar. If
- * a user forces 4+ series (e.g. 3 grades picked + one in compare-mode with
- * two sections) the 4th series cycles back to navy — a visible repeat, but
- * the colours each of the first three series gets are still unique, which
- * is what the user actually sees when glancing at the legend.
- */
-const SERIES_PALETTE = [
-  baseColors.heading, // dark navy
-  baseColors.pink,    // pastel pink
-  baseColors.blue,    // pale blue
-] as const
 
 interface StudentPerformanceChartProps {
   datasets: PerformanceDataset[]
@@ -54,14 +37,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-        <p className="text-xs font-semibold mb-1" style={{ color: baseColors.heading }}>
+        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--heading)' }}>
           {label}
         </p>
         {payload.map((entry: any) => (
           <div
             key={entry.name}
             className="flex items-center gap-2 text-xs"
-            style={{ color: baseColors.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             <span
               className="inline-block w-2 h-2 rounded-full"
@@ -121,6 +104,11 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
   }, [datasets, selected])
 
   const { startMonth } = useAcademicDates()
+  const brand = useBrandColors()
+  const SERIES_PALETTE = React.useMemo(
+    () => [brand.heading, brand.primary, brand.accent] as const,
+    [brand.heading, brand.primary, brand.accent],
+  )
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
   const allGrades = activeDataset?.grades ?? []
 
@@ -184,7 +172,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
       ...s,
       color: SERIES_PALETTE[i % SERIES_PALETTE.length],
     }))
-  }, [allGrades, pickedGrades, pickedSections, compareGrades])
+  }, [allGrades, pickedGrades, pickedSections, compareGrades, SERIES_PALETTE])
   const rawData = activeDataset?.data ?? []
   const data = React.useMemo(
     () => reorderByAcademicMonth(rawData, 'month', startMonth),

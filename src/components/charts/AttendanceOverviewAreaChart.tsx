@@ -19,7 +19,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import type { AttendanceOverviewData } from '@/features/attendance/types'
-import { baseColors } from '@/theme/colors'
+
 import { ChartGradient } from '@/theme/ChartGradient'
 import { colors } from '@/theme/colors'
 
@@ -46,15 +46,15 @@ const CustomTooltip = ({ active, payload }: any) => {
         <p className="text-caption font-medium text-heading mb-1">{data.month}</p>
         <div className="space-y-1">
           <p className="text-caption text-foreground">
-            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: baseColors.pink }} />
+            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: 'var(--primary)' }} />
             Students: <span className="font-medium">{data.students.toFixed(1)}%</span>
           </p>
           <p className="text-caption text-foreground">
-            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: baseColors.blue }} />
+            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: 'var(--accent)' }} />
             Teachers: <span className="font-medium">{data.teachers.toFixed(1)}%</span>
           </p>
           <p className="text-caption text-foreground">
-            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: baseColors.heading }} />
+            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: 'var(--heading)' }} />
             Staff: <span className="font-medium">{data.staff.toFixed(1)}%</span>
           </p>
         </div>
@@ -71,15 +71,15 @@ const CustomLegend = () => {
   return (
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-1.5">
-        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: baseColors.pink }} />
+        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--primary)' }} />
         <span className="text-caption text-foreground">Students</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: baseColors.blue }} />
+        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--accent)' }} />
         <span className="text-caption text-foreground">Teachers</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: baseColors.heading }} />
+        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--heading)' }} />
         <span className="text-caption text-foreground">Staff</span>
       </div>
     </div>
@@ -139,19 +139,19 @@ export function AttendanceOverviewAreaChart({
             <defs>
               <ChartGradient
                 id="studentsGradient"
-                color={baseColors.pink}
+                color={'var(--primary)'}
                 topOpacity={0.4}
                 bottomOpacity={0.1}
               />
               <ChartGradient
                 id="teachersGradient"
-                color={baseColors.blue}
+                color={'var(--accent)'}
                 topOpacity={0.4}
                 bottomOpacity={0.1}
               />
               <ChartGradient
                 id="staffGradient"
-                color={baseColors.heading}
+                color={'var(--heading)'}
                 topOpacity={0.4}
                 bottomOpacity={0.1}
               />
@@ -214,26 +214,26 @@ export function AttendanceOverviewAreaChart({
             <Line
               type="monotone"
               dataKey="students"
-              stroke={baseColors.pink}
+              stroke={'var(--primary)'}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: baseColors.pink }}
+              activeDot={{ r: 4, fill: 'var(--primary)' }}
             />
             <Line
               type="monotone"
               dataKey="teachers"
-              stroke={baseColors.blue}
+              stroke={'var(--accent)'}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: baseColors.blue }}
+              activeDot={{ r: 4, fill: 'var(--accent)' }}
             />
             <Line
               type="monotone"
               dataKey="staff"
-              stroke={baseColors.heading}
+              stroke={'var(--heading)'}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: baseColors.heading }}
+              activeDot={{ r: 4, fill: 'var(--heading)' }}
             />
           </AreaChart>
         </ResponsiveContainer>

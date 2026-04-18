@@ -11,7 +11,7 @@ interface AttendanceIndicatorProps {
 const DEFAULT_SIZE = 20
 const STROKE_WIDTH = 4.5
 const BACKGROUND_COLOR = colors.border.default
-const FILLED_COLOR = colors.primary.base
+const FILLED_COLOR = 'var(--primary)'
 const RADIUS_RATIO = 0.4 // radius = size * 0.4
 
 /**

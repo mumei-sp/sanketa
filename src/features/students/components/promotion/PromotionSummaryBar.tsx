@@ -59,7 +59,7 @@ export function PromotionSummaryBar({ candidates, isExecuting, onConfirm }: Prom
         disabled={!hasDecisions || isExecuting}
         className="px-5 py-2 rounded-lg text-sm font-semibold transition-opacity"
         style={{
-          backgroundColor: hasDecisions ? colors.text.heading : colors.border.default,
+          backgroundColor: hasDecisions ? 'var(--heading)' : colors.border.default,
           color: colors.background.card,
           opacity: !hasDecisions || isExecuting ? 0.6 : 1,
           cursor: !hasDecisions || isExecuting ? 'not-allowed' : 'pointer',

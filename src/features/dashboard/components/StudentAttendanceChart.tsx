@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors, colors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
+import { useBrandColors } from '@/hooks/use-brand-colors'
 import { ChartGradient } from '@/theme/ChartGradient'
 import type { AttendanceDataset } from '../types'
 
@@ -40,10 +41,10 @@ const CustomTooltip = ({ active, payload }: any) => {
     const data = payload[0].payload
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-        <p className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+        <p className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
           {data.day}
         </p>
-        <p className="text-sm font-bold" style={{ color: baseColors.heading }}>
+        <p className="text-sm font-bold" style={{ color: 'var(--heading)' }}>
           {data.count.toLocaleString('en-IN')}
         </p>
       </div>
@@ -63,6 +64,7 @@ export function StudentAttendanceChart({ datasets, isLoading = false }: StudentA
 
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
   const data = activeDataset?.data ?? []
+  const brand = useBrandColors()
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 300
 
@@ -104,7 +106,7 @@ export function StudentAttendanceChart({ datasets, isLoading = false }: StudentA
               <ResponsiveContainer width="100%" height="100%" minHeight={160}>
                 <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
-                    <ChartGradient id="attendanceBarGradient" color={baseColors.pink} topOpacity={0.9} bottomOpacity={0.4} />
+                    <ChartGradient id="attendanceBarGradient" color={brand.primary} topOpacity={0.9} bottomOpacity={0.4} />
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={colors.border.default} opacity={0.3} vertical={false} />
                   <XAxis dataKey="day" stroke={colors.text.muted} fontSize={12} tickLine={false} axisLine={false} />

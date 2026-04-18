@@ -244,10 +244,10 @@ export function EnrollmentTrendsChart({
                 <Line
                   type="monotone"
                   dataKey="enrollment"
-                  stroke={colors.text.heading}
+                  stroke="var(--heading)"
                   strokeWidth={1.75}
                   dot={false}
-                  activeDot={{ r: 4, fill: colors.text.heading }}
+                  activeDot={{ r: 4, fill: 'var(--heading)' }}
                 />
               </AreaChart>
             </ResponsiveContainer>

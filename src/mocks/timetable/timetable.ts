@@ -11,6 +11,14 @@
  */
 
 import { accent, primary, status, border } from '@/theme/colors'
+// Brand base colors are CSS vars so subject tiles reflect the user's theme.
+// Non-brand tokens (accent.soft, primary.soft, status.*, border.default) stay
+// static — they're semantic/decorative, not user-tunable.
+const BRAND_PRIMARY = 'var(--primary)'
+const BRAND_ACCENT = 'var(--accent)'
+// Mark imported values as used so lints don't flag them when specific
+// variants (like .soft and .muted) stay bound.
+void accent; void primary
 import type {
   Subject,
   ClassSection,
@@ -28,16 +36,24 @@ const EFFECTIVE_FROM = isoDate(academicYearStart())
 // Subjects Registry — colors from theme tokens, never hardcoded hex
 // ============================================================================
 
+// color-mix lets brand-derived shades track the user's active preset without
+// us having to manage half a dozen extra CSS vars.
+const PRIMARY_SOFT = 'color-mix(in srgb, var(--primary) 55%, white)'
+const PRIMARY_MUTED = 'color-mix(in srgb, var(--primary) 30%, white)'
+const ACCENT_SOFT = 'color-mix(in srgb, var(--accent) 55%, white)'
+const ACCENT_MUTED = 'color-mix(in srgb, var(--accent) 30%, white)'
+const ACCENT_SUBTLE = 'color-mix(in srgb, var(--accent) 20%, white)'
+
 export const subjects: Subject[] = [
-  { id: 'math',    name: 'Mathematics',        shortName: 'Math',    color: accent.base },
-  { id: 'eng',     name: 'English',            shortName: 'Eng',     color: primary.base },
-  { id: 'sci',     name: 'Science',            shortName: 'Sci',     color: accent.soft },
-  { id: 'sst',     name: 'Social Studies',     shortName: 'SSt',     color: primary.soft },
+  { id: 'math',    name: 'Mathematics',        shortName: 'Math',    color: BRAND_ACCENT },
+  { id: 'eng',     name: 'English',            shortName: 'Eng',     color: BRAND_PRIMARY },
+  { id: 'sci',     name: 'Science',            shortName: 'Sci',     color: ACCENT_SOFT },
+  { id: 'sst',     name: 'Social Studies',     shortName: 'SSt',     color: PRIMARY_SOFT },
   { id: 'hindi',   name: 'Hindi',              shortName: 'Hin',     color: status.success.soft },
-  { id: 'cs',      name: 'Computer Science',   shortName: 'CS',      color: accent.muted },
+  { id: 'cs',      name: 'Computer Science',   shortName: 'CS',      color: ACCENT_MUTED },
   { id: 'pe',      name: 'Physical Education', shortName: 'PE',      color: status.warning.soft },
-  { id: 'art',     name: 'Art',                shortName: 'Art',     color: primary.muted },
-  { id: 'music',   name: 'Music',              shortName: 'Mus',     color: accent.subtle },
+  { id: 'art',     name: 'Art',                shortName: 'Art',     color: PRIMARY_MUTED },
+  { id: 'music',   name: 'Music',              shortName: 'Mus',     color: ACCENT_SUBTLE },
   { id: 'library', name: 'Library',            shortName: 'Lib',     color: border.default },
 ]
 

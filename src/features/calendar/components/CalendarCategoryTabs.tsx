@@ -49,10 +49,10 @@ export function CalendarCategoryTabs({
       label: 'All Schedules',
       count: events.length,
       icon: CalendarDays,
-      bgColor: baseColors.blue,
-      borderColor: baseColors.heading,
-      iconBgColor: baseColors.blue,
-      iconColor: baseColors.heading,
+      bgColor: 'var(--accent)',
+      borderColor: 'var(--heading)',
+      iconBgColor: 'var(--accent)',
+      iconColor: 'var(--heading)',
     },
     ...allCategories.map(cat => {
       const config = categoryConfig[cat]
@@ -64,8 +64,8 @@ export function CalendarCategoryTabs({
         icon: iconMap[config.iconName] || CalendarDays,
         bgColor: config.backgroundColor,
         borderColor: config.borderColor,
-        iconBgColor: isFinance ? baseColors.heading : config.backgroundColor,
-        iconColor: isFinance ? colors.background.card : baseColors.heading,
+        iconBgColor: isFinance ? 'var(--heading)' : config.backgroundColor,
+        iconColor: isFinance ? colors.background.card : 'var(--heading)',
       }
     })
     // Sort categories by event count (busiest first)
@@ -92,7 +92,7 @@ export function CalendarCategoryTabs({
         >
           <div className="flex flex-col items-start gap-1">
             <span className="text-xs font-medium text-muted-foreground">{allTab.label}</span>
-            <span className="text-lg font-bold" style={{ color: baseColors.heading }}>
+            <span className="text-lg font-bold" style={{ color: 'var(--heading)' }}>
               {allTab.count}
             </span>
           </div>
@@ -126,7 +126,7 @@ export function CalendarCategoryTabs({
                   <span className="text-xs font-medium text-muted-foreground">{tab.label}</span>
                   <span
                     className="text-lg font-bold"
-                    style={{ color: baseColors.heading }}
+                    style={{ color: 'var(--heading)' }}
                   >
                     {tab.count}
                   </span>
@@ -176,13 +176,13 @@ export function CalendarCategoryTabs({
             </div>
             <span
               className="text-xs font-medium text-muted-foreground whitespace-nowrap"
-              style={isActive ? { color: baseColors.heading } : undefined}
+              style={isActive ? { color: 'var(--heading)' } : undefined}
             >
               {tab.label}
             </span>
             <span
               className="ml-auto text-base font-bold"
-              style={{ color: baseColors.heading }}
+              style={{ color: 'var(--heading)' }}
             >
               {tab.count}
             </span>

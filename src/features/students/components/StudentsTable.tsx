@@ -94,8 +94,8 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
             <div
               className="flex items-center gap-1.5 rounded-md h-8 px-2.5"
               style={{
-                backgroundColor: withOpacity(baseColors.blue, 0.35),
-                color: colors.text.heading,
+                backgroundColor: withOpacity('var(--accent)', 0.35),
+                color: 'var(--heading)',
               }}
             >
               <span className="text-xs font-medium">{filterLabel}</span>

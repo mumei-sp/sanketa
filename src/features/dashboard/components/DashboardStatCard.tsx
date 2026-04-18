@@ -18,7 +18,7 @@ export function DashboardStatCard({ stat }: DashboardStatCardProps) {
           <span className="text-body-muted text-muted-foreground truncate">{stat.label}</span>
           <span
             className="text-numeric text-2xl"
-            style={{ color: baseColors.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             {stat.value.toLocaleString('en-IN')}
           </span>

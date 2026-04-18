@@ -203,7 +203,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
           size="sm"
           className="h-7 text-xs px-3 hover:opacity-90 border-0"
           style={{
-            backgroundColor: baseColors.blue,
+            backgroundColor: 'var(--accent)',
             color: text.heading,
           }}
         >

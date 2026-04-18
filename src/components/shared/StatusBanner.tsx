@@ -20,9 +20,9 @@ export function StatusBanner({ icon, children, className }: StatusBannerProps) {
       className={`rounded-lg border flex items-center gap-2 text-sm ${className ?? ''}`}
       style={{
         padding: `${spacing['2.5']} ${spacing['3']}`,
-        borderColor: darken(baseColors.blue, 10),
-        backgroundColor: colors.accent.base,
-        color: colors.text.heading,
+        borderColor: 'color-mix(in srgb, var(--accent) 90%, black)',
+        backgroundColor: 'var(--accent)',
+        color: 'var(--heading)',
       }}
     >
       {icon}

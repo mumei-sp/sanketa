@@ -40,9 +40,9 @@ export function AttendanceDailySummaryBar({
   counts.unmarked += totalStudents - Object.keys(entries).length
 
   const stats = [
-    { label: 'Present', count: counts.present, icon: Check, color: darken(baseColors.blue, 15) },
-    { label: 'Late', count: counts.late, icon: Clock, color: darken(baseColors.pink, 20) },
-    { label: 'Absent', count: counts.absent, icon: X, color: colors.text.heading },
+    { label: 'Present', count: counts.present, icon: Check, color: 'color-mix(in srgb, var(--accent) 85%, black)' },
+    { label: 'Late', count: counts.late, icon: Clock, color: 'color-mix(in srgb, var(--primary) 80%, black)' },
+    { label: 'Absent', count: counts.absent, icon: X, color: 'var(--heading)' },
     { label: 'Unmarked', count: counts.unmarked, icon: AlertCircle, color: colors.text.muted },
   ]
 
@@ -77,7 +77,7 @@ export function AttendanceDailySummaryBar({
         disabled={!allMarked || isSaving}
         className="px-5 py-2 rounded-lg text-sm font-semibold transition-opacity"
         style={{
-          backgroundColor: allMarked ? colors.text.heading : colors.border.default,
+          backgroundColor: allMarked ? 'var(--heading)' : colors.border.default,
           color: colors.background.card,
           opacity: !allMarked || isSaving ? 0.6 : 1,
           cursor: !allMarked || isSaving ? 'not-allowed' : 'pointer',

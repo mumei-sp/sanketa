@@ -154,11 +154,22 @@ function desaturate(hex: string, amount: number): string {
 }
 
 /**
- * Adjust opacity of a color (returns rgba string)
+ * Adjust opacity of a color (returns rgba string, or color-mix for CSS vars).
+ *
+ * Handles two cases:
+ *  - Hex strings → rgba(r, g, b, opacity)
+ *  - CSS var references like `var(--primary)` → color-mix(in srgb, ..., transparent)
+ *    so the returned expression stays live when the CSS var updates.
  */
-export function withOpacity(hex: string, opacity: number): string {
-  const rgb = hexToRgb(hex)
-  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`
+export function withOpacity(color: string, opacity: number): string {
+  // Hex → rgba. Anything else (CSS var, color-mix, named color) goes through
+  // color-mix so it stays reactive and composes cleanly.
+  if (/^#?[0-9a-f]{3}([0-9a-f]{3})?$/i.test(color)) {
+    const rgb = hexToRgb(color)
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`
+  }
+  const pct = Math.max(0, Math.min(100, Math.round(opacity * 100)))
+  return `color-mix(in srgb, ${color} ${pct}%, transparent)`
 }
 
 /**

@@ -14,9 +14,9 @@ interface ExpenseBreakdownChartProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Salaries: baseColors.heading,
-  Supplies: baseColors.pink,
-  Maintenance: baseColors.blue,
+  Salaries: 'var(--heading)',
+  Supplies: 'var(--primary)',
+  Maintenance: 'var(--accent)',
   Events: '#A5D6A7',
   Others: '#E0E0E0',
 }
@@ -98,7 +98,7 @@ export function ExpenseBreakdownChart({
               {/* Center label */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-[10px] text-muted-foreground">Total Expense</span>
-                <span className="text-lg font-bold" style={{ color: baseColors.heading }}>
+                <span className="text-lg font-bold" style={{ color: 'var(--heading)' }}>
                   ₹{total.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -114,7 +114,7 @@ export function ExpenseBreakdownChart({
                   />
                   <div className="min-w-0">
                     <span className="text-xs text-muted-foreground block truncate">{item.category}</span>
-                    <span className="text-xs font-medium" style={{ color: baseColors.heading }}>
+                    <span className="text-xs font-medium" style={{ color: 'var(--heading)' }}>
                       ₹{(item.amount / 1000).toLocaleString('en-IN', { maximumFractionDigits: 0 })}K
                     </span>
                     <span className="text-[10px] text-muted-foreground ml-1">{item.percentage}%</span>

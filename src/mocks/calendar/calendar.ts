@@ -57,7 +57,7 @@ function createEvent(
     end: endTime ? `${date}T${to24h(endTime)}` : `${date}T${to24h(startTime)}`,
     backgroundColor: config.backgroundColor,
     borderColor: config.borderColor,
-    textColor: baseColors.heading,
+    textColor: 'var(--heading)',
     extendedProps: {
       category,
       location,
@@ -92,8 +92,8 @@ function createAllDayEvent(
     start: date,
     end: date,
     allDay: true,
-    backgroundColor: baseColors.heading,
-    borderColor: baseColors.heading,
+    backgroundColor: 'var(--heading)',
+    borderColor: 'var(--heading)',
     textColor: background.card,
     extendedProps: {
       category,

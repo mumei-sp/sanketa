@@ -55,32 +55,32 @@ export const dashboardStats: DashboardStat[] = [
     label: 'Enrolled Students',
     value: TOTAL_ENROLLMENT,
     icon: GraduationCap,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'active-teachers',
     label: 'Active Teachers',
     value: teachersData.length * SCHOOL_SCALE.facultyMultiplier,
     icon: Users,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'support-staff',
     label: 'Support Staff',
     value: 34,
     icon: UserCog,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'total-awards',
     label: 'Total Awards',
     value: 152,
     icon: Award,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
 ]
 
@@ -93,11 +93,11 @@ export const dashboardStats: DashboardStat[] = [
 // ---------------------------------------------------------------------------
 
 /** Colors cycled through grade series so bars/cells always have distinct hues. */
-const GRADE_PALETTE = [baseColors.blue, baseColors.pink, baseColors.heading] as const
+const GRADE_PALETTE = ['var(--accent)', 'var(--primary)', 'var(--heading)'] as const
 
 /** Tints cycled through the SECTIONS of a single grade (so 7A/7B/7C read apart
  *  from each other without colliding with the other grade's colour). */
-const SECTION_PALETTE = [baseColors.blue, baseColors.pink, baseColors.heading] as const
+const SECTION_PALETTE = ['var(--accent)', 'var(--primary)', 'var(--heading)'] as const
 
 /** Deterministic pseudo-random 0..1 from a seed string (stable across reloads). */
 function seededFraction(seed: string): number {
@@ -256,8 +256,8 @@ export function buildGenderDatasets(): GenderDataset[] {
       label: `Grade ${grade}`,
       value: `grade-${grade}`,
       data: [
-        { label: 'Boys', value: boys, color: baseColors.heading },
-        { label: 'Girls', value: girls, color: baseColors.pink },
+        { label: 'Boys', value: boys, color: 'var(--heading)' },
+        { label: 'Girls', value: girls, color: 'var(--primary)' },
       ],
     }
   })
@@ -306,7 +306,7 @@ export const calendarEvents: CalendarEvent[] = [
     title: 'Annual Sport Competition',
     subtitle: 'All Classes',
     color: status.danger.base,
-    bgColor: baseColors.pink,
+    bgColor: 'var(--primary)',
   },
   {
     id: 'evt-2',
@@ -316,7 +316,7 @@ export const calendarEvents: CalendarEvent[] = [
     title: 'Parent-Teacher Meeting',
     subtitle: 'Gr. 3A, 5B',
     color: status.info.base,
-    bgColor: baseColors.pink,
+    bgColor: 'var(--primary)',
   },
   {
     id: 'evt-3',
@@ -326,7 +326,7 @@ export const calendarEvents: CalendarEvent[] = [
     title: 'Annual Science Fair',
     subtitle: 'All Classes',
     color: status.warning.base,
-    bgColor: baseColors.pink,
+    bgColor: 'var(--primary)',
   },
   {
     id: 'evt-4',
@@ -336,7 +336,7 @@ export const calendarEvents: CalendarEvent[] = [
     title: 'Inter-School Debate',
     subtitle: 'Grade 8 & 9',
     color: status.info.base,
-    bgColor: baseColors.pink,
+    bgColor: 'var(--primary)',
   },
   {
     id: 'evt-5',
@@ -346,7 +346,7 @@ export const calendarEvents: CalendarEvent[] = [
     title: 'Earth Day Celebration',
     subtitle: 'All Classes',
     color: status.success.base,
-    bgColor: baseColors.pink,
+    bgColor: 'var(--primary)',
   },
   {
     id: 'evt-6',
@@ -356,7 +356,7 @@ export const calendarEvents: CalendarEvent[] = [
     title: 'Art Exhibition',
     subtitle: 'All Classes',
     color: status.warning.base,
-    bgColor: baseColors.pink,
+    bgColor: 'var(--primary)',
   },
 ]
 
@@ -388,8 +388,8 @@ export const recentActivityItems: RecentActivityItem[] = [
     timestamp: activityTimestamp(1, 9, 15, 'AM'),
     dotColor: status.info.base,
     icon: 'user-plus',
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'act-2',
@@ -397,8 +397,8 @@ export const recentActivityItems: RecentActivityItem[] = [
     timestamp: activityTimestamp(1, 11, 30, 'AM'),
     dotColor: status.success.base,
     icon: 'check-square',
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'act-3',
@@ -406,7 +406,7 @@ export const recentActivityItems: RecentActivityItem[] = [
     timestamp: activityTimestamp(2, 2, 45, 'PM'),
     dotColor: status.warning.base,
     icon: 'receipt',
-    iconBg: baseColors.heading,
+    iconBg: 'var(--heading)',
     iconColor: '#FFFFFF',
   },
   {
@@ -415,7 +415,7 @@ export const recentActivityItems: RecentActivityItem[] = [
     timestamp: activityTimestamp(3, 10, 20, 'AM'),
     dotColor: status.danger.base,
     icon: 'pencil',
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
 ]

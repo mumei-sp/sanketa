@@ -1,7 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors } from '@/theme/colors'
+import { useBrandColors } from '@/hooks/use-brand-colors'
 import type { DepartmentData } from '@/mocks/teachers/statistics'
 
 interface DepartmentChartProps {
@@ -10,24 +10,24 @@ interface DepartmentChartProps {
   isLoading?: boolean
 }
 
-const DEPARTMENT_COLORS: Record<string, string> = {
-  Mathematics: baseColors.pink,
-  English: baseColors.blue,
-  Science: baseColors.heading,
-  'Social Studies': '#A5D6A7',
-  Hindi: '#90CAF9',
-  'Computer Science': '#CE93D8',
-  'Physical Education': '#E0E0E0',
-  Art: '#FFB74D',
-  Music: '#80CBC4',
-  Library: '#BCAAA4',
-}
-
 export function DepartmentChart({
   data,
   total,
   isLoading = false,
 }: DepartmentChartProps) {
+  const brand = useBrandColors()
+  const DEPARTMENT_COLORS: Record<string, string> = {
+    Mathematics: brand.primary,
+    English: brand.accent,
+    Science: brand.heading,
+    'Social Studies': '#A5D6A7',
+    Hindi: '#90CAF9',
+    'Computer Science': '#CE93D8',
+    'Physical Education': '#E0E0E0',
+    Art: '#FFB74D',
+    Music: '#80CBC4',
+    Library: '#BCAAA4',
+  }
   if (isLoading) {
     return (
       <Tile
@@ -85,7 +85,7 @@ export function DepartmentChart({
           {/* Center label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-[10px] text-muted-foreground">Total Teachers</span>
-            <span className="text-xl font-bold" style={{ color: baseColors.heading }}>
+            <span className="text-xl font-bold" style={{ color: 'var(--heading)' }}>
               {total}
             </span>
           </div>
@@ -104,7 +104,7 @@ export function DepartmentChart({
                   <span className="text-xs text-muted-foreground truncate">{item.name}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
                     {item.count}
                   </span>
                   <span className="text-[11px] text-muted-foreground w-8 text-right">

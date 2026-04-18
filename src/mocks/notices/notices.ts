@@ -14,7 +14,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-1',
     title: 'Midterm Exam Timetable Released',
-    tags: [{ label: 'Academic', color: '#E8D5F5' }],
+    tags: [{ label: 'Academic', color: 'color-mix(in srgb, var(--primary) 55%, white)' }],
     audience: 'Students (Grade 7-9)',
     postDate: relativeDisplay(-3),
     expiryDate: relativeDisplay(10),
@@ -30,7 +30,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-2',
     title: 'Parent-Teacher Meeting Invitation',
-    tags: [{ label: 'Events', color: '#D4EDDA' }],
+    tags: [{ label: 'Events', color: 'color-mix(in srgb, var(--accent) 65%, white)' }],
     audience: 'Parents & Teachers',
     postDate: relativeDisplay(-5),
     expiryDate: relativeDisplay(7),
@@ -45,7 +45,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-3',
     title: 'Science Lab Maintenance Notice',
-    tags: [{ label: 'Maintenance', color: '#CDEAF0' }],
+    tags: [{ label: 'Maintenance', color: 'color-mix(in srgb, var(--accent) 40%, white)' }],
     audience: 'Students & Teachers (Science Dept.)',
     postDate: relativeDisplay(-1),
     expiryDate: relativeDisplay(9),
@@ -61,8 +61,8 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
     id: 'nb-4',
     title: 'School Choir Rehearsal Postponed',
     tags: [
-      { label: 'Arts', color: '#FFF3CD' },
-      { label: 'Events', color: '#D4EDDA' },
+      { label: 'Arts', color: 'color-mix(in srgb, var(--primary) 40%, white)' },
+      { label: 'Events', color: 'color-mix(in srgb, var(--accent) 65%, white)' },
     ],
     audience: 'Choir Members',
     postDate: relativeDisplay(-2),
@@ -78,7 +78,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-5',
     title: 'Fee Payment Reminder (Grade 9)',
-    tags: [{ label: 'Finance', color: '#D1ECF1' }],
+    tags: [{ label: 'Finance', color: 'color-mix(in srgb, var(--accent) 80%, var(--heading) 8%)' }],
     audience: 'Grade 9 Students & Parents',
     postDate: relativeDisplay(-6),
     expiryDate: relativeDisplay(4),
@@ -93,7 +93,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-6',
     title: 'National Holiday – School Closed',
-    tags: [{ label: 'Notice', color: '#F8D7DA' }],
+    tags: [{ label: 'Notice', color: 'color-mix(in srgb, var(--primary) 80%, var(--heading) 8%)' }],
     audience: 'Entire School',
     postDate: relativeDisplay(-18),
     expiryDate: relativeDisplay(-2),
@@ -108,7 +108,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-7',
     title: 'Teacher Development Workshop',
-    tags: [{ label: 'Training', color: '#CDEAF0' }],
+    tags: [{ label: 'Training', color: 'color-mix(in srgb, var(--accent) 55%, white)' }],
     audience: 'Teachers',
     postDate: relativeDisplay(-45),
     expiryDate: relativeDisplay(-25),
@@ -123,7 +123,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-8',
     title: 'Annual Sports Competition',
-    tags: [{ label: 'Events', color: '#D4EDDA' }],
+    tags: [{ label: 'Events', color: 'color-mix(in srgb, var(--accent) 65%, white)' }],
     audience: 'Students',
     postDate: relativeDisplay(-4),
     expiryDate: relativeDisplay(8),
@@ -139,7 +139,7 @@ export const noticeBoardEntries: NoticeBoardEntry[] = [
   {
     id: 'nb-9',
     title: 'Field Trip Consent Forms Due',
-    tags: [{ label: 'Announcement', color: '#FFF3CD' }],
+    tags: [{ label: 'Announcement', color: 'color-mix(in srgb, var(--primary) 65%, white)' }],
     audience: 'Grade 7 & 8 Students',
     postDate: relativeDisplay(-2),
     expiryDate: relativeDisplay(12),

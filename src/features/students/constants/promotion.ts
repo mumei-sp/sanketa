@@ -17,5 +17,5 @@ export const DECISION_OPTIONS: {
 }[] = [
   { value: 'promote', label: 'Promote', icon: ArrowUp, activeColor: colors.status.success.base },
   { value: 'retain', label: 'Retain', icon: X, activeColor: colors.status.danger.base },
-  { value: 'transfer', label: 'Transfer', icon: ArrowRight, activeColor: colors.text.heading },
+  { value: 'transfer', label: 'Transfer', icon: ArrowRight, activeColor: 'var(--heading)' },
 ]

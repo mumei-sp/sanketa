@@ -59,8 +59,8 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
               <span
                 className="text-[10px] font-medium rounded px-1.5 py-px"
                 style={{
-                  backgroundColor: colors.accent.base,
-                  color: colors.text.heading,
+                  backgroundColor: 'var(--accent)',
+                  color: 'var(--heading)',
                 }}
               >
                 {g.grade}
@@ -101,8 +101,8 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
             <span
               className="inline-flex items-center justify-center text-xs font-semibold rounded-full px-2.5 py-0.5"
               style={{
-                backgroundColor: colors.accent.base,
-                color: colors.text.heading,
+                backgroundColor: 'var(--accent)',
+                color: 'var(--heading)',
               }}
             >
               {grade}
@@ -116,7 +116,7 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
         accessorKey: 'gpa',
         header: ({ column }) => <DataTableColumnHeader column={column} title="GPA" />,
         cell: ({ row }) => (
-          <span className="text-sm font-semibold" style={{ color: colors.text.heading }}>
+          <span className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
             {row.original.gpa}
           </span>
         ),
@@ -134,7 +134,7 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
             type="button"
             onClick={(e) => { e.stopPropagation(); onViewReportCard(row.original.studentId) }}
             className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors cursor-pointer whitespace-nowrap"
-            style={{ backgroundColor: colors.accent.base, color: colors.text.heading }}
+            style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
           >
             <Eye className="w-3.5 h-3.5" />
             Report Card
@@ -165,8 +165,8 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
           className="flex items-center gap-4 flex-wrap mt-3 rounded-lg"
           style={{
             padding: `${spacing['2.5']} ${spacing['3']}`,
-            backgroundColor: colors.accent.base,
-            border: `1px solid ${colors.accent.base}`,
+            backgroundColor: 'var(--accent)',
+            border: `1px solid ${'var(--accent)'}`,
           }}
         >
           <span className="text-xs font-semibold text-text-heading">Class Average:</span>

@@ -26,7 +26,7 @@ export function StudentAvatar({ name, avatarUrl, size = 32, className }: Student
         height: size,
         minWidth: size,
         minHeight: size,
-        backgroundColor: colors.accent.base,
+        backgroundColor: 'var(--accent)',
       }}
     >
       {avatarUrl && (
@@ -34,7 +34,7 @@ export function StudentAvatar({ name, avatarUrl, size = 32, className }: Student
       )}
       <AvatarFallback
         className="text-xs font-semibold bg-transparent"
-        style={{ color: colors.text.heading }}
+        style={{ color: 'var(--heading)' }}
       >
         {getInitials(name)}
       </AvatarFallback>

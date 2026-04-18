@@ -19,7 +19,8 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors, colors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
+import { useBrandColors } from '@/hooks/use-brand-colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import { reorderByAcademicMonth } from '@/utils/academic-date'
 import type { EarningsDataset } from '../types'
@@ -40,12 +41,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-        <p className="text-xs font-semibold mb-1" style={{ color: baseColors.heading }}>{label}</p>
+        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--heading)' }}>{label}</p>
         {payload.map((entry: any) => (
           <div
             key={entry.name}
             className="flex items-center gap-2 text-xs"
-            style={{ color: baseColors.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             <span
               className="inline-block w-2 h-2 rounded-full"
@@ -90,6 +91,7 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
   }, [datasets, selected])
 
   const { startMonth } = useAcademicDates()
+  const brand = useBrandColors()
   const activeDataset = datasets.find(d => d.value === selected) ?? datasets[0]
   const rawData = activeDataset?.data ?? []
   const data = React.useMemo(
@@ -138,12 +140,12 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
                 <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="earningsFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={baseColors.heading} stopOpacity={0.15} />
-                      <stop offset="100%" stopColor={baseColors.heading} stopOpacity={0.02} />
+                      <stop offset="0%" stopColor={brand.heading} stopOpacity={0.15} />
+                      <stop offset="100%" stopColor={brand.heading} stopOpacity={0.02} />
                     </linearGradient>
                     <linearGradient id="expensesFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={baseColors.pink} stopOpacity={0.2} />
-                      <stop offset="100%" stopColor={baseColors.pink} stopOpacity={0.02} />
+                      <stop offset="0%" stopColor={brand.primary} stopOpacity={0.2} />
+                      <stop offset="100%" stopColor={brand.primary} stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={colors.border.default} opacity={0.3} vertical={false} />
@@ -164,21 +166,21 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
                     type="monotone"
                     dataKey="earnings"
                     name="Earnings"
-                    stroke={baseColors.heading}
+                    stroke={brand.heading}
                     strokeWidth={2}
                     fill="url(#earningsFill)"
-                    dot={{ r: 3, fill: baseColors.heading, strokeWidth: 0 }}
-                    activeDot={{ r: 4, fill: baseColors.heading, strokeWidth: 0 }}
+                    dot={{ r: 3, fill: brand.heading, strokeWidth: 0 }}
+                    activeDot={{ r: 4, fill: brand.heading, strokeWidth: 0 }}
                   />
                   <Area
                     type="monotone"
                     dataKey="expenses"
                     name="Expenses"
-                    stroke={baseColors.pink}
+                    stroke={brand.primary}
                     strokeWidth={2}
                     fill="url(#expensesFill)"
-                    dot={{ r: 3, fill: baseColors.pink, strokeWidth: 0 }}
-                    activeDot={{ r: 4, fill: baseColors.pink, strokeWidth: 0 }}
+                    dot={{ r: 3, fill: brand.primary, strokeWidth: 0 }}
+                    activeDot={{ r: 4, fill: brand.primary, strokeWidth: 0 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>

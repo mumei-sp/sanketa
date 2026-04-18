@@ -62,7 +62,7 @@ export function FeeStatCards({ stats, isLoading = false }: FeeStatCardsProps) {
               <div className="flex flex-col gap-0.5 min-w-0 items-center md:items-start">
                 <span
                   className="text-numeric text-lg md:text-[26px] font-extrabold leading-tight tracking-tight"
-                  style={{ color: baseColors.heading }}
+                  style={{ color: 'var(--heading)' }}
                 >
                   ₹{stat.value.toLocaleString('en-IN')}
                 </span>

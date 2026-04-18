@@ -51,8 +51,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: studentsData.length * ENROLLMENT_MULTIPLIER,
     description: 'Total active students',
     icon: GraduationCap,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'new-admissions',
@@ -60,8 +60,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 28,
     description: 'This month',
     icon: UserPlus,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'students-on-leave',
@@ -69,8 +69,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 12,
     description: 'Currently on leave',
     icon: UserX,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
 
   // ── Teachers ──
@@ -80,8 +80,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: teachersData.length * FACULTY_MULTIPLIER,
     description: 'Full & part-time',
     icon: Users,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'full-time-teachers',
@@ -89,8 +89,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 62,
     description: 'Permanent staff',
     icon: Briefcase,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'substitute-teachers',
@@ -98,8 +98,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 6,
     description: 'Temporary staff',
     icon: UserCheck,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
 
   // ── Finance ──
@@ -109,8 +109,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 245000,
     description: 'This month',
     icon: DollarSign,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'pending-fees',
@@ -118,8 +118,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 38500,
     description: 'Outstanding amount',
     icon: CreditCard,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'monthly-expenses',
@@ -127,8 +127,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 125000,
     description: 'This month',
     icon: TrendingDown,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
 
   // ── Attendance ──
@@ -138,8 +138,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 94,
     description: 'Percentage present',
     icon: CheckCircle,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'absent-today',
@@ -147,8 +147,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 18,
     description: 'Students absent',
     icon: XCircle,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
 
   // ── General ──
@@ -158,8 +158,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 34,
     description: 'Non-teaching staff',
     icon: UserCog,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'total-awards',
@@ -167,8 +167,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 152,
     description: 'All-time awards',
     icon: Award,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'upcoming-events',
@@ -176,8 +176,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 5,
     description: 'Next 7 days',
     icon: Calendar,
-    iconBg: baseColors.pink,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--primary)',
+    iconColor: 'var(--heading)',
   },
   {
     id: 'assignments-due',
@@ -185,8 +185,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
     value: 12,
     description: 'This week',
     icon: ClipboardList,
-    iconBg: baseColors.blue,
-    iconColor: baseColors.heading,
+    iconBg: 'var(--accent)',
+    iconColor: 'var(--heading)',
   },
 ]
 

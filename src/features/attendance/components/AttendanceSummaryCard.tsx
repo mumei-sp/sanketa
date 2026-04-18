@@ -18,21 +18,21 @@ function getCardConfig(type: AttendanceRecordType) {
     case 'student':
       return {
         title: 'Students',
-        backgroundColor: baseColors.pink,
+        backgroundColor: 'var(--primary)',
         textColor: 'text-foreground',
-        patternColor: withOpacity(colors.primary.base, 0.3),
+        patternColor: withOpacity('var(--primary)', 0.3),
       }
     case 'teacher':
       return {
         title: 'Teachers',
-        backgroundColor: baseColors.blue,
+        backgroundColor: 'var(--accent)',
         textColor: 'text-foreground',
-        patternColor: withOpacity(colors.accent.base, 0.3),
+        patternColor: withOpacity('var(--accent)', 0.3),
       }
     case 'staff':
       return {
         title: 'Staff',
-        backgroundColor: baseColors.heading,
+        backgroundColor: 'var(--heading)',
         textColor: 'text-white',
         patternColor: withOpacity(colors.background.card, 0.1),
       }

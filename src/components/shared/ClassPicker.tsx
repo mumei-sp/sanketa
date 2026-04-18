@@ -157,7 +157,7 @@ function GradeGrid({
             className="relative flex flex-col items-center text-center rounded-lg border-2 transition-all focus:outline-none"
             style={{
               padding: `${spacing['3']} ${spacing['2']}`,
-              borderColor: isSelected ? colors.accent.base : colors.border.default,
+              borderColor: isSelected ? 'var(--accent)' : colors.border.default,
               backgroundColor: isSelected ? colors.accent.soft : colors.background.card,
               opacity: isDisabled ? 0.45 : 1,
               cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -167,7 +167,7 @@ function GradeGrid({
             {isSelected && (
               <div
                 className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: colors.text.heading }}
+                style={{ backgroundColor: 'var(--heading)' }}
               >
                 <Check className="w-3 h-3" style={{ color: colors.background.card }} />
               </div>
@@ -180,15 +180,15 @@ function GradeGrid({
                 width: 40,
                 height: 40,
                 backgroundColor: isSelected
-                  ? withOpacity(baseColors.blue, 0.5)
-                  : withOpacity(baseColors.blue, 0.25),
+                  ? withOpacity('var(--accent)', 0.5)
+                  : withOpacity('var(--accent)', 0.25),
               }}
             >
               <span
                 style={{
                   fontSize: 16,
                   fontWeight: 700,
-                  color: colors.text.heading,
+                  color: 'var(--heading)',
                   lineHeight: 1,
                 }}
               >
@@ -274,11 +274,11 @@ function SectionsPopover({
             padding: '1px 6px',
             fontSize: 10,
             fontWeight: 600,
-            color: colors.text.heading,
+            color: 'var(--heading)',
             backgroundColor: highlighted
-              ? withOpacity(baseColors.pink, 0.55)
-              : withOpacity(baseColors.blue, 0.55),
-            border: `1px solid ${highlighted ? colors.accent.base : 'transparent'}`,
+              ? withOpacity('var(--primary)', 0.55)
+              : withOpacity('var(--accent)', 0.55),
+            border: `1px solid ${highlighted ? 'var(--accent)' : 'transparent'}`,
           }}
           aria-label={
             compareMode
@@ -322,9 +322,9 @@ function SectionsPopover({
           className="flex items-center gap-2 rounded-md px-2 py-1.5 mb-1.5 cursor-pointer transition-colors"
           style={{
             backgroundColor: compareMode
-              ? withOpacity(baseColors.pink, 0.25)
+              ? withOpacity('var(--primary)', 0.25)
               : 'transparent',
-            border: `1px solid ${compareMode ? colors.accent.base : colors.border.subtle}`,
+            border: `1px solid ${compareMode ? 'var(--accent)' : colors.border.subtle}`,
           }}
         >
           <Checkbox
@@ -334,7 +334,7 @@ function SectionsPopover({
           />
           <span
             className="text-[11px] font-medium flex-1"
-            style={{ color: colors.text.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             Compare sections
           </span>
@@ -352,18 +352,18 @@ function SectionsPopover({
                   padding: '3px 10px',
                   fontSize: 11,
                   fontWeight: 600,
-                  color: colors.text.heading,
+                  color: 'var(--heading)',
                   backgroundColor: active
-                    ? withOpacity(baseColors.blue, 0.7)
+                    ? withOpacity('var(--accent)', 0.7)
                     : colors.background.card,
-                  border: `1px solid ${active ? colors.accent.base : colors.border.default}`,
+                  border: `1px solid ${active ? 'var(--accent)' : colors.border.default}`,
                 }}
                 aria-pressed={active}
               >
                 {active && (
                   <Check
                     className="w-2.5 h-2.5 mr-1"
-                    style={{ color: colors.text.heading }}
+                    style={{ color: 'var(--heading)' }}
                   />
                 )}
                 {label}
@@ -500,7 +500,7 @@ function SectionTree({
 
               <span
                 className="flex-1 text-xs font-semibold"
-                style={{ color: colors.text.heading }}
+                style={{ color: 'var(--heading)' }}
               >
                 Grade {grade}
               </span>
@@ -539,9 +539,9 @@ function SectionTree({
                       style={{
                         minWidth: 48,
                         padding: `${spacing['1.5']} ${spacing['3']}`,
-                        borderColor: isSelected ? colors.accent.base : colors.border.default,
+                        borderColor: isSelected ? 'var(--accent)' : colors.border.default,
                         backgroundColor: isSelected
-                          ? withOpacity(baseColors.blue, 0.4)
+                          ? withOpacity('var(--accent)', 0.4)
                           : colors.background.card,
                         opacity: isDisabled ? 0.45 : 1,
                         cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -550,12 +550,12 @@ function SectionTree({
                       {isSelected && (
                         <Check
                           className="w-3 h-3 mr-1"
-                          style={{ color: colors.text.heading }}
+                          style={{ color: 'var(--heading)' }}
                         />
                       )}
                       <span
                         className="text-xs font-semibold tabular-nums"
-                        style={{ color: colors.text.heading }}
+                        style={{ color: 'var(--heading)' }}
                       >
                         {section.label}
                       </span>
@@ -861,10 +861,10 @@ export function ClassPicker({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[520px] max-h-[85vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle style={{ color: colors.text.heading }}>{title}</DialogTitle>
+            <DialogTitle style={{ color: 'var(--heading)' }}>{title}</DialogTitle>
             <DialogDescription>
               {description}{' '}
-              <span className="font-medium" style={{ color: colors.text.heading }}>
+              <span className="font-medium" style={{ color: 'var(--heading)' }}>
                 {mode === 'grade' ? effectiveCount : selected.length}/{max}
               </span>{' '}
               selected.
@@ -911,7 +911,7 @@ export function ClassPicker({
               onClick={() => setOpen(false)}
               className="text-sm"
               style={{
-                backgroundColor: colors.text.heading,
+                backgroundColor: 'var(--heading)',
                 color: colors.background.card,
               }}
             >

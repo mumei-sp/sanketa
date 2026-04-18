@@ -20,7 +20,7 @@ export default function NotFound() {
         style={{
           fontSize: 72,
           fontWeight: 700,
-          color: baseColors.heading,
+          color: 'var(--heading)',
           margin: 0,
           lineHeight: 1,
         }}
@@ -59,7 +59,7 @@ export default function NotFound() {
             fontSize: 13,
             fontWeight: 500,
             color: 'white',
-            backgroundColor: baseColors.heading,
+            backgroundColor: 'var(--heading)',
             borderRadius: 8,
             textDecoration: 'none',
           }}

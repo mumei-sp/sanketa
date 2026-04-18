@@ -3,13 +3,13 @@ import { text, border, accent, withOpacity, baseColors } from '@/theme/colors'
 import { specialProgramsData } from '@/mocks/students/programs'
 
 const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
-  'Enrichment': { bg: withOpacity(baseColors.blue, 0.3), color: accent.base },
+  'Enrichment': { bg: withOpacity('var(--accent)', 0.3), color: accent.base },
   'Academic Support': { bg: withOpacity('#C7E5C8', 0.5), color: '#3A7D44' },
-  'Finance': { bg: withOpacity(baseColors.pink, 0.3), color: '#8B2B6E' },
+  'Finance': { bg: withOpacity('var(--primary)', 0.3), color: '#8B2B6E' },
 }
 
 function getCategoryStyle(category: string) {
-  return CATEGORY_COLORS[category] ?? { bg: withOpacity(baseColors.blue, 0.2), color: text.muted }
+  return CATEGORY_COLORS[category] ?? { bg: withOpacity('var(--accent)', 0.2), color: text.muted }
 }
 
 function getInitials(name: string) {

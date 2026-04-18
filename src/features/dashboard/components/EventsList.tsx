@@ -21,7 +21,7 @@ function EventsContent({ events }: { events: CalendarEvent[] }) {
               className="text-badge px-2 py-0.5 rounded font-medium"
               style={{
                 backgroundColor: event.bgColor,
-                color: baseColors.heading,
+                color: 'var(--heading)',
               }}
             >
               {event.date}
@@ -30,7 +30,7 @@ function EventsContent({ events }: { events: CalendarEvent[] }) {
               {event.startTime} - {event.endTime}
             </span>
           </div>
-          <p className="text-body font-medium truncate" style={{ color: baseColors.heading }}>
+          <p className="text-body font-medium truncate" style={{ color: 'var(--heading)' }}>
             {event.title}
           </p>
           <div className="flex items-center gap-1 mt-0.5">

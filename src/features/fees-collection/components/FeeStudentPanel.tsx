@@ -119,8 +119,8 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
             <span
               className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold"
               style={{
-                backgroundColor: allPaid ? statusColors.success.base : withOpacity(baseColors.blue, 0.5),
-                color: allPaid ? '#fff' : baseColors.heading,
+                backgroundColor: allPaid ? statusColors.success.base : withOpacity('var(--accent)', 0.5),
+                color: allPaid ? '#fff' : 'var(--heading)',
               }}
             >
               {allPaid ? 'Fully Paid' : `₹${totalPaid.toLocaleString('en-IN')} paid`}
@@ -134,7 +134,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
             style={{
               height: '100%',
               width: `${paidPercent}%`,
-              backgroundColor: allPaid ? statusColors.success.base : baseColors.heading,
+              backgroundColor: allPaid ? statusColors.success.base : 'var(--heading)',
               borderRadius: '2px',
               transition: 'width 0.4s ease',
             }}
@@ -155,7 +155,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
             type="button"
             onClick={() => toast.success(`Reminder sent to ${student.studentName}'s guardian`, { description: `₹${pendingAmount.toLocaleString('en-IN')} pending via SMS & Email` })}
             className="flex items-center gap-1.5 mt-4 text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-70"
-            style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity(baseColors.heading, 0.3) }}
+            style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity('var(--heading)', 0.3) }}
           >
             <Send className="w-3 h-3" />
             Send Payment Reminder
@@ -226,7 +226,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
                       type="button"
                       onClick={() => setMarkingRecord(record)}
                       className="cursor-pointer block transition-opacity hover:opacity-70"
-                      style={{ fontSize: '11px', fontWeight: 600, color: baseColors.heading, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity(baseColors.heading, 0.3), marginTop: '3px' }}
+                      style={{ fontSize: '11px', fontWeight: 600, color: 'var(--heading)', textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity('var(--heading)', 0.3), marginTop: '3px' }}
                     >
                       Mark as Paid
                     </button>

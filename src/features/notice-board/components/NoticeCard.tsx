@@ -29,7 +29,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notice) }}
       className={cn(
         'group/notice relative w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-white text-left transition-colors hover:bg-gray-50 cursor-pointer',
-        isSelected && 'ring-2 ring-[#FECCFD] bg-[#FDFAFE]',
+        isSelected && 'ring-2 ring-[color:var(--primary)] bg-[color:color-mix(in_srgb,var(--primary)_15%,white)]',
       )}
     >
       {/* Pin toggle button */}
@@ -52,7 +52,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
             'size-4 transition-transform duration-200',
             notice.pinned && '-rotate-45 fill-current',
           )}
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         />
       </button>
 
@@ -71,7 +71,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
             <span
               key={tag.label}
               className="text-badge px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: tag.color, color: baseColors.heading }}
+              style={{ backgroundColor: tag.color, color: 'var(--heading)' }}
             >
               {tag.label}
             </span>
@@ -81,7 +81,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
         {/* Title */}
         <h3
           className="text-body font-semibold truncate"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           {notice.title}
         </h3>
@@ -98,7 +98,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
         <span className="flex items-center gap-1.5 whitespace-nowrap">
           <Calendar className="size-3 flex-shrink-0" />
           <span className="w-[80px] flex-shrink-0 truncate">{notice.dateLabel || 'Exp. Date'}</span>
-          <span className="font-medium truncate" style={{ color: baseColors.heading }}>
+          <span className="font-medium truncate" style={{ color: 'var(--heading)' }}>
             {notice.dateEndValue
               ? `${notice.expiryDate} – ${notice.dateEndValue}`
               : notice.expiryDate}
@@ -107,14 +107,14 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
         <span className="flex items-center gap-1.5 whitespace-nowrap">
           <Calendar className="size-3 flex-shrink-0" />
           <span className="w-[80px] flex-shrink-0">Post Date</span>
-          <span className="font-medium" style={{ color: baseColors.heading }}>{notice.postDate}</span>
+          <span className="font-medium" style={{ color: 'var(--heading)' }}>{notice.postDate}</span>
         </span>
       </div>
 
       {/* Created By - stacked with label */}
       <div className="hidden md:flex flex-col gap-0.5 flex-shrink-0 text-caption text-muted-foreground w-[120px]">
         <span>Created By</span>
-        <span className="font-medium truncate" style={{ color: baseColors.heading }}>
+        <span className="font-medium truncate" style={{ color: 'var(--heading)' }}>
           {notice.createdBy}
         </span>
       </div>

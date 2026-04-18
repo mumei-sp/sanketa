@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { primary, accent, text, background, border } from '@/theme/colors'
+import { text, background, border } from '@/theme/colors'
 import { textRoles } from '@/config/typography'
 
 /**
@@ -122,7 +122,7 @@ export function GridPagination({
           className="flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
           style={{
             fontSize: textRoles.body.fontSize,
-            backgroundColor: currentPage === 1 ? border.subtle : accent.base,
+            backgroundColor: currentPage === 1 ? border.subtle : 'var(--accent)',
             color: text.body,
             borderColor: border.default,
           }}
@@ -139,7 +139,7 @@ export function GridPagination({
               className="flex h-8 min-w-10 items-center justify-center rounded-md px-3 font-medium transition-colors"
               style={{
                 fontSize: textRoles.body.fontSize,
-                backgroundColor: isActive ? primary.base : accent.base,
+                backgroundColor: isActive ? 'var(--primary)' : 'var(--accent)',
                 color: isActive ? background.card : text.body,
                 border: isActive ? 'none' : `1px solid ${border.default}`,
               }}
@@ -156,7 +156,7 @@ export function GridPagination({
           className="flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
           style={{
             fontSize: textRoles.body.fontSize,
-            backgroundColor: currentPage === totalPages ? border.subtle : accent.base,
+            backgroundColor: currentPage === totalPages ? border.subtle : 'var(--accent)',
             color: text.body,
             borderColor: border.default,
           }}

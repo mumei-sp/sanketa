@@ -94,11 +94,11 @@ export function LoginForm() {
       {/* Logo (mobile/tablet — on desktop it's in the hero) */}
       <div className="mb-6 flex items-center gap-2 lg:hidden">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-soft to-accent-soft">
-          <span className="text-lg font-bold" style={{ color: baseColors.heading }}>S</span>
+          <span className="text-lg font-bold" style={{ color: 'var(--heading)' }}>S</span>
         </div>
       </div>
 
-      <h2 className="mb-1 text-center text-xl font-bold" style={{ color: baseColors.heading }}>
+      <h2 className="mb-1 text-center text-xl font-bold" style={{ color: 'var(--heading)' }}>
         Login to Your Account
       </h2>
       <p className="mb-8 text-center text-sm text-muted-foreground">
@@ -140,7 +140,7 @@ export function LoginForm() {
           <Link
             to="/forgot-password"
             className="text-sm font-medium hover:underline"
-            style={{ color: baseColors.heading }}
+            style={{ color: 'var(--heading)' }}
           >
             Forgot Password?
           </Link>
@@ -150,7 +150,7 @@ export function LoginForm() {
           type="submit"
           disabled={isSubmitting || isLockedOut}
           className="h-11 w-full rounded-full text-sm font-semibold text-white"
-          style={{ backgroundColor: isLockedOut ? undefined : baseColors.heading }}
+          style={{ backgroundColor: isLockedOut ? undefined : 'var(--heading)' }}
         >
           {isLockedOut ? (
             `Try again in ${lockoutRemaining}s`
@@ -170,7 +170,7 @@ export function LoginForm() {
         <Link
           to="/register"
           className="font-semibold hover:underline"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           Create account
         </Link>

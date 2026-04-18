@@ -88,7 +88,7 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
                           className="size-[36px] min-w-[36px] rounded-md object-cover"
                         />
                         <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="text-body font-medium truncate" style={{ color: baseColors.heading }}>
+                          <span className="text-body font-medium truncate" style={{ color: 'var(--heading)' }}>
                             {item.title}
                           </span>
                           <div className="flex items-center gap-1">
@@ -96,7 +96,7 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
                               <span
                                 key={tag.label}
                                 className="text-badge px-2 py-0.5 rounded-full whitespace-nowrap"
-                                style={{ backgroundColor: tag.color, color: baseColors.heading }}
+                                style={{ backgroundColor: tag.color, color: 'var(--heading)' }}
                               >
                                 {tag.label}
                               </span>

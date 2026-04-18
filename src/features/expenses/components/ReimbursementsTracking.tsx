@@ -217,7 +217,7 @@ export function ReimbursementsTracking({
                 <div className="min-w-0">
                   <span
                     className="text-xs font-semibold"
-                    style={{ color: baseColors.heading }}
+                    style={{ color: 'var(--heading)' }}
                   >
                     {item.requestId}
                   </span>
@@ -225,7 +225,7 @@ export function ReimbursementsTracking({
                   <div className="lg:hidden mt-0.5">
                     <p
                       className="text-[11px] font-medium truncate"
-                      style={{ color: baseColors.heading }}
+                      style={{ color: 'var(--heading)' }}
                     >
                       {item.staffName}
                     </p>
@@ -239,7 +239,7 @@ export function ReimbursementsTracking({
                 <div className="hidden lg:block min-w-0">
                   <p
                     className="text-xs font-medium truncate"
-                    style={{ color: baseColors.heading }}
+                    style={{ color: 'var(--heading)' }}
                   >
                     {item.staffName}
                   </p>
@@ -257,7 +257,7 @@ export function ReimbursementsTracking({
                     />
                     <span
                       className="text-xs font-semibold whitespace-nowrap"
-                      style={{ color: baseColors.heading }}
+                      style={{ color: 'var(--heading)' }}
                     >
                       ₹{item.amount.toLocaleString('en-IN')}
                     </span>
@@ -271,7 +271,7 @@ export function ReimbursementsTracking({
                   <a
                     href={item.proofUrl}
                     className="lg:hidden inline-flex items-center gap-1 text-[11px] mt-0.5"
-                    style={{ color: baseColors.heading }}
+                    style={{ color: 'var(--heading)' }}
                     onClick={e => e.preventDefault()}
                   >
                     <FileText
@@ -292,7 +292,7 @@ export function ReimbursementsTracking({
                   href={item.proofUrl}
                   className="hidden lg:inline-flex items-center gap-1.5 text-xs rounded-md px-2 py-1 whitespace-nowrap w-fit"
                   style={{
-                    color: baseColors.heading,
+                    color: 'var(--heading)',
                     backgroundColor: colors.border.subtle,
                   }}
                   onClick={e => e.preventDefault()}

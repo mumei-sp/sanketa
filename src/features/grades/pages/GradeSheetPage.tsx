@@ -179,9 +179,9 @@ export function GradeSheetPage() {
                       style={{
                         padding: '4px 10px',
                         backgroundColor: active
-                          ? withOpacity(baseColors.blue, 0.55)
+                          ? withOpacity('var(--accent)', 0.55)
                           : 'transparent',
-                        color: colors.text.heading,
+                        color: 'var(--heading)',
                       }}
                     >
                       {cls}
@@ -205,7 +205,7 @@ export function GradeSheetPage() {
               className="text-sm rounded-md border px-3 py-1.5 outline-none"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
+                color: 'var(--heading)',
                 backgroundColor: colors.background.card,
               }}
             >
@@ -250,7 +250,7 @@ export function GradeSheetPage() {
                   downloadCsv(csv, `grades-${selectedClass}-${selectedExam}.csv`)
                 }}
                 className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 cursor-pointer transition-colors"
-                style={{ backgroundColor: colors.accent.base, color: colors.text.heading }}
+                style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
               >
                 <Download className="w-3.5 h-3.5" />
                 Export

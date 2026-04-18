@@ -91,14 +91,14 @@ export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, on
                 className="h-6 w-6"
                 onClick={() => onEdit(id)}
               >
-                <Pencil className="h-3.5 w-3.5" style={{ color: baseColors.heading }} />
+                <Pencil className="h-3.5 w-3.5" style={{ color: 'var(--heading)' }} />
               </Button>
             )}
             {onDelete && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Trash2 className="h-3.5 w-3.5" style={{ color: baseColors.heading }} />
+                    <Trash2 className="h-3.5 w-3.5" style={{ color: 'var(--heading)' }} />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -128,46 +128,46 @@ export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, on
       {/* Title */}
       <h4
         className="text-base font-bold leading-snug"
-        style={{ color: baseColors.heading }}
+        style={{ color: 'var(--heading)' }}
       >
         {title}
       </h4>
 
       {/* Description */}
       {description && (
-        <p className="text-xs leading-relaxed" style={{ color: baseColors.heading, opacity: 0.7 }}>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--heading)', opacity: 0.7 }}>
           {description}
         </p>
       )}
 
       {/* Details */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--heading)' }}>
           <Calendar className="w-3.5 h-3.5 shrink-0 opacity-60" />
           <span>{formattedDate}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--heading)' }}>
           <Clock className="w-3.5 h-3.5 shrink-0 opacity-60" />
           <span>{timeText}</span>
         </div>
 
         {location && (
-          <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--heading)' }}>
             <MapPin className="w-3.5 h-3.5 shrink-0 opacity-60" />
             <span>{location}</span>
           </div>
         )}
 
         {attendees && (
-          <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--heading)' }}>
             <Users className="w-3.5 h-3.5 shrink-0 opacity-60" />
             <span>{attendees}</span>
           </div>
         )}
 
         {link && (
-          <div className="flex items-center gap-2 text-xs" style={{ color: baseColors.heading }}>
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--heading)' }}>
             <Link2 className="w-3.5 h-3.5 shrink-0 opacity-60" />
             <a
               href={link}
@@ -186,10 +186,10 @@ export function ScheduleDetailCard({ id, title, start, extendedProps, onEdit, on
       {notes && (
         <div className="rounded-lg p-2.5 bg-white/40">
           <div className="flex items-start gap-2">
-            <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 opacity-60" style={{ color: baseColors.heading }} />
+            <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 opacity-60" style={{ color: 'var(--heading)' }} />
             <div>
-              <span className="text-xs font-medium" style={{ color: baseColors.heading }}>Notes</span>
-              <p className="text-xs mt-0.5 leading-relaxed" style={{ color: baseColors.heading, opacity: 0.7 }}>
+              <span className="text-xs font-medium" style={{ color: 'var(--heading)' }}>Notes</span>
+              <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--heading)', opacity: 0.7 }}>
                 {notes}
               </p>
             </div>

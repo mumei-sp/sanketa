@@ -83,7 +83,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
           onClick={() => setCustomizeOpen(true)}
           className="flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
           style={{
-            color: colors.text.heading,
+            color: 'var(--heading)',
             backgroundColor: colors.accent.soft,
             border: `1px solid ${colors.border.default}`,
           }}

@@ -41,10 +41,10 @@ const CustomTooltip = ({ active, payload }: any) => {
     const data = payload[0].payload
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-        <p className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+        <p className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
           {data.month} {new Date().getFullYear()}
         </p>
-        <p className="text-sm font-bold" style={{ color: baseColors.heading }}>
+        <p className="text-sm font-bold" style={{ color: 'var(--heading)' }}>
           ₹{data.amount.toLocaleString('en-IN')}
         </p>
       </div>
@@ -135,7 +135,7 @@ export function FeeCollectionTrend({ data, isLoading = false }: FeeCollectionTre
                 <defs>
                   <ChartGradient
                     id="feeTrendGradient"
-                    color={baseColors.heading}
+                    color={'var(--heading)'}
                     topOpacity={0.3}
                     bottomOpacity={0.05}
                   />
@@ -168,7 +168,7 @@ export function FeeCollectionTrend({ data, isLoading = false }: FeeCollectionTre
                 <Area
                   type="monotone"
                   dataKey="amount"
-                  stroke={baseColors.heading}
+                  stroke={'var(--heading)'}
                   strokeWidth={2}
                   fill="url(#feeTrendGradient)"
                 />

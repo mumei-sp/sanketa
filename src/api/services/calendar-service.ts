@@ -210,8 +210,8 @@ function formValuesToCalendarEvent(data: EventFormValues, id?: string): Calendar
       start: data.date,
       end: data.date,
       allDay: true,
-      backgroundColor: baseColors.heading,
-      borderColor: baseColors.heading,
+      backgroundColor: 'var(--heading)',
+      borderColor: 'var(--heading)',
       textColor: background.card,
       extendedProps: {
         category,

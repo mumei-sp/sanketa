@@ -259,9 +259,9 @@ export function DailyAttendancePage() {
                       style={{
                         padding: `4px 10px`,
                         backgroundColor: active
-                          ? withOpacity(baseColors.blue, 0.55)
+                          ? withOpacity('var(--accent)', 0.55)
                           : 'transparent',
-                        color: colors.text.heading,
+                        color: 'var(--heading)',
                       }}
                     >
                       {cls}
@@ -286,7 +286,7 @@ export function DailyAttendancePage() {
               className="text-sm rounded-md border px-3 py-1.5 outline-none"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
+                color: 'var(--heading)',
                 backgroundColor: colors.background.card,
               }}
             />
@@ -298,9 +298,9 @@ export function DailyAttendancePage() {
                 onClick={handleMarkAllPresent}
                 className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
                 style={{
-                  backgroundColor: withOpacity(baseColors.pink, 0.4),
-                  color: colors.text.heading,
-                  border: `1px solid ${darken(baseColors.pink, 15)}`,
+                  backgroundColor: withOpacity('var(--primary)', 0.4),
+                  color: 'var(--heading)',
+                  border: `1px solid ${'color-mix(in srgb, var(--primary) 85%, black)'}`,
                 }}
               >
                 <UserCheck className="w-3.5 h-3.5" />
@@ -317,7 +317,7 @@ export function DailyAttendancePage() {
             className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80 border"
             style={{
               borderColor: colors.border.default,
-              color: colors.text.heading,
+              color: 'var(--heading)',
               backgroundColor: colors.background.card,
             }}
           >
@@ -335,7 +335,7 @@ export function DailyAttendancePage() {
               onClick={() => setViewMode('mark')}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
               style={{
-                backgroundColor: viewMode === 'mark' ? colors.text.heading : colors.background.card,
+                backgroundColor: viewMode === 'mark' ? 'var(--heading)' : colors.background.card,
                 color: viewMode === 'mark' ? colors.background.card : colors.text.muted,
               }}
             >
@@ -347,7 +347,7 @@ export function DailyAttendancePage() {
               onClick={() => setViewMode('history')}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
               style={{
-                backgroundColor: viewMode === 'history' ? colors.text.heading : colors.background.card,
+                backgroundColor: viewMode === 'history' ? 'var(--heading)' : colors.background.card,
                 color: viewMode === 'history' ? colors.background.card : colors.text.muted,
               }}
             >

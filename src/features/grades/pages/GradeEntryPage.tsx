@@ -206,9 +206,9 @@ export function GradeEntryPage() {
                       style={{
                         padding: '4px 10px',
                         backgroundColor: active
-                          ? withOpacity(baseColors.blue, 0.55)
+                          ? withOpacity('var(--accent)', 0.55)
                           : 'transparent',
-                        color: colors.text.heading,
+                        color: 'var(--heading)',
                       }}
                     >
                       {cls}
@@ -232,7 +232,7 @@ export function GradeEntryPage() {
               className="text-sm rounded-md border px-3 py-1.5 outline-none"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
+                color: 'var(--heading)',
                 backgroundColor: colors.background.card,
               }}
             >
@@ -254,7 +254,7 @@ export function GradeEntryPage() {
               className="text-sm rounded-md border px-3 py-1.5 outline-none"
               style={{
                 borderColor: colors.border.default,
-                color: colors.text.heading,
+                color: 'var(--heading)',
                 backgroundColor: colors.background.card,
               }}
             >

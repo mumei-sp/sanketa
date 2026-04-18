@@ -60,11 +60,11 @@ export function RegisterForm() {
       {/* Logo (mobile/tablet — on desktop it's in the hero) */}
       <div className="mb-6 flex items-center gap-2 lg:hidden">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-soft to-accent-soft">
-          <span className="text-lg font-bold" style={{ color: baseColors.heading }}>S</span>
+          <span className="text-lg font-bold" style={{ color: 'var(--heading)' }}>S</span>
         </div>
       </div>
 
-      <h2 className="mb-1 text-center text-xl font-bold" style={{ color: baseColors.heading }}>
+      <h2 className="mb-1 text-center text-xl font-bold" style={{ color: 'var(--heading)' }}>
         Create Your Account
       </h2>
       <p className="mb-8 text-center text-sm text-muted-foreground">
@@ -129,7 +129,7 @@ export function RegisterForm() {
               <Link
                 to="/terms"
                 className="font-medium hover:underline"
-                style={{ color: baseColors.heading }}
+                style={{ color: 'var(--heading)' }}
                 onClick={e => e.stopPropagation()}
               >
                 Terms & Conditions
@@ -147,7 +147,7 @@ export function RegisterForm() {
           type="submit"
           disabled={isSubmitting}
           className="h-11 w-full rounded-full text-sm font-semibold"
-          style={{ backgroundColor: baseColors.pink, color: baseColors.heading }}
+          style={{ backgroundColor: 'var(--primary)', color: 'var(--heading)' }}
         >
           {isSubmitting ? (
             <>
@@ -165,7 +165,7 @@ export function RegisterForm() {
         <Link
           to="/login"
           className="font-semibold hover:underline"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           Login Here
         </Link>

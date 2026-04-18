@@ -162,7 +162,7 @@ export function CalendarView({
               <button
                 type="button"
                 className="text-base font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
-                style={{ color: baseColors.heading }}
+                style={{ color: 'var(--heading)' }}
               >
                 {currentTitle}
                 <ChevronDown className="w-4 h-4" />
@@ -179,7 +179,7 @@ export function CalendarView({
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-bold" style={{ color: baseColors.heading }}>
+                <span className="text-sm font-bold" style={{ color: 'var(--heading)' }}>
                   {pickerYear}
                 </span>
                 <Button
@@ -210,7 +210,7 @@ export function CalendarView({
                           ? 'text-white shadow-sm'
                           : 'hover:bg-accent hover:text-accent-foreground active:scale-95',
                       )}
-                      style={isActive ? { backgroundColor: baseColors.heading, color: background.card } : { color: baseColors.heading }}
+                      style={isActive ? { backgroundColor: 'var(--heading)', color: background.card } : { color: 'var(--heading)' }}
                     >
                       {name.slice(0, 3)}
                     </button>
@@ -241,8 +241,8 @@ export function CalendarView({
                 className="px-3 h-full text-xs font-medium transition-colors"
                 style={
                   currentView === opt.value
-                    ? { backgroundColor: baseColors.heading, color: background.card, fontWeight: 600 }
-                    : { color: baseColors.heading, opacity: 0.55 }
+                    ? { backgroundColor: 'var(--heading)', color: background.card, fontWeight: 600 }
+                    : { color: 'var(--heading)', opacity: 0.55 }
                 }
               >
                 {opt.label}
@@ -256,9 +256,9 @@ export function CalendarView({
             size="sm"
             className="h-8 px-3 gap-1.5 text-xs font-medium rounded-lg border"
             style={{
-              backgroundColor: baseColors.pink,
-              borderColor: baseColors.pink,
-              color: baseColors.heading,
+              backgroundColor: 'var(--primary)',
+              borderColor: 'var(--primary)',
+              color: 'var(--heading)',
             }}
             onClick={onAddAgenda}
           >

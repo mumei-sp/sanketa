@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors } from '@/theme/colors'
+import { useBrandColors } from '@/hooks/use-brand-colors'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { GenderDataset } from '../types'
 
@@ -42,7 +42,15 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
   }, [filteredDatasets, selected])
 
   const activeDataset = filteredDatasets.find(d => d.value === selected) ?? filteredDatasets[0]
-  const data = activeDataset?.data ?? []
+  const rawData = activeDataset?.data ?? []
+  const brand = useBrandColors()
+  // Re-tint pie slices with live brand colors so preset changes propagate.
+  // Boys = heading (dark), Girls = primary (soft), third+ falls back to accent.
+  const sliceColors = [brand.heading, brand.primary, brand.accent]
+  const data = React.useMemo(
+    () => rawData.map((d, i) => ({ ...d, color: sliceColors[i % sliceColors.length] })),
+    [rawData, brand.heading, brand.primary, brand.accent],
+  )
   const total = React.useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])
 
   if (isLoading || !activeDataset) {
@@ -112,7 +120,7 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: baseColors.heading }}
+                  style={{ color: 'var(--heading)' }}
                 >
                   {total.toLocaleString('en-IN')}
                 </span>

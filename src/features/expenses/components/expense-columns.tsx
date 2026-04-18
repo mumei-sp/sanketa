@@ -4,8 +4,8 @@ import type { Expense, ExpenseCategory } from '@/features/expenses/types'
 import { baseColors } from '@/theme/colors'
 
 const CATEGORY_DOT_COLORS: Record<ExpenseCategory, string> = {
-  Salaries: baseColors.heading,
-  Supplies: baseColors.pink,
+  Salaries: 'var(--heading)',
+  Supplies: 'var(--primary)',
   Maintenance: '#94A3B8',
   Events: '#A5D6A7',
   Others: '#E0E0E0',
@@ -16,7 +16,7 @@ export const expenseColumns: ColumnDef<Expense>[] = [
     accessorKey: 'expenseId',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Expense ID" />,
     cell: ({ row }) => (
-      <span className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+      <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
         {row.original.expenseId}
       </span>
     ),
@@ -81,7 +81,7 @@ export const expenseColumns: ColumnDef<Expense>[] = [
     accessorKey: 'amount',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
     cell: ({ row }) => (
-      <span className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+      <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
         ₹{row.original.amount.toLocaleString('en-IN')}
       </span>
     ),

@@ -42,10 +42,10 @@ const CustomTooltip = ({ active, payload }: any) => {
     const data = payload[0].payload
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-        <p className="text-xs font-semibold" style={{ color: baseColors.heading }}>
+        <p className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>
           {data.month} {new Date().getFullYear()}
         </p>
-        <p className="text-sm font-bold" style={{ color: baseColors.heading }}>
+        <p className="text-sm font-bold" style={{ color: 'var(--heading)' }}>
           ₹{data.amount.toLocaleString('en-IN')}
         </p>
       </div>
@@ -61,7 +61,7 @@ const CustomBar = (props: any) => {
   if (height <= 0) return <g />
 
   // Hovered bar uses solid heading color; default uses gradient
-  const barFill = isActive ? baseColors.heading : 'url(#expenseTrendGradient)'
+  const barFill = isActive ? 'var(--heading)' : 'url(#expenseTrendGradient)'
 
   return (
     <rect
@@ -158,7 +158,7 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
             <ResponsiveContainer width="100%" height="100%" minHeight={180}>
               <BarChart key={timeRange} data={filteredData} margin={{ top: 20, right: 10, left: 4, bottom: 0 }}>
                 <defs>
-                  <ChartGradient id="expenseTrendGradient" color={baseColors.pink} topOpacity={0.8} bottomOpacity={0.3} />
+                  <ChartGradient id="expenseTrendGradient" color={'var(--primary)'} topOpacity={0.8} bottomOpacity={0.3} />
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -187,13 +187,13 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
                 <Tooltip content={<CustomTooltip />} cursor={false} />
                 <ReferenceLine
                   y={average}
-                  stroke={baseColors.heading}
+                  stroke={'var(--heading)'}
                   strokeDasharray="6 4"
                   strokeWidth={1.5}
                   label={{
                     value: `₹${average.toLocaleString('en-IN')}`,
                     position: 'right',
-                    fill: baseColors.heading,
+                    fill: 'var(--heading)',
                     fontSize: 11,
                     fontWeight: 600,
                   }}
@@ -201,7 +201,7 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
                 <Bar
                   dataKey="amount"
                   shape={CustomBar}
-                  fill={baseColors.pink}
+                  fill={'var(--primary)'}
                   activeBar={<ActiveBar />}
                   barSize={32}
                 />

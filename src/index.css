@@ -177,6 +177,7 @@
   --popover: #ffffff; /* background.card */
   /* Text colors */
   --foreground: #15446e; /* text.heading - converted to oklch: oklch(0.30 0.10 240) */
+  --heading: #15446e; /* user-tunable heading anchor — runtime-overridable */
   --card-foreground: #15446e; /* text.heading */
   --popover-foreground: #15446e; /* text.heading */
   /* Primary colors (pink-based) */
@@ -223,6 +224,7 @@
   /* Dark mode - keeping existing values for now, can be extended later */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+  --heading: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -252,6 +254,32 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Arc color picker — conic rainbow frame around the dot-grid plane. */
+.arc-picker-frame {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    #60a5fa 0deg,
+    #a855f7 60deg,
+    #ec4899 120deg,
+    #f97316 180deg,
+    #facc15 220deg,
+    #22c55e 280deg,
+    #06b6d4 330deg,
+    #60a5fa 360deg
+  );
+  padding: 10px;
+}
+
+/* Density: compact mode tightens common card padding + gap spacing. */
+html[data-density="compact"] .rounded-xl,
+html[data-density="compact"] .rounded-lg,
+html[data-density="compact"] [data-slot="card"] {
+  --density-padding-shrink: 0.85;
+}
+html[data-density="compact"] [data-slot="card"] {
+  padding: calc(var(--spacing-5) * var(--density-padding-shrink, 1));
 }
 
 @layer base {

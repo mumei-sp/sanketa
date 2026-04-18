@@ -57,7 +57,7 @@ export function RecentActivity({ items, isLoading = false }: RecentActivityProps
                   <Icon className="w-5 h-5" style={{ color: item.iconColor }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-body font-medium leading-tight" style={{ color: baseColors.heading }}>
+                  <p className="text-body font-medium leading-tight" style={{ color: 'var(--heading)' }}>
                     {item.text}
                   </p>
                   <p className="text-caption text-muted-foreground mt-1">{item.timestamp}</p>

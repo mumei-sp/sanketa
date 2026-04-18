@@ -1,5 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { SchoolConfigProvider } from './config/SchoolConfigContext'
+import { SchoolConfigProvider } from '@/config/SchoolConfigContext'
 import { Toaster } from './components/ui/sonner'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AppLayout } from './components/layout'

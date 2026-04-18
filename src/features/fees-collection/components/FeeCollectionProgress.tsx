@@ -18,13 +18,13 @@ function ProgressCard({ item }: { item: FeeProgressData }) {
       <div className="flex items-center justify-between gap-2">
         <span
           className="text-base font-bold"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           {item.category}
         </span>
         <span
           className="text-base font-extrabold flex-shrink-0"
-          style={{ color: baseColors.heading }}
+          style={{ color: 'var(--heading)' }}
         >
           {item.percentage}%
         </span>
@@ -33,7 +33,7 @@ function ProgressCard({ item }: { item: FeeProgressData }) {
       {/* Progress bar — thick, track uses brand pink */}
       <div
         className="h-3 w-full rounded-full"
-        style={{ backgroundColor: baseColors.pink }}
+        style={{ backgroundColor: 'var(--primary)' }}
       >
         <div
           className="h-full rounded-full transition-all duration-500"
@@ -46,7 +46,7 @@ function ProgressCard({ item }: { item: FeeProgressData }) {
 
       {/* Collected / Total */}
       <span className="text-sm text-muted-foreground">
-        <span className="font-extrabold" style={{ color: baseColors.heading }}>
+        <span className="font-extrabold" style={{ color: 'var(--heading)' }}>
           ₹{item.collected.toLocaleString('en-IN')}
         </span>
         {' / ₹'}{item.total.toLocaleString('en-IN')} collected

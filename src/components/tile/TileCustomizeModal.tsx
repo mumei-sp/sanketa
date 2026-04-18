@@ -84,10 +84,10 @@ export function TileCustomizeModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[640px] max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle style={{ color: colors.text.heading }}>{title}</DialogTitle>
+          <DialogTitle style={{ color: 'var(--heading)' }}>{title}</DialogTitle>
           <DialogDescription>
             Select up to {maxSelections} tiles to display.{' '}
-            <span className="font-medium" style={{ color: colors.text.heading }}>
+            <span className="font-medium" style={{ color: 'var(--heading)' }}>
               {selectedIds.length}/{maxSelections}
             </span>{' '}
             selected.
@@ -112,7 +112,7 @@ export function TileCustomizeModal({
                 className="relative flex flex-col items-center text-center rounded-lg border-2 transition-all"
                 style={{
                   padding: spacing['3'],
-                  borderColor: isSelected ? colors.accent.base : colors.border.default,
+                  borderColor: isSelected ? 'var(--accent)' : colors.border.default,
                   backgroundColor: isSelected ? colors.accent.soft : colors.background.card,
                   opacity: isDisabled ? 0.45 : 1,
                   cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -122,7 +122,7 @@ export function TileCustomizeModal({
                 {isSelected && (
                   <div
                     className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: colors.text.heading }}
+                    style={{ backgroundColor: 'var(--heading)' }}
                   >
                     <Check className="w-3 h-3" style={{ color: colors.background.card }} />
                   </div>
@@ -143,7 +143,7 @@ export function TileCustomizeModal({
                 {/* Label */}
                 <span
                   className="text-xs font-semibold leading-tight"
-                  style={{ color: colors.text.heading }}
+                  style={{ color: 'var(--heading)' }}
                 >
                   {opt.label}
                 </span>
@@ -176,7 +176,7 @@ export function TileCustomizeModal({
             onClick={() => onOpenChange(false)}
             className="text-sm"
             style={{
-              backgroundColor: colors.text.heading,
+              backgroundColor: 'var(--heading)',
               color: colors.background.card,
             }}
           >

@@ -69,14 +69,14 @@ function TopActions() {
         <div
           className="size-10 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
           style={{
-            backgroundColor: baseColors.heading,
-            boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${baseColors.pink}`,
+            backgroundColor: 'var(--heading)',
+            boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${'var(--primary)'}`,
           }}
         >
           SA
         </div>
         <div className="hidden lg:block">
-          <p className="text-sm font-semibold leading-tight whitespace-nowrap" style={{ color: baseColors.heading }}>
+          <p className="text-sm font-semibold leading-tight whitespace-nowrap" style={{ color: 'var(--heading)' }}>
             Surya Admin
           </p>
           <p className="text-xs text-muted-foreground leading-tight">Admin</p>

@@ -22,6 +22,7 @@ import * as React from 'react'
 import type { SchoolConfig } from './school-config'
 import { DEFAULT_SCHOOL_CONFIG } from './school-config'
 import { loadSchoolConfig, saveSchoolConfig } from '@/api/services/school-config-service'
+import { applyAppearance, subscribeToSystemMode } from '@/theme/apply-appearance'
 
 // ============================================================================
 // Context Value Type
@@ -75,6 +76,18 @@ interface SchoolConfigProviderProps {
 export function SchoolConfigProvider({ children }: SchoolConfigProviderProps) {
   const [config, setConfig] = React.useState<SchoolConfig>(() => loadSchoolConfig())
   const [isSettingsOpen, setSettingsOpen] = React.useState(false)
+
+  // Apply theme synchronously before first paint — no flash of default tokens
+  // on cold reload. Re-runs whenever the saved appearance changes.
+  React.useLayoutEffect(() => {
+    applyAppearance(config.appearance)
+  }, [config.appearance])
+
+  // Keep `mode: 'system'` live against OS color-scheme changes.
+  React.useEffect(() => {
+    const cleanup = subscribeToSystemMode(() => config.appearance)
+    return cleanup
+  }, [config.appearance])
 
   const updateConfig = React.useCallback((patch: Partial<SchoolConfig>) => {
     setConfig(prev => {

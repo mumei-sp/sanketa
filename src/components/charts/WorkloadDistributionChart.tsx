@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { colors, baseColors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { teacherWorkloadData } from '@/mocks/teachers/workload'
 
@@ -61,15 +61,15 @@ const CustomTooltip = ({ active, payload }: any) => {
         <p className="text-badge text-heading mb-1">{data.teacherName}</p>
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">
-            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: baseColors.pink }} />
+            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: 'var(--primary)' }} />
             Total Classes: <span className="font-medium">{data.totalClasses}h</span>
           </p>
           <p className="text-xs text-muted-foreground">
-            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: baseColors.blue }} />
+            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: 'var(--accent)' }} />
             Teaching Hours: <span className="font-medium">{data.teachingHours}h</span>
           </p>
           <p className="text-xs text-muted-foreground">
-            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: baseColors.heading }} />
+            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: 'var(--heading)' }} />
             Extra Duties: <span className="font-medium">{data.extraDuties}h</span>
           </p>
         </div>
@@ -250,15 +250,15 @@ export function WorkloadDistributionChart({
           {/* Legend outside chart */}
           <div className="flex-shrink-0 flex items-center gap-6 mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: baseColors.pink }} />
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--primary)' }} />
               <span className="text-xs text-muted-foreground">Total Classes</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: baseColors.blue }} />
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent)' }} />
               <span className="text-xs text-muted-foreground">Teaching Hours</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: baseColors.heading }} />
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--heading)' }} />
               <span className="text-xs text-muted-foreground">Extra Duties</span>
             </div>
           </div>
@@ -305,7 +305,7 @@ export function WorkloadDistributionChart({
                 <Bar
                   dataKey="totalClasses"
                   stackId="workload"
-                  fill={baseColors.pink}
+                  fill="var(--primary)"
                   radius={[0, 0, 4, 4]}
                   barSize={35}
                   shape={CustomBarBottom}
@@ -313,7 +313,7 @@ export function WorkloadDistributionChart({
                 <Bar
                   dataKey="teachingHours"
                   stackId="workload"
-                  fill={baseColors.blue}
+                  fill="var(--accent)"
                   radius={[4, 4, 4, 4]}
                   barSize={35}
                   shape={CustomBarMiddle}
@@ -321,7 +321,7 @@ export function WorkloadDistributionChart({
                 <Bar
                   dataKey="extraDuties"
                   stackId="workload"
-                  fill={baseColors.heading}
+                  fill="var(--heading)"
                   radius={[4, 4, 0, 0]}
                   barSize={35}
                   shape={CustomBarTop}

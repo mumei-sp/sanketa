@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
 import { Card } from '@/components/ui/card'
-import { accent, colors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import { useTileSelection } from '@/hooks/use-tile-selection'
 import {
   dashboardTileRegistry,
@@ -156,7 +156,7 @@ export default function Dashboard() {
               onClick={() => setCustomizeOpen(true)}
               className="flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
               style={{
-                color: colors.text.heading,
+                color: 'var(--heading)',
                 backgroundColor: colors.accent.soft,
                 border: `1px solid ${colors.border.default}`,
               }}
@@ -193,7 +193,7 @@ export default function Dashboard() {
         >
           <Card
             className="pt-4 pb-2 flex flex-col gap-3 h-full"
-            style={{ backgroundColor: accent.base }}
+            style={{ backgroundColor: 'var(--accent)' }}
           >
             <DashboardCalendar
               embedded

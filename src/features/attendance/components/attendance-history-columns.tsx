@@ -53,7 +53,7 @@ export function createHistoryColumns(
       ),
       cell: ({ row }) =>
         row.original.isSubmitted ? (
-          <span className="text-sm font-medium" style={{ color: darken(baseColors.blue, 15) }}>
+          <span className="text-sm font-medium" style={{ color: 'color-mix(in srgb, var(--accent) 85%, black)' }}>
             {row.original.present}
           </span>
         ) : (
@@ -69,7 +69,7 @@ export function createHistoryColumns(
       ),
       cell: ({ row }) =>
         row.original.isSubmitted ? (
-          <span className="text-sm font-medium" style={{ color: darken(baseColors.pink, 20) }}>
+          <span className="text-sm font-medium" style={{ color: 'color-mix(in srgb, var(--primary) 80%, black)' }}>
             {row.original.late}
           </span>
         ) : (
@@ -141,9 +141,9 @@ export function createHistoryColumns(
             onClick={() => callbacks.onMark(date)}
             className="flex items-center gap-1 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
             style={{
-              color: colors.text.heading,
-              backgroundColor: colors.accent.base,
-              border: `1px solid ${darken(baseColors.blue, 10)}`,
+              color: 'var(--heading)',
+              backgroundColor: 'var(--accent)',
+              border: `1px solid ${'color-mix(in srgb, var(--accent) 90%, black)'}`,
             }}
           >
             <AlertTriangle className="w-3 h-3" />

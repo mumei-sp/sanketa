@@ -114,9 +114,9 @@ export function DashboardCalendar({
               )}
               style={
                 isSelected
-                  ? { backgroundColor: baseColors.heading, color: 'white' }
+                  ? { backgroundColor: 'var(--heading)', color: 'white' }
                   : isHighlighted
-                    ? { backgroundColor: highlightColor, color: baseColors.heading }
+                    ? { backgroundColor: highlightColor, color: 'var(--heading)' }
                     : isSunday
                       ? { color: status.danger.base }
                       : undefined

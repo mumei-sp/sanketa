@@ -1,4 +1,4 @@
-import { status, accent, primary, statusVivid } from '@/theme/colors'
+import { status, statusVivid } from '@/theme/colors'
 import type { StatusPillConfig } from '@/components/ui/status-pill'
 
 // Re-export for backwards compatibility within transport module.
@@ -77,14 +77,14 @@ export const VEHICLE_STATUS_CHART_COLORS: Record<string, string> = {
 }
 
 export const ROUTE_CHART_COLORS = [
-  primary.base,
-  accent.base,
+  'var(--primary)',
+  'var(--accent)',
   status.success.base,
   status.info.base,
   status.warning.base,
   status.danger.soft,
-  primary.soft,
-  accent.soft,
+  'color-mix(in srgb, var(--primary) 55%, white)',
+  'color-mix(in srgb, var(--accent) 55%, white)',
 ]
 
 // ============================================================================

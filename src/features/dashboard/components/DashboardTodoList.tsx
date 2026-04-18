@@ -254,7 +254,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                       )}
                       title={editDate ? formatTodoDate(editDate) : 'Pick a date'}
                     >
-                      <Calendar className="w-4 h-4" style={{ color: baseColors.heading }} />
+                      <Calendar className="w-4 h-4" style={{ color: 'var(--heading)' }} />
                     </button>
                   </div>
                 </div>
@@ -275,13 +275,13 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                         'text-body font-medium leading-tight',
                         todo.completed && 'line-through text-muted-foreground',
                       )}
-                      style={!todo.completed ? { color: baseColors.heading } : undefined}
+                      style={!todo.completed ? { color: 'var(--heading)' } : undefined}
                     >
                       {todo.text}
                     </p>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <Calendar className="w-3.5 h-3.5" style={{ color: baseColors.heading }} />
-                      <span className="text-caption" style={{ color: baseColors.heading }}>{todo.date}</span>
+                      <Calendar className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
+                      <span className="text-caption" style={{ color: 'var(--heading)' }}>{todo.date}</span>
                     </div>
                   </div>
                   <DropdownMenu>
@@ -347,7 +347,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                     )}
                     title={addDate ? formatTodoDate(addDate) : 'Pick a date'}
                   >
-                    <Calendar className="w-4 h-4" style={{ color: baseColors.heading }} />
+                    <Calendar className="w-4 h-4" style={{ color: 'var(--heading)' }} />
                   </button>
                 </div>
               </div>

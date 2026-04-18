@@ -32,10 +32,10 @@ export function PromotionCards({ candidates, onDecisionChange }: PromotionCardsP
               <div className="text-xs text-text-muted">Roll #{candidate.rollNumber}</div>
             </div>
             <div className="flex items-center gap-2.5 flex-shrink-0">
-              <span className="text-sm font-semibold" style={{ color: colors.text.heading, fontVariantNumeric: 'tabular-nums' }}>
+              <span className="text-sm font-semibold" style={{ color: 'var(--heading)', fontVariantNumeric: 'tabular-nums' }}>
                 {candidate.percentage}%
               </span>
-              <span className="text-xs font-medium" style={{ color: colors.text.heading, fontVariantNumeric: 'tabular-nums' }}>
+              <span className="text-xs font-medium" style={{ color: 'var(--heading)', fontVariantNumeric: 'tabular-nums' }}>
                 GPA {candidate.gpa}
               </span>
             </div>
