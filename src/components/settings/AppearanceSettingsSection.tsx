@@ -140,56 +140,67 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
       />
 
       <div className="flex flex-col" style={{ gap: spacing['3'] }}>
-        {/* ================= Theme studio hero ================= */}
+        {/* ================= Theme studio hero — ink panel ================= */}
         <div
           className="relative overflow-hidden rounded-2xl"
           style={{
-            backgroundColor: 'var(--card)',
-            boxShadow: 'var(--shadow-card), inset 0 0 0 1px var(--card-border)',
+            background:
+              'linear-gradient(140deg, color-mix(in srgb, var(--heading-accent) 88%, #060d1a) 0%, color-mix(in srgb, var(--heading-accent) 55%, #060d1a) 100%)',
+            boxShadow:
+              '0 24px 48px -24px color-mix(in srgb, var(--heading-accent) 55%, transparent), inset 0 0 0 1px rgb(255 255 255 / 0.08)',
+            transition: 'background 300ms ease',
           }}
         >
           {/* Slow-panning brand band */}
           <div aria-hidden className="appearance-gradient-band" />
 
-          {/* Aurora washes — theme-reactive, purely decorative */}
+          {/* Glowing orbs — theme-reactive, drifting slowly */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full"
+            className="hero-orb pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full"
             style={{
               background:
-                'radial-gradient(closest-side, color-mix(in srgb, var(--primary) 42%, transparent), transparent 72%)',
-              filter: 'blur(28px)',
+                'radial-gradient(closest-side, color-mix(in srgb, var(--primary) 62%, transparent), transparent 72%)',
+              filter: 'blur(34px)',
+              opacity: 0.6,
               transition: 'background 300ms ease',
             }}
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-28 -left-24 h-80 w-80 rounded-full"
+            className="hero-orb pointer-events-none absolute -bottom-32 -left-24 h-88 w-88 rounded-full"
             style={{
+              width: '20rem',
+              height: '20rem',
               background:
-                'radial-gradient(closest-side, color-mix(in srgb, var(--accent) 46%, transparent), transparent 72%)',
-              filter: 'blur(30px)',
+                'radial-gradient(closest-side, color-mix(in srgb, var(--accent) 58%, transparent), transparent 72%)',
+              filter: 'blur(38px)',
+              opacity: 0.5,
+              animationDuration: '12s',
               transition: 'background 300ms ease',
             }}
           />
+
+          {/* Film grain */}
+          <div aria-hidden className="hero-grain pointer-events-none absolute inset-0" />
 
           <div className="relative flex flex-col gap-4 p-5">
             {/* Header row: eyebrow + title | shuffle & reset */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col gap-1 min-w-0">
                 <span
-                  className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em]"
-                  style={{ color: 'var(--heading)', opacity: 0.65 }}
+                  className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em]"
+                  style={{ color: 'var(--accent)' }}
                 >
                   <Sparkles size={11} strokeWidth={2.25} />
                   Theme studio
                 </span>
-                <h4
-                  className="text-xl font-extrabold tracking-tight"
-                  style={{ color: 'var(--heading)' }}
-                >
+                <h4 className="text-2xl font-extrabold tracking-tight text-white">
                   Make Sanketa yours
                 </h4>
+                <p className="text-xs" style={{ color: 'rgb(255 255 255 / 0.55)' }}>
+                  Everything below repaints the moment you touch it.
+                </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <StudioButton onClick={handleShuffle} title="Roll a fresh palette">
@@ -228,12 +239,16 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
                     onChange={handlePickerChange}
                     onInvert={handleInvert}
                     onReset={handleReset}
+                    className="border-0 shadow-[0_20px_44px_-16px_rgb(6_13_26_/_0.6)]"
                   />
                 </div>
                 <HexReadout label="Primary" value={appearance.primary} />
                 <HexReadout label="Accent" value={appearance.accent} />
                 <HexReadout label="Heading" value={appearance.heading} showContrast />
-                <p className="text-[11px] leading-relaxed" style={{ color: text.muted }}>
+                <p
+                  className="text-[11px] leading-relaxed"
+                  style={{ color: 'rgb(255 255 255 / 0.5)' }}
+                >
                   Light handle sets primary, dark handle sets the text anchor. Accent follows
                   automatically.
                 </p>
@@ -331,12 +346,11 @@ function StudioButton({
       type="button"
       onClick={onClick}
       title={title}
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer transition-all duration-200 hover:-translate-y-px"
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer transition-all duration-200 hover:-translate-y-px text-white"
       style={{
-        color: 'var(--heading)',
-        backgroundColor: 'color-mix(in srgb, var(--card) 65%, transparent)',
-        boxShadow: 'inset 0 0 0 1px var(--border), 0 1px 3px rgb(21 68 110 / 0.06)',
-        backdropFilter: 'blur(6px)',
+        backgroundColor: 'rgb(255 255 255 / 0.12)',
+        boxShadow: 'inset 0 0 0 1px rgb(255 255 255 / 0.22)',
+        backdropFilter: 'blur(8px)',
       }}
     >
       {children}
@@ -368,8 +382,13 @@ function StudioCard({
     >
       <header className="flex items-center" style={{ gap: spacing['2'] }}>
         <span
-          className="font-mono text-[10px] font-bold tabular-nums"
-          style={{ color: 'var(--muted-foreground)', opacity: 0.8 }}
+          className="flex items-center justify-center rounded-md font-mono text-[9px] font-bold tabular-nums shrink-0"
+          style={{
+            width: '20px',
+            height: '20px',
+            color: 'var(--heading)',
+            backgroundColor: 'color-mix(in srgb, var(--accent) 35%, var(--card))',
+          }}
         >
           {String(index).padStart(2, '0')}
         </span>
@@ -431,34 +450,35 @@ function HexReadout({
 }) {
   return (
     <div
-      className="flex items-center rounded-lg"
+      className="flex items-center rounded-xl"
       style={{
         padding: `${spacing['2']} ${spacing['2.5']}`,
-        boxShadow: 'inset 0 0 0 1px var(--border)',
-        backgroundColor: 'color-mix(in srgb, var(--card) 80%, transparent)',
+        boxShadow: 'inset 0 0 0 1px rgb(255 255 255 / 0.14)',
+        backgroundColor: 'rgb(255 255 255 / 0.08)',
+        backdropFilter: 'blur(8px)',
         gap: spacing['2.5'],
       }}
     >
       <div
-        className="rounded-md shrink-0"
+        className="rounded-full shrink-0"
         style={{
           width: '22px',
           height: '22px',
           backgroundColor: value,
-          boxShadow: 'inset 0 0 0 1px var(--border)',
-          transition: 'background-color 200ms ease',
+          boxShadow: `0 0 14px ${value}, inset 0 0 0 1px rgb(255 255 255 / 0.35)`,
+          transition: 'background-color 200ms ease, box-shadow 200ms ease',
         }}
       />
       <div className="flex flex-col min-w-0 flex-1">
         <span
-          className="text-[10px] font-medium uppercase tracking-wide"
-          style={{ color: text.muted, lineHeight: 1 }}
+          className="text-[9px] font-bold uppercase tracking-[0.16em]"
+          style={{ color: 'rgb(255 255 255 / 0.5)', lineHeight: 1 }}
         >
           {label}
         </span>
         <span
-          className="text-xs font-mono tabular-nums"
-          style={{ color: 'var(--heading)', lineHeight: 1.3, marginTop: '2px' }}
+          className="text-xs font-mono tabular-nums text-white"
+          style={{ lineHeight: 1.3, marginTop: '2px', opacity: 0.92 }}
         >
           {value.toUpperCase()}
         </span>
@@ -478,14 +498,15 @@ function LegibilityDemo({ color }: { color: string }) {
   return (
     <span
       aria-hidden
-      className="shrink-0 inline-flex items-baseline"
+      className="shrink-0 inline-flex items-baseline rounded-lg bg-white"
       style={{
         gap: '6px',
+        padding: '4px 8px',
         color,
         fontFamily: 'var(--font-sans)',
         lineHeight: 1,
       }}
-      title="Heading color rendered at 12 / 14 / 16 px"
+      title="Heading color rendered at 12 / 14 / 16 px on white"
     >
       <span style={{ fontSize: '12px', fontWeight: 400 }}>Aa</span>
       <span style={{ fontSize: '14px', fontWeight: 600 }}>Aa</span>

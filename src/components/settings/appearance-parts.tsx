@@ -51,9 +51,10 @@ export function ModeSelector({ value, onChange, primary, accent, heading }: Mode
             onClick={() => onChange(mode)}
             className="group relative flex flex-col overflow-hidden rounded-xl text-left cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
             style={{
+              // These float on the ink hero — active gets a primary halo.
               boxShadow: active
-                ? '0 0 0 1.5px var(--heading), 0 10px 24px -10px color-mix(in srgb, var(--heading) 45%, transparent)'
-                : 'inset 0 0 0 1px var(--border), 0 1px 2px rgb(21 68 110 / 0.03)',
+                ? '0 0 0 2px var(--primary), 0 0 24px -2px color-mix(in srgb, var(--primary) 55%, transparent), 0 14px 30px -12px rgb(6 13 26 / 0.6)'
+                : '0 10px 24px -14px rgb(6 13 26 / 0.55), inset 0 0 0 1px var(--border-subtle)',
               backgroundColor: 'var(--card)',
             }}
           >
@@ -136,6 +137,21 @@ function SceneLight({ primary, accent, heading }: { primary: string; accent: str
 function SceneDark({ primary }: { primary: string }) {
   return (
     <div className="absolute inset-0 flex gap-1 p-1.5" style={{ backgroundColor: DARK_SCENE.bg }}>
+      {/* Star field */}
+      {[
+        { top: '12%', left: '38%', s: 2, o: 0.8 },
+        { top: '22%', left: '58%', s: 1.5, o: 0.5 },
+        { top: '10%', left: '76%', s: 2, o: 0.65 },
+        { top: '30%', left: '88%', s: 1.5, o: 0.45 },
+        { top: '18%', left: '47%', s: 1, o: 0.35 },
+      ].map((st, i) => (
+        <span
+          key={i}
+          aria-hidden
+          className="absolute rounded-full bg-white"
+          style={{ top: st.top, left: st.left, width: `${st.s}px`, height: `${st.s}px`, opacity: st.o }}
+        />
+      ))}
       <div
         className="h-full w-[26%] rounded-md p-1 flex flex-col gap-[3px]"
         style={{ backgroundColor: DARK_SCENE.card }}
@@ -180,7 +196,8 @@ export function LivePreviewPanel() {
       className="flex flex-col rounded-xl overflow-hidden h-full min-w-0"
       style={{
         minHeight: '320px',
-        boxShadow: 'inset 0 0 0 1px var(--border), 0 8px 24px -12px rgb(21 68 110 / 0.14)',
+        // Floats on the ink hero — deep drop shadow instead of a hairline.
+        boxShadow: '0 24px 48px -20px rgb(6 13 26 / 0.65), inset 0 0 0 1px var(--border-subtle)',
         backgroundColor: 'var(--background)',
         transition: 'background-color 200ms ease',
       }}
@@ -447,12 +464,12 @@ export function PresetCard({
       <div
         className="p-2"
         style={{
-          background: `linear-gradient(135deg, ${tint(primary, 0.22)} 0%, ${tint(accent, 0.2)} 100%)`,
+          background: `linear-gradient(135deg, ${tint(primary, 0.32)} 0%, ${tint(accent, 0.28)} 100%)`,
         }}
       >
         <div
-          className="flex h-[92px] w-full overflow-hidden rounded-lg bg-white transition-transform duration-200 group-hover:scale-[1.02]"
-          style={{ boxShadow: `0 3px 10px -2px ${tint(heading, 0.22)}` }}
+          className="flex h-[92px] w-full overflow-hidden rounded-lg bg-white -rotate-1 transition-transform duration-300 group-hover:rotate-0 group-hover:scale-[1.03]"
+          style={{ boxShadow: `0 6px 16px -4px ${tint(heading, 0.3)}` }}
         >
           {/* sidebar */}
           <div
