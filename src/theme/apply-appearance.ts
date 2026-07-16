@@ -58,7 +58,7 @@ function hexToHsl(hex: string): [number, number, number] {
   return [h * 60, s, l]
 }
 
-function hslToHex(h: number, s: number, l: number): string {
+export function hslToHex(h: number, s: number, l: number): string {
   s = clamp01(s)
   l = clamp01(l)
   const c = (1 - Math.abs(2 * l - 1)) * s

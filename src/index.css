@@ -689,6 +689,31 @@ html[data-density="compact"] [data-slot="card"] {
   box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.5);
 }
 
+/* Appearance studio — slow-panning brand band across the hero card. The
+   global reduced-motion rule below freezes it to a static gradient. */
+@keyframes gradient-pan {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+.appearance-gradient-band {
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--primary),
+    var(--accent),
+    var(--heading),
+    var(--accent),
+    var(--primary)
+  );
+  background-size: 300% 100%;
+  animation: gradient-pan 10s linear infinite alternate;
+}
+
 /* Respect OS-level reduced-motion preference app-wide */
 @media (prefers-reduced-motion: reduce) {
   *,

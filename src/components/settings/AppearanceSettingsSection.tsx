@@ -7,12 +7,13 @@
  * route change / crash) it re-applies the saved `config.appearance`,
  * guaranteeing a clean revert without a separate Cancel handler.
  *
- * Layout: a "theme studio" hero (mode scenes + arc palette + live preview),
- * the curated preset gallery, and interface tuning (density / radius).
+ * Layout: an aurora "theme studio" hero (mode scenes, arc palette, shuffle,
+ * live preview mini-app), then numbered studio cards for the curated preset
+ * gallery and interface tuning (density / radius).
  */
 
 import * as React from 'react'
-import { RotateCcw, Sparkles } from 'lucide-react'
+import { RotateCcw, Shuffle, Sparkles } from 'lucide-react'
 import type { SchoolConfig } from '@/config/school-config'
 import {
   APPEARANCE_PRESETS,
@@ -23,12 +24,10 @@ import {
   type Density,
   type ThemeMode,
 } from '@/theme/appearance'
-import { applyAppearance, deriveAccent } from '@/theme/apply-appearance'
+import { applyAppearance, deriveAccent, hslToHex } from '@/theme/apply-appearance'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { ArcColorPicker } from '@/components/ui/arc-color-picker'
-import { Button } from '@/components/ui/button'
-import { Tile } from '@/components/tile'
-import { text, border } from '@/theme/colors'
+import { text } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import {
   ModeSelector,
@@ -111,6 +110,25 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
     patch({ mode: draft.appearance.mode === 'dark' ? 'light' : 'dark' })
   }, [draft.appearance.mode, patch])
 
+  /**
+   * Shuffle — rolls a fresh pastel-plus-ink palette on the Schola formula:
+   * a soft high-lightness primary, an ink rotated to the far side of the
+   * wheel and held dark enough to stay AA/AAA on white, accent auto-derived.
+   */
+  const handleShuffle = React.useCallback(() => {
+    const hue = Math.random() * 360
+    const primary = hslToHex(hue, 0.7 + Math.random() * 0.18, 0.86 + Math.random() * 0.04)
+    const inkHue = (hue + 150 + Math.random() * 80) % 360
+    const heading = hslToHex(inkHue, 0.42 + Math.random() * 0.2, 0.22 + Math.random() * 0.06)
+    patch({
+      presetId: 'custom',
+      primary,
+      heading,
+      accent: deriveAccent(primary),
+      accentAutoDerive: true,
+    })
+  }, [patch])
+
   const isCustom = draft.appearance.presetId === 'custom'
   const { appearance } = draft
 
@@ -118,142 +136,142 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
     <>
       <SectionHeading
         title="Appearance"
-        description="Theme, palette, and interface personality — every change previews live across the app."
+        description="Palette, mode, and personality — every change previews live across the app."
       />
 
       <div className="flex flex-col" style={{ gap: spacing['3'] }}>
-        {/* ========== Theme studio — mode scenes | palette | live preview ========== */}
-        <Tile
-          id="appearance-studio"
-          layoutMode="block"
-          background="card"
-          borderRadius="lg"
-          padding="p-0"
-          className="border overflow-hidden"
-          style={{ borderColor: border.default }}
+        {/* ================= Theme studio hero ================= */}
+        <div
+          className="relative overflow-hidden rounded-2xl"
+          style={{
+            backgroundColor: 'var(--card)',
+            boxShadow: 'var(--shadow-card), inset 0 0 0 1px var(--card-border)',
+          }}
         >
-          {/* Palette gradient banner — flows primary → accent → heading so the
-              tile visually carries the active theme */}
+          {/* Slow-panning brand band */}
+          <div aria-hidden className="appearance-gradient-band" />
+
+          {/* Aurora washes — theme-reactive, purely decorative */}
           <div
             aria-hidden
+            className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full"
             style={{
-              height: '4px',
               background:
-                'linear-gradient(90deg, var(--primary) 0%, var(--accent) 50%, var(--heading) 100%)',
-              transition: 'background 200ms ease',
+                'radial-gradient(closest-side, color-mix(in srgb, var(--primary) 42%, transparent), transparent 72%)',
+              filter: 'blur(28px)',
+              transition: 'background 300ms ease',
             }}
           />
-          <div className="flex flex-col" style={{ gap: spacing['4'], padding: spacing['4'] }}>
-            <FieldGroup label="Theme mode">
-              <ModeSelector
-                value={appearance.mode}
-                onChange={v => patch({ mode: v as ThemeMode })}
-                primary={appearance.primary}
-                accent={appearance.accent}
-                heading={appearance.heading}
-              />
-            </FieldGroup>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-28 -left-24 h-80 w-80 rounded-full"
+            style={{
+              background:
+                'radial-gradient(closest-side, color-mix(in srgb, var(--accent) 46%, transparent), transparent 72%)',
+              filter: 'blur(30px)',
+              transition: 'background 300ms ease',
+            }}
+          />
 
+          <div className="relative flex flex-col gap-4 p-5">
+            {/* Header row: eyebrow + title | shuffle & reset */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-1 min-w-0">
+                <span
+                  className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em]"
+                  style={{ color: 'var(--heading)', opacity: 0.65 }}
+                >
+                  <Sparkles size={11} strokeWidth={2.25} />
+                  Theme studio
+                </span>
+                <h4
+                  className="text-xl font-extrabold tracking-tight"
+                  style={{ color: 'var(--heading)' }}
+                >
+                  Make Sanketa yours
+                </h4>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <StudioButton onClick={handleShuffle} title="Roll a fresh palette">
+                  <Shuffle size={12} strokeWidth={2.25} />
+                  Shuffle
+                </StudioButton>
+                <StudioButton onClick={handleReset} title="Back to Sanketa Classic">
+                  <RotateCcw size={12} strokeWidth={2.25} />
+                  Reset
+                </StudioButton>
+              </div>
+            </div>
+
+            {/* Mode scenes */}
+            <ModeSelector
+              value={appearance.mode}
+              onChange={v => patch({ mode: v as ThemeMode })}
+              primary={appearance.primary}
+              accent={appearance.accent}
+              heading={appearance.heading}
+            />
+
+            {/* Palette | live preview — auto-stacks when the panel is narrow */}
             <div
-              className="grid"
+              className="grid items-stretch"
               style={{
-                gridTemplateColumns: 'minmax(0, 1.35fr) minmax(260px, 1fr)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
                 gap: spacing['4'],
-                alignItems: 'stretch',
               }}
             >
-              {/* LEFT — Brand palette */}
-              <div
-                className="flex flex-col"
-                style={{ minWidth: 0, gap: spacing['3'] }}
-              >
-                <FieldGroup
-                  label="Brand palette"
-                  hint="Drag the light handle for primary, dark handle for the text anchor. Accent follows automatically."
-                >
-                  <div
-                    className="flex flex-col"
-                    style={{ gap: spacing['3'], alignItems: 'stretch' }}
-                  >
-                    <div style={{ alignSelf: 'center' }}>
-                      <ArcColorPicker
-                        primary={appearance.primary}
-                        heading={appearance.heading}
-                        onChange={handlePickerChange}
-                        onInvert={handleInvert}
-                        onReset={handleReset}
-                      />
-                    </div>
-                    <div
-                      className="grid"
-                      style={{ gridTemplateColumns: '1fr 1fr', gap: spacing['2'] }}
-                    >
-                      <HexReadout label="Primary" value={appearance.primary} />
-                      <HexReadout label="Accent" value={appearance.accent} />
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <HexReadout label="Heading" value={appearance.heading} showContrast />
-                      </div>
-                    </div>
-                  </div>
-                </FieldGroup>
+              <div className="flex flex-col gap-2.5 min-w-0">
+                <div style={{ alignSelf: 'center' }}>
+                  <ArcColorPicker
+                    primary={appearance.primary}
+                    heading={appearance.heading}
+                    onChange={handlePickerChange}
+                    onInvert={handleInvert}
+                    onReset={handleReset}
+                  />
+                </div>
+                <HexReadout label="Primary" value={appearance.primary} />
+                <HexReadout label="Accent" value={appearance.accent} />
+                <HexReadout label="Heading" value={appearance.heading} showContrast />
+                <p className="text-[11px] leading-relaxed" style={{ color: text.muted }}>
+                  Light handle sets primary, dark handle sets the text anchor. Accent follows
+                  automatically.
+                </p>
               </div>
 
-              {/* RIGHT — Live preview */}
-              <div className="flex flex-col" style={{ minWidth: 0 }}>
-                <LivePreviewPanel />
-              </div>
+              <LivePreviewPanel />
             </div>
           </div>
-        </Tile>
+        </div>
 
-        {/* ========== Curated palette gallery ========== */}
-        <Tile
-          id="appearance-presets"
-          layoutMode="block"
-          background="card"
-          borderRadius="lg"
-          padding="p-4"
-          className="border"
-          style={{ borderColor: border.default }}
-        >
-          <FieldGroup
-            label="Curated palettes"
-            hint="A hand-picked set — two soft surfaces anchored by one deep ink."
-            headerRight={isCustom ? <CustomPaletteChip /> : null}
-          >
-            <div
-              className="grid"
-              style={{
-                gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
-                gap: spacing['2'],
-              }}
-            >
-              {APPEARANCE_PRESETS.map(preset => (
-                <PresetCard
-                  key={preset.id}
-                  preset={preset}
-                  active={appearance.presetId === preset.id}
-                  onSelect={() => handlePreset(preset.id)}
-                />
-              ))}
-            </div>
-          </FieldGroup>
-        </Tile>
-
-        {/* ========== Interface tuning — density + radius ========== */}
-        <Tile
-          id="appearance-interface"
-          layoutMode="block"
-          background="card"
-          borderRadius="lg"
-          padding="p-4"
-          className="border"
-          style={{ borderColor: border.default }}
+        {/* ================= Curated palette gallery ================= */}
+        <StudioCard
+          index={2}
+          title="Curated palettes"
+          aside={isCustom ? <CustomPaletteChip /> : null}
+          hint="A hand-picked set — two soft surfaces anchored by one deep ink."
         >
           <div
             className="grid"
-            style={{ gridTemplateColumns: '2fr 3fr', gap: spacing['6'] }}
+            style={{
+              gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+              gap: spacing['2'],
+            }}
           >
+            {APPEARANCE_PRESETS.map(preset => (
+              <PresetCard
+                key={preset.id}
+                preset={preset}
+                active={appearance.presetId === preset.id}
+                onSelect={() => handlePreset(preset.id)}
+              />
+            ))}
+          </div>
+        </StudioCard>
+
+        {/* ================= Interface tuning ================= */}
+        <StudioCard index={3} title="Interface">
+          <div className="grid" style={{ gridTemplateColumns: '2fr 3fr', gap: spacing['6'] }}>
             <FieldGroup label="Density">
               <div className="grid grid-cols-2" style={{ gap: spacing['2'] }}>
                 {(
@@ -289,28 +307,95 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
               </div>
             </FieldGroup>
           </div>
-        </Tile>
-
-        {/* ========== Reset button ========== */}
-        <div>
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            className="text-sm"
-            style={{ gap: spacing['2'] }}
-          >
-            <RotateCcw style={{ width: '14px', height: '14px' }} />
-            Reset to Sanketa Classic
-          </Button>
-        </div>
+        </StudioCard>
       </div>
     </>
   )
 }
 
 // ============================================================================
-// Custom-palette indicator — shows next to the gallery label when the user
-// has drifted the picker off any named preset.
+// Studio chrome — hero buttons and numbered section cards
+// ============================================================================
+
+function StudioButton({
+  onClick,
+  title,
+  children,
+}: {
+  onClick: () => void
+  title?: string
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer transition-all duration-200 hover:-translate-y-px"
+      style={{
+        color: 'var(--heading)',
+        backgroundColor: 'color-mix(in srgb, var(--card) 65%, transparent)',
+        boxShadow: 'inset 0 0 0 1px var(--border), 0 1px 3px rgb(21 68 110 / 0.06)',
+        backdropFilter: 'blur(6px)',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function StudioCard({
+  index,
+  title,
+  hint,
+  aside,
+  children,
+}: {
+  index: number
+  title: string
+  hint?: string
+  aside?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <section
+      className="flex flex-col rounded-2xl p-4"
+      style={{
+        gap: spacing['3'],
+        backgroundColor: 'var(--card)',
+        boxShadow: 'var(--shadow-card), inset 0 0 0 1px var(--card-border)',
+      }}
+    >
+      <header className="flex items-center" style={{ gap: spacing['2'] }}>
+        <span
+          className="font-mono text-[10px] font-bold tabular-nums"
+          style={{ color: 'var(--muted-foreground)', opacity: 0.8 }}
+        >
+          {String(index).padStart(2, '0')}
+        </span>
+        <h4 className="text-sm font-bold" style={{ color: 'var(--heading)' }}>
+          {title}
+        </h4>
+        <span
+          aria-hidden
+          className="flex-1 h-px"
+          style={{ backgroundColor: 'var(--border-subtle)' }}
+        />
+        {aside}
+      </header>
+      {children}
+      {hint && (
+        <p className="text-[11px]" style={{ color: text.muted, lineHeight: 1.5 }}>
+          {hint}
+        </p>
+      )}
+    </section>
+  )
+}
+
+// ============================================================================
+// Custom-palette indicator — shows in the gallery header when the user has
+// drifted the picker (or shuffle) off any named preset.
 // ============================================================================
 
 function CustomPaletteChip() {
@@ -346,11 +431,11 @@ function HexReadout({
 }) {
   return (
     <div
-      className="flex items-center rounded-lg border"
+      className="flex items-center rounded-lg"
       style={{
         padding: `${spacing['2']} ${spacing['2.5']}`,
-        borderColor: border.default,
-        backgroundColor: 'var(--card)',
+        boxShadow: 'inset 0 0 0 1px var(--border)',
+        backgroundColor: 'color-mix(in srgb, var(--card) 80%, transparent)',
         gap: spacing['2.5'],
       }}
     >
@@ -360,7 +445,7 @@ function HexReadout({
           width: '22px',
           height: '22px',
           backgroundColor: value,
-          border: `1px solid ${border.default}`,
+          boxShadow: 'inset 0 0 0 1px var(--border)',
           transition: 'background-color 200ms ease',
         }}
       />
