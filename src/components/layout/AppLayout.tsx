@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import {
   SidebarProvider,
   SidebarInset,
@@ -96,6 +96,7 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
   const isDesktop = useIsDesktop()
   const { setOpen, isMobile, toggleSidebar } = useSidebar()
   const { config } = useSchoolConfig()
+  const location = useLocation()
 
   // Use uploaded school logo if available, otherwise fall back to prop
   const effectiveLogoPath = config.schoolLogo ?? logoPath
@@ -127,7 +128,10 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
         {/* No separate desktop header — TopActions render inside PageHeader via context */}
         <TopActionsContext.Provider value={<TopActions />}>
-          <main className="flex flex-1 flex-col gap-4 p-4 overflow-auto min-h-0">
+          <main
+            key={location.pathname}
+            className="page-enter scrollbar-thin flex flex-1 flex-col gap-4 p-4 overflow-auto min-h-0"
+          >
             <ErrorBoundary>
               <Outlet />
             </ErrorBoundary>

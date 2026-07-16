@@ -29,7 +29,7 @@ export function StudentStatCard({
 }: StudentStatCardProps) {
   return (
     <Card
-      className="group/card relative flex flex-col justify-end px-4 py-3 border-0"
+      className="card-hover group/card relative flex flex-col justify-end px-4 py-3 border-0"
       style={{ backgroundColor: cardBg }}
     >
       {/* Action slot — top-left, visible on card hover */}

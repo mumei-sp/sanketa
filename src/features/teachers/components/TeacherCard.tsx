@@ -71,7 +71,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
       borderRadius="lg"
       shadowed
       padding={16}
-      className="relative flex flex-col gap-3 h-full cursor-pointer hover:shadow-md transition-shadow"
+      className="card-interactive relative flex flex-col gap-3 h-full"
       onClick={handleViewDetails}
     >
       {/* Top-right action icons */}

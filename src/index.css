@@ -604,6 +604,77 @@ html[data-density="compact"] [data-slot="card"] {
 }
 
 /* ===================================================================
+ * MOTION & INTERACTION
+ * Shared motion tokens + micro-interaction utilities.
+ * =================================================================== */
+
+:root {
+  --motion-duration-fast: 150ms;
+  --motion-duration: 250ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Route-change entrance: subtle fade + rise applied to the page container */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter var(--motion-duration) var(--motion-ease) both;
+}
+
+/* Hover elevation for informational cards (stat tiles, summary cards) */
+.card-hover {
+  transition:
+    box-shadow var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+.card-hover:hover {
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+}
+.dark .card-hover:hover {
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.4);
+}
+
+/* Clickable cards: elevation + lift, settles back down on press */
+.card-interactive {
+  cursor: pointer;
+  transition:
+    box-shadow var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+.card-interactive:hover {
+  box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.12);
+  transform: translateY(-1px);
+}
+.card-interactive:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 0.1);
+}
+.dark .card-interactive:hover {
+  box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.5);
+}
+
+/* Respect OS-level reduced-motion preference app-wide */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===================================================================
  * PRINT STYLES — Report Card + Timetable
  * =================================================================== */
 

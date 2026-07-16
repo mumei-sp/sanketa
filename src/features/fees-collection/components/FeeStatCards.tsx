@@ -50,7 +50,7 @@ export function FeeStatCards({ stats, isLoading = false }: FeeStatCardsProps) {
             padding={0}
             shadowed={false}
           >
-            <Card className="flex flex-col md:flex-row items-center gap-3 px-3 md:px-4 py-3">
+            <Card className="card-hover flex flex-col md:flex-row items-center gap-3 px-3 md:px-4 py-3">
               {/* Icon — square with rounded corners */}
               <div
                 className="flex items-center justify-center size-[40px] md:size-[52px] min-w-[40px] md:min-w-[52px] rounded-xl flex-shrink-0"

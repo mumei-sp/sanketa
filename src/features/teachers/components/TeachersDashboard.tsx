@@ -33,7 +33,7 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
       borderRadius="lg"
       shadowed
       padding={12}
-      className="flex items-center justify-between"
+      className="card-hover group flex items-center justify-between"
     >
       <div className="flex flex-col gap-1">
         <h3 className="text-body-muted font-medium" style={{ color: 'var(--heading)' }}>
