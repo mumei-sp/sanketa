@@ -55,10 +55,10 @@ export interface AppearanceConfig {
 
 export type PresetId =
   | 'sanketa-classic'
-  | 'soft-pink'
-  | 'ocean'
-  | 'emerald'
-  | 'mono'
+  | 'pacific'
+  | 'wisteria'
+  | 'meadow'
+  | 'champagne'
 
 export interface AppearancePreset {
   id: PresetId
@@ -70,6 +70,10 @@ export interface AppearancePreset {
 }
 
 /**
+ * Curated preset gallery — every entry follows the Schola formula:
+ * two soft pastel surfaces anchored by one deep ink. Presets that broke the
+ * formula (washed greys, low-contrast blush) were retired.
+ *
  * `sanketa-classic` MUST reproduce today's light mode exactly.
  * Values come from `baseColors` in src/theme/colors.ts — the single source
  * of truth for the current brand palette.
@@ -78,42 +82,42 @@ export const APPEARANCE_PRESETS: AppearancePreset[] = [
   {
     id: 'sanketa-classic',
     label: 'Sanketa Classic',
-    description: 'The default pink + navy brand look.',
+    description: 'Signature pink & cyan over deep navy.',
     primary: baseColors.pink,     // #FECCFD
     accent: baseColors.blue,      // #CDEAF0
     heading: baseColors.heading,  // #15446E
   },
   {
-    id: 'soft-pink',
-    label: 'Soft Pink',
-    description: 'Warmer blush with mocha ink.',
-    primary: '#FBD5E2',
-    accent: '#F5E6D8',
-    heading: '#4A2C3A',
-  },
-  {
-    id: 'ocean',
-    label: 'Ocean',
-    description: 'Calm blues with deep slate text.',
+    id: 'pacific',
+    label: 'Pacific',
+    description: 'Airy sky blue & sea mint with marine ink.',
     primary: '#BCE0F5',
-    accent: '#D6ECF2',
+    accent: '#CFF2EC',
     heading: '#0F3854',
   },
   {
-    id: 'emerald',
-    label: 'Emerald',
-    description: 'Fresh greens with forest text.',
-    primary: '#C8EBD3',
-    accent: '#E3F2E0',
-    heading: '#1F4D3A',
+    id: 'wisteria',
+    label: 'Wisteria',
+    description: 'Lilac & periwinkle with indigo ink.',
+    primary: '#DDD5FB',
+    accent: '#E4EAFE',
+    heading: '#35306B',
   },
   {
-    id: 'mono',
-    label: 'Mono',
-    description: 'Neutral greys for a quiet UI.',
-    primary: '#E5E5E5',
-    accent: '#F0F0F0',
-    heading: '#1F1F1F',
+    id: 'meadow',
+    label: 'Meadow',
+    description: 'Sage & mint with forest ink.',
+    primary: '#C9EBD4',
+    accent: '#E2F4E4',
+    heading: '#1E4D38',
+  },
+  {
+    id: 'champagne',
+    label: 'Champagne',
+    description: 'Warm champagne & cream with espresso ink.',
+    primary: '#F6E0C3',
+    accent: '#FAEEDB',
+    heading: '#5A3E1E',
   },
 ]
 
@@ -126,9 +130,9 @@ export function getPreset(id: string): AppearancePreset | undefined {
 // ============================================================================
 
 export const RADIUS_OPTIONS = [
-  { value: 0.4, label: 'Sharp' },
-  { value: 0.625, label: 'Default' },
-  { value: 0.9, label: 'Soft' },
+  { value: 0.625, label: 'Crisp' },
+  { value: 1, label: 'Signature' },
+  { value: 1.25, label: 'Round' },
 ] as const
 
 // ============================================================================
@@ -145,5 +149,5 @@ export const DEFAULT_APPEARANCE: AppearanceConfig = {
   accentAutoDerive: true,
   headingAutoDerive: false,
   density: 'comfortable',
-  radius: 0.625,
+  radius: 1,
 }

@@ -17,17 +17,17 @@ export function DashboardStatCard({ stat }: DashboardStatCardProps) {
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="text-body-muted text-muted-foreground truncate">{stat.label}</span>
           <span
-            className="text-numeric text-2xl"
+            className="text-numeric text-2xl font-extrabold tracking-tight"
             style={{ color: 'var(--heading)' }}
           >
             {stat.value.toLocaleString('en-IN')}
           </span>
         </div>
         <div
-          className="flex items-center justify-center size-[40px] min-w-[40px] rounded-full flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+          className="flex items-center justify-center size-[48px] min-w-[48px] rounded-full flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
           style={{ backgroundColor: stat.iconBg }}
         >
-          <Icon className="w-5 h-5" style={{ color: stat.iconColor }} />
+          <Icon className="size-[22px]" style={{ color: stat.iconColor }} />
         </div>
       </Card>
     </Tile>

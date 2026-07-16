@@ -6,10 +6,13 @@
  * cascade across the whole app in real time. On unmount (ESC / outside click /
  * route change / crash) it re-applies the saved `config.appearance`,
  * guaranteeing a clean revert without a separate Cancel handler.
+ *
+ * Layout: a "theme studio" hero (mode scenes + arc palette + live preview),
+ * the curated preset gallery, and interface tuning (density / radius).
  */
 
 import * as React from 'react'
-import { RotateCcw, Rows3, AlignJustify, Sparkles } from 'lucide-react'
+import { RotateCcw, Sparkles } from 'lucide-react'
 import type { SchoolConfig } from '@/config/school-config'
 import {
   APPEARANCE_PRESETS,
@@ -25,9 +28,16 @@ import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { ArcColorPicker } from '@/components/ui/arc-color-picker'
 import { Button } from '@/components/ui/button'
 import { Tile } from '@/components/tile'
-import { text, border, background } from '@/theme/colors'
+import { text, border } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
-import { ThemeModeToggle, PresetCard, LivePreviewPanel } from './appearance-parts'
+import {
+  ModeSelector,
+  PresetCard,
+  LivePreviewPanel,
+  OptionCard,
+  DensityGlyph,
+  RadiusGlyph,
+} from './appearance-parts'
 
 interface Props {
   draft: SchoolConfig
@@ -102,21 +112,19 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
   }, [draft.appearance.mode, patch])
 
   const isCustom = draft.appearance.presetId === 'custom'
+  const { appearance } = draft
 
   return (
     <>
       <SectionHeading
         title="Appearance"
-        description="Theme, brand colors, density, and radius."
+        description="Theme, palette, and interface personality — every change previews live across the app."
       />
 
-      <div
-        className="flex flex-col"
-        style={{ gap: spacing['3'] }}
-      >
-        {/* ========== Combined tile — Brand colors (left) | Theme mode + Preview (right) ========== */}
+      <div className="flex flex-col" style={{ gap: spacing['3'] }}>
+        {/* ========== Theme studio — mode scenes | palette | live preview ========== */}
         <Tile
-          id="appearance-palette"
+          id="appearance-studio"
           layoutMode="block"
           background="card"
           borderRadius="lg"
@@ -124,8 +132,8 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
           className="border overflow-hidden"
           style={{ borderColor: border.default }}
         >
-          {/* Palette gradient banner — flows primary → accent → heading so the tile
-              visually carries the active theme */}
+          {/* Palette gradient banner — flows primary → accent → heading so the
+              tile visually carries the active theme */}
           <div
             aria-hidden
             style={{
@@ -135,121 +143,70 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
               transition: 'background 200ms ease',
             }}
           />
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: 'minmax(0, 1.55fr) minmax(280px, 1fr)',
-              gap: spacing['4'],
-              alignItems: 'stretch',
-              padding: spacing['4'],
-            }}
-          >
-            {/* LEFT — Brand colors */}
-            <div style={{ minWidth: 0 }}>
-              <FieldGroup
-                label="Brand colors"
-                hint="Drag the light handle for primary, dark handle for text anchor."
-              >
-                <div
-                  className="flex flex-col"
-                  style={{ gap: spacing['3'], alignItems: 'stretch' }}
-                >
-                  <div style={{ alignSelf: 'center' }}>
-                    <ArcColorPicker
-                      primary={draft.appearance.primary}
-                      heading={draft.appearance.heading}
-                      onChange={handlePickerChange}
-                      onInvert={handleInvert}
-                      onReset={handleReset}
-                    />
-                  </div>
-                  <div
-                    className="grid"
-                    style={{
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: spacing['2'],
-                    }}
-                  >
-                    <HexReadout label="Primary" value={draft.appearance.primary} />
-                    <HexReadout label="Accent" value={draft.appearance.accent} />
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <HexReadout
-                        label="Heading"
-                        value={draft.appearance.heading}
-                        showContrast
-                      />
-                    </div>
-                  </div>
-                </div>
-              </FieldGroup>
-            </div>
+          <div className="flex flex-col" style={{ gap: spacing['4'], padding: spacing['4'] }}>
+            <FieldGroup label="Theme mode">
+              <ModeSelector
+                value={appearance.mode}
+                onChange={v => patch({ mode: v as ThemeMode })}
+                primary={appearance.primary}
+                accent={appearance.accent}
+                heading={appearance.heading}
+              />
+            </FieldGroup>
 
-            {/* RIGHT — Theme mode + Live preview, separated by a subtle left seam */}
             <div
-              className="flex flex-col"
+              className="grid"
               style={{
-                minWidth: 0,
-                gap: spacing['3'],
-                borderLeft: `1px solid ${border.subtle}`,
-                paddingLeft: spacing['4'],
+                gridTemplateColumns: 'minmax(0, 1.35fr) minmax(260px, 1fr)',
+                gap: spacing['4'],
+                alignItems: 'stretch',
               }}
             >
-              <FieldGroup label="Theme mode">
-                <ThemeModeToggle
-                  value={draft.appearance.mode}
-                  onChange={v => patch({ mode: v as ThemeMode })}
-                />
-              </FieldGroup>
-              <LivePreviewPanel />
+              {/* LEFT — Brand palette */}
+              <div
+                className="flex flex-col"
+                style={{ minWidth: 0, gap: spacing['3'] }}
+              >
+                <FieldGroup
+                  label="Brand palette"
+                  hint="Drag the light handle for primary, dark handle for the text anchor. Accent follows automatically."
+                >
+                  <div
+                    className="flex flex-col"
+                    style={{ gap: spacing['3'], alignItems: 'stretch' }}
+                  >
+                    <div style={{ alignSelf: 'center' }}>
+                      <ArcColorPicker
+                        primary={appearance.primary}
+                        heading={appearance.heading}
+                        onChange={handlePickerChange}
+                        onInvert={handleInvert}
+                        onReset={handleReset}
+                      />
+                    </div>
+                    <div
+                      className="grid"
+                      style={{ gridTemplateColumns: '1fr 1fr', gap: spacing['2'] }}
+                    >
+                      <HexReadout label="Primary" value={appearance.primary} />
+                      <HexReadout label="Accent" value={appearance.accent} />
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <HexReadout label="Heading" value={appearance.heading} showContrast />
+                      </div>
+                    </div>
+                  </div>
+                </FieldGroup>
+              </div>
+
+              {/* RIGHT — Live preview */}
+              <div className="flex flex-col" style={{ minWidth: 0 }}>
+                <LivePreviewPanel />
+              </div>
             </div>
           </div>
         </Tile>
 
-        {/* ========== Density + Corner radius tile (2-col inside) ========== */}
-        <Tile
-          id="appearance-layout"
-          layoutMode="block"
-          background="card"
-          borderRadius="lg"
-          padding="p-4"
-          className="border"
-          style={{ borderColor: border.default }}
-        >
-          <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: spacing['6'] }}>
-            <FieldGroup label="Density">
-              <SegmentedControl
-                value={draft.appearance.density}
-                onChange={v => patch({ density: v as Density })}
-                options={[
-                  {
-                    value: 'comfortable',
-                    label: 'Comfortable',
-                    leading: <Rows3 size={13} strokeWidth={1.75} />,
-                  },
-                  {
-                    value: 'compact',
-                    label: 'Compact',
-                    leading: <AlignJustify size={13} strokeWidth={1.75} />,
-                  },
-                ]}
-              />
-            </FieldGroup>
-
-            <FieldGroup label="Corner radius">
-              <SegmentedControl
-                value={String(draft.appearance.radius)}
-                onChange={v => patch({ radius: Number(v) })}
-                options={RADIUS_OPTIONS.map(o => ({
-                  value: String(o.value),
-                  label: o.label,
-                  leading: <RadiusGlyph rem={o.value} />,
-                }))}
-              />
-            </FieldGroup>
-          </div>
-        </Tile>
-
-        {/* ========== Full-width preset strip tile ========== */}
+        {/* ========== Curated palette gallery ========== */}
         <Tile
           id="appearance-presets"
           layoutMode="block"
@@ -260,15 +217,78 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
           style={{ borderColor: border.default }}
         >
           <FieldGroup
-            label="Preset"
+            label="Curated palettes"
+            hint="A hand-picked set — two soft surfaces anchored by one deep ink."
             headerRight={isCustom ? <CustomPaletteChip /> : null}
           >
-            <PresetStrip
-              presets={APPEARANCE_PRESETS}
-              activeId={draft.appearance.presetId}
-              onSelect={handlePreset}
-            />
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+                gap: spacing['2'],
+              }}
+            >
+              {APPEARANCE_PRESETS.map(preset => (
+                <PresetCard
+                  key={preset.id}
+                  preset={preset}
+                  active={appearance.presetId === preset.id}
+                  onSelect={() => handlePreset(preset.id)}
+                />
+              ))}
+            </div>
           </FieldGroup>
+        </Tile>
+
+        {/* ========== Interface tuning — density + radius ========== */}
+        <Tile
+          id="appearance-interface"
+          layoutMode="block"
+          background="card"
+          borderRadius="lg"
+          padding="p-4"
+          className="border"
+          style={{ borderColor: border.default }}
+        >
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: '2fr 3fr', gap: spacing['6'] }}
+          >
+            <FieldGroup label="Density">
+              <div className="grid grid-cols-2" style={{ gap: spacing['2'] }}>
+                {(
+                  [
+                    { value: 'comfortable', label: 'Comfortable', compact: false },
+                    { value: 'compact', label: 'Compact', compact: true },
+                  ] as const
+                ).map(opt => (
+                  <OptionCard
+                    key={opt.value}
+                    label={opt.label}
+                    active={appearance.density === opt.value}
+                    onSelect={() => patch({ density: opt.value as Density })}
+                  >
+                    <DensityGlyph compact={opt.compact} />
+                  </OptionCard>
+                ))}
+              </div>
+            </FieldGroup>
+
+            <FieldGroup label="Corner radius">
+              <div className="grid grid-cols-3" style={{ gap: spacing['2'] }}>
+                {RADIUS_OPTIONS.map(opt => (
+                  <OptionCard
+                    key={opt.value}
+                    label={opt.label}
+                    active={appearance.radius === opt.value}
+                    onSelect={() => patch({ radius: opt.value })}
+                  >
+                    <RadiusGlyph rem={opt.value} />
+                  </OptionCard>
+                ))}
+              </div>
+            </FieldGroup>
+          </div>
         </Tile>
 
         {/* ========== Reset button ========== */}
@@ -289,7 +309,7 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
 }
 
 // ============================================================================
-// Custom-palette indicator — shows next to the Preset label when the user
+// Custom-palette indicator — shows next to the gallery label when the user
 // has drifted the picker off any named preset.
 // ============================================================================
 
@@ -307,74 +327,6 @@ function CustomPaletteChip() {
       <Sparkles size={10} strokeWidth={2} />
       Custom palette
     </span>
-  )
-}
-
-// ============================================================================
-// Preset strip — horizontal scroll row; each card gets a fixed flex-basis so
-// adding more presets keeps cards the same width and overflows to scroll.
-// ============================================================================
-
-function PresetStrip({
-  presets,
-  activeId,
-  onSelect,
-}: {
-  presets: typeof APPEARANCE_PRESETS
-  activeId: string
-  onSelect: (id: string) => void
-}) {
-  return (
-    <div
-      className="flex overflow-x-auto"
-      style={{
-        gap: spacing['2'],
-        paddingTop: '3px',
-        paddingBottom: '6px',
-        justifyContent: 'flex-start',
-        alignItems: 'stretch',
-        scrollSnapType: 'x proximity',
-        scrollbarWidth: 'thin',
-      }}
-    >
-      {presets.map(preset => (
-        <div
-          key={preset.id}
-          style={{
-            flex: '0 0 200px',
-            flexShrink: 0,
-            flexGrow: 0,
-            scrollSnapAlign: 'start',
-          }}
-        >
-          <PresetCard
-            preset={preset}
-            active={activeId === preset.id}
-            onSelect={() => onSelect(preset.id)}
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ============================================================================
-// Radius glyph — small outlined square whose corner radius matches the option
-// ============================================================================
-
-function RadiusGlyph({ rem }: { rem: number }) {
-  return (
-    <span
-      aria-hidden
-      style={{
-        display: 'inline-block',
-        width: '11px',
-        height: '11px',
-        border: '1.5px solid currentColor',
-        borderRadius: `${Math.min(rem * 4, 5)}px`,
-        pointerEvents: 'none',
-      }}
-    />
   )
 }
 
@@ -398,7 +350,7 @@ function HexReadout({
       style={{
         padding: `${spacing['2']} ${spacing['2.5']}`,
         borderColor: border.default,
-        backgroundColor: background.card,
+        backgroundColor: 'var(--card)',
         gap: spacing['2.5'],
       }}
     >
@@ -445,7 +397,7 @@ function LegibilityDemo({ color }: { color: string }) {
       style={{
         gap: '6px',
         color,
-        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+        fontFamily: 'var(--font-sans)',
         lineHeight: 1,
       }}
       title="Heading color rendered at 12 / 14 / 16 px"
@@ -552,55 +504,6 @@ function FieldGroup({
           {hint}
         </p>
       )}
-    </div>
-  )
-}
-
-interface SegmentedOption {
-  value: string
-  label: string
-  leading?: React.ReactNode
-}
-
-function SegmentedControl({
-  value,
-  onChange,
-  options,
-}: {
-  value: string
-  onChange: (v: string) => void
-  options: SegmentedOption[]
-}) {
-  return (
-    <div
-      className="inline-flex rounded-lg"
-      style={{
-        backgroundColor: background.page,
-        border: `1px solid ${border.default}`,
-        padding: '3px',
-      }}
-    >
-      {options.map(opt => {
-        const active = opt.value === value
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className="flex items-center rounded-md transition-all text-xs font-medium cursor-pointer"
-            style={{
-              padding: `${spacing['1.5']} ${spacing['3']}`,
-              gap: spacing['1.5'],
-              backgroundColor: active ? background.card : 'transparent',
-              color: active ? 'var(--heading)' : text.muted,
-              boxShadow: active ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
-            }}
-          >
-            {opt.leading}
-            {opt.label}
-          </button>
-        )
-      })}
     </div>
   )
 }

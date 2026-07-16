@@ -37,13 +37,14 @@ export default defineConfig({
       },
     },
   },
-  // Server configuration
+  // Server configuration — PORT env (set by tooling like IDE previews) wins
+  // over the default so the assigned port and the served port always agree.
   server: {
-    port: 1337,
-    open: true,
+    port: Number(process.env.PORT) || 1337,
+    open: false,
     allowedHosts: ['.ngrok-free.app'],
   },
   preview: {
-    port: 1337,
+    port: Number(process.env.PORT) || 1337,
   },
 })

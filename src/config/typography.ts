@@ -9,7 +9,7 @@
 /**
  * Font weight semantic names
  */
-export type FontWeight = 'regular' | 'medium' | 'semibold' | 'bold'
+export type FontWeight = 'regular' | 'medium' | 'semibold' | 'bold' | 'extrabold'
 
 /**
  * Font size semantic names
@@ -38,6 +38,7 @@ export const fontWeights: Record<FontWeight, number> = {
   medium: 500,
   semibold: 600,
   bold: 700,
+  extrabold: 800,
 } as const
 
 /**
@@ -75,10 +76,13 @@ export const lineHeights: Record<FontSize, string> = {
 
 /**
  * Font family configuration
- * Primary font: Inter Variable with system fallbacks
+ * Primary font: Plus Jakarta Sans Variable (the Schola design-kit typeface),
+ * with Inter Variable and system fallbacks
  */
 export const fontFamily = {
   sans: [
+    '"Plus Jakarta Sans Variable"',
+    '"Plus Jakarta Sans"',
     'Inter Variable',
     'Inter',
     'ui-sans-serif',
@@ -131,7 +135,7 @@ export const textRoles: Record<TextRole, TextRoleConfig> = {
    */
   pageTitle: {
     fontSize: 'xl', // 20px (1.429rem)
-    fontWeight: 'semibold', // 600
+    fontWeight: 'bold', // 700 — Schola titles are set heavy
     lineHeight: '2xl', // 1.3 ratio (1.857rem)
   },
 
@@ -143,7 +147,7 @@ export const textRoles: Record<TextRole, TextRoleConfig> = {
    */
   sectionTitle: {
     fontSize: 'lg', // 16px (1.143rem)
-    fontWeight: 'semibold', // 600
+    fontWeight: 'bold', // 700 — Schola card headers are bold navy
     lineHeight: 'xl', // 1.35 ratio (1.543rem)
   },
 

@@ -1,3 +1,4 @@
+@import '@fontsource-variable/plus-jakarta-sans';
 @import '@fontsource-variable/inter';
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -13,13 +14,20 @@
   /* Typography: Font Family
    * NOTE: These values must match src/config/typography.ts fontFamily configuration
    * Source: @/config/typography fontFamily.sans and fontFamily.mono
+   *
+   * `--font-sans` / `--font-mono` are the Tailwind v4 theme tokens that the
+   * `font-sans` / `font-mono` utilities actually compile from. The legacy
+   * `--font-family-*` names are kept as aliases for any direct var() readers.
    */
-  --font-family-sans:
-    'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-family-mono:
+  --font-sans:
+    'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Inter Variable', 'Inter', ui-sans-serif,
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
+  --font-family-sans: var(--font-sans);
+  --font-family-mono: var(--font-mono);
 
   /* Typography: Font Weights (semantic names)
    * NOTE: These values must match src/config/typography.ts fontWeights configuration
@@ -29,6 +37,7 @@
   --font-weight-medium: 500; /* fontWeights.medium */
   --font-weight-semibold: 600; /* fontWeights.semibold */
   --font-weight-bold: 700; /* fontWeights.bold */
+  --font-weight-extrabold: 800; /* fontWeights.extrabold — display numerals / hero titles */
 
   /* Map to Tailwind's default font-weight scale for compatibility */
   --font-weight-normal: 400;
@@ -166,13 +175,14 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-card-border: var(--card-border);
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 1rem; /* Schola cards read at ~16-20px corners */
   /* Theme Colors - Using centralized color system */
   /* Background colors */
-  --background: #f8f8f8; /* background.page */
+  --background: #f6f8fb; /* background.page — cool, blue-tinted canvas */
   --card: #ffffff; /* background.card */
   --popover: #ffffff; /* background.card */
   /* Text colors */
@@ -180,17 +190,17 @@
   --heading: #15446e; /* user-tunable heading anchor — runtime-overridable */
   --card-foreground: #15446e; /* text.heading */
   --popover-foreground: #15446e; /* text.heading */
-  --text-body: #262626; /* body copy — neutral-800 */
-  --text-muted: #00110B; /* secondary / muted text */
+  --text-body: #33415c; /* body copy — navy-leaning slate */
+  --text-muted: #5e6e85; /* secondary / muted text — blue-gray, not dead gray */
   /* Primary colors (pink-based) */
   --primary: #feccfd; /* primary.base - converted to oklch: oklch(0.95 0.08 320) */
   --primary-foreground: #15446e; /* text.heading for contrast */
   /* Secondary colors */
-  --secondary: #f5f5f5; /* accent.muted - very subtle background */
+  --secondary: #eef2f7; /* cool wash for quiet surfaces */
   --secondary-foreground: #15446e; /* text.heading */
   /* Muted colors */
-  --muted: #fafafa; /* border.muted - very subtle background */
-  --muted-foreground: #737373; /* text.muted */
+  --muted: #f3f6fa; /* cool subtle background */
+  --muted-foreground: #64748b; /* slate-500 — harmonizes with navy headings */
   /* Accent colors (blue-based) */
   --accent: #cdeaf0; /* accent.base - converted to oklch: oklch(0.90 0.05 200) */
   --accent-foreground: #15446e; /* text.heading for contrast */
@@ -202,11 +212,15 @@
   --delete-action-text: #D64445; /* same as bg for text usage */
   --delete-action-soft: #FADCDC; /* status.danger.soft */
   /* Border colors */
-  --border: #e5e5e5; /* border.default */
-  --border-subtle: #f5f5f5; /* border.subtle */
-  --border-muted: #fafafa; /* border.muted */
-  --input: #e5e5e5; /* border.default */
+  --border: #e4eaf2; /* border.default — cool hairline */
+  --border-subtle: #edf1f7; /* border.subtle */
+  --border-muted: #f4f7fb; /* border.muted */
+  --input: #dfe6ef; /* border.default */
   --ring: #cdeaf0; /* accent.base for focus rings */
+  /* Card chrome — Schola cards are borderless white lifted by a soft navy-tinted
+     shadow; the faint border only defines edges where white meets white. */
+  --card-border: #eef2f7;
+  --shadow-card: 0 1px 2px rgb(21 68 110 / 0.03), 0 10px 28px -14px rgb(21 68 110 / 0.1);
   /* Chart colors - using theme colors */
   --chart-1: #feccfd; /* primary.base */
   --chart-2: #cdeaf0; /* accent.base */
@@ -266,6 +280,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  /* Card chrome — dark mode keeps hairline borders for elevation; shadows
+     read as mud on dark surfaces so they stay off. */
+  --card-border: oklch(1 0 0 / 7%);
+  --shadow-card: none;
 }
 
 /* Arc color picker — conic rainbow frame around the dot-grid plane. */
@@ -350,20 +368,23 @@ html[data-density="compact"] [data-slot="card"] {
 
   /* Semantic Text Role Utilities - Compact Dashboard Specs */
 
-  /* pageTitle - Main page headers: 20px, weight 600, line-height 1.3 */
+  /* pageTitle - Main page headers: 20px, weight 700, line-height 1.3
+   * Schola titles are set heavy — Plus Jakarta bold carries the look. */
   /* Usage: <h1 className="text-page-title">Dashboard</h1> */
   .text-page-title {
     font-size: var(--font-size-xl); /* 20px (1.429rem) */
-    font-weight: var(--font-weight-semibold); /* 600 */
+    font-weight: var(--font-weight-bold); /* 700 */
     line-height: 1.3; /* 20px * 1.3 = 26px */
+    letter-spacing: -0.01em;
   }
 
-  /* sectionTitle - Card and section headers: 16px, weight 600, line-height 1.35 */
+  /* sectionTitle - Card and section headers: 16px, weight 700, line-height 1.35 */
   /* Usage: <h2 className="text-section-title">Student Information</h2> */
   .text-section-title {
     font-size: var(--font-size-lg); /* 16px (1.143rem) */
-    font-weight: var(--font-weight-semibold); /* 600 */
+    font-weight: var(--font-weight-bold); /* 700 */
     line-height: 1.35; /* 16px * 1.35 = 21.6px */
+    letter-spacing: -0.005em;
   }
 
   /* tableHeader - Table column headers: 13px, weight 500, line-height 1.3 */
@@ -475,6 +496,12 @@ html[data-density="compact"] [data-slot="card"] {
   /* Chart scale utility - locally scales chart font size for better visual density */
   .chart-scale {
     font-size: 0.9em; /* Scales down from 14px base to ~12.6px effective */
+  }
+
+  /* Card elevation — soft navy-tinted lift used by Card and standalone tiles.
+     Resolves through --shadow-card so dark mode can switch it off. */
+  .shadow-card {
+    box-shadow: var(--shadow-card);
   }
 }
 
@@ -637,7 +664,7 @@ html[data-density="compact"] [data-slot="card"] {
     transform var(--motion-duration) var(--motion-ease);
 }
 .card-hover:hover {
-  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+  box-shadow: 0 6px 18px -4px rgb(21 68 110 / 0.14);
 }
 .dark .card-hover:hover {
   box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.4);
@@ -651,12 +678,12 @@ html[data-density="compact"] [data-slot="card"] {
     transform var(--motion-duration) var(--motion-ease);
 }
 .card-interactive:hover {
-  box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.12);
+  box-shadow: 0 8px 22px -6px rgb(21 68 110 / 0.16);
   transform: translateY(-1px);
 }
 .card-interactive:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 0.1);
+  box-shadow: 0 2px 6px -2px rgb(21 68 110 / 0.12);
 }
 .dark .card-interactive:hover {
   box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.5);

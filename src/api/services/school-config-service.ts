@@ -18,7 +18,7 @@ import {
   DEFAULT_SCHOOL_CONFIG,
   SCHOOL_CONFIG_STORAGE_KEY,
 } from '@/config/school-config'
-import { DEFAULT_APPEARANCE } from '@/theme/appearance'
+import { DEFAULT_APPEARANCE, getPreset } from '@/theme/appearance'
 
 /**
  * Load school config from localStorage.
@@ -51,6 +51,48 @@ function migrateSubjectColors(subjects: SchoolConfig['subjects'] | undefined) {
   }))
 }
 
+/**
+ * Appearance migration for the Schola refresh:
+ *  - The radius scale moved from 0.4 / 0.625 / 0.9 to 0.625 / 1 / 1.25 — each
+ *    stored step maps onto the equivalent step of the new scale.
+ *  - Retired preset ids: `ocean`→`pacific` and `emerald`→`meadow` follow their
+ *    successors (colors included); `soft-pink` / `mono` keep the user's colors
+ *    but become `custom` since no successor exists.
+ */
+const LEGACY_RADIUS_MIGRATIONS: Record<string, number> = {
+  '0.4': 0.625,
+  '0.625': 1,
+  '0.9': 1.25,
+}
+
+const LEGACY_PRESET_MIGRATIONS: Record<string, string> = {
+  ocean: 'pacific',
+  emerald: 'meadow',
+  'soft-pink': 'custom',
+  mono: 'custom',
+}
+
+function migrateAppearance(
+  appearance: Partial<SchoolConfig['appearance']> | undefined,
+): Partial<SchoolConfig['appearance']> {
+  if (!appearance) return {}
+  const migrated = { ...appearance }
+  if (migrated.radius !== undefined) {
+    migrated.radius = LEGACY_RADIUS_MIGRATIONS[String(migrated.radius)] ?? migrated.radius
+  }
+  const successorId = migrated.presetId && LEGACY_PRESET_MIGRATIONS[migrated.presetId]
+  if (successorId) {
+    migrated.presetId = successorId as SchoolConfig['appearance']['presetId']
+    const successor = getPreset(successorId)
+    if (successor) {
+      migrated.primary = successor.primary
+      migrated.accent = successor.accent
+      migrated.heading = successor.heading
+    }
+  }
+  return migrated
+}
+
 export function loadSchoolConfig(): SchoolConfig {
   try {
     const raw = localStorage.getItem(SCHOOL_CONFIG_STORAGE_KEY)
@@ -63,7 +105,7 @@ export function loadSchoolConfig(): SchoolConfig {
       ...DEFAULT_SCHOOL_CONFIG,
       ...parsed,
       ...(migratedSubjects ? { subjects: migratedSubjects } : {}),
-      appearance: { ...DEFAULT_APPEARANCE, ...(parsed.appearance ?? {}) },
+      appearance: { ...DEFAULT_APPEARANCE, ...migrateAppearance(parsed.appearance) },
     }
   } catch {
     console.warn('Failed to parse school config from localStorage, using defaults')
