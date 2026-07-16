@@ -48,7 +48,7 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
         </span>
       </div>
       <div
-        className="flex items-center justify-center rounded-[14px] shrink-0 transition-transform duration-200 group-hover:scale-110"
+        className="flex items-center justify-center rounded-[14px] shrink-0"
         style={{
           background: `linear-gradient(135deg, ${iconBg}, color-mix(in srgb, ${iconBg} 45%, white))`,
           boxShadow: `0 8px 18px -8px ${iconBg}`,
