@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 import { text, colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
+import { CountUp } from '@/components/shared/CountUp'
 import { useTileSelection } from '@/hooks/use-tile-selection'
 import type { TeacherStatistics } from '@/mocks/teachers/statistics'
 import {
@@ -40,15 +41,22 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
           {label}
         </h3>
         <span
-          className="text-numeric text-2xl"
-          style={{ color: 'var(--heading)', fontWeight: fontWeights.bold }}
+          className="text-numeric text-2xl tracking-tight"
+          style={{ color: 'var(--heading)', fontWeight: fontWeights.extrabold }}
         >
-          {value.toLocaleString('en-IN')}
+          <CountUp value={value} />
         </span>
       </div>
       <div
-        className="flex items-center justify-center rounded-full shrink-0"
-        style={{ backgroundColor: iconBg, width: 44, height: 44, minWidth: 44, minHeight: 44 }}
+        className="flex items-center justify-center rounded-[14px] shrink-0 transition-transform duration-200 group-hover:scale-110"
+        style={{
+          background: `linear-gradient(135deg, ${iconBg}, color-mix(in srgb, ${iconBg} 45%, white))`,
+          boxShadow: `0 8px 18px -8px ${iconBg}`,
+          width: 46,
+          height: 46,
+          minWidth: 46,
+          minHeight: 46,
+        }}
       >
         <Icon className="w-5 h-5" style={{ color: iconColor }} />
       </div>

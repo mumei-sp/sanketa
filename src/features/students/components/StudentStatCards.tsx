@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { CountUp } from '@/components/shared/CountUp'
 import { text, withOpacity, baseColors } from '@/theme/colors'
 
 interface StudentStatCardProps {
@@ -74,7 +75,7 @@ export function StudentStatCard({
           lineHeight: 1.15,
         }}
       >
-        {value.toLocaleString('en-IN')}
+        <CountUp value={value} />
       </span>
       <span
         style={{

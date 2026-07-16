@@ -51,12 +51,18 @@ export default function Dashboard() {
     selectedIds,
     toggle: toggleTile,
     reset: resetTiles,
+    reorder: reorderTiles,
   } = useTileSelection(dashboardTileRegistry, {
     storageKey: 'sanketa:dashboard-tiles',
     defaults: DEFAULT_DASHBOARD_TILE_IDS,
     maxSelections: 4,
   })
   const [customizeOpen, setCustomizeOpen] = React.useState(false)
+
+  // Drag-to-reorder for the KPI row (native HTML5 drag — persists via
+  // useTileSelection's reorder). dragIndex rides in a ref so dragover stays cheap.
+  const dragIndex = React.useRef<number | null>(null)
+  const [dropTarget, setDropTarget] = React.useState<number | null>(null)
 
   const [performance, setPerformance] = React.useState<PerformanceDataset[]>([])
   const [earnings, setEarnings] = React.useState<EarningsDataset[]>([])
@@ -166,8 +172,37 @@ export default function Dashboard() {
             </button>
           </div>
           <TileWrapper columns={{ default: 2, md: 4 }} gap={12}>
-            {selectedTiles.map(stat => (
-              <DashboardStatCard key={stat.id} stat={stat} />
+            {selectedTiles.map((stat, index) => (
+              <div
+                key={stat.id}
+                draggable
+                onDragStart={e => {
+                  dragIndex.current = index
+                  e.dataTransfer.effectAllowed = 'move'
+                }}
+                onDragOver={e => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                  if (dropTarget !== index) setDropTarget(index)
+                }}
+                onDragLeave={() => setDropTarget(current => (current === index ? null : current))}
+                onDrop={e => {
+                  e.preventDefault()
+                  if (dragIndex.current !== null && dragIndex.current !== index) {
+                    reorderTiles(dragIndex.current, index)
+                  }
+                  dragIndex.current = null
+                  setDropTarget(null)
+                }}
+                onDragEnd={() => {
+                  dragIndex.current = null
+                  setDropTarget(null)
+                }}
+                className="cursor-grab active:cursor-grabbing transition-transform duration-200"
+                style={dropTarget === index ? { transform: 'scale(0.97)', opacity: 0.85 } : undefined}
+              >
+                <DashboardStatCard stat={stat} />
+              </div>
             ))}
           </TileWrapper>
         </Tile>

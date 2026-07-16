@@ -10,6 +10,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px); /* bento tiles — ~24px at default radius */
 
   /* Typography: Font Family
    * NOTE: These values must match src/config/typography.ts fontFamily configuration
@@ -218,9 +219,24 @@
   --input: #dfe6ef; /* border.default */
   --ring: #cdeaf0; /* accent.base for focus rings */
   /* Card chrome — Schola cards are borderless white lifted by a soft navy-tinted
-     shadow; the faint border only defines edges where white meets white. */
+     shadow; the faint border only defines edges where white meets white.
+     Depth tuned to the Aurora Polish reference (deep, wide, very soft). */
   --card-border: #eef2f7;
-  --shadow-card: 0 1px 2px rgb(21 68 110 / 0.03), 0 10px 28px -14px rgb(21 68 110 / 0.1);
+  --shadow-card: 0 1px 2px rgb(21 68 110 / 0.03), 0 16px 36px -22px rgb(21 68 110 / 0.24);
+  /* Aurora canvas — two soft radial washes (accent top-right, primary top-left)
+     over the page background. Derived from the live brand tokens so presets
+     and dark mode re-tint it automatically. */
+  --app-aurora:
+    radial-gradient(
+      1200px 500px at 80% -10%,
+      color-mix(in srgb, var(--accent) 38%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 500px at 0% 0%,
+      color-mix(in srgb, var(--primary) 26%, transparent) 0%,
+      transparent 45%
+    );
   /* Chart colors - using theme colors */
   --chart-1: #feccfd; /* primary.base */
   --chart-2: #cdeaf0; /* accent.base */
@@ -284,6 +300,18 @@
      read as mud on dark surfaces so they stay off. */
   --card-border: oklch(1 0 0 / 7%);
   --shadow-card: none;
+  /* Aurora stays but far quieter — a whisper of brand tint on the dark shell. */
+  --app-aurora:
+    radial-gradient(
+      1200px 500px at 80% -10%,
+      color-mix(in srgb, var(--accent) 10%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 500px at 0% 0%,
+      color-mix(in srgb, var(--primary) 8%, transparent) 0%,
+      transparent 45%
+    );
 }
 
 /* Arc color picker — conic rainbow frame around the dot-grid plane. */
@@ -629,6 +657,90 @@ html[data-density="compact"] [data-slot="card"] {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-muted-foreground);
 }
+
+/* ===================================================================
+ * AURORA POLISH — canvas, glass surfaces, gradient nav
+ * Core-level rules so every page inherits the reskin uniformly.
+ * =================================================================== */
+
+/* App shell canvas — the aurora sits on the SidebarInset (the <main> that
+   frames every routed page); the inner scroller is transparent so the washes
+   stay pinned while content scrolls past. */
+[data-slot='sidebar-inset'] {
+  background-image: var(--app-aurora);
+  background-repeat: no-repeat;
+  background-color: var(--background);
+}
+
+/* Frosted glass surface — translucent card over the aurora with backdrop
+   blur. Resolves through --card so dark mode frosts the dark surface. */
+.glass-card {
+  background-color: color-mix(in srgb, var(--card) 72%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* Sidebar nav — gradient active pill with a navy indicator bar, and fluid
+   hover/active transitions on every item. Unlayered so these win over the
+   Tailwind utility classes baked into the shadcn sidebar. */
+[data-sidebar='menu-button'] {
+  transition:
+    background-color var(--motion-duration-fast) var(--motion-ease),
+    color var(--motion-duration-fast) var(--motion-ease),
+    transform var(--motion-duration-fast) var(--motion-ease);
+}
+
+[data-sidebar='menu-button']:hover {
+  transform: translateX(2px);
+}
+
+[data-sidebar='menu-button'][data-active='true'] {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    color-mix(in srgb, var(--accent) 67%, transparent)
+  );
+  overflow: hidden;
+}
+
+[data-sidebar='menu-button'][data-active='true']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--heading);
+}
+
+/* Bento entrance — tiles rise in with a per-container stagger whenever a
+   page mounts (the router wraps each page in .page-enter). nth-child resets
+   per parent, so KPI rows and top-level tiles each get their own cascade. */
+@keyframes tile-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-enter [data-tile-id] {
+  animation: tile-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-enter [data-tile-id]:nth-child(2) { animation-delay: 0.06s; }
+.page-enter [data-tile-id]:nth-child(3) { animation-delay: 0.12s; }
+.page-enter [data-tile-id]:nth-child(4) { animation-delay: 0.18s; }
+.page-enter [data-tile-id]:nth-child(5) { animation-delay: 0.24s; }
+.page-enter [data-tile-id]:nth-child(6) { animation-delay: 0.3s; }
+.page-enter [data-tile-id]:nth-child(7) { animation-delay: 0.36s; }
+.page-enter [data-tile-id]:nth-child(8) { animation-delay: 0.42s; }
+.page-enter [data-tile-id]:nth-child(n + 9) { animation-delay: 0.48s; }
 
 /* ===================================================================
  * MOTION & INTERACTION

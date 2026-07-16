@@ -9,7 +9,7 @@ import { AppSidebar } from './AppSidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Logo } from './Logo'
 import { useIsDesktop } from '@/hooks/use-mobile'
-import { Search, Settings, Bell, Menu, SlidersHorizontal } from 'lucide-react'
+import { Search, Settings, Bell, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { baseColors } from '@/theme/colors'
@@ -38,9 +38,11 @@ function TopActions() {
         <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search anything"
-          className="pl-11 pr-10 h-10 w-[240px] bg-card border border-border rounded-full shadow-sm text-sm placeholder:text-muted-foreground"
+          className="pl-11 pr-12 h-10 w-[240px] bg-card border border-border rounded-full shadow-sm text-sm placeholder:text-muted-foreground"
         />
-        <SlidersHorizontal className="absolute right-3.5 h-4 w-4 text-muted-foreground" />
+        <kbd className="absolute right-3 rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+          ⌘K
+        </kbd>
       </div>
       {/* Search icon (tablet only) */}
       <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 rounded-full">
@@ -59,18 +61,24 @@ function TopActions() {
       <Button
         variant="ghost"
         size="icon"
-        className="size-10 rounded-full bg-card border border-border shadow-sm"
+        className="relative size-10 rounded-full bg-card border border-border shadow-sm"
       >
         <Bell className="h-4 w-4 text-foreground" />
+        <span
+          aria-hidden
+          className="absolute top-2 right-2.5 size-2 rounded-full bg-destructive"
+          style={{ boxShadow: '0 0 0 2px var(--card)' }}
+        />
       </Button>
 
       {/* ── User avatar with pink ring ── */}
       <div className="flex items-center gap-2.5">
         <div
-          className="size-10 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+          className="size-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
           style={{
             backgroundColor: 'var(--heading)',
-            boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${'var(--primary)'}`,
+            color: 'var(--card)',
+            boxShadow: '0 0 0 2px var(--card), 0 0 0 4px var(--primary)',
           }}
         >
           SA

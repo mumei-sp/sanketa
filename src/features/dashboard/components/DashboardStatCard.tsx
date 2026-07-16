@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card'
 import { Tile } from '@/components/tile'
-import { baseColors } from '@/theme/colors'
+import { CountUp } from '@/components/shared/CountUp'
 import type { DashboardStat } from '../types'
 
 interface DashboardStatCardProps {
@@ -20,12 +20,16 @@ export function DashboardStatCard({ stat }: DashboardStatCardProps) {
             className="text-numeric text-2xl font-extrabold tracking-tight"
             style={{ color: 'var(--heading)' }}
           >
-            {stat.value.toLocaleString('en-IN')}
+            <CountUp value={stat.value} />
           </span>
         </div>
+        {/* Gradient squircle with a soft glow in the tile's own color */}
         <div
-          className="flex items-center justify-center size-[48px] min-w-[48px] rounded-full flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
-          style={{ backgroundColor: stat.iconBg }}
+          className="flex items-center justify-center size-[46px] min-w-[46px] rounded-[14px] flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+          style={{
+            background: `linear-gradient(135deg, ${stat.iconBg}, color-mix(in srgb, ${stat.iconBg} 45%, white))`,
+            boxShadow: `0 8px 18px -8px ${stat.iconBg}`,
+          }}
         >
           <Icon className="size-[22px]" style={{ color: stat.iconColor }} />
         </div>
