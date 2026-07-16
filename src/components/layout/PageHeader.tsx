@@ -135,7 +135,7 @@ export default function PageHeader({
     <Tile
       id="page-header"
       layoutMode="block"
-      background="default"
+      background="transparent"
       borderRadius="lg"
       shadowed={false}
       className={cn(className)}
