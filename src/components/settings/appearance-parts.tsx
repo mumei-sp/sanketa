@@ -51,10 +51,10 @@ export function ModeSelector({ value, onChange, primary, accent, heading }: Mode
             onClick={() => onChange(mode)}
             className="group relative flex flex-col overflow-hidden rounded-xl text-left cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
             style={{
-              // These float on the ink hero — active gets a primary halo.
+              // These float on the aurora hero — active gets a primary halo.
               boxShadow: active
-                ? '0 0 0 2px var(--primary), 0 0 24px -2px color-mix(in srgb, var(--primary) 55%, transparent), 0 14px 30px -12px rgb(6 13 26 / 0.6)'
-                : '0 10px 24px -14px rgb(6 13 26 / 0.55), inset 0 0 0 1px var(--border-subtle)',
+                ? '0 0 0 2px var(--primary), 0 0 20px -2px color-mix(in srgb, var(--primary) 60%, transparent), 0 12px 26px -12px color-mix(in srgb, var(--heading) 35%, transparent)'
+                : '0 8px 20px -12px color-mix(in srgb, var(--heading) 25%, transparent), inset 0 0 0 1px var(--border-subtle)',
               backgroundColor: 'var(--card)',
             }}
           >
@@ -196,8 +196,9 @@ export function LivePreviewPanel() {
       className="flex flex-col rounded-xl overflow-hidden h-full min-w-0"
       style={{
         minHeight: '320px',
-        // Floats on the ink hero — deep drop shadow instead of a hairline.
-        boxShadow: '0 24px 48px -20px rgb(6 13 26 / 0.65), inset 0 0 0 1px var(--border-subtle)',
+        // Floats on the aurora hero — soft heading-tinted drop shadow.
+        boxShadow:
+          '0 20px 40px -18px color-mix(in srgb, var(--heading) 35%, transparent), inset 0 0 0 1px var(--border-subtle)',
         backgroundColor: 'var(--background)',
         transition: 'background-color 200ms ease',
       }}

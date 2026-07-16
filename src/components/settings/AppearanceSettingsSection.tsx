@@ -140,14 +140,15 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
       />
 
       <div className="flex flex-col" style={{ gap: spacing['3'] }}>
-        {/* ================= Theme studio hero — ink panel ================= */}
+        {/* ================= Theme studio hero — aurora glass panel =================
+            Built entirely from live tokens so it stays faithful to the mode:
+            pastel wash over white in light mode, tinted panel in dark mode. */}
         <div
           className="relative overflow-hidden rounded-2xl"
           style={{
             background:
-              'linear-gradient(140deg, color-mix(in srgb, var(--heading-accent) 88%, #060d1a) 0%, color-mix(in srgb, var(--heading-accent) 55%, #060d1a) 100%)',
-            boxShadow:
-              '0 24px 48px -24px color-mix(in srgb, var(--heading-accent) 55%, transparent), inset 0 0 0 1px rgb(255 255 255 / 0.08)',
+              'linear-gradient(140deg, color-mix(in srgb, var(--primary) 16%, var(--card)) 0%, color-mix(in srgb, var(--accent) 22%, var(--card)) 100%)',
+            boxShadow: 'var(--shadow-card), inset 0 0 0 1px var(--card-border)',
             transition: 'background 300ms ease',
           }}
         >
@@ -190,15 +191,18 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
               <div className="flex flex-col gap-1 min-w-0">
                 <span
                   className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em]"
-                  style={{ color: 'var(--accent)' }}
+                  style={{ color: 'var(--heading)', opacity: 0.6 }}
                 >
                   <Sparkles size={11} strokeWidth={2.25} />
                   Theme studio
                 </span>
-                <h4 className="text-2xl font-extrabold tracking-tight text-white">
+                <h4
+                  className="text-2xl font-extrabold tracking-tight"
+                  style={{ color: 'var(--heading)' }}
+                >
                   Make Sanketa yours
                 </h4>
-                <p className="text-xs" style={{ color: 'rgb(255 255 255 / 0.55)' }}>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                   Everything below repaints the moment you touch it.
                 </p>
               </div>
@@ -239,7 +243,7 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
                     onChange={handlePickerChange}
                     onInvert={handleInvert}
                     onReset={handleReset}
-                    className="border-0 shadow-[0_20px_44px_-16px_rgb(6_13_26_/_0.6)]"
+                    className="border-0 shadow-[0_16px_36px_-14px_rgb(21_68_110_/_0.28)]"
                   />
                 </div>
                 <HexReadout label="Primary" value={appearance.primary} />
@@ -247,7 +251,7 @@ export function AppearanceSettingsSection({ draft, setDraft }: Props) {
                 <HexReadout label="Heading" value={appearance.heading} showContrast />
                 <p
                   className="text-[11px] leading-relaxed"
-                  style={{ color: 'rgb(255 255 255 / 0.5)' }}
+                  style={{ color: 'var(--muted-foreground)' }}
                 >
                   Light handle sets primary, dark handle sets the text anchor. Accent follows
                   automatically.
@@ -346,10 +350,12 @@ function StudioButton({
       type="button"
       onClick={onClick}
       title={title}
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer transition-all duration-200 hover:-translate-y-px text-white"
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold cursor-pointer transition-all duration-200 hover:-translate-y-px"
       style={{
-        backgroundColor: 'rgb(255 255 255 / 0.12)',
-        boxShadow: 'inset 0 0 0 1px rgb(255 255 255 / 0.22)',
+        color: 'var(--heading)',
+        backgroundColor: 'color-mix(in srgb, var(--card) 70%, transparent)',
+        boxShadow:
+          'inset 0 0 0 1px var(--border), 0 2px 6px color-mix(in srgb, var(--heading) 8%, transparent)',
         backdropFilter: 'blur(8px)',
       }}
     >
@@ -453,8 +459,8 @@ function HexReadout({
       className="flex items-center rounded-xl"
       style={{
         padding: `${spacing['2']} ${spacing['2.5']}`,
-        boxShadow: 'inset 0 0 0 1px rgb(255 255 255 / 0.14)',
-        backgroundColor: 'rgb(255 255 255 / 0.08)',
+        boxShadow: 'inset 0 0 0 1px var(--border)',
+        backgroundColor: 'color-mix(in srgb, var(--card) 75%, transparent)',
         backdropFilter: 'blur(8px)',
         gap: spacing['2.5'],
       }}
@@ -465,20 +471,20 @@ function HexReadout({
           width: '22px',
           height: '22px',
           backgroundColor: value,
-          boxShadow: `0 0 14px ${value}, inset 0 0 0 1px rgb(255 255 255 / 0.35)`,
+          boxShadow: `0 0 12px ${value}, inset 0 0 0 1px color-mix(in srgb, var(--heading) 15%, transparent)`,
           transition: 'background-color 200ms ease, box-shadow 200ms ease',
         }}
       />
       <div className="flex flex-col min-w-0 flex-1">
         <span
           className="text-[9px] font-bold uppercase tracking-[0.16em]"
-          style={{ color: 'rgb(255 255 255 / 0.5)', lineHeight: 1 }}
+          style={{ color: 'var(--muted-foreground)', lineHeight: 1 }}
         >
           {label}
         </span>
         <span
-          className="text-xs font-mono tabular-nums text-white"
-          style={{ lineHeight: 1.3, marginTop: '2px', opacity: 0.92 }}
+          className="text-xs font-mono tabular-nums"
+          style={{ color: 'var(--heading)', lineHeight: 1.3, marginTop: '2px' }}
         >
           {value.toUpperCase()}
         </span>
@@ -505,6 +511,7 @@ function LegibilityDemo({ color }: { color: string }) {
         color,
         fontFamily: 'var(--font-sans)',
         lineHeight: 1,
+        boxShadow: 'inset 0 0 0 1px var(--border-subtle)',
       }}
       title="Heading color rendered at 12 / 14 / 16 px on white"
     >
