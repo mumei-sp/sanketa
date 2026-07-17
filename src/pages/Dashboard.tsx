@@ -2,6 +2,8 @@ import * as React from 'react'
 import { Settings } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
+import { useCurrentUser } from '@/hooks/use-current-user'
+import { getTimeOfDayGreeting, formatFriendlyDate } from '@/utils/date'
 import { Card } from '@/components/ui/card'
 import { colors } from '@/theme/colors'
 import { useTileSelection } from '@/hooks/use-tile-selection'
@@ -45,6 +47,11 @@ import type {
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 
 export default function Dashboard() {
+  // Greeting header — all derived (auth user + clock), nothing hard-coded
+  const currentUser = useCurrentUser()
+  const greeting = getTimeOfDayGreeting()
+  const firstName = currentUser?.fullName.split(' ')[0]
+
   // Configurable tile selection (persisted to localStorage)
   const {
     selectedTiles,
@@ -136,7 +143,10 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Dashboard" breadcrumbs={[{ label: 'Dashboard' }]} />
+      <PageHeader
+        title={currentUser ? `${greeting}, ${firstName}` : 'Dashboard'}
+        subtitle={`${formatFriendlyDate()} · Here's what's happening across campus today`}
+      />
 
       {/* ───── Unified Dashboard Grid ───── */}
       {/*

@@ -34,6 +34,7 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   }
 
   authUtils.setToken(mockUser.token)
+  authUtils.setUser(mockUser.user)
   return mockUser
 }
 
@@ -60,5 +61,6 @@ export async function mockRegister(data: RegisterRequest): Promise<AuthResponse>
   }
 
   authUtils.setToken(response.token)
+  authUtils.setUser(response.user)
   return response
 }

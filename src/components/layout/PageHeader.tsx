@@ -31,6 +31,8 @@ export interface PageHeaderBreadcrumbItem {
 export interface PageHeaderProps {
   /** The main page title (required) */
   title: string
+  /** Muted line under the title — e.g. a friendly date on greeting headers */
+  subtitle?: string
   /** Array of breadcrumb items to display above the title */
   breadcrumbs?: PageHeaderBreadcrumbItem[]
   /** Whether to show the back button */
@@ -82,6 +84,7 @@ export interface PageHeaderProps {
  */
 export default function PageHeader({
   title,
+  subtitle,
   breadcrumbs,
   showBackButton = false,
   onBack,
@@ -157,6 +160,9 @@ export default function PageHeader({
 
           <div className="flex flex-col gap-1 min-w-0">
             <h1 className="text-page-title text-foreground truncate">{title}</h1>
+            {subtitle && (
+              <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
+            )}
             {breadcrumbs && breadcrumbs.length > 0 && (
               <Breadcrumb>
                 <BreadcrumbList>

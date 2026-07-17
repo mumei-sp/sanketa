@@ -12,9 +12,10 @@ import { useIsDesktop } from '@/hooks/use-mobile'
 import { Search, Settings, Bell, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { baseColors } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { SchoolSettingsPanel } from '@/components/settings/SchoolSettingsPanel'
+import { useCurrentUser } from '@/hooks/use-current-user'
+import { getInitials } from '@/utils/format'
 
 interface AppLayoutProps {
   logoPath?: string
@@ -31,6 +32,7 @@ export function useTopActions() {
 /** Search bar + settings + notifications + avatar — styled to match figma */
 function TopActions() {
   const { setSettingsOpen } = useSchoolConfig()
+  const currentUser = useCurrentUser()
   return (
     <div className="hidden md:flex items-center gap-3">
       {/* ── Search bar (desktop) ── */}
@@ -71,25 +73,27 @@ function TopActions() {
         />
       </Button>
 
-      {/* ── User avatar with pink ring ── */}
-      <div className="flex items-center gap-2.5">
-        <div
-          className="size-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-          style={{
-            backgroundColor: 'var(--heading)',
-            color: 'var(--card)',
-            boxShadow: '0 0 0 2px var(--card), 0 0 0 4px var(--primary)',
-          }}
-        >
-          SA
+      {/* ── User avatar with pink ring — profile from the auth session ── */}
+      {currentUser && (
+        <div className="flex items-center gap-2.5">
+          <div
+            className="size-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+            style={{
+              backgroundColor: 'var(--heading)',
+              color: 'var(--card)',
+              boxShadow: '0 0 0 2px var(--card), 0 0 0 4px var(--primary)',
+            }}
+          >
+            {getInitials(currentUser.fullName)}
+          </div>
+          <div className="hidden lg:block">
+            <p className="text-sm font-semibold leading-tight whitespace-nowrap" style={{ color: 'var(--heading)' }}>
+              {currentUser.fullName}
+            </p>
+            <p className="text-xs text-muted-foreground leading-tight">{currentUser.role}</p>
+          </div>
         </div>
-        <div className="hidden lg:block">
-          <p className="text-sm font-semibold leading-tight whitespace-nowrap" style={{ color: 'var(--heading)' }}>
-            Surya Admin
-          </p>
-          <p className="text-xs text-muted-foreground leading-tight">Admin</p>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

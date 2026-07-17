@@ -34,6 +34,28 @@ function formatLocalDate(date: Date): string {
 }
 
 /**
+ * Time-of-day salutation for greeting headers (e.g., "Good morning").
+ * Boundaries: morning until 12:00, afternoon until 17:00, evening after.
+ */
+export function getTimeOfDayGreeting(date: Date = new Date()): string {
+  const hour = date.getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+/**
+ * Format a date as a friendly long-form line (e.g., "Monday, 16 March").
+ */
+export function formatFriendlyDate(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(date)
+}
+
+/**
  * Format date string to display format for table column headers (e.g., "Thu, Mar 1")
  */
 export function formatDateHeader(dateStr: string): string {
