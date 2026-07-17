@@ -142,7 +142,7 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
         <TopActionsContext.Provider value={<TopActions />}>
           <main
             key={location.pathname}
-            className="page-enter scrollbar-thin flex flex-1 flex-col gap-4 p-4 overflow-auto min-h-0"
+            className="page-enter scrollbar-thin flex flex-1 flex-col gap-4 p-4 overflow-y-auto overflow-x-clip min-h-0 min-w-0"
           >
             <ErrorBoundary>
               <Outlet />

@@ -17,8 +17,9 @@ function ProgressCard({ item }: { item: FeeProgressData }) {
       {/* Category + Percentage */}
       <div className="flex items-center justify-between gap-2">
         <span
-          className="text-base font-bold"
+          className="text-base font-bold truncate min-w-0"
           style={{ color: 'var(--heading)' }}
+          title={item.category}
         >
           {item.category}
         </span>

@@ -672,6 +672,25 @@ html[data-density="compact"] [data-slot="card"] {
   background-color: var(--background);
 }
 
+/* ── Responsive resilience ──────────────────────────────────────────
+   Grid and flex children default to min-width:auto, so charts, tables and
+   long labels refuse to shrink and blow their tiles out of the grid when
+   the window narrows. Let every tile-system child and card shrink freely;
+   inner content then truncates or scrolls inside its own container. */
+[data-tile-wrapper] > *,
+[data-tile-id],
+[data-slot='card'] {
+  min-width: 0;
+}
+
+/* Cards clip to their rounded bounds — transient overflow while charts
+   re-measure during a resize stays inside the tile instead of spilling
+   across the page. Overlays (selects, menus, tooltips) render in portals,
+   so nothing interactive gets cut. */
+[data-slot='card'] {
+  overflow: clip;
+}
+
 /* Frosted glass surface — translucent card over the aurora with backdrop
    blur. Resolves through --card so dark mode frosts the dark surface. */
 .glass-card {
