@@ -32,7 +32,6 @@ import {
   fetchStudentAttendance,
   fetchCalendarEvents,
   fetchTodoItems,
-  fetchRecentActivity,
 } from '@/api/services/dashboard-service'
 import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
 import type {
@@ -42,7 +41,6 @@ import type {
   AttendanceDataset,
   CalendarEvent,
   TodoItem,
-  RecentActivityItem,
 } from '@/features/dashboard/types'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 
@@ -78,7 +76,6 @@ export default function Dashboard() {
   const [events, setEvents] = React.useState<CalendarEvent[]>([])
   const [todos, setTodos] = React.useState<TodoItem[]>([])
   const [notices, setNotices] = React.useState<NoticeBoardEntry[]>([])
-  const [activity, setActivity] = React.useState<RecentActivityItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [calendarDate, setCalendarDate] = React.useState(() => new Date())
 
@@ -94,7 +91,6 @@ export default function Dashboard() {
           eventsData,
           todosData,
           noticesData,
-          activityData,
         ] = await Promise.all([
           fetchStudentPerformance(),
           fetchEarnings(),
@@ -103,7 +99,6 @@ export default function Dashboard() {
           fetchCalendarEvents(),
           fetchTodoItems(),
           fetchNoticeBoardEntries(),
-          fetchRecentActivity(),
         ])
         setPerformance(perfData)
         setEarnings(earnData)
@@ -112,7 +107,6 @@ export default function Dashboard() {
         setEvents(eventsData)
         setTodos(todosData)
         setNotices(noticesData)
-        setActivity(activityData)
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error)
       } finally {
@@ -295,7 +289,7 @@ export default function Dashboard() {
           <NoticeBoard items={notices} isLoading={isLoading} />
         </Tile>
         <Tile id="activity-grid" width={{ default: 1, md: 3 }}>
-          <RecentActivity items={activity} isLoading={isLoading} />
+          <RecentActivity />
         </Tile>
       </TileWrapper>
     </div>

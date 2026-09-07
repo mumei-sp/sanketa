@@ -12,6 +12,7 @@ import type {
 } from '@/features/attendance/types'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
+import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
 import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
 import {
@@ -133,6 +134,16 @@ export async function submitAttendance(
       const idx = attendanceSubmissions.findIndex(s => s.classId === classId && s.date === date)
       if (idx >= 0) attendanceSubmissions[idx] = submission
       else attendanceSubmissions.push(submission)
+      emitDomainEvent({
+        type: 'attendance.submitted',
+        payload: {
+          submissionId: submission.id,
+          className: classId,
+          date,
+          presentCount: entries.filter(e => e.status === 'present').length,
+          absentCount: entries.filter(e => e.status === 'absent').length,
+        },
+      })
       return submission
     },
     async () => {

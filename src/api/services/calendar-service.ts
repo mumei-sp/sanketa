@@ -7,6 +7,7 @@
  */
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
+import { emitDomainEvent } from './notification-service'
 import { withLatency } from '@/mocks/_shared'
 import { mockCalendarEvents } from '@/mocks/calendar'
 import { categoryConfig } from '@/features/calendar/utils/category-config'
@@ -97,7 +98,17 @@ export async function createCalendarEvent(data: EventFormValues): Promise<Calend
   return mockOrHttp(
     async () => {
       await withLatency()
-      return formValuesToCalendarEvent(data)
+      const created = formValuesToCalendarEvent(data)
+      emitDomainEvent({
+        type: 'calendar.event_created',
+        payload: {
+          eventId: created.id,
+          title: created.title,
+          category: created.extendedProps.category,
+          date: created.extendedProps.dateDisplay ?? String(created.start),
+        },
+      })
+      return created
     },
     async () => {
       const { data: created } = await apiClient.post<CalendarEvent>('/calendar/events', data)

@@ -11,6 +11,19 @@ interface EnvConfig {
    * Default: true. Flip to false by setting VITE_USE_MOCK_API=false in .env.local.
    */
   useMockApi: boolean
+  /**
+   * How notifications reach the client.
+   *
+   * 'sse'  — the server pushes over an EventSource; the client still runs a
+   *          `?since=` reconciliation fetch on connect, reconnect and focus,
+   *          because a push channel silently loses anything sent while the tab
+   *          was asleep or the connection was down.
+   * 'poll' — the client asks for `?since=` on a timer. No infrastructure, and
+   *          the fallback when a stream is unavailable.
+   *
+   * Default: 'sse'. Set VITE_NOTIFICATION_TRANSPORT=poll to switch.
+   */
+  notificationTransport: 'sse' | 'poll'
 }
 
 /**
@@ -25,6 +38,12 @@ export function validateEnv(): EnvConfig {
   // string 'false' as opt-out so accidental values (undefined, '0', '') don't
   // surprise anyone trying to develop against the mocks.
   const useMockApi = String(import.meta.env.VITE_USE_MOCK_API ?? 'true').toLowerCase() !== 'false'
+  // Only the literal 'poll' opts out of push, so a typo falls back to the
+  // richer transport rather than silently degrading to a timer.
+  const notificationTransport =
+    String(import.meta.env.VITE_NOTIFICATION_TRANSPORT ?? 'sse').toLowerCase() === 'poll'
+      ? 'poll'
+      : 'sse'
 
   if (isNaN(apiTimeout) || apiTimeout <= 0) {
     console.warn(
@@ -41,6 +60,7 @@ export function validateEnv(): EnvConfig {
     apiBaseUrl: apiBaseUrl.trim(),
     apiTimeout: apiTimeout > 0 ? apiTimeout : 10000,
     useMockApi,
+    notificationTransport,
   }
 }
 

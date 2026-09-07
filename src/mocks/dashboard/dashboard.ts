@@ -8,9 +8,8 @@ import type {
   AttendanceDataset,
   CalendarEvent,
   TodoItem,
-  RecentActivityItem,
 } from '@/features/dashboard/types'
-import { relativeDate, displayDate } from '@/mocks/_shared/date-helpers'
+import { relativeDate } from '@/mocks/_shared/date-helpers'
 import { studentsData } from '@/mocks/students/students'
 import { teachersData } from '@/mocks/teachers/teachers'
 import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
@@ -32,15 +31,6 @@ function gradeGenderSplit(total: number, boysPct = 0.5) {
   const boys = Math.round(total * boysPct)
   const girls = total - boys
   return { boys, girls }
-}
-
-/** Format an absolute-date activity timestamp like "Apr 14, 2026 – 09:15 AM". */
-function activityTimestamp(daysAgo: number, hh: number, mm: number, ampm: 'AM' | 'PM'): string {
-  const d = relativeDate(-daysAgo)
-  const dateStr = displayDate(d)
-  const h = String(hh).padStart(2, '0')
-  const m = String(mm).padStart(2, '0')
-  return `${dateStr} – ${h}:${m} ${ampm}`
 }
 
 /** Verbose "March 11, 2035" style date used by todos on the Dashboard. */
@@ -381,41 +371,3 @@ export const todoItems: TodoItem[] = [
   },
 ]
 
-export const recentActivityItems: RecentActivityItem[] = [
-  {
-    id: 'act-1',
-    text: 'New student Alicia Gomez (Class 8B) enrolled by Registrar.',
-    timestamp: activityTimestamp(1, 9, 15, 'AM'),
-    dotColor: status.info.base,
-    icon: 'user-plus',
-    iconBg: 'var(--accent)',
-    iconColor: 'var(--accent-foreground)',
-  },
-  {
-    id: 'act-2',
-    text: 'Attendance for Class 7A marked by Meera Iyengar.',
-    timestamp: activityTimestamp(1, 11, 30, 'AM'),
-    dotColor: status.success.base,
-    icon: 'check-square',
-    iconBg: 'var(--primary)',
-    iconColor: 'var(--primary-foreground)',
-  },
-  {
-    id: 'act-3',
-    text: 'Monthly fee payments verified for Grade 9 students.',
-    timestamp: activityTimestamp(2, 2, 45, 'PM'),
-    dotColor: status.warning.base,
-    icon: 'receipt',
-    iconBg: 'var(--heading)',
-    iconColor: 'var(--card)',
-  },
-  {
-    id: 'act-4',
-    text: 'Exam timetable for Term 2 updated by Academic Coordinator.',
-    timestamp: activityTimestamp(3, 10, 20, 'AM'),
-    dotColor: status.danger.base,
-    icon: 'pencil',
-    iconBg: 'var(--primary)',
-    iconColor: 'var(--primary-foreground)',
-  },
-]

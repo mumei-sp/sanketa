@@ -5,6 +5,7 @@
  */
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
+import { emitDomainEvent } from './notification-service'
 import { withLatency, newId, displayDate } from '@/mocks/_shared'
 import { noticeBoardEntries } from '@/mocks/notices'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
@@ -72,6 +73,17 @@ export async function createNoticeBoardEntry(data: NoticeFormValues): Promise<No
         pinned: data.pinned ?? false,
       }
       noticeBoardEntries.unshift(newEntry)
+      // The mock server decides whether this is worth telling anyone about;
+      // the HTTP branch says nothing because the real backend already knows.
+      emitDomainEvent({
+        type: 'notice.published',
+        payload: {
+          noticeId: newEntry.id,
+          title: newEntry.title,
+          audience: newEntry.audience,
+          category: data.category,
+        },
+      })
       return newEntry
     },
     async () => {
@@ -148,6 +160,13 @@ export async function toggleNoticePin(id: string): Promise<NoticeBoardEntry> {
       const entry = noticeBoardEntries.find(n => n.id === id)
       if (!entry) throw new Error('Notice not found')
       entry.pinned = !entry.pinned
+      // Only pinning is news. Unpinning quietly restores the default order.
+      if (entry.pinned) {
+        emitDomainEvent({
+          type: 'notice.pinned',
+          payload: { noticeId: entry.id, title: entry.title },
+        })
+      }
       return { ...entry }
     },
     async () => {
@@ -167,7 +186,15 @@ export async function deleteNoticeBoardEntry(id: string): Promise<void> {
     async () => {
       await withLatency({ min: 150, max: 400 })
       const index = noticeBoardEntries.findIndex(n => n.id === id)
-      if (index !== -1) noticeBoardEntries.splice(index, 1)
+      if (index !== -1) {
+        // Read the title before the splice — afterwards there is nothing left
+        // to name it by.
+        const [removed] = noticeBoardEntries.splice(index, 1)
+        emitDomainEvent({
+          type: 'notice.deleted',
+          payload: { noticeId: id, title: removed.title },
+        })
+      }
     },
     async () => {
       await apiClient.delete(`/notices/${id}`)

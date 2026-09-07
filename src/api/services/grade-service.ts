@@ -6,6 +6,7 @@
 
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
+import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
 import { classRosters } from '@/mocks/attendance/daily'
 import { gradeSubmissions, findSubmission, upsertSubmission } from '@/mocks/grades/grades'
@@ -190,6 +191,18 @@ export async function submitGrades(
         submittedAt: new Date().toISOString(),
       }
       upsertSubmission(submission)
+      emitDomainEvent({
+        type: 'grades.submitted',
+        payload: {
+          submissionId: submission.id,
+          className: classId,
+          examId,
+          examName: exam?.name ?? examId,
+          subjectId,
+          subject: subjectId,
+          entryCount: submission.entries.length,
+        },
+      })
       return { ...submission, entries: submission.entries.map(e => ({ ...e })) }
     },
     async () => {

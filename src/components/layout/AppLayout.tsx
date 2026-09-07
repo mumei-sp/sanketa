@@ -9,14 +9,15 @@ import { AppSidebar } from './AppSidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Logo } from './Logo'
 import { useIsDesktop } from '@/hooks/use-mobile'
-import { Search, Settings, Bell, Menu } from 'lucide-react'
+import { Search, Settings, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { SchoolSettingsPanel } from '@/components/settings/SchoolSettingsPanel'
+import { NotificationProvider } from '@/features/notifications/NotificationContext'
+import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { getInitials } from '@/utils/format'
-import { cn } from '@/lib/utils'
 
 interface AppLayoutProps {
   logoPath?: string
@@ -57,22 +58,7 @@ function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' })
       >
         <Settings className="h-[18px] w-[18px] text-foreground" />
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn('relative', shape)}
-        aria-label="Notifications"
-      >
-        <Bell className="h-[18px] w-[18px] text-foreground" />
-        <span
-          aria-hidden
-          className={cn(
-            'absolute size-2 rounded-full bg-destructive',
-            variant === 'pill' ? 'top-2 right-2.5' : 'top-1.5 right-1.5',
-          )}
-          style={{ boxShadow: '0 0 0 2px var(--background)' }}
-        />
-      </Button>
+      <NotificationBell variant={variant} />
     </>
   )
 }
@@ -153,23 +139,32 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
       <AppSidebar logoPath={effectiveLogoPath} />
       <SidebarInset className="overflow-hidden">
         {/* ── Mobile top bar (< md) — carries the global actions the desktop
-             header hides, so settings and notifications stay reachable. ── */}
-        {/* Height comes from the 40px controls plus padding rather than a `h-*`
-            token — the compact spacing scale makes `h-14` 32px, which the
-            buttons then overflowed. */}
-        <header className="flex md:hidden items-center justify-between gap-2 border-b bg-background px-2 py-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
-          <Logo logoPath={effectiveLogoPath} className="min-w-0 px-1 py-0" />
-          <div className="flex items-center gap-0.5">
+             header hides, so settings and notifications stay reachable.
+
+             Menu on the left, where the drawer it opens slides in from, and
+             where every mobile app puts navigation; actions on the right. The
+             three controls used to sit together at one end, which read as a
+             cluster of equal-weight icons with no hierarchy.
+
+             Frosted rather than flat white so the bar belongs to the aurora
+             canvas it floats over instead of capping it with a hard rule.
+
+             Height comes from the 40px controls plus padding rather than a
+             `h-*` token — the compact spacing scale makes `h-14` 32px, which
+             the buttons then overflowed. ── */}
+        <header className="glass-card sticky top-0 z-30 flex md:hidden items-center gap-1 border-b border-border/60 px-2 py-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-10 shrink-0 rounded-lg hover:bg-muted"
+            onClick={() => toggleSidebar()}
+          >
+            <Menu className="h-[18px] w-[18px]" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+          <Logo logoPath={effectiveLogoPath} className="min-w-0 flex-1 px-1 py-0" />
+          <div className="flex shrink-0 items-center gap-0.5">
             <GlobalActionButtons variant="bar" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-10 rounded-lg hover:bg-muted"
-              onClick={() => toggleSidebar()}
-            >
-              <Menu className="h-[18px] w-[18px]" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
           </div>
         </header>
 
@@ -194,8 +189,12 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
 export function AppLayout({ logoPath }: AppLayoutProps) {
   return (
-    <SidebarProvider>
-      <LayoutContent logoPath={logoPath} />
-    </SidebarProvider>
+    // Inside the router (the bell navigates on select) and outside the sidebar
+    // so the feed keeps streaming while the mobile drawer is open.
+    <NotificationProvider>
+      <SidebarProvider>
+        <LayoutContent logoPath={logoPath} />
+      </SidebarProvider>
+    </NotificationProvider>
   )
 }

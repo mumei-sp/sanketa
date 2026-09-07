@@ -106,12 +106,3 @@ export interface NoticeBoardItem {
   createdBy: string
 }
 
-export interface RecentActivityItem {
-  id: string
-  text: string
-  timestamp: string
-  dotColor: string
-  icon: string
-  iconBg: string
-  iconColor: string
-}

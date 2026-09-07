@@ -15,8 +15,6 @@ import {
   fetchEnrollmentTrends,
   fetchAttendanceOverview,
 } from '@/api/services/student-service'
-import { fetchRecentActivity } from '@/api/services/dashboard-service'
-import type { RecentActivityItem } from '@/features/dashboard/types'
 import { generateCsv, downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
 import type { Student } from '@/features/students/types'
@@ -32,22 +30,19 @@ export function StudentsPage() {
   const [enrollmentData, setEnrollmentData] = React.useState<EnrollmentData[]>([])
   const [attendanceData, setAttendanceData] = React.useState<AttendanceData[]>([])
   const [isLoadingCharts, setIsLoadingCharts] = React.useState(true)
-  const [activityItems, setActivityItems] = React.useState<RecentActivityItem[]>([])
   const [importOpen, setImportOpen] = React.useState(false)
 
   React.useEffect(() => {
     async function loadData() {
       try {
-        const [studentsData, enrollment, attendance, activity] = await Promise.all([
+        const [studentsData, enrollment, attendance] = await Promise.all([
           fetchStudents(),
           fetchEnrollmentTrends(),
           fetchAttendanceOverview(),
-          fetchRecentActivity(),
         ])
         setStudents(studentsData)
         setEnrollmentData(enrollment)
         setAttendanceData(attendance)
-        setActivityItems(activity)
       } catch (error) {
         console.error('Failed to fetch students data:', error)
       } finally {
@@ -263,7 +258,7 @@ export function StudentsPage() {
         >
           <div className="flex flex-col gap-4 h-full">
             <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
-            <RecentActivity items={activityItems} isLoading={isLoadingCharts} />
+            <RecentActivity />
           </div>
         </Tile>
 

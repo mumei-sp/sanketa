@@ -7,7 +7,8 @@
 import { CircleCheckBig, CircleDashed, OctagonAlert } from 'lucide-react'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
-import { withLatency, txnId, newId } from '@/mocks/_shared'
+import { emitDomainEvent } from './notification-service'
+import { withLatency, txnId, newId, CURRENCY } from '@/mocks/_shared'
 import type {
   FeeStat,
   FeeTrendData,
@@ -158,6 +159,15 @@ export async function markAsPaid(params: {
         receiptId,
       }
       paymentTransactions.push(transaction)
+      emitDomainEvent({
+        type: 'fees.payment_recorded',
+        payload: {
+          paymentId: transaction.id,
+          studentName: transaction.studentName,
+          amount: `${CURRENCY.symbol}${params.amount.toLocaleString('en-IN')}`,
+          method: params.method,
+        },
+      })
       return { ...transaction }
     },
     async () => {

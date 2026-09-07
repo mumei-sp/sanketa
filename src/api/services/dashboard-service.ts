@@ -14,7 +14,6 @@ import {
   attendanceDatasets,
   calendarEvents,
   todoItems,
-  recentActivityItems,
 } from '@/mocks/dashboard'
 import type {
   DashboardStat,
@@ -24,7 +23,6 @@ import type {
   AttendanceDataset,
   CalendarEvent,
   TodoItem,
-  RecentActivityItem,
 } from '@/features/dashboard/types'
 
 /** @apiRoute GET /api/v1/dashboard/stats */
@@ -133,19 +131,6 @@ export async function fetchTodoItems(): Promise<TodoItem[]> {
   )
 }
 
-/** @apiRoute GET /api/v1/dashboard/recent-activity */
-export async function fetchRecentActivity(): Promise<RecentActivityItem[]> {
-  return mockOrHttp(
-    async () => {
-      await withLatency({ min: 150, max: 350 })
-      return [...recentActivityItems]
-    },
-    async () => {
-      const { data } = await apiClient.get<RecentActivityItem[]>('/dashboard/recent-activity')
-      return data
-    },
-  )
-}
 
 /** @apiRoute POST /api/v1/dashboard/todos */
 export async function createTodoItem(data: { text: string; date: string }): Promise<TodoItem> {
