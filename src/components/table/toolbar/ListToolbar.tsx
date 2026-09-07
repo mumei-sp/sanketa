@@ -19,6 +19,10 @@
  * state. Only genuinely secondary actions (export, import) fold into the ⋯
  * menu, because they are rare and their icons alone are ambiguous.
  *
+ * A list with no search has nothing to pair the primary action with, so the
+ * action moves up beside the title instead of stranding itself on a line of
+ * its own.
+ *
  * Each filter renders in exactly one place at a time (inline on desktop, in
  * the chip row on phones), so there is only ever one live control per filter.
  *
@@ -120,16 +124,26 @@ export function ListToolbar({
 
   if (isMobile) {
     const hasFilterRow = filters.length > 0 || secondaryActions.length > 0
+    // The action rides beside the search field, the way mobile list screens
+    // pair them. A list with no search has nothing to pair with, so it moves
+    // up to the title row rather than sitting alone on a line of its own.
+    const actionOnTitleRow = !search && primaryAction
+
     return (
       <div className={cn('flex flex-col gap-2', className)}>
-        {typeof title === 'string' ? (
-          <h2 className="text-page-title text-foreground">{title}</h2>
-        ) : (
-          title
+        {(title || actionOnTitleRow) && (
+          <div className="flex items-center justify-between gap-2">
+            {typeof title === 'string' ? (
+              <h2 className="text-page-title text-foreground">{title}</h2>
+            ) : (
+              title
+            )}
+            {actionOnTitleRow && primaryAction}
+          </div>
         )}
 
         {/* Row 1 — search keeps the primary action beside it. */}
-        {(search || primaryAction) && (
+        {search && (
           <div className="flex items-center gap-2">
             {search}
             {primaryAction}

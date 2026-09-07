@@ -222,7 +222,10 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
                 {/* Preset images */}
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Choose a preset image</p>
-                  <div className="grid grid-cols-6 gap-2">
+                  {/* Six across only once there is width for it. In a phone's
+                      full-screen sheet that came to 45×22px tiles — too small
+                      to tell the images apart or to tap. */}
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                     {PRESET_IMAGES.map(preset => (
                       <button
                         key={preset.url}
@@ -256,7 +259,7 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Or upload your own</p>
                   <UploadDropzone
-                    label="Click or drag to upload"
+                    label="Upload an image"
                     description="Max: 2MB, JPG/PNG"
                     accept={{ 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'] }}
                     maxSize={2 * 1024 * 1024}

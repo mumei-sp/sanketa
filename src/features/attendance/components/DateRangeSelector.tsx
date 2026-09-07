@@ -7,11 +7,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { DateRange, AttendanceTableData } from '../types'
+import { cn } from '@/lib/utils'
 import { MONTH_NAMES } from '@/utils/date'
 
 export interface DateRangeSelectorProps {
   value: DateRange
   onChange: (range: DateRange) => void
+  /** Sizing from the toolbar — pass a TOOLBAR_* token. */
+  className?: string
   /** All attendance records to derive available months */
   records: AttendanceTableData[]
 }
@@ -90,7 +93,7 @@ function dateRangeToMonthKey(range: DateRange): string {
 /**
  * Month/Year selector for the attendance table
  */
-export function DateRangeSelector({ value, onChange, records }: DateRangeSelectorProps) {
+export function DateRangeSelector({ value, onChange, records, className }: DateRangeSelectorProps) {
   const months = React.useMemo(() => getAvailableMonths(records), [records])
   const currentKey = dateRangeToMonthKey(value)
 
@@ -112,7 +115,9 @@ export function DateRangeSelector({ value, onChange, records }: DateRangeSelecto
 
   return (
     <Select value={currentKey} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-[130px] bg-accent text-foreground border-0 hover:bg-accent/80">
+      <SelectTrigger
+        className={cn('h-9 w-[130px] bg-accent text-foreground border-0 hover:bg-accent/80', className)}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

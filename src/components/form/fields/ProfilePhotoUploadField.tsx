@@ -35,7 +35,7 @@ export function ProfilePhotoUploadField<T extends FieldValues>({
   control,
   name,
   label,
-  uploadLabel = 'Click or drag to upload',
+  uploadLabel = 'Upload a photo',
   description = 'Upload a recent passport-size photo (Max: 2MB, JPG/PNG)',
   maxSize = 2 * 1024 * 1024,
   accept = {

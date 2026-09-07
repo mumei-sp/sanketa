@@ -11,7 +11,7 @@ export interface UploadDropzoneProps {
   onFileAccepted: (file: File) => void;
   /** Callback when a file is rejected (invalid type/size) */
   onFileRejected?: (fileRejections: FileRejection[]) => void;
-  /** Main label text */
+  /** Main label text. Keep it device-neutral — a phone cannot drag. */
   label?: string;
   /** Helper text below label */
   description?: string;
@@ -46,7 +46,7 @@ export const UploadDropzone = React.forwardRef<
     {
       onFileAccepted,
       onFileRejected,
-      label = "Click or drag to upload",
+      label = "Upload a file",
       description,
       accept = { "image/*": [] },
       maxSize = 2 * 1024 * 1024,
@@ -137,7 +137,7 @@ export const UploadDropzone = React.forwardRef<
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center p-8 bg-muted">
-                <File className="w-12 h-12 text-muted-foreground mb-2" />
+                <File className="size-12 text-muted-foreground mb-2" />
                 <p className="text-sm font-medium text-foreground truncate max-w-full px-4">
                   {currentFile.name}
                 </p>
@@ -180,7 +180,12 @@ export const UploadDropzone = React.forwardRef<
             )}
           >
             <input {...getInputProps()} aria-label="File upload input" />
-            <p className="font-medium text-accent">{label}</p>
+            {/* Was `text-accent`, which is a pale wash that measured 1.26:1
+                on the white dropzone — the label read as blank space. The
+                dashed border and pointer carry the affordance instead. */}
+            <p className="font-medium" style={{ color: "var(--heading)" }}>
+              {label}
+            </p>
             {description && (
               <p className="text-xs text-muted-foreground mt-1">{description}</p>
             )}

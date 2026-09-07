@@ -340,9 +340,14 @@ export default function NoticeBoard() {
             >
               <ListToolbar
                 title={
-                  <h2 className="text-section-title" style={{ color: 'var(--heading)' }}>
-                    Notice Board
-                  </h2>
+                  // Labels the list column of the desktop split. Without the
+                  // split there is only one column, and the heading would just
+                  // repeat the PageHeader two lines above it.
+                  isDesktop ? (
+                    <h2 className="text-section-title" style={{ color: 'var(--heading)' }}>
+                      Notice Board
+                    </h2>
+                  ) : undefined
                 }
                 filters={[
                   {
@@ -400,7 +405,13 @@ export default function NoticeBoard() {
                 primaryAction={
                   <Button
                     size="sm"
-                    className={cn(TOOLBAR_PRIMARY_ACTION, 'gap-1.5 px-4 font-semibold text-sm md:ml-2')}
+                    // No search field on this list, so on a phone the action is
+                    // the only thing on its row — it takes the width rather
+                    // than sitting as a stub at one end.
+                    className={cn(
+                      TOOLBAR_PRIMARY_ACTION,
+                      'gap-1.5 px-4 font-semibold text-sm md:ml-2 max-md:w-full',
+                    )}
                     onClick={() => { setSelectedNotice(null); setIsCreateOpen(true) }}
                   >
                     <Plus className="size-4" />
