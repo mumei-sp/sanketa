@@ -1,11 +1,12 @@
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
+import { cn } from '@/lib/utils'
 import {
   SelectField,
   DateField,
   TextField,
   type SelectOption,
-  GRID_COLS_2,
+  FORM_GRID_2,
 } from '@/components/form/fields'
 import type { StudentFormValues } from '../../schemas/student-schema'
 
@@ -59,7 +60,7 @@ export function AcademicInfoSection({ control, width }: AcademicInfoSectionProps
       width={width}
       className="self-start"
     >
-      <div className="grid w-full gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+      <div className={cn('grid w-full gap-4', FORM_GRID_2)}>
         <SelectField
           name="academicInfo.gradeLevel"
           control={control}

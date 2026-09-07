@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { baseColors } from '@/theme/colors'
 
 const MAX_ATTEMPTS = 5
 const LOCKOUT_DURATION_MS = 30_000 // 30 seconds
@@ -91,13 +90,6 @@ export function LoginForm() {
 
   return (
     <div className="flex flex-col items-center">
-      {/* Logo (mobile/tablet — on desktop it's in the hero) */}
-      <div className="mb-6 flex items-center gap-2 lg:hidden">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-soft to-accent-soft">
-          <span className="text-lg font-bold" style={{ color: 'var(--heading)' }}>S</span>
-        </div>
-      </div>
-
       <h2 className="mb-1 text-center text-xl font-bold" style={{ color: 'var(--heading)' }}>
         Login to Your Account
       </h2>

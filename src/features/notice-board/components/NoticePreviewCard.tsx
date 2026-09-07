@@ -1,5 +1,5 @@
 import { Eye } from 'lucide-react'
-import { baseColors, statusVivid } from '@/theme/colors'
+import { statusVivid } from '@/theme/colors'
 import { getNoticeCategoryColor } from '../utils/category-colors'
 import type { NoticeFormValues } from '../schemas/notice-schema'
 

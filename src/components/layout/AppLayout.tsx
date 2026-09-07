@@ -16,6 +16,7 @@ import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { SchoolSettingsPanel } from '@/components/settings/SchoolSettingsPanel'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { getInitials } from '@/utils/format'
+import { cn } from '@/lib/utils'
 
 interface AppLayoutProps {
   logoPath?: string
@@ -29,9 +30,55 @@ export function useTopActions() {
   return useContext(TopActionsContext)
 }
 
+/**
+ * Settings + notifications — the two global controls that must stay reachable
+ * at every width. Shared by the desktop TopActions row and the mobile top bar.
+ *
+ * `pill` is the desktop treatment: raised white circles that read against the
+ * aurora canvas. `bar` is the mobile one: flat ghost buttons that sit level
+ * with the hamburger beside them, so the three controls read as one set
+ * instead of two raised circles and a bare icon.
+ */
+function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' }) {
+  const { setSettingsOpen } = useSchoolConfig()
+  const shape =
+    variant === 'pill'
+      ? 'size-10 rounded-full bg-card border border-border shadow-sm'
+      : 'size-10 rounded-lg hover:bg-muted'
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={shape}
+        onClick={() => setSettingsOpen(true)}
+        aria-label="School settings"
+      >
+        <Settings className="h-[18px] w-[18px] text-foreground" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn('relative', shape)}
+        aria-label="Notifications"
+      >
+        <Bell className="h-[18px] w-[18px] text-foreground" />
+        <span
+          aria-hidden
+          className={cn(
+            'absolute size-2 rounded-full bg-destructive',
+            variant === 'pill' ? 'top-2 right-2.5' : 'top-1.5 right-1.5',
+          )}
+          style={{ boxShadow: '0 0 0 2px var(--background)' }}
+        />
+      </Button>
+    </>
+  )
+}
+
 /** Search bar + settings + notifications + avatar — styled to match figma */
 function TopActions() {
-  const { setSettingsOpen } = useSchoolConfig()
   const currentUser = useCurrentUser()
   return (
     <div className="hidden md:flex items-center gap-3">
@@ -47,31 +94,12 @@ function TopActions() {
         </kbd>
       </div>
       {/* Search icon (tablet only) */}
-      <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 rounded-full">
+      <Button variant="ghost" size="icon" className="lg:hidden size-10 rounded-full" aria-label="Search">
         <Search className="h-4 w-4" />
       </Button>
 
       {/* ── Action icon buttons ── */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-10 rounded-full bg-card border border-border shadow-sm"
-        onClick={() => setSettingsOpen(true)}
-      >
-        <Settings className="h-4 w-4 text-foreground" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative size-10 rounded-full bg-card border border-border shadow-sm"
-      >
-        <Bell className="h-4 w-4 text-foreground" />
-        <span
-          aria-hidden
-          className="absolute top-2 right-2.5 size-2 rounded-full bg-destructive"
-          style={{ boxShadow: '0 0 0 2px var(--card)' }}
-        />
-      </Button>
+      <GlobalActionButtons />
 
       {/* ── User avatar with pink ring — profile from the auth session ── */}
       {currentUser && (
@@ -124,25 +152,32 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
     <>
       <AppSidebar logoPath={effectiveLogoPath} />
       <SidebarInset className="overflow-hidden">
-        {/* ── Mobile top bar (< md) ── */}
-        <header className="flex md:hidden items-center justify-between px-4 h-12 border-b bg-background">
-          <Logo logoPath={effectiveLogoPath} className="px-0 py-0" />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => toggleSidebar()}
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
+        {/* ── Mobile top bar (< md) — carries the global actions the desktop
+             header hides, so settings and notifications stay reachable. ── */}
+        {/* Height comes from the 40px controls plus padding rather than a `h-*`
+            token — the compact spacing scale makes `h-14` 32px, which the
+            buttons then overflowed. */}
+        <header className="flex md:hidden items-center justify-between gap-2 border-b bg-background px-2 py-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
+          <Logo logoPath={effectiveLogoPath} className="min-w-0 px-1 py-0" />
+          <div className="flex items-center gap-0.5">
+            <GlobalActionButtons variant="bar" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10 rounded-lg hover:bg-muted"
+              onClick={() => toggleSidebar()}
+            >
+              <Menu className="h-[18px] w-[18px]" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </div>
         </header>
 
         {/* No separate desktop header — TopActions render inside PageHeader via context */}
         <TopActionsContext.Provider value={<TopActions />}>
           <main
             key={location.pathname}
-            className="page-enter scrollbar-thin flex flex-1 flex-col gap-4 p-4 overflow-y-auto overflow-x-clip min-h-0 min-w-0"
+            className="page-enter scrollbar-thin flex flex-1 flex-col gap-3 p-3 sm:gap-4 sm:p-4 overflow-y-auto overflow-x-clip min-h-0 min-w-0 pb-[max(env(safe-area-inset-bottom),0.75rem)]"
           >
             <ErrorBoundary>
               <Outlet />

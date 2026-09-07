@@ -1,5 +1,5 @@
 import { Check, Clock, X } from 'lucide-react'
-import { colors, baseColors, darken } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import type { MarkableAttendanceStatus } from '../types'
 
 interface AttendanceStatusSelectProps {

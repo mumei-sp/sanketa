@@ -1,17 +1,19 @@
 import { useMemo } from 'react'
 import { Bus, Route, Users, UserCog, AlertTriangle } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent, CardAction } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { TileWrapper, Tile } from '@/components/tile'
 import { DashboardStatCard } from '@/features/dashboard/components/DashboardStatCard'
 import { StatusPill } from '@/components/ui/status-pill'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
-import { text, status, border, baseColors } from '@/theme/colors'
+import { text, status, border } from '@/theme/colors'
 import { mockVehicles, mockRoutes, mockDrivers, mockStudentAssignments, mockAlerts } from '@/mocks/transport'
 import { VEHICLE_STATUS_CHART_COLORS, ALERT_SEVERITY_COLORS } from '../constants'
-import { getOccupancyPercent, formatDate } from '../utils/transport-utils'
+import { formatDate } from '../utils/transport-utils'
 import type { TransportStat } from '../types'
 
-const FEE_COLLECTION_COLORS = [status.success.base, status.warning.base, status.danger.base]
+/** Paid / Pending / Overdue — the app's core brand triad, as used by every
+ *  other donut. The semantic palette stays on the status pills. */
+const FEE_COLLECTION_COLORS = ['var(--heading)', 'var(--primary)', 'var(--accent)']
 
 export function TransportOverview() {
   const stats: TransportStat[] = useMemo(() => [
@@ -20,32 +22,32 @@ export function TransportOverview() {
       label: 'Total Vehicles',
       value: mockVehicles.length,
       icon: Bus,
-      iconBg: 'var(--accent)',
-      iconColor: 'var(--accent-foreground)',
+      iconBg: 'var(--primary)',
+      iconColor: 'var(--primary-foreground)',
     },
     {
       id: 'active-routes',
       label: 'Active Routes',
       value: mockRoutes.filter(r => r.status === 'Active').length,
       icon: Route,
-      iconBg: 'var(--primary)',
-      iconColor: 'var(--primary-foreground)',
+      iconBg: 'var(--heading)',
+      iconColor: 'var(--card)',
     },
     {
       id: 'students-transported',
       label: 'Students Transported',
       value: mockStudentAssignments.length,
       icon: Users,
-      iconBg: status.success.muted,
-      iconColor: status.success.text,
+      iconBg: 'var(--primary)',
+      iconColor: 'var(--primary-foreground)',
     },
     {
       id: 'total-drivers',
       label: 'Total Drivers',
       value: mockDrivers.filter(d => d.status === 'Active').length,
       icon: UserCog,
-      iconBg: status.info.muted,
-      iconColor: status.info.text,
+      iconBg: 'var(--heading)',
+      iconColor: 'var(--card)',
     },
   ], [])
 

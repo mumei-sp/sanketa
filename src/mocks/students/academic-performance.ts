@@ -29,11 +29,13 @@ function percentFor(grade: string, month: string): number {
 function buildSeries(months: string[]): AcademicPerformanceEntry[] {
   const grades = getUniqueGrades(loadSchoolConfig().classSections)
   return months.map(month => {
-    const row: Record<string, number | string> = { month }
+    // Seed with the required `month` so the object satisfies the interface
+    // outright — the previous `Record<string, …>` needed an unsound cast.
+    const row: AcademicPerformanceEntry = { month }
     grades.forEach(g => {
       row[`grade${g}`] = percentFor(g, month)
     })
-    return row as AcademicPerformanceEntry
+    return row
   })
 }
 

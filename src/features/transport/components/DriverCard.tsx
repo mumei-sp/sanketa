@@ -1,8 +1,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import { StatusPill } from '@/components/ui/status-pill'
 import { Tile } from '@/components/tile'
-import { Phone, ShieldCheck, ShieldX, Pencil, Trash2, IdCard, Bus, AlertCircle } from 'lucide-react'
+import { Phone, Pencil, Trash2, IdCard, Bus, AlertCircle } from 'lucide-react'
 import { primary, accent, text, status, statusVivid } from '@/theme/colors'
 import {
   AlertDialog,
@@ -44,7 +43,7 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
       <div className="absolute top-3 right-3 flex items-center gap-0.5">
         <button
           onClick={() => onEdit(driver)}
-          className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+          className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
           style={{ backgroundColor: accent.soft }}
           onMouseEnter={e => { e.currentTarget.style.backgroundColor = accent.base }}
           onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
@@ -55,7 +54,7 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
-              className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+              className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
               style={{ backgroundColor: accent.soft }}
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
@@ -83,7 +82,7 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
 
       {/* Profile Header */}
       <div className="flex items-center gap-3">
-        <Avatar className="w-12 h-12 shrink-0" style={{ backgroundColor: primary.soft }}>
+        <Avatar className="size-12 shrink-0" style={{ backgroundColor: primary.soft }}>
           <AvatarFallback className="text-sm font-semibold" style={{ backgroundColor: primary.soft, color: text.heading }}>
             {initials}
           </AvatarFallback>

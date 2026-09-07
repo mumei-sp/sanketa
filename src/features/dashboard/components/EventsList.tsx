@@ -2,7 +2,6 @@ import { Ellipsis, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
 import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
-import { baseColors } from '@/theme/colors'
 import type { CalendarEvent } from '../types'
 
 interface EventsListProps {
@@ -72,7 +71,7 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
           <h3 className="text-section-title">Events</h3>
-          <button className="p-1 rounded-md hover:bg-accent transition-colors">
+          <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
             <Ellipsis className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -89,7 +88,7 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
         <CardHeader className="flex-shrink-0 pb-2">
           <h3 className="text-section-title">Events</h3>
           <CardAction>
-            <button className="p-1 rounded-md hover:bg-accent transition-colors">
+            <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
               <Ellipsis className="w-4 h-4 text-muted-foreground" />
             </button>
           </CardAction>

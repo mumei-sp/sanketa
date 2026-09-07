@@ -1,10 +1,11 @@
 import * as React from 'react'
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
-import { TextField, SelectField, type SelectOption, GRID_COLS_2 } from '@/components/form/fields'
+import { TextField, SelectField, type SelectOption, FORM_GRID_2 } from '@/components/form/fields'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
 import type { TeacherFormValues } from '../../schemas/teacher-schema'
+import { cn } from '@/lib/utils'
 
 export interface ProfessionalInfoSectionProps {
   control: Control<TeacherFormValues>
@@ -39,7 +40,7 @@ export function ProfessionalInfoSection({ control, width }: ProfessionalInfoSect
         placeholder="Select subject"
         options={subjectOptions}
       />
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+      <div className={cn('grid gap-4', FORM_GRID_2)}>
         <TextField
           name="professionalInfo.qualification"
           control={control}

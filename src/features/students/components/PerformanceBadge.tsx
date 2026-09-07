@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { statusVivid } from '@/theme/colors'
+import { statusVivid, type StatusVividTone } from '@/theme/colors'
 import type { StudentPerformance } from '@/features/students/types'
 
 interface PerformanceBadgeProps {
@@ -21,7 +21,7 @@ interface PerformanceBadgeProps {
  * label (and dot). Previously used status.*.soft which desaturated to grey.
  */
 export function PerformanceBadge({ performance, variant = 'default', className }: PerformanceBadgeProps) {
-  const statusMap: Record<StudentPerformance, typeof statusVivid.success> = {
+  const statusMap: Record<StudentPerformance, StatusVividTone> = {
     Good: statusVivid.success,
     'Needs Support': statusVivid.warning,
     'At Risk': statusVivid.danger,

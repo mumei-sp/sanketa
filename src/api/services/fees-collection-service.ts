@@ -5,7 +5,6 @@
  */
 
 import { CircleCheckBig, CircleDashed, OctagonAlert } from 'lucide-react'
-import { baseColors } from '@/theme/colors'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, txnId, newId } from '@/mocks/_shared'

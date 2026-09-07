@@ -10,7 +10,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { CircleDollarSign, FileText, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react'
-import { baseColors, colors, statusVivid } from '@/theme/colors'
+import { colors, statusVivid } from '@/theme/colors'
 import type { Reimbursement, ReimbursementStatus } from '../types'
 
 interface ReimbursementsTrackingProps {
@@ -33,11 +33,13 @@ const statusStyles: Record<
 
 /**
  * Responsive grid columns:
- * - Mobile / Tablet (< lg): 4 columns — Staff Name merges into Request ID, Proof merges into Amount
+ * - Mobile / Tablet (< lg): 3 columns — Staff Name, Proof and Date all fold into
+ *   the Request ID and Amount blocks. Four columns needed ~450px and this card
+ *   is only ~330px wide on a tablet, which squeezed every label to nothing.
  * - Desktop (lg+):          6 columns — all columns separate
  */
 const GRID_COLS =
-  'grid-cols-[1fr_1fr_100px_100px] lg:grid-cols-[72px_1.2fr_1fr_120px_90px_110px]'
+  'grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] lg:grid-cols-[72px_1.2fr_1fr_120px_90px_110px]'
 
 /** Sortable column keys */
 type SortKey = 'requestId' | 'staffName' | 'amount' | 'dateSubmitted'
@@ -193,12 +195,15 @@ export function ReimbursementsTracking({
               direction={sortKey === 'amount' ? sortDirection : undefined}
               onClick={() => handleSort('amount')}
             />
-            <SortHeader
-              label="Date Submitted"
-              active={sortKey === 'dateSubmitted'}
-              direction={sortKey === 'dateSubmitted' ? sortDirection : undefined}
-              onClick={() => handleSort('dateSubmitted')}
-            />
+            {/* Date Submitted — desktop only */}
+            <span className="hidden lg:flex">
+              <SortHeader
+                label="Date Submitted"
+                active={sortKey === 'dateSubmitted'}
+                direction={sortKey === 'dateSubmitted' ? sortDirection : undefined}
+                onClick={() => handleSort('dateSubmitted')}
+              />
+            </span>
             {/* Proof — desktop only */}
             <span className="hidden lg:block text-xs font-medium text-muted-foreground">
               Proof
@@ -231,6 +236,9 @@ export function ReimbursementsTracking({
                     </p>
                     <p className="text-[11px] text-muted-foreground truncate">
                       {item.department}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {item.dateSubmitted}
                     </p>
                   </div>
                 </div>
@@ -282,8 +290,8 @@ export function ReimbursementsTracking({
                   </a>
                 </div>
 
-                {/* ── Date Submitted ── */}
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {/* ── Date Submitted — desktop only (folded into the ID block below lg) ── */}
+                <span className="hidden lg:inline text-xs text-muted-foreground whitespace-nowrap">
                   {item.dateSubmitted}
                 </span>
 
@@ -357,7 +365,7 @@ function SortHeader({
   return (
     <button
       type="button"
-      className="text-xs font-medium text-muted-foreground flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors"
+      className="tap-area text-xs font-medium text-muted-foreground flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors"
       onClick={onClick}
     >
       {label}

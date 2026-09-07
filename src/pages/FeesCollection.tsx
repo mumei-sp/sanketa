@@ -95,13 +95,13 @@ export default function FeesCollection() {
       />
 
       <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
-        <Tile id="fee-stats" layoutMode="block" width={{ default: 1, md: 3 }} className="h-full">
+        <Tile id="fee-stats" layoutMode="block" width={{ default: 1, md: 12, lg: 3 }} className="h-full">
           <FeeStatCards stats={stats} isLoading={isLoading} />
         </Tile>
-        <Tile id="fee-trend" layoutMode="block" width={{ default: 1, md: 4 }} className="h-full">
+        <Tile id="fee-trend" layoutMode="block" width={{ default: 1, md: 6, lg: 4 }} className="h-full">
           <FeeCollectionTrend data={trendData} isLoading={isLoading} />
         </Tile>
-        <Tile id="fee-progress" layoutMode="block" width={{ default: 1, md: 5 }} className="h-full">
+        <Tile id="fee-progress" layoutMode="block" width={{ default: 1, md: 6, lg: 5 }} className="h-full">
           <FeeCollectionProgress data={progressData} isLoading={isLoading} />
         </Tile>
       </TileWrapper>

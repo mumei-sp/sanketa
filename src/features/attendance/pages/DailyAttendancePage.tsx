@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, UserCheck, History, Download } from 'lucide-react'
 import { StatusBanner } from '@/components/shared/StatusBanner'
-import { colors, darken, baseColors, withOpacity } from '@/theme/colors'
+import { colors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
 import { useAttendanceHistory } from '../hooks/use-attendance-history'
@@ -255,7 +255,7 @@ export function DailyAttendancePage() {
                       key={cls}
                       type="button"
                       onClick={() => handleClassChange(cls)}
-                      className="text-xs font-medium rounded transition-colors"
+                      className="tap-target text-xs font-medium rounded transition-colors"
                       style={{
                         padding: `4px 10px`,
                         backgroundColor: active
@@ -296,7 +296,7 @@ export function DailyAttendancePage() {
               <button
                 type="button"
                 onClick={handleMarkAllPresent}
-                className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
+                className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
                 style={{
                   backgroundColor: withOpacity('var(--primary)', 0.4),
                   color: 'var(--heading)',
@@ -314,7 +314,7 @@ export function DailyAttendancePage() {
           <button
             type="button"
             onClick={handleExport}
-            className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80 border"
+            className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80 border"
             style={{
               borderColor: colors.border.default,
               color: 'var(--heading)',

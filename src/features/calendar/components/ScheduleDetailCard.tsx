@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { baseColors, status } from '@/theme/colors'
+import { status } from '@/theme/colors'
 import { categoryConfig } from '../utils/category-config'
 import type { CalendarEventExtendedProps } from '../types'
 

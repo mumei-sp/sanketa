@@ -21,7 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { baseColors } from '@/theme/colors'
 import { cn } from '@/lib/utils'
 import { createTodoItem, updateTodoItem, deleteTodoItem } from '@/api/services/dashboard-service'
 import type { TodoItem } from '../types'
@@ -209,7 +208,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
           <h3 className="text-section-title">To Do List</h3>
           <CardAction>
             <button
-              className="p-1 rounded-md hover:bg-accent transition-colors"
+              className="tap-area p-1 rounded-md hover:bg-accent transition-colors"
               onClick={() => setIsAdding(true)}
             >
               <Plus className="w-5 h-5 text-muted-foreground" />
@@ -287,7 +286,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className="p-1 rounded-md opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-accent transition-all shrink-0"
+                        className="p-1 rounded-md opacity-0 touch:opacity-100 group-hover:opacity-100 focus:opacity-100 hover:bg-accent transition-all shrink-0"
                         onClick={e => e.stopPropagation()}
                       >
                         <Ellipsis className="w-4 h-4 text-muted-foreground" />

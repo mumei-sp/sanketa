@@ -4,7 +4,7 @@ import { SectionCard } from '@/components/ui/section-card'
 import { Button } from '@/components/ui/button'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, accent, border } from '@/theme/colors'
+import { text, border } from '@/theme/colors'
 import type { StudentScholarship } from '../types'
 
 interface StudentScholarshipsProps {
@@ -85,7 +85,7 @@ export function StudentScholarships({ scholarships, onAdd, onEdit, onDelete }: S
                   {onDelete && (
                     <button
                       type="button"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-1 rounded hover:bg-red-50"
+                      className="opacity-0 touch:opacity-100 group-hover:opacity-100 transition-opacity shrink-0 p-1 rounded hover:bg-red-50"
                       onClick={e => { e.stopPropagation(); onDelete(scholarship.id) }}
                       aria-label={`Delete ${scholarship.title}`}
                     >

@@ -1,7 +1,6 @@
 import { X } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { baseColors } from '@/theme/colors'
 import { ScheduleDetailCard } from './ScheduleDetailCard'
 import type { CalendarEvent } from '../types'
 

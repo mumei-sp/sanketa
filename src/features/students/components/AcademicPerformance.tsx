@@ -77,6 +77,10 @@ const CustomTooltip = ({ active, payload }: any) => {
  */
 const CustomBar = (props: any) => {
   const { x, y, width, height } = props
+  // Recharts animates height up from zero, so skip the frames where there is
+  // nothing to draw rather than handing SVG a zero/negative rect height.
+  if (!(height > 0)) return <g />
+
   // Use light pink color for bars (matching the theme)
   const fillColor = 'var(--primary)'
 
@@ -341,7 +345,13 @@ export function AcademicPerformance({
                       hide={true}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={false} />
-                    <Bar dataKey="score" shape={CustomBar} activeBar={false} barSize={32}>
+                    <Bar
+                      dataKey="score"
+                      shape={CustomBar}
+                      activeBar={false}
+                      barSize={32}
+                      isAnimationActive={false}
+                    >
                       <LabelList content={<CustomLabel />} />
                     </Bar>
                   </BarChart>

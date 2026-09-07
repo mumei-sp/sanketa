@@ -143,15 +143,16 @@ export default function PageHeader({
       shadowed={false}
       className={cn(className)}
     >
-      <div className="flex items-center justify-between gap-4">
+      {/* Mobile stacks title over actions; from md the two share a row. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
         {/* Left Section — Title + Breadcrumbs */}
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="flex items-center gap-3 min-w-0 md:flex-1">
           {shouldShowBackButton && (
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="shrink-0 h-9 w-9 bg-card hover:bg-muted"
+              className="shrink-0 size-9 bg-card hover:bg-muted"
               aria-label="Go back"
             >
               <ArrowLeft className="size-5" />
@@ -161,7 +162,9 @@ export default function PageHeader({
           <div className="flex flex-col gap-1 min-w-0">
             <h1 className="text-page-title text-foreground truncate">{title}</h1>
             {subtitle && (
-              <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2 md:line-clamp-1">
+                {subtitle}
+              </p>
             )}
             {breadcrumbs && breadcrumbs.length > 0 && (
               <Breadcrumb>
@@ -191,11 +194,15 @@ export default function PageHeader({
           </div>
         </div>
 
-        {/* Right Section — Global top actions (search, settings, avatar) + page actions */}
-        <div className="flex items-center gap-3 shrink-0">
-          {topActions}
-          {actions}
-        </div>
+        {/* Right Section — Global top actions (search, settings, avatar) + page actions.
+            Page actions wrap onto extra lines on narrow screens instead of
+            compressing the title beside them. */}
+        {(topActions || actions) && (
+          <div className="flex flex-wrap items-center gap-2 md:flex-nowrap md:gap-3 md:shrink-0">
+            {topActions}
+            {actions}
+          </div>
+        )}
       </div>
     </Tile>
   )

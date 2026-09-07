@@ -28,7 +28,7 @@ import { useGradeCalculator } from '../hooks/use-grade-calculator'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
 import { ClassPicker } from '@/components/shared/ClassPicker'
-import { withOpacity, baseColors } from '@/theme/colors'
+import { withOpacity } from '@/theme/colors'
 import {
   fetchGradeableSubjects,
   fetchGradeSheet,
@@ -175,7 +175,7 @@ export function GradeSheetPage() {
                       key={cls}
                       type="button"
                       onClick={() => handleParamChange('class', cls)}
-                      className="text-xs font-medium rounded transition-colors"
+                      className="tap-target text-xs font-medium rounded transition-colors"
                       style={{
                         padding: '4px 10px',
                         backgroundColor: active
@@ -249,7 +249,7 @@ export function GradeSheetPage() {
                   const csv = generateCsv(csvData as Record<string, unknown>[], csvCols as { key: string; header: string }[])
                   downloadCsv(csv, `grades-${selectedClass}-${selectedExam}.csv`)
                 }}
-                className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 cursor-pointer transition-colors"
+                className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 cursor-pointer transition-colors"
                 style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
               >
                 <Download className="w-3.5 h-3.5" />

@@ -94,7 +94,7 @@ export function TimetableSlotCell({
         {/* Edit mode pencil indicator */}
         {isEditMode && (
           <div
-            className="absolute top-1.5 right-1.5 rounded-full flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1.5 right-1.5 rounded-full flex items-center justify-center opacity-40 touch:opacity-100 group-hover:opacity-100 transition-opacity"
             style={{ width: '18px', height: '18px', backgroundColor: withOpacity(tintColor, 0.2) }}
           >
             <Pencil className="w-2.5 h-2.5" style={{ color: 'var(--heading)' }} />

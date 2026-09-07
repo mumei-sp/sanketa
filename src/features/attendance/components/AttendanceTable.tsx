@@ -1,6 +1,8 @@
 import * as React from 'react'
-import type { Table as TanStackTable } from '@tanstack/react-table'
-import { DataTable } from '@/components/table'
+import type { Row, Table as TanStackTable } from '@tanstack/react-table'
+import { DataTable, MobileRecordCard } from '@/components/table'
+import { AttendanceStatusBadge } from './AttendanceStatusBadge'
+import { formatDateHeader } from '@/utils/date'
 import { generateAttendanceColumns } from './attendance-columns'
 import type { AttendanceTableData, AttendanceRecordType, DateRange } from '../types'
 import {
@@ -55,9 +57,9 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
 
       return (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:flex-wrap">
             <h2 className="text-section-title text-foreground">Attendance</h2>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Type filter tabs */}
               <Tabs value={typeFilter} onValueChange={handleTypeChange}>
                 <TabsList className="h-9 bg-muted p-0.5 rounded-lg gap-0.5">
@@ -114,6 +116,36 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
     return <DataTablePaginationCustom table={table} />
   }, [])
 
+  // Below `lg` the person x date matrix becomes one card per person, with the
+  // dates wrapping as chips instead of marching off the right edge.
+  const renderMobileCard = React.useCallback((row: Row<AttendanceTableData>) => {
+    const record = row.original
+    const id = record.studentId || record.teacherId || record.staffId || 'N/A'
+    const dates = Object.keys(record.attendance).sort().reverse()
+
+    return (
+      <MobileRecordCard
+        title={record.name}
+        subtitle={record.class ? `${id} · ${record.class}` : id}
+        footer={
+          <div className="flex flex-wrap gap-2">
+            {dates.map(dateStr => (
+              <div
+                key={dateStr}
+                className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1"
+              >
+                <span className="text-caption text-muted-foreground">
+                  {formatDateHeader(dateStr)}
+                </span>
+                <AttendanceStatusBadge status={record.attendance[dateStr] || 'na'} />
+              </div>
+            ))}
+          </div>
+        }
+      />
+    )
+  }, [])
+
   return (
     <DataTable
       columns={columns}
@@ -125,6 +157,8 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
       showToolbar={true}
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
+      renderMobileCard={renderMobileCard}
+      mobileEmptyMessage="No attendance records for this selection."
       bodyProps={{
         rowProps: {
           className: 'h-12',

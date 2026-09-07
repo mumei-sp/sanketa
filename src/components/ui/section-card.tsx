@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Tile } from '@/components/tile'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, border } from '@/theme/colors'
+import { border } from '@/theme/colors'
 
 /**
  * SectionCard - A generic, reusable card wrapper for detail page sections.

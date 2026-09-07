@@ -1,7 +1,8 @@
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
-import { TextField, PhoneNumberFieldWithCountryCode, GRID_COLS_2 } from '@/components/form/fields'
+import { TextField, PhoneNumberFieldWithCountryCode, FORM_GRID_2 } from '@/components/form/fields'
 import type { StudentFormValues } from '../../schemas/student-schema'
+import { cn } from '@/lib/utils'
 
 /**
  * Props for ContactInfoSection component
@@ -25,7 +26,7 @@ export function ContactInfoSection({ control, width }: ContactInfoSectionProps) 
       width={width}
     >
       {/* Email Address and Phone Number - Side by Side */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+      <div className={cn('grid gap-4', FORM_GRID_2)}>
         {/* Email Address */}
         <TextField
           name="contactInfo.email"

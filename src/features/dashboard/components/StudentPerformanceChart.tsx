@@ -202,7 +202,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
           <h3 className="text-section-title">Student Performance</h3>
           <CardAction>
             <div className="flex items-center gap-2">
-              <div className="opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200">
+              <div className="opacity-100 lg:opacity-0 lg:group-hover/chart:opacity-100 transition-opacity duration-200">
                 <ClassPicker
                   storageKey="dash-perf"
                   mode="grade"
@@ -233,7 +233,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
                   <CartesianGrid strokeDasharray="3 3" stroke={colors.border.default} opacity={0.3} vertical={false} />
                   <XAxis dataKey="month" stroke={colors.text.muted} fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis
-                    width={36}
+                    width={44}
                     stroke={colors.text.muted}
                     fontSize={12}
                     tickLine={false}

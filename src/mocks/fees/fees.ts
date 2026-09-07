@@ -7,7 +7,6 @@
  */
 
 import { CircleCheckBig, CircleDashed, OctagonAlert } from 'lucide-react'
-import { baseColors } from '@/theme/colors'
 import type {
   FeeStat,
   FeeTrendData,

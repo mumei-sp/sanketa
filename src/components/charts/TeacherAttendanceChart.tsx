@@ -278,6 +278,7 @@ export function TeacherAttendanceChart({
                 <Bar
                   dataKey="attendance"
                   shape={CustomBar}
+                  isAnimationActive={false}
                   fill={'var(--primary)'}
                   activeBar={<CustomActiveBar />}
                   barSize={32}

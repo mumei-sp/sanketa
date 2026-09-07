@@ -251,10 +251,12 @@
     min-height: 3.5rem;
   }
 
+  /* Month cells render events as bare colour bars at this width (see
+     makeEventContent), so the chip padding collapses to almost nothing. */
   .fc .fc-daygrid-event {
     font-size: 0.5625rem;
-    padding: 0.0625rem 0.1875rem;
-    margin: 0.0625rem 0.125rem;
+    padding: 0.125rem 0.1875rem;
+    margin: 0.0625rem 0.1875rem;
   }
 
   .fc .fc-daygrid-day-number {

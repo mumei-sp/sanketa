@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, accent, border } from '@/theme/colors'
+import { text, border } from '@/theme/colors'
 import type { LeaveRequest } from '../types/teacher-detail'
 
 interface TeacherLeaveRequestProps {

@@ -5,7 +5,7 @@
  */
 
 import { Check, X, AlertCircle, BarChart3 } from 'lucide-react'
-import { colors, darken, baseColors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useGradeCalculator } from '../hooks/use-grade-calculator'
 import type { GradeEntry } from '../types'

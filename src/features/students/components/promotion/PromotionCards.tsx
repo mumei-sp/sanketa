@@ -5,7 +5,6 @@
  * performance badge, and decision toggle buttons (Promote / Retain / Transfer).
  */
 
-import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { StudentAvatar } from '@/components/shared/StudentAvatar'
 import { MobileCardItem } from '@/components/shared/MobileCardItem'

@@ -16,7 +16,7 @@ import { DataTableBody } from "./body/DataTableBody";
 import { DataTableToolbar } from "./toolbar/DataTableToolbar";
 import { DataTablePagination } from "./pagination/DataTablePagination";
 import { cn } from "@/lib/utils";
-import type { Table as TanStackTable } from "@tanstack/react-table";
+import type { Table as TanStackTable, Row } from "@tanstack/react-table";
 
 /**
  * Props for the DataTable component.
@@ -61,6 +61,15 @@ export interface DataTableProps<TData, TValue> {
   renderHeader?: (table: TanStackTable<TData>) => React.ReactNode;
   renderBody?: (table: TanStackTable<TData>) => React.ReactNode;
   renderPagination?: (table: TanStackTable<TData>) => React.ReactNode;
+  /**
+   * Card renderer for narrow viewports. When provided, the table itself is
+   * hidden below `lg` and each row renders through this instead — a column
+   * layout that only survives by scrolling sideways is unusable on a phone.
+   * Toolbar and pagination are shared by both presentations.
+   */
+  renderMobileCard?: (row: Row<TData>, table: TanStackTable<TData>) => React.ReactNode;
+  /** Message shown in place of the card list when a filter matches nothing. */
+  mobileEmptyMessage?: string;
   layout?: "default" | "compact" | "spacious";
   showBorder?: boolean;
   borderClassName?: string;
@@ -128,6 +137,8 @@ export function DataTable<TData, TValue>({
   renderHeader,
   renderBody,
   renderPagination,
+  renderMobileCard,
+  mobileEmptyMessage = "No results.",
   layout = "default",
   showBorder = true,
   borderClassName,
@@ -241,6 +252,7 @@ export function DataTable<TData, TValue>({
         <div
           className={cn(
             showBorder && "rounded-md border",
+            renderMobileCard && "hidden lg:block",
             tableWrapperClassName,
             borderClassName,
           )}
@@ -258,6 +270,23 @@ export function DataTable<TData, TValue>({
             )}
           </Table>
         </div>
+        {renderMobileCard && (
+          <div className="flex flex-col gap-3 lg:hidden">
+            {table.getRowModel().rows.length === 0 ? (
+              <p className="py-8 text-center text-body-muted text-muted-foreground">
+                {mobileEmptyMessage}
+              </p>
+            ) : (
+              table
+                .getRowModel()
+                .rows.map((row) => (
+                  <React.Fragment key={row.id}>
+                    {renderMobileCard(row, table)}
+                  </React.Fragment>
+                ))
+            )}
+          </div>
+        )}
         {enablePagination &&
           (renderPagination ? (
             renderPagination(table)

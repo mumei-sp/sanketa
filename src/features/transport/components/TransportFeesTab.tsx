@@ -1,8 +1,14 @@
 import { useState, useMemo, useCallback } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Plus, IndianRupee, CheckCircle, Clock, AlertCircle, Search, Download, Trash2 } from 'lucide-react'
+import { Plus, IndianRupee, CheckCircle, Clock, AlertCircle, Download, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+} from '@/components/table'
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -16,13 +22,13 @@ import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { DashboardStatCard } from '@/features/dashboard/components/DashboardStatCard'
-import { text, accent, status } from '@/theme/colors'
+import { text, accent } from '@/theme/colors'
 import { generateCsv, downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
 import { mockFeeStructures, mockStudentAssignments } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
 import { formatCurrency } from '../utils/transport-utils'
-import { FeeStructureDialog } from './FeeStructureDialog'
+import { FeeStructureFormSheet } from './FeeStructureFormSheet'
 import type { TransportFeeStructure, TransportStat, StudentTransportAssignment } from '../types'
 
 /** Resolves the fee amount for a student based on their route and type */
@@ -37,7 +43,7 @@ function getStudentFee(
 
 export function TransportFeesTab() {
   const [feeStructures, setFeeStructures] = useState<TransportFeeStructure[]>(mockFeeStructures)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
   const [editingFee, setEditingFee] = useState<TransportFeeStructure | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -68,32 +74,32 @@ export function TransportFeesTab() {
       label: 'Total Expected (₹)',
       value: feeSummary.totalExpected,
       icon: IndianRupee,
-      iconBg: accent.base,
-      iconColor: text.heading,
+      iconBg: 'var(--primary)',
+      iconColor: 'var(--primary-foreground)',
     },
     {
       id: 'total-collected',
       label: 'Collected (₹)',
       value: feeSummary.totalCollected,
       icon: CheckCircle,
-      iconBg: status.success.soft,
-      iconColor: status.success.text,
+      iconBg: 'var(--heading)',
+      iconColor: 'var(--card)',
     },
     {
       id: 'total-pending',
       label: 'Pending (₹)',
       value: feeSummary.totalPending,
       icon: Clock,
-      iconBg: status.warning.soft,
-      iconColor: status.warning.text,
+      iconBg: 'var(--primary)',
+      iconColor: 'var(--primary-foreground)',
     },
     {
       id: 'overdue-count',
       label: 'Overdue Students',
       value: feeSummary.overdue,
       icon: AlertCircle,
-      iconBg: status.danger.soft,
-      iconColor: status.danger.text,
+      iconBg: 'var(--heading)',
+      iconColor: 'var(--card)',
     },
   ], [feeSummary])
 
@@ -186,7 +192,7 @@ export function TransportFeesTab() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 opacity-0 group-hover/row:opacity-100 text-destructive transition-opacity"
+            className="size-7 opacity-0 touch:opacity-100 group-hover/row:opacity-100 text-destructive transition-opacity"
             onClick={(e) => handleDeleteFee(row.original.id, e)}
           >
             <Trash2 className="size-3.5" />
@@ -258,7 +264,7 @@ export function TransportFeesTab() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-section-title" style={{ color: text.heading }}>Fee Structure</h3>
           <Button
-            onClick={() => { setEditingFee(null); setDialogOpen(true) }}
+            onClick={() => { setEditingFee(null); setFormOpen(true) }}
             className="h-8 bg-primary hover:bg-primary/90 text-foreground"
             size="sm"
           >
@@ -278,7 +284,7 @@ export function TransportFeesTab() {
             renderRow: (row) => (
               <tr
                 key={row.id}
-                onClick={() => { setEditingFee(row.original); setDialogOpen(true) }}
+                onClick={() => { setEditingFee(row.original); setFormOpen(true) }}
                 className="group/row cursor-pointer hover:bg-muted/50 transition-colors"
               >
                 {row.getVisibleCells().map(cell => (
@@ -304,38 +310,44 @@ export function TransportFeesTab() {
         padding="p-5"
         overflow="auto"
       >
-        <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-          <h3 className="text-section-title" style={{ color: text.heading }}>Student Fee Status</h3>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative min-w-[140px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="h-8 w-full pl-9 bg-white text-xs"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className="h-8 w-[110px] text-xs"
-                style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Paid">Paid</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={handleExport} className="h-8 gap-1 text-xs">
-              <Download className="size-3" />
-              Export
-            </Button>
-          </div>
-        </div>
+        <ListToolbar
+          className="mb-4"
+          title={<h3 className="text-section-title" style={{ color: text.heading }}>Student Fee Status</h3>}
+          search={
+            <ListToolbarSearch
+              placeholder="Search"
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              className="md:w-[180px]"
+            />
+          }
+          filters={[
+            {
+              id: 'status',
+              label: 'Status',
+              isActive: statusFilter !== 'all',
+              control: (
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger
+                    className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[110px] text-xs', TOOLBAR_FILTER_CONTROL)}
+                    style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ]}
+          secondaryActions={[
+            { id: 'export', label: 'Export', icon: <Download className="size-3" />, onSelect: handleExport },
+          ]}
+        />
         <DataTable
           columns={studentFeeColumns}
           data={filteredStudents}
@@ -359,9 +371,9 @@ export function TransportFeesTab() {
         />
       </Tile>
 
-      <FeeStructureDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+      <FeeStructureFormSheet
+        open={formOpen}
+        onOpenChange={setFormOpen}
         feeStructure={editingFee}
         onSave={handleSave}
       />

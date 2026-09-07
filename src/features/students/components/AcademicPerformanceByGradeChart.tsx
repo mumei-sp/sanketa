@@ -17,8 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { text, border, baseColors, withOpacity } from '@/theme/colors'
-import { colors } from '@/theme/colors'
+import { text, border, withOpacity } from '@/theme/colors'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { AcademicPerformanceEntry } from '@/mocks/students/academic-performance'
 import {
@@ -175,7 +174,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
         </div>
         <CardAction>
           <div className="flex items-center gap-2">
-            <div className="opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200">
+            <div className="opacity-100 lg:opacity-0 lg:group-hover/chart:opacity-100 transition-opacity duration-200">
               <ClassPicker
                 storageKey="academic-perf"
                 mode="grade"
@@ -223,7 +222,13 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
               {activeGradeKeys.map((key, idx) => {
                 const { fill, stroke } = getGradeColor(idx)
                 return (
-                  <Bar key={key} dataKey={key} fill={fill} shape={CustomBarShape(stroke)} />
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    fill={fill}
+                    shape={CustomBarShape(stroke)}
+                    isAnimationActive={false}
+                  />
                 )
               })}
             </BarChart>

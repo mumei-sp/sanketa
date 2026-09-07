@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { text, background, border, baseColors } from '@/theme/colors'
+import { text, background, border } from '@/theme/colors'
 import { Home, ArrowLeft } from 'lucide-react'
 
 export default function NotFound() {

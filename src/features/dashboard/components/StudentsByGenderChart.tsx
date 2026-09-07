@@ -74,7 +74,7 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
           <h3 className="text-section-title">Students by Gender</h3>
           <CardAction>
             <div className="flex items-center gap-2">
-              <div className="opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200">
+              <div className="opacity-100 lg:opacity-0 lg:group-hover/chart:opacity-100 transition-opacity duration-200">
                 <ClassPicker
                   storageKey="dash-gender"
                   mode="grade"

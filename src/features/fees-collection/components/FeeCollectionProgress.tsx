@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { baseColors } from '@/theme/colors'
 import type { FeeProgressData } from '../types'
 
 interface FeeCollectionProgressProps {
@@ -17,7 +16,7 @@ function ProgressCard({ item }: { item: FeeProgressData }) {
       {/* Category + Percentage */}
       <div className="flex items-center justify-between gap-2">
         <span
-          className="text-base font-bold truncate min-w-0"
+          className="text-base font-bold min-w-0 break-words"
           style={{ color: 'var(--heading)' }}
           title={item.category}
         >
@@ -102,7 +101,7 @@ export function FeeCollectionProgress({ data, isLoading = false }: FeeCollection
       </div>
 
       {/* 2×2 grid of individual progress cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3 flex-1">
+      <div className="grid grid-cols-2 gap-3 flex-1">
         {data.map(item => (
           <ProgressCard key={item.category} item={item} />
         ))}

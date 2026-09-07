@@ -26,7 +26,7 @@ import { EXAMS_BY_TERM } from '../constants'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
 import { ClassPicker } from '@/components/shared/ClassPicker'
-import { withOpacity, baseColors } from '@/theme/colors'
+import { withOpacity } from '@/theme/colors'
 import {
   fetchGradeableSubjects,
   fetchGradeSubmission,
@@ -202,7 +202,7 @@ export function GradeEntryPage() {
                       key={cls}
                       type="button"
                       onClick={() => handleParamChange('class', cls)}
-                      className="text-xs font-medium rounded transition-colors"
+                      className="tap-target text-xs font-medium rounded transition-colors"
                       style={{
                         padding: '4px 10px',
                         backgroundColor: active

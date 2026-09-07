@@ -96,7 +96,7 @@ export function TimetableToolbar({
           <button
             type="button"
             onClick={onPrint}
-            className="flex items-center gap-1.5 text-xs font-medium rounded-lg px-3 py-2 transition-all cursor-pointer hover:opacity-80"
+            className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-lg px-3 py-2 transition-all cursor-pointer hover:opacity-80"
             style={{
               borderColor: border.default,
               color: text.muted,
@@ -115,7 +115,7 @@ export function TimetableToolbar({
             <button
               type="button"
               onClick={() => setShowCopyDropdown(prev => !prev)}
-              className="flex items-center gap-1.5 text-xs font-medium rounded-lg px-3 py-2 transition-all cursor-pointer hover:opacity-80"
+              className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-lg px-3 py-2 transition-all cursor-pointer hover:opacity-80"
               style={{
                 borderColor: border.default,
                 color: text.muted,

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, border, primary, accent, background } from '@/theme/colors'
+import { text, border, background } from '@/theme/colors'
 import type { ScheduleBlock } from '../types/teacher-detail'
 
 const VIEWS = ['Weekly', 'Daily']

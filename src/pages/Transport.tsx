@@ -6,7 +6,7 @@ import { VehiclesTab } from '@/features/transport/components/VehiclesTab'
 import { DriversTab } from '@/features/transport/components/DriversTab'
 import { StudentAssignmentTab } from '@/features/transport/components/StudentAssignmentTab'
 import { TransportFeesTab } from '@/features/transport/components/TransportFeesTab'
-import { accent, text, border } from '@/theme/colors'
+import { accent, text } from '@/theme/colors'
 
 export default function Transport() {
   return (

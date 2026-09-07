@@ -170,7 +170,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setCustomizeOpen(true)}
-              className="flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
+              className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
               style={{
                 color: 'var(--foreground)',
                 backgroundColor: 'color-mix(in srgb, var(--accent) 35%, var(--card))',

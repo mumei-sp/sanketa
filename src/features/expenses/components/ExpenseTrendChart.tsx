@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { colors, baseColors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
 import type { ExpenseTrendData } from '../types'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
@@ -201,6 +201,7 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
                 <Bar
                   dataKey="amount"
                   shape={CustomBar}
+                  isAnimationActive={false}
                   fill={'var(--primary)'}
                   activeBar={<ActiveBar />}
                   barSize={32}

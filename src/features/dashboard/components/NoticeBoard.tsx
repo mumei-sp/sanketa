@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { baseColors } from '@/theme/colors'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 
 interface NoticeBoardProps {
@@ -115,7 +114,7 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
                       {item.createdBy}
                     </td>
                     <td className="py-3 align-middle">
-                      <button className="p-1 rounded-md hover:bg-accent transition-colors">
+                      <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
                         <Ellipsis className="w-4 h-4 text-muted-foreground" />
                       </button>
                     </td>

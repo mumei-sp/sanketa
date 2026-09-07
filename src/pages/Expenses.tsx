@@ -87,7 +87,7 @@ export default function Expenses() {
           id="expense-breakdown"
           layoutMode="block"
           width={{ default: 1, md: 7, lg: 5 }}
-          rowStart={{ default: 1, lg: 2 }}
+          rowStart={{ lg: 2 }}
         >
           <ExpenseBreakdownChart
             data={breakdownData}
@@ -100,8 +100,8 @@ export default function Expenses() {
           id="reimbursements-tracking"
           layoutMode="block"
           width={{ default: 1, md: 12, lg: 7 }}
-          rowStart={{ default: 1, lg: 1 }}
-          rowEnd={{ default: 1, lg: 3 }}
+          rowStart={{ lg: 1 }}
+          rowEnd={{ lg: 3 }}
         >
           <ReimbursementsTracking data={reimbursements} isLoading={isLoading} />
         </Tile>

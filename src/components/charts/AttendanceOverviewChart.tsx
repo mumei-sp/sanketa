@@ -278,6 +278,7 @@ export function AttendanceOverviewChart({
                 <Bar
                   dataKey="attendance"
                   shape={CustomBar}
+                  isAnimationActive={false}
                   fill={'var(--primary)'}
                   activeBar={false}
                 >

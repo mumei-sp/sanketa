@@ -1,8 +1,15 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/layout/PageHeader'
+import { cn } from '@/lib/utils'
+import {
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+  TOOLBAR_PRIMARY_ACTION,
+} from '@/components/table'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -10,14 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Plus, Download, Upload } from 'lucide-react'
+import { Plus, Download, Upload } from 'lucide-react'
 import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution, deleteTeacher, createTeacher } from '@/api/services/teacher-service'
 import type { Teacher } from '@/features/teachers/types'
 import type { TeacherStatistics, DepartmentData } from '@/mocks/teachers/statistics'
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { baseColors, text } from '@/theme/colors'
+import { text } from '@/theme/colors'
 import { TeacherAttendanceChart } from '@/components/charts/TeacherAttendanceChart'
 import { WorkloadDistributionChart } from '@/components/charts/WorkloadDistributionChart'
 import { DepartmentChart } from '@/components/charts/DepartmentChart'
@@ -211,10 +218,6 @@ export default function Teachers() {
     setCurrentPage(1)
   }, [searchQuery, sortOption])
 
-  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-  }, [])
-
   const handleSortChange = React.useCallback((value: string) => {
     setSortOption(value as SortOption)
   }, [])
@@ -323,7 +326,7 @@ export default function Teachers() {
           id="teacher-workload-chart"
           layoutMode="block"
           width={{ default: 1, md: 12, lg: 4 }}
-          colStart={{ default: 1, lg: 5 }}
+          colStart={{ lg: 5 }}
         >
           <WorkloadDistributionChart isLoading={isLoadingAttendance} />
         </Tile>
@@ -332,9 +335,9 @@ export default function Teachers() {
           id="teacher-department-chart"
           layoutMode="block"
           width={{ default: 1, md: 5, lg: 4 }}
-          colStart={{ default: 1, md: 8, lg: 9 }}
-          rowStart={{ default: 1, md: 1 }}
-          rowEnd={{ default: 1, lg: 3 }}
+          colStart={{ md: 8, lg: 9 }}
+          rowStart={{ md: 1 }}
+          rowEnd={{ lg: 3 }}
         >
           <DepartmentChart data={departmentData} total={totalTeachers} />
         </Tile>
@@ -347,73 +350,58 @@ export default function Teachers() {
         background="default"
         borderRadius="lg"
         padding="p-4"
-        className="flex items-center justify-between gap-4 flex-wrap"
       >
-        <h2 className="text-page-title text-heading">Teachers</h2>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Search */}
-          <div className="relative min-w-[160px] max-w-[300px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-            <Input
+        <ListToolbar
+          title={<h2 className="text-page-title text-heading">Teachers</h2>}
+          search={
+            <ListToolbarSearch
               placeholder="Search teacher"
               value={searchQuery}
-              onChange={handleSearchChange}
-              className="h-8 w-full pl-10 bg-white"
+              onValueChange={setSearchQuery}
+              className="md:min-w-[160px] md:max-w-[300px]"
             />
-          </div>
-
-          {/* Sort */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
-            <Select value={sortOption} onValueChange={handleSortChange}>
-              <SelectTrigger
-                className="h-8 w-[120px]"
-                style={{
-                  backgroundColor: 'var(--accent)',
-                  color: text.heading,
-                  borderColor: 'var(--accent)',
-                }}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">Latest</SelectItem>
-                <SelectItem value="name-asc">Name A-Z</SelectItem>
-                <SelectItem value="name-desc">Name Z-A</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Export */}
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            className="h-8 gap-1.5"
-          >
-            <Download className="size-3.5" />
-            Export
-          </Button>
-
-          {/* Import */}
-          <Button
-            variant="outline"
-            onClick={() => setImportOpen(true)}
-            className="h-8 gap-1.5"
-          >
-            <Upload className="size-3.5" />
-            Import
-          </Button>
-
-          {/* Add Teacher Button */}
-          <Button
-            onClick={handleAddTeacher}
-            className="h-8 bg-primary hover:bg-primary/90 text-foreground"
-          >
-            <Plus className="size-4" />
-            Add Teacher
-          </Button>
-        </div>
+          }
+          filters={[
+            {
+              id: 'sort',
+              label: 'Sort by',
+              inlineLabel: true,
+              isActive: sortOption !== 'latest',
+              control: (
+                <Select value={sortOption} onValueChange={handleSortChange}>
+                  <SelectTrigger
+                    className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}
+                    style={{
+                      backgroundColor: 'var(--accent)',
+                      color: text.heading,
+                      borderColor: 'var(--accent)',
+                    }}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest</SelectItem>
+                    <SelectItem value="name-asc">Name A-Z</SelectItem>
+                    <SelectItem value="name-desc">Name Z-A</SelectItem>
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ]}
+          secondaryActions={[
+            { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
+            { id: 'import', label: 'Import', icon: <Upload className="size-3.5" />, onSelect: () => setImportOpen(true) },
+          ]}
+          primaryAction={
+            <Button
+              onClick={handleAddTeacher}
+              className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
+            >
+              <Plus className="size-4" />
+              Add Teacher
+            </Button>
+          }
+        />
       </Tile>
 
       {/* Teachers Grid */}

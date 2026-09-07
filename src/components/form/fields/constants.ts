@@ -24,10 +24,19 @@ export const GUARDIAN_PHONE_FIELD_STYLE: React.CSSProperties = {
 export const GUARDIAN_PHONE_FIELD_CLASSNAME = 'hover:bg-accent'
 
 /**
- * Grid layout template column constants
+ * Responsive form-row grids.
+ *
+ * These are class names rather than inline `gridTemplateColumns` values so the
+ * breakpoints actually apply: a 20/40/40 split leaves roughly 60px per field on
+ * a phone, which clips the label and the input alike. Every multi-column form
+ * row therefore stacks below `sm` and takes its designed proportions above it.
+ *
+ * Apply with `cn('grid gap-4', FORM_GRID_3)`; a child that spans two of the
+ * three tracks needs `FORM_GRID_3_SPAN_2` so it also stacks.
  */
-export const GRID_COLS_2 = '1fr 1fr'
-export const GRID_COLS_3 = '1fr 2fr 2fr'
+export const FORM_GRID_2 = 'grid-cols-1 sm:grid-cols-2'
+export const FORM_GRID_3 = 'grid-cols-1 sm:grid-cols-[1fr_2fr_2fr]'
+export const FORM_GRID_3_SPAN_2 = 'sm:col-span-2'
 
 /**
  * Guardian input background class name

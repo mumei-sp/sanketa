@@ -124,6 +124,7 @@ export function StudentAttendanceChart({ datasets, isLoading = false }: StudentA
                     dataKey="count"
                     fill="url(#attendanceBarGradient)"
                     shape={RoundedBar}
+                    isAnimationActive={false}
                     barSize={32}
                   />
                 </BarChart>

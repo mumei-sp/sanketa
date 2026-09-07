@@ -8,10 +8,10 @@
 import * as React from 'react'
 import { Check, Clock, Send } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
-import { text, border, background, baseColors, status as statusColors, darken, withOpacity, statusVivid } from '@/theme/colors'
+import { text, border, background, status as statusColors, withOpacity, statusVivid } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { fetchPaymentHistory } from '@/api/services/fees-collection-service'
-import { PaymentDialog } from './PaymentDialog'
+import { PaymentFormSheet } from './PaymentFormSheet'
 import { PAYMENT_METHOD_LABELS } from '../types'
 import { toast } from 'sonner'
 import type { FeeCollectionRecord, FeeStatus, PaymentTransaction } from '../types'
@@ -317,7 +317,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
       </div>
 
       {/* ═══ MARK AS PAID DIALOG ═══ */}
-      <PaymentDialog
+      <PaymentFormSheet
         open={markingRecord !== null}
         onOpenChange={open => { if (!open) setMarkingRecord(null) }}
         record={markingRecord}

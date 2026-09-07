@@ -2,15 +2,8 @@ import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { FormSheet } from '@/components/form/FormSheet'
 import { FormSection } from '@/components/form/FormSection'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -35,14 +28,14 @@ const assignmentSchema = z.object({
 
 type AssignmentFormValues = z.infer<typeof assignmentSchema>
 
-interface AssignStudentDialogProps {
+interface AssignStudentFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   assignment?: StudentTransportAssignment | null
   onSave: (data: Partial<StudentTransportAssignment>) => void
 }
 
-export function AssignStudentDialog({ open, onOpenChange, assignment, onSave }: AssignStudentDialogProps) {
+export function AssignStudentFormSheet({ open, onOpenChange, assignment, onSave }: AssignStudentFormSheetProps) {
   const isEdit = !!assignment
 
   const form = useForm<AssignmentFormValues>({
@@ -89,13 +82,13 @@ export function AssignStudentDialog({ open, onOpenChange, assignment, onSave }: 
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle>{isEdit ? 'Edit Assignment' : 'Assign Student'}</DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-4 space-y-4">
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? 'Edit Assignment' : 'Assign Student'}
+      onSubmit={form.handleSubmit(onSubmit)}
+      submitLabel={isEdit ? 'Update' : 'Assign'}
+    >
           <FormSection title="Student Details" width={12}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -162,14 +155,6 @@ export function AssignStudentDialog({ open, onOpenChange, assignment, onSave }: 
             </div>
           </FormSection>
 
-          <DialogFooter className="px-6 pb-6 pt-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-foreground">
-              {isEdit ? 'Update' : 'Assign'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </FormSheet>
   )
 }

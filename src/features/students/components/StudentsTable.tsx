@@ -1,8 +1,17 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Table as TanStackTable, Row } from '@tanstack/react-table'
-import { Plus, Search, X } from 'lucide-react'
-import { DataTable, DataTableCell } from '@/components/table'
+import { Plus, X } from 'lucide-react'
+import {
+  DataTable,
+  DataTableCell,
+  MobileRecordCard,
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+  TOOLBAR_PRIMARY_ACTION,
+} from '@/components/table'
 import { studentColumns } from './student-columns'
 import type { Student } from '@/features/students/types'
 import { Button } from '@/components/ui/button'
@@ -13,11 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import { TableRow } from '@/components/ui/table'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { PerformanceBadge } from './PerformanceBadge'
+import { StatusBadge } from './StatusBadge'
+import { AttendanceIndicator } from './AttendanceIndicator'
+import { getInitials } from '@/utils/format'
 import { DataTablePaginationCustom } from '@/components/table/DataTablePaginationCustom'
-import { colors, withOpacity, baseColors } from '@/theme/colors'
+import { colors, withOpacity } from '@/theme/colors'
+import { cn } from '@/lib/utils'
 
 interface StudentsTableProps {
   data: Student[]
@@ -77,67 +91,89 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
           : `${selectedSections.length} classes`
 
       return (
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <h2 className="text-page-title text-foreground">Students</h2>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative w-[250px] min-w-[150px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search for a student"
-                value={searchValue}
-                onChange={e => handleSearchChange(e.target.value)}
-                className="h-8 w-full pl-10 bg-white border-default"
-              />
-            </div>
-
-            {/* Class filter pill: label on the left + ClassPicker trigger (gear). */}
-            <div
-              className="flex items-center gap-1.5 rounded-md h-8 px-2.5"
-              style={{
-                backgroundColor: withOpacity('var(--accent)', 0.35),
-                color: 'var(--heading)',
-              }}
-            >
-              <span className="text-xs font-medium">{filterLabel}</span>
-              {selectedSections.length > 0 && (
-                <button
-                  type="button"
-                  onClick={clearSections}
-                  className="flex items-center justify-center rounded hover:bg-black/5 transition-colors"
-                  style={{ width: 18, height: 18 }}
-                  aria-label="Clear class filter"
+        <ListToolbar
+          title="Students"
+          search={
+            <ListToolbarSearch
+              placeholder="Search for a student"
+              value={searchValue}
+              onValueChange={handleSearchChange}
+            />
+          }
+          filters={[
+            {
+              id: 'class',
+              label: 'Class',
+              isActive: selectedSections.length > 0,
+              control: (
+                /* Class filter pill: label on the left + ClassPicker trigger (gear). */
+                <div
+                  className={cn(
+                    'flex min-w-0 items-center gap-1.5 rounded-md px-2.5',
+                    TOOLBAR_CONTROL_HEIGHT,
+                  )}
+                  style={{
+                    backgroundColor: withOpacity('var(--accent)', 0.35),
+                    color: 'var(--heading)',
+                  }}
                 >
-                  <X className="w-3 h-3" style={{ color: colors.text.muted }} />
-                </button>
-              )}
-              <ClassPicker
-                storageKey="students-table"
-                mode="section"
-                max={10}
-                defaultSelected={[]}
-                onChange={applySectionFilter}
-              />
-            </div>
-
-            <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 w-[120px] bg-accent text-foreground border-0 hover:bg-accent/80">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="On Leave">On Leave</SelectItem>
-              </SelectContent>
-            </Select>
+                  <span className="truncate text-xs font-medium">{filterLabel}</span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    {selectedSections.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearSections}
+                        className="tap-area flex size-[18px] items-center justify-center rounded transition-colors hover:bg-black/5"
+                        aria-label="Clear class filter"
+                      >
+                        <X className="w-3 h-3" style={{ color: colors.text.muted }} />
+                      </button>
+                    )}
+                    <ClassPicker
+                      storageKey="students-table"
+                      mode="section"
+                      max={10}
+                      defaultSelected={[]}
+                      onChange={applySectionFilter}
+                    />
+                  </div>
+                </div>
+              ),
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              isActive: statusFilter !== 'all',
+              control: (
+                <Select value={statusFilter} onValueChange={handleStatusChange}>
+                  <SelectTrigger
+                    className={cn(
+                      TOOLBAR_CONTROL_HEIGHT,
+                      'w-[120px] bg-accent text-foreground border-0 hover:bg-accent/80',
+                      TOOLBAR_FILTER_CONTROL,
+                    )}
+                  >
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="On Leave">On Leave</SelectItem>
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ]}
+          primaryAction={
             <Button
               onClick={() => navigate('/students/add')}
-              className="bg-primary hover:bg-primary/90 text-foreground"
+              className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
             >
               <Plus className="size-4" />
               Add Student
             </Button>
-          </div>
-        </div>
+          }
+        />
       )
     },
     [navigate, statusFilter, selectedSections, applySectionFilter, clearSections],
@@ -147,6 +183,36 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
   const renderPagination = React.useCallback((table: TanStackTable<Student>) => {
     return <DataTablePaginationCustom table={table} />
   }, [])
+
+  // Below `lg` the seven columns can't fit, so each student becomes a card.
+  const renderMobileCard = React.useCallback(
+    (row: Row<Student>) => {
+      const student = row.original
+      return (
+        <MobileRecordCard
+          media={
+            <Avatar className="size-10">
+              <AvatarImage src={student.avatarUrl} alt={student.name} />
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                {getInitials(student.name ?? '')}
+              </AvatarFallback>
+            </Avatar>
+          }
+          title={student.name}
+          subtitle={student.studentId}
+          trailing={<StatusBadge status={student.status} />}
+          fields={[
+            { label: 'Class', value: student.class },
+            { label: 'GPA', value: student.gpa.toFixed(1) },
+            { label: 'Performance', value: <PerformanceBadge performance={student.performance} /> },
+            { label: 'Attendance', value: <AttendanceIndicator value={student.percentage} /> },
+          ]}
+          onClick={() => navigate(`/students/details/${student.id}`)}
+        />
+      )
+    },
+    [navigate],
+  )
 
   // Custom row renderer with click handler for navigation
   const renderRow = React.useCallback(
@@ -207,6 +273,9 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
       showToolbar={true}
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
+      renderMobileCard={renderMobileCard}
+      mobileEmptyMessage="No students match these filters."
+
       bodyProps={{
         renderRow,
       }}

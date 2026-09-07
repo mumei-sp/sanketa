@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
-import { colors, baseColors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
 import type { FeeTrendData } from '../types'
 import { useAcademicDates } from '@/hooks/use-academic-dates'

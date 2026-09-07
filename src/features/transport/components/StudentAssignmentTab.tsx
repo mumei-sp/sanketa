@@ -1,8 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
 import type { ColumnDef, Row } from '@tanstack/react-table'
-import { Search, Plus, Download, Upload } from 'lucide-react'
+import { Plus, Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+  TOOLBAR_PRIMARY_ACTION,
+} from '@/components/table'
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -22,7 +29,7 @@ import { generateCsv, downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
 import { mockStudentAssignments, mockRoutes, mockVehicles } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
-import { AssignStudentDialog } from './AssignStudentDialog'
+import { AssignStudentFormSheet } from './AssignStudentFormSheet'
 import type { StudentTransportAssignment } from '../types'
 
 type GroupBy = 'none' | 'route' | 'vehicle' | 'pickup-stop' | 'drop-stop'
@@ -32,7 +39,7 @@ export function StudentAssignmentTab() {
   const [searchQuery, setSearchQuery] = useState('')
   const [routeFilter, setRouteFilter] = useState<string>('all')
   const [groupBy, setGroupBy] = useState<GroupBy>('none')
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState<StudentTransportAssignment | null>(null)
   const [importOpen, setImportOpen] = useState(false)
 
@@ -205,7 +212,7 @@ export function StudentAssignmentTab() {
   const renderClickableRow = useCallback((row: Row<StudentTransportAssignment>) => (
     <tr
       key={row.id}
-      onClick={() => { setEditingAssignment(row.original); setDialogOpen(true) }}
+      onClick={() => { setEditingAssignment(row.original); setFormOpen(true) }}
       className="cursor-pointer hover:bg-muted/50 transition-colors"
     >
       {row.getVisibleCells().map(cell => (
@@ -225,74 +232,76 @@ export function StudentAssignmentTab() {
       background="default"
       borderRadius="lg"
       padding="p-4"
-      className="flex items-center justify-between gap-4 flex-wrap"
     >
-      <h2 className="text-page-title text-heading">Student Assignments</h2>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative min-w-[160px] max-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-          <Input
+      <ListToolbar
+        title={<h2 className="text-page-title text-heading">Student Assignments</h2>}
+        search={
+          <ListToolbarSearch
             placeholder="Search students"
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="h-8 w-full pl-10 bg-white"
+            onValueChange={setSearchQuery}
+            className="md:min-w-[160px] md:max-w-[300px]"
           />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Route:</span>
-          <Select value={routeFilter} onValueChange={setRouteFilter}>
-            <SelectTrigger
-              className="h-8 w-[160px]"
-              style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Routes</SelectItem>
-              {mockRoutes.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Group by:</span>
-          <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
-            <SelectTrigger
-              className="h-8 w-[140px]"
-              style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="route">Route</SelectItem>
-              <SelectItem value="vehicle">Vehicle</SelectItem>
-              <SelectItem value="pickup-stop">Pickup Stop</SelectItem>
-              <SelectItem value="drop-stop">Drop Stop</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Button variant="outline" onClick={handleExport} className="h-8 gap-1.5">
-          <Download className="size-3.5" />
-          Export
-        </Button>
-
-        <Button variant="outline" onClick={() => setImportOpen(true)} className="h-8 gap-1.5">
-          <Upload className="size-3.5" />
-          Import
-        </Button>
-
-        <Button
-          onClick={() => { setEditingAssignment(null); setDialogOpen(true) }}
-          className="h-8 bg-primary hover:bg-primary/90 text-foreground"
-        >
-          <Plus className="size-4" />
-          Assign Student
-        </Button>
-      </div>
+        }
+        filters={[
+          {
+            id: 'route',
+            label: 'Route',
+            inlineLabel: true,
+            isActive: routeFilter !== 'all',
+            control: (
+              <Select value={routeFilter} onValueChange={setRouteFilter}>
+                <SelectTrigger
+                  className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[160px]', TOOLBAR_FILTER_CONTROL)}
+                  style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Routes</SelectItem>
+                  {mockRoutes.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ),
+          },
+          {
+            id: 'groupBy',
+            label: 'Group by',
+            inlineLabel: true,
+            isActive: groupBy !== 'none',
+            control: (
+              <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
+                <SelectTrigger
+                  className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[140px]', TOOLBAR_FILTER_CONTROL)}
+                  style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="route">Route</SelectItem>
+                  <SelectItem value="vehicle">Vehicle</SelectItem>
+                  <SelectItem value="pickup-stop">Pickup Stop</SelectItem>
+                  <SelectItem value="drop-stop">Drop Stop</SelectItem>
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        secondaryActions={[
+          { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
+          { id: 'import', label: 'Import', icon: <Upload className="size-3.5" />, onSelect: () => setImportOpen(true) },
+        ]}
+        primaryAction={
+          <Button
+            onClick={() => { setEditingAssignment(null); setFormOpen(true) }}
+            className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
+          >
+            <Plus className="size-4" />
+            Assign Student
+          </Button>
+        }
+      />
     </Tile>
   )
 
@@ -323,7 +332,7 @@ export function StudentAssignmentTab() {
                 columns={groupedColumns}
                 data={items}
                 rowKey={a => a.id}
-                onRowClick={(a) => { setEditingAssignment(a); setDialogOpen(true) }}
+                onRowClick={(a) => { setEditingAssignment(a); setFormOpen(true) }}
               />
             </Tile>
           ))}
@@ -356,9 +365,9 @@ export function StudentAssignmentTab() {
         />
       )}
 
-      <AssignStudentDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+      <AssignStudentFormSheet
+        open={formOpen}
+        onOpenChange={setFormOpen}
         assignment={editingAssignment}
         onSave={handleSave}
       />

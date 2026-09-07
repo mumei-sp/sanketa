@@ -6,6 +6,7 @@ import { resolveScheduleForDay } from '../utils/timetable-helpers'
 import type { TimetableSlot, TimetableException, ResolvedSlot } from '../types'
 import type { PeriodDefinition } from '@/config/school-config'
 import { DAY_LABELS, DAY_SHORT_LABELS } from '../types'
+import { TimetableDayList } from './TimetableDayList'
 
 interface TimetableGridProps {
   periods: PeriodDefinition[]
@@ -17,10 +18,14 @@ interface TimetableGridProps {
 }
 
 /**
- * Bento-style timetable grid.
+ * Bento-style timetable.
  *
- * Subject slots are rounded colored cards. Break rows are pill badges.
- * Period labels are compact. Row gaps for breathing room.
+ * Desktop (`lg` and up) renders the weekly grid: subject slots are rounded
+ * colored cards, break rows are pill badges, period labels are compact.
+ *
+ * Below `lg` the same schedule renders as a single-day agenda — six columns of
+ * ~140px cannot fit a phone or a portrait tablet, and side-scrolling a matrix
+ * hides the day headings you are scrolling towards. See TimetableDayList.
  */
 export function TimetableGrid({
   periods,
@@ -43,7 +48,19 @@ export function TimetableGrid({
   }, [periods, slots, schoolDays, exceptions])
 
   return (
-    <div className="overflow-x-auto rounded-lg">
+    <>
+      {/* Phone / portrait tablet — one day at a time */}
+      <div className="lg:hidden">
+        <TimetableDayList
+          schoolDays={schoolDays}
+          resolvedDays={resolvedDays}
+          isEditMode={isEditMode}
+          onSlotClick={onSlotClick}
+        />
+      </div>
+
+      {/* Desktop — the full week */}
+      <div className="hidden overflow-x-auto rounded-lg lg:block">
       <table
         className="w-full border-separate"
         style={{
@@ -165,6 +182,7 @@ export function TimetableGrid({
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   )
 }

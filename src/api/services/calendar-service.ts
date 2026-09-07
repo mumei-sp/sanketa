@@ -10,7 +10,7 @@ import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
 import { mockCalendarEvents } from '@/mocks/calendar'
 import { categoryConfig } from '@/features/calendar/utils/category-config'
-import { baseColors, background } from '@/theme/colors'
+import { background } from '@/theme/colors'
 import type { CalendarEvent, EventCategory } from '@/features/calendar/types'
 import type { EventFormValues } from '@/features/calendar/schemas/event-schema'
 

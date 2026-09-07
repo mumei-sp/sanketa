@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { TextField, SelectField, DateField, TextareaField, SwitchField, GRID_COLS_2 } from '@/components/form/fields'
+import { TextField, SelectField, DateField, TextareaField, SwitchField, FORM_GRID_2 } from '@/components/form/fields'
 import { FormSection } from '@/components/form/FormSection'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -134,7 +134,7 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
                 required
                 disabled={isEditMode}
               />
-              <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+              <div className={cn('grid gap-4', FORM_GRID_2)}>
                 <SelectField
                   name="status"
                   control={control}
@@ -153,15 +153,19 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
                 />
               </div>
               {DATE_LABEL_OPTIONS.find(o => o.value === formValues.dateLabel)?.range ? (
-                <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-                  <SelectField
-                    name="dateLabel"
-                    control={control}
-                    label="Date Type"
-                    options={DATE_LABEL_OPTIONS}
-                    placeholder="Select date type"
-                    required
-                  />
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+                  {/* Date Type takes the full first line on a phone; the two
+                      dates pair up beneath it. */}
+                  <div className="max-sm:col-span-2">
+                    <SelectField
+                      name="dateLabel"
+                      control={control}
+                      label="Date Type"
+                      options={DATE_LABEL_OPTIONS}
+                      placeholder="Select date type"
+                      required
+                    />
+                  </div>
                   <DateField
                     name="dateValue"
                     control={control}
@@ -176,7 +180,7 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
                   />
                 </div>
               ) : (
-                <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+                <div className={cn('grid gap-4', FORM_GRID_2)}>
                   <SelectField
                     name="dateLabel"
                     control={control}

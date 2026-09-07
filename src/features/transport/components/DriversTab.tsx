@@ -1,7 +1,14 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Search, Plus, Download } from 'lucide-react'
+import { Plus, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+  TOOLBAR_PRIMARY_ACTION,
+} from '@/components/table'
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -10,7 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { TileWrapper, Tile } from '@/components/tile'
-import { Skeleton } from '@/components/ui/skeleton'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { text, accent } from '@/theme/colors'
 import { generateCsv, downloadCsv } from '@/lib/csv'
@@ -18,7 +24,7 @@ import { toast } from 'sonner'
 import { mockDrivers } from '@/mocks/transport'
 import { DRIVER_STATUS_OPTIONS } from '../constants'
 import { DriverCard } from './DriverCard'
-import { DriverDialog } from './DriverDialog'
+import { DriverFormSheet } from './DriverFormSheet'
 import type { TransportDriver } from '../types'
 
 export function DriversTab() {
@@ -27,7 +33,7 @@ export function DriversTab() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(8)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
   const [editingDriver, setEditingDriver] = useState<TransportDriver | null>(null)
 
   const filtered = useMemo(() => {
@@ -53,7 +59,7 @@ export function DriversTab() {
 
   const handleEdit = useCallback((driver: TransportDriver) => {
     setEditingDriver(driver)
-    setDialogOpen(true)
+    setFormOpen(true)
   }, [])
 
   const handleDelete = useCallback((id: string) => {
@@ -95,50 +101,52 @@ export function DriversTab() {
         background="default"
         borderRadius="lg"
         padding="p-4"
-        className="flex items-center justify-between gap-4 flex-wrap"
-      >
-        <h2 className="text-page-title text-heading">Drivers</h2>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative min-w-[160px] max-w-[300px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-            <Input
+        >
+        <ListToolbar
+          title={<h2 className="text-page-title text-heading">Drivers</h2>}
+          search={
+            <ListToolbarSearch
               placeholder="Search drivers"
               value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1) }}
-              className="h-8 w-full pl-10 bg-white"
+              onValueChange={v => { setCurrentPage(1); setSearchQuery(v) }}
+              className="md:min-w-[160px] md:max-w-[300px]"
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
-            <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1) }}>
-              <SelectTrigger
-                className="h-8 w-[120px]"
-                style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {DRIVER_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button variant="outline" onClick={handleExport} className="h-8 gap-1.5">
-            <Download className="size-3.5" />
-            Export
-          </Button>
-
-          <Button
-            onClick={() => { setEditingDriver(null); setDialogOpen(true) }}
-            className="h-8 bg-primary hover:bg-primary/90 text-foreground"
-          >
-            <Plus className="size-4" />
-            Add Driver
-          </Button>
-        </div>
+          }
+          filters={[
+            {
+              id: 'status',
+              label: 'Status',
+              inlineLabel: true,
+              isActive: statusFilter !== 'all',
+              control: (
+                <Select value={statusFilter} onValueChange={v => { setCurrentPage(1); setStatusFilter(v) }}>
+                  <SelectTrigger
+                    className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}
+                    style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {DRIVER_STATUS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ]}
+          secondaryActions={[
+            { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
+          ]}
+          primaryAction={
+            <Button
+              onClick={() => { setEditingDriver(null); setFormOpen(true) }}
+              className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
+            >
+              <Plus className="size-4" />
+              Add Driver
+            </Button>
+          }
+        />
       </Tile>
 
       {/* Driver Cards Grid */}
@@ -174,9 +182,9 @@ export function DriversTab() {
         </>
       )}
 
-      <DriverDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+      <DriverFormSheet
+        open={formOpen}
+        onOpenChange={setFormOpen}
         driver={editingDriver}
         onSave={handleSave}
       />

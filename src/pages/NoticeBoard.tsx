@@ -1,6 +1,13 @@
 import * as React from 'react'
 import PageHeader from '@/components/layout/PageHeader'
 import {
+  ListToolbar,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+  TOOLBAR_PRIMARY_ACTION,
+} from '@/components/table'
+import { cn } from '@/lib/utils'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -10,7 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Tile } from '@/components/tile'
-import { baseColors, text } from '@/theme/colors'
+import { text } from '@/theme/colors'
 import { useIsDesktop } from '@/hooks/use-mobile'
 import { ClipboardList, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -331,58 +338,76 @@ export default function NoticeBoard() {
               shadowed={false}
               padding="p-3"
             >
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <h2 className="text-section-title" style={{ color: 'var(--heading)' }}>
-                  Notice Board
-                </h2>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger
-                      className="h-8 w-[140px]"
-                      style={{
-                        backgroundColor: 'var(--accent)',
-                        color: text.heading,
-                        borderColor: 'var(--accent)',
-                      }}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by</span>
-                    <Select value={sortOption} onValueChange={v => setSortOption(v as SortOption)}>
-                      <SelectTrigger
-                        className="h-8 w-[100px]"
-                        style={{
-                          backgroundColor: 'var(--accent)',
-                          color: text.heading,
-                          borderColor: 'var(--accent)',
-                        }}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="latest">Latest</SelectItem>
-                        <SelectItem value="oldest">Oldest</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button size="sm" className="gap-1.5 ml-2 h-8 px-4 font-semibold text-sm" onClick={() => { setSelectedNotice(null); setIsCreateOpen(true) }}>
+              <ListToolbar
+                title={
+                  <h2 className="text-section-title" style={{ color: 'var(--heading)' }}>
+                    Notice Board
+                  </h2>
+                }
+                filters={[
+                  {
+                    id: 'category',
+                    label: 'Category',
+                    isActive: categoryFilter !== 'all',
+                    control: (
+                      <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <SelectTrigger
+                          className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[140px]', TOOLBAR_FILTER_CONTROL)}
+                          style={{
+                            backgroundColor: 'var(--accent)',
+                            color: text.heading,
+                            borderColor: 'var(--accent)',
+                          }}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {CATEGORIES.map(cat => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ),
+                  },
+                  {
+                    id: 'sort',
+                    label: 'Sort by',
+                    inlineLabel: true,
+                    isActive: sortOption !== 'latest',
+                    control: (
+                      <Select value={sortOption} onValueChange={v => setSortOption(v as SortOption)}>
+                        <SelectTrigger
+                          className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[100px]', TOOLBAR_FILTER_CONTROL)}
+                          style={{
+                            backgroundColor: 'var(--accent)',
+                            color: text.heading,
+                            borderColor: 'var(--accent)',
+                          }}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="latest">Latest</SelectItem>
+                          <SelectItem value="oldest">Oldest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ),
+                  },
+                ]}
+                primaryAction={
+                  <Button
+                    size="sm"
+                    className={cn(TOOLBAR_PRIMARY_ACTION, 'gap-1.5 px-4 font-semibold text-sm md:ml-2')}
+                    onClick={() => { setSelectedNotice(null); setIsCreateOpen(true) }}
+                  >
                     <Plus className="size-4" />
                     Create
                   </Button>
-                </div>
-              </div>
+                }
+              />
             </Tile>
 
             {/* Notice cards */}

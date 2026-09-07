@@ -1,5 +1,5 @@
 import { GraduationCap, Users, UserCog, Award } from 'lucide-react'
-import { baseColors, status } from '@/theme/colors'
+import { status } from '@/theme/colors'
 import type {
   DashboardStat,
   PerformanceDataset,

@@ -5,7 +5,7 @@ import { SectionCard } from '@/components/ui/section-card'
 import { CompactTable, type CompactTableColumn } from '@/components/ui/compact-table'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, accent } from '@/theme/colors'
+import { text } from '@/theme/colors'
 import type { StudentActivity } from '../types'
 
 interface StudentExtracurricularProps {
@@ -71,7 +71,7 @@ function getColumns(onDelete?: (id: string) => void): CompactTableColumn<Student
       render: (activity) => (
         <button
           type="button"
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50"
+          className="opacity-0 touch:opacity-100 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50"
           onClick={e => { e.stopPropagation(); onDelete(activity.id) }}
           aria-label={`Delete ${activity.club}`}
         >

@@ -3,7 +3,6 @@ import type { LucideIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
 import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
-import { baseColors } from '@/theme/colors'
 import type { RecentActivityItem } from '../types'
 
 const iconMap: Record<string, LucideIcon> = {
@@ -40,7 +39,7 @@ export function RecentActivity({ items, isLoading = false }: RecentActivityProps
         <CardHeader className="flex-shrink-0 pb-2">
           <h3 className="text-section-title">Recent Activity</h3>
           <CardAction>
-            <button className="p-1 rounded-md hover:bg-accent transition-colors">
+            <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
               <Ellipsis className="w-4 h-4 text-muted-foreground" />
             </button>
           </CardAction>

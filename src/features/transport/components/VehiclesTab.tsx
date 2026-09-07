@@ -1,7 +1,14 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Search, Plus, Download } from 'lucide-react'
+import { Plus, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+  TOOLBAR_PRIMARY_ACTION,
+} from '@/components/table'
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -17,7 +24,7 @@ import { toast } from 'sonner'
 import { mockVehicles } from '@/mocks/transport'
 import { VEHICLE_STATUS_OPTIONS } from '../constants'
 import { VehicleCard } from './VehicleCard'
-import { VehicleDialog } from './VehicleDialog'
+import { VehicleFormSheet } from './VehicleFormSheet'
 import type { Vehicle } from '../types'
 
 export function VehiclesTab() {
@@ -26,7 +33,7 @@ export function VehiclesTab() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(8)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
 
   const filtered = useMemo(() => {
@@ -53,7 +60,7 @@ export function VehiclesTab() {
 
   const handleEdit = useCallback((vehicle: Vehicle) => {
     setEditingVehicle(vehicle)
-    setDialogOpen(true)
+    setFormOpen(true)
   }, [])
 
   const handleDelete = useCallback((id: string) => {
@@ -96,50 +103,52 @@ export function VehiclesTab() {
         background="default"
         borderRadius="lg"
         padding="p-4"
-        className="flex items-center justify-between gap-4 flex-wrap"
-      >
-        <h2 className="text-page-title text-heading">Vehicles</h2>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative min-w-[160px] max-w-[300px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-            <Input
+        >
+        <ListToolbar
+          title={<h2 className="text-page-title text-heading">Vehicles</h2>}
+          search={
+            <ListToolbarSearch
               placeholder="Search vehicles"
               value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1) }}
-              className="h-8 w-full pl-10 bg-white"
+              onValueChange={v => { setCurrentPage(1); setSearchQuery(v) }}
+              className="md:min-w-[160px] md:max-w-[300px]"
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
-            <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1) }}>
-              <SelectTrigger
-                className="h-8 w-[150px]"
-                style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {VEHICLE_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button variant="outline" onClick={handleExport} className="h-8 gap-1.5">
-            <Download className="size-3.5" />
-            Export
-          </Button>
-
-          <Button
-            onClick={() => { setEditingVehicle(null); setDialogOpen(true) }}
-            className="h-8 bg-primary hover:bg-primary/90 text-foreground"
-          >
-            <Plus className="size-4" />
-            Add Vehicle
-          </Button>
-        </div>
+          }
+          filters={[
+            {
+              id: 'status',
+              label: 'Status',
+              inlineLabel: true,
+              isActive: statusFilter !== 'all',
+              control: (
+                <Select value={statusFilter} onValueChange={v => { setCurrentPage(1); setStatusFilter(v) }}>
+                  <SelectTrigger
+                    className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[150px]', TOOLBAR_FILTER_CONTROL)}
+                    style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {VEHICLE_STATUS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ]}
+          secondaryActions={[
+            { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
+          ]}
+          primaryAction={
+            <Button
+              onClick={() => { setEditingVehicle(null); setFormOpen(true) }}
+              className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
+            >
+              <Plus className="size-4" />
+              Add Vehicle
+            </Button>
+          }
+        />
       </Tile>
 
       {/* Vehicle Cards Grid */}
@@ -175,9 +184,9 @@ export function VehiclesTab() {
         </>
       )}
 
-      <VehicleDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+      <VehicleFormSheet
+        open={formOpen}
+        onOpenChange={setFormOpen}
         vehicle={editingVehicle}
         onSave={handleSave}
       />

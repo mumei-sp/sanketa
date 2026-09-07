@@ -1,5 +1,5 @@
 import { categoryConfig } from '@/features/calendar/utils/category-config'
-import { baseColors, background } from '@/theme/colors'
+import { background } from '@/theme/colors'
 import type { CalendarEvent, EventCategory, EventPriority, EventReminder } from '@/features/calendar/types'
 
 /**

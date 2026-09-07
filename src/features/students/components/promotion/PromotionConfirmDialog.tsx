@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { text, border, accent, background, status as statusColors } from '@/theme/colors'
+import { text, border, background, status as statusColors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import type { PromotionCandidate } from '../../types/promotion'
 

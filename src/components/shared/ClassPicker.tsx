@@ -44,7 +44,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getUniqueGrades, getGroupedByGrade } from '@/utils/class-section-helpers'
 import { useClassPick } from '@/hooks/use-class-pick'
-import { colors, withOpacity, baseColors } from '@/theme/colors'
+import { colors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 
 // ============================================================================
@@ -863,7 +863,9 @@ export function ClassPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center justify-center rounded-md transition-colors cursor-pointer"
+        // tap-area, not tap-target: this trigger nests inside 36px toolbar pills,
+        // so it must keep its 28px box and grow only its hit region.
+        className="tap-area flex items-center justify-center rounded-md transition-colors cursor-pointer"
         style={{
           width: 28,
           height: 28,

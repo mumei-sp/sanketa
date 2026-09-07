@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import type { Expense, ExpenseCategory } from '@/features/expenses/types'
-import { baseColors } from '@/theme/colors'
 
 const CATEGORY_DOT_COLORS: Record<ExpenseCategory, string> = {
   Salaries: 'var(--heading)',
@@ -9,6 +8,22 @@ const CATEGORY_DOT_COLORS: Record<ExpenseCategory, string> = {
   Maintenance: '#94A3B8',
   Events: '#A5D6A7',
   Others: '#E0E0E0',
+}
+
+/**
+ * Colour-dot + label for an expense category. Exported so the narrow-viewport
+ * card list renders the same tag as the table column.
+ */
+export function ExpenseCategoryTag({ category }: { category: ExpenseCategory }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="w-2 h-2 rounded-full flex-shrink-0"
+        style={{ backgroundColor: CATEGORY_DOT_COLORS[category] || '#E0E0E0' }}
+      />
+      <span className="text-xs">{category}</span>
+    </div>
+  )
 }
 
 export const expenseColumns: ColumnDef<Expense>[] = [
@@ -41,18 +56,7 @@ export const expenseColumns: ColumnDef<Expense>[] = [
   {
     accessorKey: 'category',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Category" />,
-    cell: ({ row }) => {
-      const category = row.original.category
-      return (
-        <div className="flex items-center gap-2">
-          <div
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ backgroundColor: CATEGORY_DOT_COLORS[category] || '#E0E0E0' }}
-          />
-          <span className="text-xs">{category}</span>
-        </div>
-      )
-    },
+    cell: ({ row }) => <ExpenseCategoryTag category={row.original.category} />,
     enableSorting: true,
     filterFn: (row, _id, value) => {
       if (value === 'all' || !value) return true

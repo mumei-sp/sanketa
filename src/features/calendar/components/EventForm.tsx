@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { TextField, SelectField, DateField, TextareaField, SwitchField, GRID_COLS_2 } from '@/components/form/fields'
+import { TextField, SelectField, DateField, TextareaField, SwitchField, FORM_GRID_2 } from '@/components/form/fields'
 import { FormSection } from '@/components/form/FormSection'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -86,7 +86,7 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
               rows={3}
               textareaClassName="field-sizing-fixed min-h-[80px]"
             />
-            <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+            <div className={cn('grid gap-4', FORM_GRID_2)}>
               <SelectField
                 name="category"
                 control={control}
@@ -117,13 +117,17 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
               label="All-day event"
               description="Toggle for events without specific start/end times"
             />
-            <div className="grid gap-4" style={{ gridTemplateColumns: isAllDay ? '1fr' : '1fr 1fr 1fr' }}>
-              <DateField
-                name="date"
-                control={control}
-                label="Date"
-                required
-              />
+            <div className={cn('grid gap-4', isAllDay ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3')}>
+              {/* Date takes the full first line on a phone; the two times pair
+                  up beneath it. Three across leaves ~100px each and overflows. */}
+              <div className={cn(!isAllDay && 'max-sm:col-span-2')}>
+                <DateField
+                  name="date"
+                  control={control}
+                  label="Date"
+                  required
+                />
+              </div>
               {!isAllDay && (
                 <>
                   <TimeField name="startTime" control={control} label="Start Time" required />
@@ -146,7 +150,7 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
             description="Additional event information"
             width={12}
           >
-            <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+            <div className={cn('grid gap-4', FORM_GRID_2)}>
               <TextField
                 name="location"
                 control={control}

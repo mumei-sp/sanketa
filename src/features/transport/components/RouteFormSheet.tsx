@@ -2,13 +2,7 @@ import { useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet'
+import { FormSheet } from '@/components/form/FormSheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -45,19 +39,26 @@ const routeSchema = z.object({
   stops: z.array(stopSchema).min(1, 'At least one stop is required'),
 })
 
-type RouteFormValues = z.infer<typeof routeSchema>
+/**
+ * `z.coerce.number()` takes unknown input and yields a number, so the schema's
+ * input and output types differ. React Hook Form models that with a third
+ * generic: the fields are typed by the schema input, the submit handler by the
+ * validated output.
+ */
+type RouteFormInput = z.input<typeof routeSchema>
+type RouteFormValues = z.output<typeof routeSchema>
 
-interface RouteDialogProps {
+interface RouteFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   route?: TransportRoute | null
   onSave: (data: Partial<TransportRoute>) => void
 }
 
-export function RouteDialog({ open, onOpenChange, route, onSave }: RouteDialogProps) {
+export function RouteFormSheet({ open, onOpenChange, route, onSave }: RouteFormSheetProps) {
   const isEdit = !!route
 
-  const form = useForm<RouteFormValues>({
+  const form = useForm<RouteFormInput, unknown, RouteFormValues>({
     resolver: zodResolver(routeSchema),
     defaultValues: {
       name: '', code: '', startLocation: 'School Campus', endLocation: '',
@@ -108,14 +109,14 @@ export function RouteDialog({ open, onOpenChange, route, onSave }: RouteDialogPr
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[640px] p-0 gap-0 overflow-y-auto">
-        <SheetHeader className="px-6 pt-6 pb-0">
-          <SheetTitle>{isEdit ? 'Edit Route' : 'Add Route'}</SheetTitle>
-        </SheetHeader>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-          <div className="px-6 py-4 space-y-4">
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? 'Edit Route' : 'Add Route'}
+      onSubmit={form.handleSubmit(onSubmit)}
+      submitLabel={isEdit ? 'Update Route' : 'Add Route'}
+      size="xl"
+    >
             {/* Route Information */}
             <FormSection title="Route Information" description="Basic route details" width={12}>
               <div className="grid grid-cols-2 gap-4">
@@ -204,8 +205,9 @@ export function RouteDialog({ open, onOpenChange, route, onSave }: RouteDialogPr
 
             {/* Stops */}
             <FormSection title="Stops" description="Define route stops in order" width={12}>
-              {/* Header row */}
-              <div className="flex items-center gap-2 px-2">
+              {/* Header row — the columns only exist from `md`, where the row
+                  is laid out side by side. */}
+              <div className="hidden items-center gap-2 px-2 md:flex">
                 <span className="w-5 shrink-0" />
                 <span className="flex-1 text-xs font-medium text-muted-foreground">Stop Name</span>
                 <span className="w-[110px] text-xs font-medium text-muted-foreground">Pickup</span>
@@ -214,16 +216,35 @@ export function RouteDialog({ open, onOpenChange, route, onSave }: RouteDialogPr
               </div>
               <div className="space-y-2">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                  /* Name + two times + delete need ~300px of fixed width, which
+                     leaves the name input 4px on a phone. Below `md` the times
+                     wrap onto their own line under the name. */
+                  <div key={field.id} className="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-muted/30">
                     <span className="text-xs text-muted-foreground w-5 shrink-0 text-center">{index + 1}.</span>
-                    <Input {...form.register(`stops.${index}.name`)} placeholder="Stop name" className="h-8 flex-1" />
-                    <Input type="time" {...form.register(`stops.${index}.pickupTime`)} className="h-8 w-[110px]" />
-                    <Input type="time" {...form.register(`stops.${index}.dropTime`)} className="h-8 w-[110px]" />
-                    {fields.length > 1 ? (
-                      <Button type="button" variant="ghost" size="icon" className="size-7 text-destructive shrink-0" onClick={() => remove(index)}>
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    ) : <span className="size-7 shrink-0" />}
+                    <Input
+                      {...form.register(`stops.${index}.name`)}
+                      placeholder="Stop name"
+                      className="h-8 min-w-0 flex-1"
+                    />
+                    <div className="flex items-center gap-2 max-md:w-full max-md:pl-7">
+                      <Input
+                        type="time"
+                        aria-label={`Stop ${index + 1} pickup time`}
+                        {...form.register(`stops.${index}.pickupTime`)}
+                        className="h-8 min-w-0 flex-1 md:w-[110px] md:flex-none"
+                      />
+                      <Input
+                        type="time"
+                        aria-label={`Stop ${index + 1} drop time`}
+                        {...form.register(`stops.${index}.dropTime`)}
+                        className="h-8 min-w-0 flex-1 md:w-[110px] md:flex-none"
+                      />
+                      {fields.length > 1 ? (
+                        <Button type="button" variant="ghost" size="icon" className="size-7 text-destructive shrink-0" onClick={() => remove(index)}>
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      ) : <span className="size-7 shrink-0" />}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -234,16 +255,6 @@ export function RouteDialog({ open, onOpenChange, route, onSave }: RouteDialogPr
                 <p className="text-xs text-destructive">{form.formState.errors.stops.message || form.formState.errors.stops.root?.message}</p>
               )}
             </FormSection>
-          </div>
-
-          <SheetFooter className="px-6 py-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-foreground">
-              {isEdit ? 'Update Route' : 'Add Route'}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+    </FormSheet>
   )
 }

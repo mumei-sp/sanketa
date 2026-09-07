@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Settings } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { text, colors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
 import { CountUp } from '@/components/shared/CountUp'
@@ -89,7 +89,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
         <button
           type="button"
           onClick={() => setCustomizeOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
+          className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
           style={{
             color: 'var(--heading)',
             backgroundColor: colors.accent.soft,

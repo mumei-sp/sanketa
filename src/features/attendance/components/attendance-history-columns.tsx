@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Pencil, AlertTriangle } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
-import { colors, darken, baseColors } from '@/theme/colors'
 import type { AttendanceHistoryRow } from '../types'
 
 /** Format a YYYY-MM-DD date for display */

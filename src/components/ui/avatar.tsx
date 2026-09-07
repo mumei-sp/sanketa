@@ -5,7 +5,10 @@ const Avatar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElem
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('relative flex shrink-0 overflow-hidden rounded-full', className)}
+      className={cn(
+        'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full',
+        className,
+      )}
       {...props}
     />
   ),
@@ -31,7 +34,13 @@ const AvatarImage = React.forwardRef<HTMLImageElement, React.ImgHTMLAttributes<H
     return (
       <img
         ref={ref}
-        className={cn('aspect-square h-full w-full', (!loaded || error) && 'hidden', className)}
+        // Sits above the fallback (which is absolutely positioned) so a loaded
+        // photo covers the initials rather than sitting beside them.
+        className={cn(
+          'relative z-10 aspect-square h-full w-full',
+          (!loaded || error) && 'hidden',
+          className,
+        )}
         src={src}
         onLoad={() => setLoaded(true)}
         onError={() => {
@@ -49,8 +58,10 @@ const AvatarFallback = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTM
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
+      // Absolute so it never takes flow space next to the image: as a flex
+      // sibling it pushed the initials out past the avatar's clipped bounds.
       className={cn(
-        'flex h-full w-full items-center justify-center rounded-full bg-muted',
+        'absolute inset-0 flex h-full w-full items-center justify-center rounded-full bg-muted',
         className,
       )}
       {...props}

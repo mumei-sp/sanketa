@@ -300,6 +300,14 @@ export const statusVivid = {
 
 export type StatusVividKey = keyof typeof statusVivid
 
+/**
+ * One entry of the vivid status palette — a pill background plus its paired
+ * foreground. `statusVivid` is `as const`, so `typeof statusVivid.success`
+ * narrows to that one entry's literal hexes; use this union whenever a map is
+ * keyed by something other than the palette's own keys.
+ */
+export type StatusVividTone = (typeof statusVivid)[StatusVividKey]
+
 // ============================================================================
 // Delete / Destructive Action Colors
 // ============================================================================

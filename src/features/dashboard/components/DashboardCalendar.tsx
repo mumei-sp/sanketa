@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Tile } from '@/components/tile'
 import { cn } from '@/lib/utils'
-import { baseColors, status } from '@/theme/colors'
+import { status } from '@/theme/colors'
 
 export interface HighlightedDate {
   day: number

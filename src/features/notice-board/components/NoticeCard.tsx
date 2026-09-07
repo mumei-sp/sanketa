@@ -1,6 +1,6 @@
 import { Calendar, Pin, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { baseColors, statusVivid } from '@/theme/colors'
+import { statusVivid } from '@/theme/colors'
 import type { NoticeBoardEntry, NoticeStatus } from '../types'
 
 const statusStyles: Record<NoticeStatus, { bg: string; text: string }> = {
@@ -28,7 +28,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
       onClick={() => onClick(notice)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notice) }}
       className={cn(
-        'group/notice relative w-full flex items-center gap-4 px-4 py-3 rounded-lg border bg-card text-left transition-colors hover:bg-muted/50 cursor-pointer',
+        'group/notice relative w-full flex items-start gap-3 px-3 py-3 rounded-lg border bg-card text-left transition-colors hover:bg-muted/50 cursor-pointer md:items-center md:gap-4 md:px-4',
         isSelected && 'ring-2 ring-[color:var(--primary)] bg-[color:color-mix(in_srgb,var(--primary)_15%,var(--card))]',
       )}
     >
@@ -40,10 +40,10 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
           onTogglePin?.(notice.id)
         }}
         className={cn(
-          'absolute top-2 right-2 size-7 flex items-center justify-center rounded-md transition-all cursor-pointer z-10',
+          'tap-area absolute top-2 right-2 size-7 flex items-center justify-center rounded-md transition-all cursor-pointer z-10',
           notice.pinned
             ? 'opacity-100'
-            : 'opacity-0 group-hover/notice:opacity-100 hover:bg-muted',
+            : 'opacity-0 touch:opacity-100 group-hover/notice:opacity-100 hover:bg-muted',
         )}
         aria-label={notice.pinned ? 'Unpin notice' : 'Pin notice'}
       >
@@ -60,7 +60,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
       <img
         src={notice.thumbnail}
         alt=""
-        className="size-36 rounded-lg object-cover flex-shrink-0"
+        className="size-20 rounded-lg object-cover flex-shrink-0 md:size-28 lg:size-36"
       />
 
       {/* Main info */}
@@ -80,21 +80,21 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
 
         {/* Title */}
         <h3
-          className="text-body font-semibold truncate"
+          className="text-body font-semibold line-clamp-2 lg:truncate"
           style={{ color: 'var(--heading)' }}
         >
           {notice.title}
         </h3>
 
         {/* Audience */}
-        <div className="flex items-center gap-1 text-caption text-muted-foreground">
-          <Users className="size-3 flex-shrink-0" />
-          <span className="truncate">{notice.audience}</span>
+        <div className="flex items-start gap-1 text-caption text-muted-foreground">
+          <Users className="mt-0.5 size-3 flex-shrink-0" />
+          <span className="line-clamp-2 lg:truncate">{notice.audience}</span>
         </div>
       </div>
 
       {/* Dates - stacked vertically with labels */}
-      <div className="hidden md:flex flex-col gap-1.5 flex-shrink-0 text-caption text-muted-foreground w-[260px]">
+      <div className="hidden md:flex flex-col gap-1.5 flex-shrink-0 text-caption text-muted-foreground w-[200px] lg:w-[260px]">
         <span className="flex items-center gap-1.5 whitespace-nowrap">
           <Calendar className="size-3 flex-shrink-0" />
           <span className="w-[80px] flex-shrink-0 truncate">{notice.dateLabel || 'Exp. Date'}</span>
@@ -112,7 +112,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
       </div>
 
       {/* Created By - stacked with label */}
-      <div className="hidden md:flex flex-col gap-0.5 flex-shrink-0 text-caption text-muted-foreground w-[120px]">
+      <div className="hidden lg:flex flex-col gap-0.5 flex-shrink-0 text-caption text-muted-foreground w-[120px]">
         <span>Created By</span>
         <span className="font-medium truncate" style={{ color: 'var(--heading)' }}>
           {notice.createdBy}
@@ -121,7 +121,7 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
 
       {/* Status badge */}
       <span
-        className="text-badge py-1 rounded-full flex-shrink-0 w-[85px] text-center truncate"
+        className="text-badge px-2.5 py-1 rounded-full flex-shrink-0 text-center lg:w-[85px] lg:px-0"
         style={{ backgroundColor: status.bg, color: status.text }}
       >
         {notice.status}

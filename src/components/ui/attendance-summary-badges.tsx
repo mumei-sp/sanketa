@@ -1,6 +1,5 @@
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text } from '@/theme/colors'
 
 export interface AttendanceBadgeItem {
   label: string

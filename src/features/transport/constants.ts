@@ -1,4 +1,4 @@
-import { status, statusVivid } from '@/theme/colors'
+import { statusVivid } from '@/theme/colors'
 import type { StatusPillConfig } from '@/components/ui/status-pill'
 
 // Re-export for backwards compatibility within transport module.
@@ -70,19 +70,29 @@ export const ALERT_SEVERITY_COLORS: Record<string, StatusPillConfig> = {
 // Chart colors
 // ============================================================================
 
+/**
+ * Chart fills are brand-led, matching the other donuts in the app
+ * (DepartmentChart, ExpenseBreakdownChart, StudentsByGenderChart): navy →
+ * pink → blue, then soft pastels, with grey for the inert slice.
+ *
+ * Deliberately NOT the semantic green/amber/red of `status` — those saturated
+ * hues made Transport read as a different product. Status *pills* still use
+ * the semantic palette (see VEHICLE_STATUS_COLORS above); it is only the
+ * chart fills that follow the brand ramp.
+ */
 export const VEHICLE_STATUS_CHART_COLORS: Record<string, string> = {
-  Active: status.success.base,
-  'Under Maintenance': status.warning.base,
-  Inactive: status.danger.base,
+  Active: 'var(--heading)',
+  'Under Maintenance': 'var(--primary)',
+  Inactive: '#E0E0E0',
 }
 
 export const ROUTE_CHART_COLORS = [
   'var(--primary)',
   'var(--accent)',
-  status.success.base,
-  status.info.base,
-  status.warning.base,
-  status.danger.soft,
+  'var(--heading)',
+  '#A5D6A7',
+  '#90CAF9',
+  '#CE93D8',
   'color-mix(in srgb, var(--primary) 55%, white)',
   'color-mix(in srgb, var(--accent) 55%, white)',
 ]

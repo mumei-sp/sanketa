@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import type { AttendanceRecordType } from '../types'
 import type { AttendanceStatistics } from '../utils/attendance-stats'
 import { AttendanceTrendIcon } from './AttendanceTrendIcon'
-import { baseColors, colors, withOpacity } from '@/theme/colors'
+import { colors, withOpacity } from '@/theme/colors'
 
 interface AttendanceSummaryCardProps {
   type: AttendanceRecordType
@@ -94,7 +94,7 @@ function ColoredSection({
         {config.title}
       </h3>
 
-      <div className="flex items-baseline gap-2 mb-1 relative z-10">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1 relative z-10">
         <span className="text-numeric text-2xl">
           {formatNumber(statistics.totalPresent)}
         </span>

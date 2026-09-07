@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { CountUp } from '@/components/shared/CountUp'
-import { text, withOpacity, baseColors } from '@/theme/colors'
+import { text, withOpacity } from '@/theme/colors'
 
 interface StudentStatCardProps {
   label: string
@@ -35,7 +35,7 @@ export function StudentStatCard({
     >
       {/* Action slot — top-left, visible on card hover */}
       {action && (
-        <div className="absolute top-2 left-2 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200">
+        <div className="absolute top-2 left-2 opacity-0 touch:opacity-100 group-hover/card:opacity-100 transition-opacity duration-200">
           {action}
         </div>
       )}

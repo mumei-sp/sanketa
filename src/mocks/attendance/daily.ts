@@ -11,6 +11,8 @@ import type {
   ClassRosterStudent,
   MarkableAttendanceStatus,
 } from '@/features/attendance/types'
+import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { fullName } from '@/mocks/_shared/fake'
 
 // ============================================================================
 // Class Rosters
@@ -62,8 +64,41 @@ const class7ARoster: ClassRosterStudent[] = [
   { id: 'stu-7a-12', name: 'Sebastian Parker', rollNumber: '12', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sebastian' },
 ]
 
-/** All class rosters keyed by class ID */
+/**
+ * Build a deterministic roster for a class that has no hand-authored one.
+ *
+ * The school config defines every class section (1A through 10B); only three
+ * of them were written out by hand here, so picking any other class in the
+ * daily-attendance screen threw `Class "1A" not found`. Seeding off the class
+ * label keeps each generated roster stable across reloads.
+ */
+function generateClassRoster(classLabel: string): ClassRosterStudent[] {
+  const labelSeed = [...classLabel].reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7)
+  const size = 10 + (labelSeed % 6) // 10–15 students
+  const slug = classLabel.toLowerCase()
+
+  return Array.from({ length: size }, (_, i) => {
+    const rollNumber = String(i + 1).padStart(2, '0')
+    const name = fullName(labelSeed + i * 101)
+    return {
+      id: `stu-${slug}-${rollNumber}`,
+      name,
+      rollNumber,
+      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
+    }
+  })
+}
+
+/**
+ * All class rosters keyed by class ID.
+ *
+ * The three hand-authored rosters win; every other section in the school
+ * config gets a generated one so no class in the picker is ever missing.
+ */
 export const classRosters: Record<string, ClassRosterStudent[]> = {
+  ...Object.fromEntries(
+    DEFAULT_CLASS_SECTIONS.map(section => [section.label, generateClassRoster(section.label)]),
+  ),
   '9A': class9ARoster,
   '8B': class8BRoster,
   '7A': class7ARoster,

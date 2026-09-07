@@ -1,11 +1,13 @@
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
+import { cn } from '@/lib/utils'
 import {
   TextField,
   DateField,
   ProfilePhotoUploadField,
   SegmentedRadioField,
-  GRID_COLS_3,
+  FORM_GRID_3,
+  FORM_GRID_3_SPAN_2,
 } from '@/components/form/fields'
 import type { TeacherFormValues } from '../../schemas/teacher-schema'
 
@@ -27,7 +29,7 @@ export function PersonalInfoSection({ control, width }: PersonalInfoSectionProps
       width={width}
     >
       {/* Teacher ID, First Name and Last Name */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_3 }}>
+      <div className={cn('grid gap-4', FORM_GRID_3)}>
         <TextField
           name="employmentInfo.teacherId"
           control={control}
@@ -49,8 +51,8 @@ export function PersonalInfoSection({ control, width }: PersonalInfoSectionProps
       </div>
 
       {/* Full Name and Date of Birth */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_3 }}>
-        <div className="col-span-2">
+      <div className={cn('grid gap-4', FORM_GRID_3)}>
+        <div className={FORM_GRID_3_SPAN_2}>
           <TextField
             name="personalInfo.preferredName"
             control={control}

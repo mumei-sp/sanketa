@@ -4,8 +4,14 @@ export type Breakpoint = 'sm' | 'md' | 'lg' | 'xl'
 /**
  * Responsive value: plain value (all breakpoints) or object with breakpoint overrides.
  * Example: { default: 12, md: 8, lg: 6 } → "col-span-12 md:col-span-8 lg:col-span-6"
+ *
+ * `default` is optional so a constraint can start at a breakpoint rather than
+ * at the base. That matters for grid placement: forcing `{ default: 1 }` onto
+ * `rowStart`/`rowEnd` just to satisfy the type stacks every tile into row 1 on
+ * mobile, which collapses them on top of one another. Write `{ lg: 2 }` when a
+ * value should only apply from `lg` up.
  */
-export type ResponsiveValue<T> = T | ({ default: T } & Partial<Record<Breakpoint, T>>)
+export type ResponsiveValue<T> = T | Partial<Record<Breakpoint | 'default', T>>
 
 // ── Col-span (Tile width in grid mode) ──────────────────────────────────
 

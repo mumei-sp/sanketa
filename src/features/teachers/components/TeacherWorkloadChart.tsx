@@ -11,7 +11,7 @@ import {
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, accent, primary, border, background } from '@/theme/colors'
+import { text, border, background } from '@/theme/colors'
 import type { WorkloadDataPoint } from '../types/teacher-detail'
 
 const PERIODS = ['Last 8 months', 'Last 6 months', 'Last 3 months', 'This month']

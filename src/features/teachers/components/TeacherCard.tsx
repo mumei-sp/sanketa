@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Phone, Mail, MessageCircle, Pencil, Trash2 } from 'lucide-react'
-import { primary, accent, text, baseColors, status } from '@/theme/colors'
+import { primary, accent, status } from '@/theme/colors'
 import { Tile } from '@/components/tile'
 import type { Teacher } from '../types'
 import { getDisplayName, formatPhone } from '../utils/formatting'
@@ -80,7 +80,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
           {onEdit && (
             <button
               onClick={e => { e.stopPropagation(); onEdit(teacher) }}
-              className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+              className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
               style={{ backgroundColor: accent.soft }}
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--accent)' }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
@@ -94,7 +94,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
               <AlertDialogTrigger asChild>
                 <button
                   onClick={e => e.stopPropagation()}
-                  className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
+                  className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
                   style={{ backgroundColor: accent.soft }}
                   onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}
                   onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
@@ -137,7 +137,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
       {/* Profile Header */}
       <div className="flex items-center gap-3">
         <Avatar
-          className="w-12 h-12 shrink-0"
+          className="size-12 shrink-0"
           style={{ backgroundColor: primary.soft }}
         >
           <AvatarImage
@@ -188,13 +188,13 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
       <div className="flex items-center justify-between pt-3 border-t border-border/50">
         <div className="flex items-center gap-2">
           {/* Phone & MessageCircle: visible on tablet/mobile, hidden on desktop */}
-          <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
+          <button onClick={e => e.stopPropagation()} className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
             <Phone className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
-          <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
+          <button onClick={e => e.stopPropagation()} className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
             <WhatsAppIcon className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
-          <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
+          <button onClick={e => e.stopPropagation()} className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
             <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
         </div>

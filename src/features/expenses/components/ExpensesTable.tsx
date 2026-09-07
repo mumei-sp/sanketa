@@ -1,9 +1,18 @@
 import * as React from 'react'
-import type { Table as TanStackTable } from '@tanstack/react-table'
-import { DataTable } from '@/components/table'
+import type { Row, Table as TanStackTable } from '@tanstack/react-table'
+import { DataTable, MobileRecordCard } from '@/components/table'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { Skeleton } from '@/components/ui/skeleton'
-import { expenseColumns } from './expense-columns'
+import { expenseColumns, ExpenseCategoryTag } from './expense-columns'
+import { cn } from '@/lib/utils'
+import {
+  ListToolbar,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+} from '@/components/table'
+
+/** Shared look for the accent filter selects in this toolbar. */
+const FILTER_TRIGGER = 'bg-accent text-foreground border-0 hover:bg-accent/80'
 import type { Expense, ExpenseCategory } from '@/features/expenses/types'
 import {
   Select,
@@ -35,34 +44,48 @@ export function ExpensesTable({ data, isLoading = false }: ExpensesTableProps) {
       }
 
       return (
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <h2 className="text-page-title text-foreground">Expenses</h2>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="h-8 w-[140px] bg-accent text-foreground border-0 hover:bg-accent/80">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {CATEGORIES.map(cat => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="h-8 w-[120px] bg-accent text-foreground border-0 hover:bg-accent/80">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="this-month">This Month</SelectItem>
-                <SelectItem value="last-month">Last Month</SelectItem>
-                <SelectItem value="this-quarter">This Quarter</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <ListToolbar
+          title="Expenses"
+          filters={[
+            {
+              id: 'category',
+              label: 'Category',
+              isActive: categoryFilter !== 'all',
+              control: (
+                <Select value={categoryFilter} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className={cn(TOOLBAR_CONTROL_HEIGHT, FILTER_TRIGGER, 'w-[140px]', TOOLBAR_FILTER_CONTROL)}>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {CATEGORIES.map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ),
+            },
+            {
+              id: 'period',
+              label: 'Period',
+              isActive: timeFilter !== 'this-month',
+              control: (
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger className={cn(TOOLBAR_CONTROL_HEIGHT, FILTER_TRIGGER, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="this-month">This Month</SelectItem>
+                    <SelectItem value="last-month">Last Month</SelectItem>
+                    <SelectItem value="this-quarter">This Quarter</SelectItem>
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ]}
+        />
       )
     },
     [categoryFilter, timeFilter],
@@ -79,6 +102,29 @@ export function ExpensesTable({ data, isLoading = false }: ExpensesTableProps) {
         onPageChange={(page) => table.setPageIndex(page - 1)}
         onPageSizeChange={(size) => table.setPageSize(size)}
         pageSizeOptions={[8, 16, 24, 48]}
+      />
+    )
+  }, [])
+
+  // Below `lg` each expense row becomes a card — seven columns of ₹ amounts and
+  // free-text descriptions are unreadable side by side on a phone.
+  const renderMobileCard = React.useCallback((row: Row<Expense>) => {
+    const expense = row.original
+    return (
+      <MobileRecordCard
+        title={expense.description}
+        subtitle={expense.expenseId}
+        trailing={
+          <span className="text-body font-semibold" style={{ color: 'var(--heading)' }}>
+            ₹{expense.amount.toLocaleString('en-IN')}
+          </span>
+        }
+        fields={[
+          { label: 'Category', value: <ExpenseCategoryTag category={expense.category} /> },
+          { label: 'Department', value: expense.department },
+          { label: 'Date', value: expense.date },
+          { label: 'Quantity', value: expense.quantity != null ? expense.quantity : '-' },
+        ]}
       />
     )
   }, [])
@@ -114,6 +160,8 @@ export function ExpensesTable({ data, isLoading = false }: ExpensesTableProps) {
       showToolbar={true}
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
+      renderMobileCard={renderMobileCard}
+      mobileEmptyMessage="No expenses match these filters."
       tableOptions={{
         initialState: {
           pagination: {

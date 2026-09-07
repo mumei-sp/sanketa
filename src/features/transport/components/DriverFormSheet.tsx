@@ -2,14 +2,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
+import { FormSheet } from '@/components/form/FormSheet'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -37,19 +30,26 @@ const driverSchema = z.object({
   status: z.enum(['Active', 'On Leave', 'Inactive']),
 })
 
-type DriverFormValues = z.infer<typeof driverSchema>
+/**
+ * `z.coerce.number()` takes unknown input and yields a number, so the schema's
+ * input and output types differ. React Hook Form models that with a third
+ * generic: the fields are typed by the schema input, the submit handler by the
+ * validated output.
+ */
+type DriverFormInput = z.input<typeof driverSchema>
+type DriverFormValues = z.output<typeof driverSchema>
 
-interface DriverDialogProps {
+interface DriverFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   driver?: TransportDriver | null
   onSave: (data: Partial<TransportDriver>) => void
 }
 
-export function DriverDialog({ open, onOpenChange, driver, onSave }: DriverDialogProps) {
+export function DriverFormSheet({ open, onOpenChange, driver, onSave }: DriverFormSheetProps) {
   const isEdit = !!driver
 
-  const form = useForm<DriverFormValues>({
+  const form = useForm<DriverFormInput, unknown, DriverFormValues>({
     resolver: zodResolver(driverSchema),
     defaultValues: {
       firstName: '', lastName: '', phone: '', emergencyContact: '',
@@ -83,14 +83,14 @@ export function DriverDialog({ open, onOpenChange, driver, onSave }: DriverDialo
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[600px] p-0 gap-0 overflow-y-auto">
-        <SheetHeader className="px-6 pt-6 pb-0">
-          <SheetTitle>{isEdit ? 'Edit Driver' : 'Add Driver'}</SheetTitle>
-        </SheetHeader>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-          <div className="px-6 py-4 space-y-4">
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? 'Edit Driver' : 'Add Driver'}
+      onSubmit={form.handleSubmit(onSubmit)}
+      submitLabel={isEdit ? 'Update Driver' : 'Add Driver'}
+      size="xl"
+    >
             {/* Personal Information */}
             <FormSection title="Personal Information" description="Driver's basic details" width={12}>
               <div className="grid grid-cols-2 gap-4">
@@ -173,16 +173,6 @@ export function DriverDialog({ open, onOpenChange, driver, onSave }: DriverDialo
                 </div>
               </div>
             </FormSection>
-          </div>
-
-          <SheetFooter className="px-6 py-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-foreground">
-              {isEdit ? 'Update Driver' : 'Add Driver'}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+    </FormSheet>
   )
 }

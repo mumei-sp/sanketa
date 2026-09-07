@@ -19,11 +19,11 @@ import { StudentExtracurricular } from '../components/StudentExtracurricular'
 import { StudentBehaviorLog } from '../components/StudentBehaviorLog'
 
 // CRUD dialogs
-import { HealthRecordDialog } from '../components/detail-crud/HealthRecordDialog'
-import { ScholarshipDialog } from '../components/detail-crud/ScholarshipDialog'
-import { ExtracurricularDialog } from '../components/detail-crud/ExtracurricularDialog'
-import { BehaviorDialog } from '../components/detail-crud/BehaviorDialog'
-import { DocumentUploadSheet } from '../components/detail-crud/DocumentUploadSheet'
+import { HealthRecordFormSheet } from '../components/detail-crud/HealthRecordFormSheet'
+import { ScholarshipFormSheet } from '../components/detail-crud/ScholarshipFormSheet'
+import { ExtracurricularFormSheet } from '../components/detail-crud/ExtracurricularFormSheet'
+import { BehaviorFormSheet } from '../components/detail-crud/BehaviorFormSheet'
+import { DocumentUploadFormSheet } from '../components/detail-crud/DocumentUploadFormSheet'
 import { DeleteConfirmDialog } from '../components/detail-crud/DeleteConfirmDialog'
 
 // Services
@@ -315,35 +315,35 @@ export default function StudentDetails() {
       )}
 
       {/* ═══ CRUD DIALOGS ═══ */}
-      <HealthRecordDialog
+      <HealthRecordFormSheet
         open={activeModal?.type === 'health'}
         onOpenChange={open => { if (!open) setActiveModal(null) }}
         record={activeModal?.type === 'health' ? activeModal.record : null}
         onSave={handleSaveHealth}
         isSaving={isSaving}
       />
-      <ScholarshipDialog
+      <ScholarshipFormSheet
         open={activeModal?.type === 'scholarship'}
         onOpenChange={open => { if (!open) setActiveModal(null) }}
         record={activeModal?.type === 'scholarship' ? activeModal.record : null}
         onSave={handleSaveScholarship}
         isSaving={isSaving}
       />
-      <ExtracurricularDialog
+      <ExtracurricularFormSheet
         open={activeModal?.type === 'extracurricular'}
         onOpenChange={open => { if (!open) setActiveModal(null) }}
         record={activeModal?.type === 'extracurricular' ? activeModal.record : null}
         onSave={handleSaveActivity}
         isSaving={isSaving}
       />
-      <BehaviorDialog
+      <BehaviorFormSheet
         open={activeModal?.type === 'behavior'}
         onOpenChange={open => { if (!open) setActiveModal(null) }}
         record={activeModal?.type === 'behavior' ? activeModal.record : null}
         onSave={handleSaveBehavior}
         isSaving={isSaving}
       />
-      <DocumentUploadSheet
+      <DocumentUploadFormSheet
         open={activeModal?.type === 'document'}
         onOpenChange={open => { if (!open) setActiveModal(null) }}
         onSave={handleSaveDocument}

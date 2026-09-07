@@ -1,7 +1,8 @@
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
-import { TextField, PhoneNumberFieldWithCountryCode, GRID_COLS_2, GRID_COLS_3 } from '@/components/form/fields'
+import { TextField, PhoneNumberFieldWithCountryCode, FORM_GRID_2, FORM_GRID_3 } from '@/components/form/fields'
 import type { TeacherFormValues } from '../../schemas/teacher-schema'
+import { cn } from '@/lib/utils'
 
 export interface ContactInfoSectionProps {
   control: Control<TeacherFormValues>
@@ -16,7 +17,7 @@ export function ContactInfoSection({ control, width }: ContactInfoSectionProps) 
       width={width}
     >
       {/* Email and Phone */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+      <div className={cn('grid gap-4', FORM_GRID_2)}>
         <TextField
           name="contactInfo.email"
           control={control}
@@ -34,7 +35,7 @@ export function ContactInfoSection({ control, width }: ContactInfoSectionProps) 
       </div>
 
       {/* Secondary and Emergency Phone */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+      <div className={cn('grid gap-4', FORM_GRID_2)}>
         <TextField
           name="contactInfo.secondaryPhone"
           control={control}
@@ -58,7 +59,7 @@ export function ContactInfoSection({ control, width }: ContactInfoSectionProps) 
       />
 
       {/* City, State, Postal Code */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_3 }}>
+      <div className={cn('grid gap-4', FORM_GRID_3)}>
         <TextField
           name="contactInfo.city"
           control={control}

@@ -2,14 +2,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
+import { FormSheet } from '@/components/form/FormSheet'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -37,19 +30,26 @@ const vehicleSchema = z.object({
   status: z.enum(['Active', 'Under Maintenance', 'Inactive']),
 })
 
-type VehicleFormValues = z.infer<typeof vehicleSchema>
+/**
+ * `z.coerce.number()` takes unknown input and yields a number, so the schema's
+ * input and output types differ. React Hook Form models that with a third
+ * generic: the fields are typed by the schema input, the submit handler by the
+ * validated output.
+ */
+type VehicleFormInput = z.input<typeof vehicleSchema>
+type VehicleFormValues = z.output<typeof vehicleSchema>
 
-interface VehicleDialogProps {
+interface VehicleFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   vehicle?: Vehicle | null
   onSave: (data: Partial<Vehicle>) => void
 }
 
-export function VehicleDialog({ open, onOpenChange, vehicle, onSave }: VehicleDialogProps) {
+export function VehicleFormSheet({ open, onOpenChange, vehicle, onSave }: VehicleFormSheetProps) {
   const isEdit = !!vehicle
 
-  const form = useForm<VehicleFormValues>({
+  const form = useForm<VehicleFormInput, unknown, VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
       registrationNumber: '', type: 'Bus', make: '', model: '',
@@ -83,14 +83,14 @@ export function VehicleDialog({ open, onOpenChange, vehicle, onSave }: VehicleDi
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[600px] p-0 gap-0 overflow-y-auto">
-        <SheetHeader className="px-6 pt-6 pb-0">
-          <SheetTitle>{isEdit ? 'Edit Vehicle' : 'Add Vehicle'}</SheetTitle>
-        </SheetHeader>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
-          <div className="px-6 py-4 space-y-4">
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? 'Edit Vehicle' : 'Add Vehicle'}
+      onSubmit={form.handleSubmit(onSubmit)}
+      submitLabel={isEdit ? 'Update Vehicle' : 'Add Vehicle'}
+      size="xl"
+    >
             {/* Vehicle Details */}
             <FormSection title="Vehicle Details" description="Registration and specifications" width={12}>
               <div className="grid grid-cols-2 gap-4">
@@ -169,16 +169,6 @@ export function VehicleDialog({ open, onOpenChange, vehicle, onSave }: VehicleDi
                 <Input {...form.register('gpsDeviceId')} placeholder="GPS-XXX" />
               </div>
             </FormSection>
-          </div>
-
-          <SheetFooter className="px-6 py-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-foreground">
-              {isEdit ? 'Update Vehicle' : 'Add Vehicle'}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+    </FormSheet>
   )
 }

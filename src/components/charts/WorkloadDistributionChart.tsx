@@ -86,11 +86,13 @@ const GAP_SIZE = 1.5 // Gap size in pixels between segments
 
 const CustomBarBottom = (props: any) => {
   const { x, y, width, height, fill, radius } = props
-  if (height <= 0) return <g />
-  
-  // Reduce height slightly to create gap at top
+
+  // Reduce height slightly to create gap at top. Guard AFTER the subtraction:
+  // a segment shorter than the gap (routine while the grow-in animation runs)
+  // would otherwise hand SVG a negative rect height.
   const adjustedHeight = height - GAP_SIZE / 2
-  
+  if (!(adjustedHeight > 0)) return <g />
+
   return (
     <rect
       x={x}
@@ -106,12 +108,12 @@ const CustomBarBottom = (props: any) => {
 
 const CustomBarMiddle = (props: any) => {
   const { x, y, width, height, fill, radius } = props
-  if (height <= 0) return <g />
-  
+
   // Add gap at top and bottom
   const adjustedY = y + GAP_SIZE / 2
   const adjustedHeight = height - GAP_SIZE
-  
+  if (!(adjustedHeight > 0)) return <g />
+
   return (
     <rect
       x={x}
@@ -127,12 +129,12 @@ const CustomBarMiddle = (props: any) => {
 
 const CustomBarTop = (props: any) => {
   const { x, y, width, height, fill, radius } = props
-  if (height <= 0) return <g />
-  
+
   // Add gap at bottom, reduce height slightly
   const adjustedY = y + GAP_SIZE / 2
   const adjustedHeight = height - GAP_SIZE / 2
-  
+  if (!(adjustedHeight > 0)) return <g />
+
   return (
     <rect
       x={x}
@@ -305,6 +307,7 @@ export function WorkloadDistributionChart({
                 <Bar
                   dataKey="totalClasses"
                   stackId="workload"
+                  isAnimationActive={false}
                   fill="var(--primary)"
                   radius={[0, 0, 4, 4]}
                   barSize={35}
@@ -313,6 +316,7 @@ export function WorkloadDistributionChart({
                 <Bar
                   dataKey="teachingHours"
                   stackId="workload"
+                  isAnimationActive={false}
                   fill="var(--accent)"
                   radius={[4, 4, 4, 4]}
                   barSize={35}
@@ -321,6 +325,7 @@ export function WorkloadDistributionChart({
                 <Bar
                   dataKey="extraDuties"
                   stackId="workload"
+                  isAnimationActive={false}
                   fill="var(--heading)"
                   radius={[4, 4, 0, 0]}
                   barSize={35}

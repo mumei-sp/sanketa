@@ -78,7 +78,7 @@ export function StudentHealthInfo({ records, onAdd, onEdit, onDelete }: StudentH
                 {onDelete && (
                   <button
                     type="button"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-1 rounded hover:bg-red-50"
+                    className="opacity-0 touch:opacity-100 group-hover:opacity-100 transition-opacity shrink-0 p-1 rounded hover:bg-red-50"
                     onClick={e => { e.stopPropagation(); onDelete(record.id) }}
                     aria-label={`Delete ${record.title}`}
                   >

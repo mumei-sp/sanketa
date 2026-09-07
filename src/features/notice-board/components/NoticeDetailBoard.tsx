@@ -14,7 +14,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Tile } from '@/components/tile'
-import { baseColors, status, accent, border as borderTokens, statusVivid } from '@/theme/colors'
+import { statusVivid } from '@/theme/colors'
 import type { NoticeBoardEntry, NoticeStatus } from '../types'
 
 const statusStyles: Record<NoticeStatus, { bg: string; text: string }> = {

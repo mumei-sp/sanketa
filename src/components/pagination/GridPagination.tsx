@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { text, background, border } from '@/theme/colors'
 import { textRoles } from '@/config/typography'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 /**
  * Props for GridPagination component
@@ -40,8 +41,10 @@ export function GridPagination({
 }: GridPaginationProps) {
   const totalPages = Math.ceil(totalItems / pageSize)
 
-  // Calculate which pages to show
-  const maxPagesToShow = 5
+  // Calculate which pages to show — a narrower window on phones so the pager
+  // fits the viewport instead of scrolling sideways.
+  const isMobile = useIsMobile()
+  const maxPagesToShow = isMobile ? 3 : 5
   let startPage = 1
   let endPage = Math.min(maxPagesToShow, totalPages)
 
@@ -51,7 +54,7 @@ export function GridPagination({
     endPage = totalPages
   } else if (currentPage > 2 && totalPages > maxPagesToShow) {
     // Show pages around current
-    startPage = Math.max(1, currentPage - 2)
+    startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2))
     endPage = Math.min(totalPages, startPage + maxPagesToShow - 1)
   }
 
@@ -82,12 +85,12 @@ export function GridPagination({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 py-3 px-4 overflow-x-auto min-w-0 bg-transparent',
+        'flex flex-col gap-3 py-3 px-4 min-w-0 bg-transparent sm:flex-row sm:items-center sm:justify-between sm:gap-4',
         className,
       )}
     >
       <div 
-        className="flex items-center gap-2 flex-shrink-0"
+        className="flex items-center gap-2 sm:flex-shrink-0"
         style={{
           fontSize: textRoles.body.fontSize,
           color: text.body,
@@ -99,7 +102,7 @@ export function GridPagination({
           onChange={e => {
             onPageSizeChange(Number(e.target.value))
           }}
-          className="h-8 rounded-md border px-2 font-medium transition-colors"
+          className="tap-target h-8 rounded-md border px-2 font-medium transition-colors"
           style={{
             fontSize: textRoles.body.fontSize,
             backgroundColor: border.subtle,
@@ -115,11 +118,11 @@ export function GridPagination({
         </select>
         <span>of {totalItems} results</span>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center justify-center gap-2 sm:justify-end sm:flex-shrink-0">
         <button
           onClick={handlePrevious}
           disabled={currentPage === 1}
-          className="flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
+          className="tap-target flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
           style={{
             fontSize: textRoles.body.fontSize,
             backgroundColor: currentPage === 1 ? border.subtle : 'var(--accent)',
@@ -136,7 +139,7 @@ export function GridPagination({
             <button
               key={pageNum}
               onClick={() => handlePageClick(pageNum)}
-              className="flex h-8 min-w-10 items-center justify-center rounded-md px-3 font-medium transition-colors"
+              className="tap-target flex h-8 min-w-10 items-center justify-center rounded-md px-3 font-medium transition-colors"
               style={{
                 fontSize: textRoles.body.fontSize,
                 backgroundColor: isActive ? 'var(--primary)' : 'var(--accent)',
@@ -153,7 +156,7 @@ export function GridPagination({
         <button
           onClick={handleNext}
           disabled={currentPage === totalPages}
-          className="flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
+          className="tap-target flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
           style={{
             fontSize: textRoles.body.fontSize,
             backgroundColor: currentPage === totalPages ? border.subtle : 'var(--accent)',

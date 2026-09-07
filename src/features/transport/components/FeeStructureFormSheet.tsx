@@ -2,15 +2,8 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { FormSheet } from '@/components/form/FormSheet'
 import { FormSection } from '@/components/form/FormSection'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -32,19 +25,26 @@ const feeSchema = z.object({
   term: z.string().min(1, 'Term is required'),
 })
 
-type FeeFormValues = z.infer<typeof feeSchema>
+/**
+ * `z.coerce.number()` takes unknown input and yields a number, so the schema's
+ * input and output types differ. React Hook Form models that with a third
+ * generic: the fields are typed by the schema input, the submit handler by the
+ * validated output.
+ */
+type FeeFormInput = z.input<typeof feeSchema>
+type FeeFormValues = z.output<typeof feeSchema>
 
-interface FeeStructureDialogProps {
+interface FeeStructureFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   feeStructure?: TransportFeeStructure | null
   onSave: (data: Partial<TransportFeeStructure>) => void
 }
 
-export function FeeStructureDialog({ open, onOpenChange, feeStructure, onSave }: FeeStructureDialogProps) {
+export function FeeStructureFormSheet({ open, onOpenChange, feeStructure, onSave }: FeeStructureFormSheetProps) {
   const isEdit = !!feeStructure
 
-  const form = useForm<FeeFormValues>({
+  const form = useForm<FeeFormInput, unknown, FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
       routeId: '', distanceSlab: '', oneWayFee: 0, twoWayFee: 0, term: 'Term 1',
@@ -76,13 +76,13 @@ export function FeeStructureDialog({ open, onOpenChange, feeStructure, onSave }:
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle>{isEdit ? 'Edit Fee Structure' : 'Add Fee Structure'}</DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-4 space-y-4">
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? 'Edit Fee Structure' : 'Add Fee Structure'}
+      onSubmit={form.handleSubmit(onSubmit)}
+      submitLabel={isEdit ? 'Update' : 'Add Fee Structure'}
+    >
           <FormSection title="Fee Details" width={12}>
             <div className="space-y-1.5">
               <Label>Route <span className="text-destructive">*</span></Label>
@@ -122,14 +122,6 @@ export function FeeStructureDialog({ open, onOpenChange, feeStructure, onSave }:
             </div>
           </FormSection>
 
-          <DialogFooter className="px-6 pb-6 pt-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-foreground">
-              {isEdit ? 'Update' : 'Add Fee Structure'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </FormSheet>
   )
 }

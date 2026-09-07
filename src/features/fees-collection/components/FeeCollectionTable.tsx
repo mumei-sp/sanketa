@@ -1,12 +1,10 @@
 import * as React from 'react'
 import type { Row, Table as TanStackTable } from '@tanstack/react-table'
-import { DataTable } from '@/components/table'
+import { DataTable, MobileRecordCard } from '@/components/table'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { Skeleton } from '@/components/ui/skeleton'
-import { createFeeCollectionColumns } from './fee-collection-columns'
+import { createFeeCollectionColumns, FeeStatusPill } from './fee-collection-columns'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
-import { Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -16,6 +14,16 @@ import {
 } from '@/components/ui/select'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
+import { cn } from '@/lib/utils'
+import {
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+} from '@/components/table'
+
+/** Shared look for the accent filter selects in this toolbar. */
+const FILTER_TRIGGER = 'bg-accent text-foreground border-0 hover:bg-accent/80'
 
 interface FeeCollectionTableProps {
   data: FeeCollectionRecord[]
@@ -90,56 +98,75 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
       }
 
       return (
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <h2 className="text-page-title text-foreground">Fees Collection</h2>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative w-[250px] min-w-[150px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search by name or ID"
-                value={searchValue}
-                onChange={e => handleSearchChange(e.target.value)}
-                className="h-8 w-full pl-10 bg-white border-default"
-              />
-            </div>
-            <Select value={classFilter} onValueChange={handleClassChange}>
-              <SelectTrigger className="h-8 w-[140px] bg-accent text-foreground border-0 hover:bg-accent/80">
-                <SelectValue placeholder="All Classes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classLabels.map(cls => (
-                  <SelectItem key={cls} value={cls}>
-                    {cls}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 w-[140px] bg-accent text-foreground border-0 hover:bg-accent/80">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {STATUSES.map(st => (
-                  <SelectItem key={st} value={st}>
-                    {st}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="h-8 w-[120px] bg-accent text-foreground border-0 hover:bg-accent/80">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="this-month">This Month</SelectItem>
-                <SelectItem value="last-month">Last Month</SelectItem>
-                <SelectItem value="this-quarter">This Quarter</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <ListToolbar
+          title="Fees Collection"
+          search={
+            <ListToolbarSearch
+              placeholder="Search by name or ID"
+              value={searchValue}
+              onValueChange={v => handleSearchChange(v)}
+            />
+          }
+          filters={[
+            {
+              id: 'class',
+              label: 'Class',
+              isActive: classFilter !== 'all',
+              control: (
+                <Select value={classFilter} onValueChange={handleClassChange}>
+                  <SelectTrigger className={cn(TOOLBAR_CONTROL_HEIGHT, FILTER_TRIGGER, 'w-[140px]', TOOLBAR_FILTER_CONTROL)}>
+                    <SelectValue placeholder="All Classes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Classes</SelectItem>
+                    {classLabels.map(cls => (
+                      <SelectItem key={cls} value={cls}>
+                        {cls}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ),
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              isActive: statusFilter !== 'all',
+              control: (
+                <Select value={statusFilter} onValueChange={handleStatusChange}>
+                  <SelectTrigger className={cn(TOOLBAR_CONTROL_HEIGHT, FILTER_TRIGGER, 'w-[140px]', TOOLBAR_FILTER_CONTROL)}>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    {STATUSES.map(st => (
+                      <SelectItem key={st} value={st}>
+                        {st}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ),
+            },
+            {
+              id: 'period',
+              label: 'Period',
+              isActive: timeFilter !== 'this-month',
+              control: (
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger className={cn(TOOLBAR_CONTROL_HEIGHT, FILTER_TRIGGER, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="this-month">This Month</SelectItem>
+                    <SelectItem value="last-month">Last Month</SelectItem>
+                    <SelectItem value="this-quarter">This Quarter</SelectItem>
+                  </SelectContent>
+                </Select>
+              ),
+            },
+          ]}
+        />
       )
     },
     [classFilter, statusFilter, timeFilter],
@@ -159,6 +186,28 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
       />
     )
   }, [])
+
+  // Below `lg` each fee row becomes a card — the six columns can't be read
+  // side by side on a phone.
+  const renderMobileCard = React.useCallback(
+    (row: Row<FeeCollectionRecord>) => {
+      const record = row.original
+      return (
+        <MobileRecordCard
+          title={record.studentName}
+          subtitle={`${record.studentId} · ${record.class}`}
+          trailing={<FeeStatusPill status={record.status} />}
+          fields={[
+            { label: 'Fee Category', value: record.feeCategory },
+            { label: 'Total Amount', value: `₹${record.totalAmount.toLocaleString('en-IN')}` },
+            { label: 'Due Date', value: record.dueDate },
+          ]}
+          onClick={onRowClick ? () => onRowClick(record) : undefined}
+        />
+      )
+    },
+    [onRowClick],
+  )
 
   // Zebra-striping + cursor pointer when clickable
   const rowClassName = React.useCallback((row: Row<FeeCollectionRecord>) => {
@@ -204,6 +253,8 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
       showToolbar={true}
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
+      renderMobileCard={renderMobileCard}
+      mobileEmptyMessage="No fee records match these filters."
       bodyProps={{
         rowClassName,
         renderRow: onRowClick ? (row) => (

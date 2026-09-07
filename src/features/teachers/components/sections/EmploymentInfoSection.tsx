@@ -1,9 +1,10 @@
 import * as React from 'react'
 import { type Control } from 'react-hook-form'
 import { FormSection } from '@/components/form/FormSection'
-import { SelectField, DateField, type SelectOption, GRID_COLS_2 } from '@/components/form/fields'
+import { SelectField, DateField, type SelectOption, FORM_GRID_2 } from '@/components/form/fields'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import type { TeacherFormValues } from '../../schemas/teacher-schema'
+import { cn } from '@/lib/utils'
 
 export interface EmploymentInfoSectionProps {
   control: Control<TeacherFormValues>
@@ -29,7 +30,7 @@ export function EmploymentInfoSection({ control, width }: EmploymentInfoSectionP
       width={width}
       className="self-start"
     >
-      <div className="grid gap-4" style={{ gridTemplateColumns: GRID_COLS_2 }}>
+      <div className={cn('grid gap-4', FORM_GRID_2)}>
         <SelectField
           name="employmentInfo.employmentType"
           control={control}

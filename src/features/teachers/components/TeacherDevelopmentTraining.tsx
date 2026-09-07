@@ -3,7 +3,7 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, border, status, accent, background } from '@/theme/colors'
+import { text, border, status, background } from '@/theme/colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import type { TrainingEvent } from '../types/teacher-detail'
 

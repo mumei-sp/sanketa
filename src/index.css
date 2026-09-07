@@ -5,6 +5,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Touch devices have no hover state, so anything revealed by `group-hover`
+   would be permanently invisible there. Pair every hover-reveal with
+   `touch:opacity-100` (or the equivalent) to keep the affordance reachable. */
+@custom-variant touch (@media (hover: none));
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -521,6 +526,22 @@ html[data-density="compact"] [data-slot="card"] {
     padding-bottom: 0.625rem; /* 10px at 14px base */
   }
 
+  /* Toolbar control height — tap-comfortable on phones, compact from `sm` up.
+     This exists as its own utility because `.h-8` / `.h-9` are redefined above
+     without responsive counterparts, so a plain `h-9 sm:h-8` pair loses to the
+     unprefixed override and stays 36px at every width. */
+  /* Doubled class name for specificity (0-2-0): shadcn's SelectTrigger sizes
+     itself with `data-[size=default]:h-9`, which is a class+attribute selector
+     and would otherwise outrank a single class. */
+  .h-control.h-control {
+    height: var(--height-9); /* 36px */
+  }
+  @media (width >= 48rem) {
+    .h-control.h-control {
+      height: var(--height-8); /* 32px */
+    }
+  }
+
   /* Chart scale utility - locally scales chart font size for better visual density */
   .chart-scale {
     font-size: 0.9em; /* Scales down from 14px base to ~12.6px effective */
@@ -689,6 +710,55 @@ html[data-density="compact"] [data-slot="card"] {
    so nothing interactive gets cut. */
 [data-slot='card'] {
   overflow: clip;
+}
+
+/* ── Touch ergonomics ───────────────────────────────────────────────
+   The dashboard is deliberately dense: 19–28px icon buttons read well under a
+   mouse but sit below the comfortable tap floor on a phone or tablet. Both
+   utilities apply only where there is no hover, so desktop density is
+   untouched.
+
+   .tap-target — grows the control itself. Use when a little extra room is
+     harmless (pagination, filter chips, standalone icon buttons).
+   .tap-area   — keeps the drawn size and extends the hit region with a
+     transparent overlay. Use when growing would disturb the layout. Avoid on
+     controls sitting closer than ~20px apart, where overlays would overlap
+     and swallow the neighbour's taps. */
+@media (hover: none) {
+  .tap-target {
+    min-width: 2.857rem; /* 40px */
+    min-height: 2.857rem; /* 40px */
+  }
+
+  .tap-area {
+    position: relative;
+  }
+  .tap-area::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 2.857rem);
+    height: max(100%, 2.857rem);
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Period selects and filter pills sit beside the card title on wide headers.
+   Below the desktop breakpoint a header narrower than ~26rem cannot seat both,
+   so the control drops onto its own row rather than squeezing the title into a
+   two-word column. Scoped to actions holding a select (and its loading
+   skeleton) — icon-only actions stay pinned to the top-right corner where they
+   belong. CardHeader is the named container and a container query never
+   matches its own container, so the rule targets the action and spans it. */
+@media (width < 64rem) {
+  @container card-header (width < 26rem) {
+    [data-slot='card-action']:has([data-slot='select-trigger'], [data-slot='skeleton']) {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      justify-self: start;
+    }
+  }
 }
 
 /* Frosted glass surface — translucent card over the aurora with backdrop

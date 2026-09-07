@@ -2,7 +2,7 @@ import * as React from 'react'
 import { SectionCard } from '@/components/ui/section-card'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
-import { text, border, primary, accent, background } from '@/theme/colors'
+import { text, border, background } from '@/theme/colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
 import type { PerformanceMetric } from '../types/teacher-detail'
 

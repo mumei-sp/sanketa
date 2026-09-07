@@ -43,6 +43,8 @@ export interface UserProfile {
 
   /** Contact Information */
   primaryPhone?: string
+  /** Dialling code paired with `primaryPhone`, e.g. '+91'. */
+  phoneCountryCode?: string
   profilePictureUrl?: string
 
   /** Sync metadata */

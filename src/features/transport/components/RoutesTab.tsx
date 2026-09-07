@@ -1,8 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
 import type { ColumnDef, Row } from '@tanstack/react-table'
-import { Search, Plus, Download, ChevronDown, ChevronRight, MapPin, Bus as BusIcon, User } from 'lucide-react'
+import { Plus, Download, ChevronDown, ChevronRight, MapPin, Bus as BusIcon, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  ListToolbar,
+  ListToolbarSearch,
+  TOOLBAR_CONTROL_HEIGHT,
+  TOOLBAR_FILTER_CONTROL,
+  TOOLBAR_PRIMARY_ACTION,
+} from '@/components/table'
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -21,7 +28,7 @@ import { toast } from 'sonner'
 import { mockRoutes } from '@/mocks/transport'
 import { ROUTE_STATUS_OPTIONS, ROUTE_STATUS_COLORS } from '../constants'
 import { getOccupancyColor, getOccupancyPercent } from '../utils/transport-utils'
-import { RouteDialog } from './RouteDialog'
+import { RouteFormSheet } from './RouteFormSheet'
 import type { TransportRoute } from '../types'
 
 export function RoutesTab() {
@@ -29,7 +36,7 @@ export function RoutesTab() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
   const [editingRoute, setEditingRoute] = useState<TransportRoute | null>(null)
 
   const filtered = useMemo(() => {
@@ -175,56 +182,58 @@ export function RoutesTab() {
       background="default"
       borderRadius="lg"
       padding="p-4"
-      className="flex items-center justify-between gap-4 flex-wrap"
     >
-      <h2 className="text-page-title text-heading">Routes</h2>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative min-w-[160px] max-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-          <Input
+      <ListToolbar
+        title={<h2 className="text-page-title text-heading">Routes</h2>}
+        search={
+          <ListToolbarSearch
             placeholder="Search routes"
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="h-8 w-full pl-10 bg-white"
+            onValueChange={v => { setSearchQuery(v) }}
+            className="md:min-w-[160px] md:max-w-[300px]"
           />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger
-              className="h-8 w-[120px]"
-              style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              {ROUTE_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Button variant="outline" onClick={handleExport} className="h-8 gap-1.5">
-          <Download className="size-3.5" />
-          Export
-        </Button>
-
-        <Button
-          onClick={() => { setEditingRoute(null); setDialogOpen(true) }}
-          className="h-8 bg-primary hover:bg-primary/90 text-foreground"
-        >
-          <Plus className="size-4" />
-          Add Route
-        </Button>
-      </div>
+        }
+        filters={[
+          {
+            id: 'status',
+            label: 'Status',
+            inlineLabel: true,
+            isActive: statusFilter !== 'all',
+            control: (
+              <Select value={statusFilter} onValueChange={v => { setStatusFilter(v) }}>
+                <SelectTrigger
+                  className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}
+                  style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {ROUTE_STATUS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        secondaryActions={[
+          { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
+        ]}
+        primaryAction={
+          <Button
+            onClick={() => { setEditingRoute(null); setFormOpen(true) }}
+            className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
+          >
+            <Plus className="size-4" />
+            Add Route
+          </Button>
+        }
+      />
     </Tile>
   ), [searchQuery, statusFilter, handleExport])
 
   const handleRowClick = useCallback((row: Row<TransportRoute>) => {
     setEditingRoute(row.original)
-    setDialogOpen(true)
+    setFormOpen(true)
   }, [])
 
   return (
@@ -326,9 +335,9 @@ export function RoutesTab() {
         )}
       />
 
-      <RouteDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+      <RouteFormSheet
+        open={formOpen}
+        onOpenChange={setFormOpen}
         route={editingRoute}
         onSave={handleSave}
       />

@@ -7,8 +7,9 @@ import type { EventClickArg, EventContentArg, DatesSetArg } from '@fullcalendar/
 import { ChevronLeft, ChevronRight, ChevronDown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { baseColors, text, background } from '@/theme/colors'
+import { text, background } from '@/theme/colors'
 import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
 import type { CalendarEvent, CalendarViewType } from '../types'
 import '../styles/fullcalendar-theme.css'
 
@@ -32,36 +33,53 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-function renderEventContent(eventInfo: EventContentArg) {
-  const { event, view } = eventInfo
-  const { startTimeDisplay, endTimeDisplay } = event.extendedProps
+/**
+ * Event renderer for the calendar cells.
+ *
+ * A month grid gives each day roughly a seventh of the width — about 45px on a
+ * phone, which is far too narrow for a title and breaks it mid-word. On those
+ * widths the month view collapses to a time-and-dot chip; the day's full
+ * schedule is one tap away in the details panel.
+ */
+function makeEventContent(isCompactMonth: boolean) {
+  return function renderEventContent(eventInfo: EventContentArg) {
+    const { event, view } = eventInfo
+    const { startTimeDisplay, endTimeDisplay } = event.extendedProps
 
-  if (view.type === 'dayGridMonth') {
-    const timeText = endTimeDisplay
-      ? `${startTimeDisplay} – ${endTimeDisplay}`
-      : startTimeDisplay
+    if (view.type === 'dayGridMonth') {
+      if (isCompactMonth) {
+        // A day cell is ~45px wide here — even the start time truncates to
+        // "09:…", which reads worse than nothing. A coloured bar keeps the
+        // category and the day's density legible; the details panel has the rest.
+        return <div className="h-1 w-full rounded-full bg-current opacity-60" />
+      }
 
+      const timeText = endTimeDisplay
+        ? `${startTimeDisplay} – ${endTimeDisplay}`
+        : startTimeDisplay
+
+      return (
+        <div className="flex flex-col w-full" style={{ lineHeight: 1.35 }}>
+          <span className="font-medium" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+            {event.title}
+          </span>
+          <span className="opacity-70 mt-0.5" style={{ fontSize: '0.625rem' }}>
+            {timeText}
+          </span>
+        </div>
+      )
+    }
+
+    // Week/Day time grid views
     return (
-      <div className="flex flex-col w-full" style={{ lineHeight: 1.35 }}>
-        <span className="font-medium" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-          {event.title}
-        </span>
-        <span className="opacity-70 mt-0.5" style={{ fontSize: '0.625rem' }}>
-          {timeText}
+      <div className="flex flex-col gap-0.5 p-0.5 overflow-hidden">
+        <span className="font-medium text-xs truncate">{event.title}</span>
+        <span className="text-[10px] opacity-70">
+          {startTimeDisplay}{endTimeDisplay ? ` – ${endTimeDisplay}` : ''}
         </span>
       </div>
     )
   }
-
-  // Week/Day time grid views
-  return (
-    <div className="flex flex-col gap-0.5 p-0.5 overflow-hidden">
-      <span className="font-medium text-xs truncate">{event.title}</span>
-      <span className="text-[10px] opacity-70">
-        {startTimeDisplay}{endTimeDisplay ? ` – ${endTimeDisplay}` : ''}
-      </span>
-    </div>
-  )
 }
 
 export function CalendarView({
@@ -73,6 +91,8 @@ export function CalendarView({
   className,
 }: CalendarViewProps) {
   const calendarRef = React.useRef<FullCalendar>(null)
+  const isMobile = useIsMobile()
+  const eventContent = React.useMemo(() => makeEventContent(isMobile), [isMobile])
   const [currentView, setCurrentView] = React.useState<CalendarViewType>('dayGridMonth')
   const [currentTitle, setCurrentTitle] = React.useState('')
   const [monthPickerOpen, setMonthPickerOpen] = React.useState(false)
@@ -164,7 +184,7 @@ export function CalendarView({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="text-base font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
+                className="tap-target text-base font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
                 style={{ color: 'var(--heading)' }}
               >
                 {currentTitle}
@@ -223,10 +243,10 @@ export function CalendarView({
             </PopoverContent>
           </Popover>
           <div className="flex items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrev}>
+            <Button variant="ghost" size="icon" className="tap-target h-7 w-7" onClick={handlePrev}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNext}>
+            <Button variant="ghost" size="icon" className="tap-target h-7 w-7" onClick={handleNext}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -257,7 +277,7 @@ export function CalendarView({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 px-3 gap-1.5 text-xs font-medium rounded-lg border"
+            className="tap-target h-8 px-3 gap-1.5 text-xs font-medium rounded-lg border"
             style={{
               backgroundColor: 'var(--primary)',
               borderColor: 'var(--primary)',
@@ -279,11 +299,11 @@ export function CalendarView({
         initialDate={new Date().toISOString().slice(0, 10)}
         now={new Date().toISOString().slice(0, 10)}
         events={events}
-        eventContent={renderEventContent}
+        eventContent={eventContent}
         eventClick={handleEventClick}
         dateClick={handleDateClick}
         datesSet={handleDatesSet}
-        dayMaxEvents={4}
+        dayMaxEvents={isMobile ? 2 : 4}
         weekends={true}
         firstDay={0}
         height="auto"

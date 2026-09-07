@@ -63,7 +63,7 @@ function getColumns(onDelete?: (id: string) => void): CompactTableColumn<Student
       render: (entry) => (
         <button
           type="button"
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50"
+          className="opacity-0 touch:opacity-100 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50"
           onClick={e => { e.stopPropagation(); onDelete(entry.id) }}
           aria-label={`Delete behavior entry`}
         >

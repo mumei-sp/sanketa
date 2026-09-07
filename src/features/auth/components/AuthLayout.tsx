@@ -1,4 +1,3 @@
-import { baseColors } from '@/theme/colors'
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -54,7 +53,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
       {/* ── Form panel ── */}
       <div className="flex flex-1 items-start justify-center overflow-y-auto bg-white px-6 py-10 lg:items-center lg:py-0">
-        <div className="w-full max-w-md">{children}</div>
+        {/* my-auto centres the form in the leftover height on a phone without
+            clipping its top when the content is taller than the panel. */}
+        <div className="my-auto w-full max-w-md lg:my-0">{children}</div>
       </div>
     </div>
   )

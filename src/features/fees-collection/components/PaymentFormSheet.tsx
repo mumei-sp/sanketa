@@ -1,5 +1,5 @@
 /**
- * PaymentDialog — "Mark as Paid" form for admin fee management.
+ * PaymentFormSheet — "Mark as Paid" form for admin fee management.
  *
  * Simple form: select method, enter transaction ID, date, notes → mark paid.
  * No payment gateway simulation.
@@ -7,13 +7,7 @@
 
 import * as React from 'react'
 import { CheckCircle } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { FormSheet } from '@/components/form/FormSheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +18,7 @@ import { toast } from 'sonner'
 import type { FeeCollectionRecord, PaymentMethod, PaymentTransaction, FeeCategory } from '../types'
 import { PAYMENT_METHOD_LABELS } from '../types'
 
-interface PaymentDialogProps {
+interface PaymentFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   record: FeeCollectionRecord | null
@@ -36,7 +30,7 @@ function getTodayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export function PaymentDialog({ open, onOpenChange, record, onComplete }: PaymentDialogProps) {
+export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: PaymentFormSheetProps) {
   const [method, setMethod] = React.useState<PaymentMethod>('cash')
   const [transactionId, setTransactionId] = React.useState('')
   const [paidDate, setPaidDate] = React.useState(getTodayStr())
@@ -79,11 +73,29 @@ export function PaymentDialog({ open, onOpenChange, record, onComplete }: Paymen
   if (!record) return null
 
   return (
-    <Dialog open={open} onOpenChange={isSaving ? undefined : onOpenChange}>
-      <DialogContent className="sm:max-w-[420px]">
-        <DialogHeader>
-          <DialogTitle style={{ color: text.heading }}>Mark as Paid</DialogTitle>
-        </DialogHeader>
+    <FormSheet
+      open={open}
+      // Can't be dismissed mid-save.
+      onOpenChange={next => { if (!isSaving) onOpenChange(next) }}
+      title="Mark as Paid"
+      size="md"
+      footer={
+        <>
+    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+    Cancel
+    </Button>
+    <Button
+    onClick={handleSubmit}
+    disabled={!transactionId.trim() || isSaving}
+    className="gap-1.5"
+    style={{ backgroundColor: text.heading, color: background.card }}
+    >
+    <CheckCircle className="w-3.5 h-3.5" />
+    {isSaving ? 'Saving...' : 'Mark as Paid'}
+    </Button>
+        </>
+      }
+    >
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
           {/* Fee info */}
@@ -173,21 +185,6 @@ export function PaymentDialog({ open, onOpenChange, record, onComplete }: Paymen
           </div>
         </div>
 
-        <DialogFooter className="flex-row items-center justify-end gap-2 mt-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!transactionId.trim() || isSaving}
-            className="gap-1.5"
-            style={{ backgroundColor: text.heading, color: background.card }}
-          >
-            <CheckCircle className="w-3.5 h-3.5" />
-            {isSaving ? 'Saving...' : 'Mark as Paid'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </FormSheet>
   )
 }

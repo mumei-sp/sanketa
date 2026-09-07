@@ -1,13 +1,33 @@
 import type { ColumnDef, Row, Table } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
-import { baseColors, status, darken, background, statusVivid } from '@/theme/colors'
+import { statusVivid } from '@/theme/colors'
 
 const STATUS_STYLES: Record<FeeStatus, { color: string; bg: string; border?: string }> = {
   Paid:             { bg: statusVivid.success.bg, color: statusVivid.success.color },
   Pending:          { bg: statusVivid.warning.bg, color: statusVivid.warning.color },
   'Partially Paid': { bg: statusVivid.info.bg,    color: statusVivid.info.color    },
   Overdue:          { bg: statusVivid.danger.bg,  color: statusVivid.danger.color  },
+}
+
+/**
+ * Status pill for a fee record. Exported so the narrow-viewport card list can
+ * show the same badge the table column does.
+ */
+export function FeeStatusPill({ status: feeStatus }: { status: FeeStatus }) {
+  const style = STATUS_STYLES[feeStatus]
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+      style={{
+        color: style.color,
+        backgroundColor: style.bg,
+        ...(style.border ? { border: `1px solid ${style.border}` } : {}),
+      }}
+    >
+      {feeStatus}
+    </span>
+  )
 }
 
 /** Check if this row is the first of a student group in the visible (paginated) rows */
@@ -144,22 +164,7 @@ export function createFeeCollectionColumns(
     {
       accessorKey: 'status',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-      cell: ({ row }) => {
-        const feeStatus = row.original.status
-        const style = STATUS_STYLES[feeStatus]
-        return (
-          <span
-            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
-            style={{
-              color: style.color,
-              backgroundColor: style.bg,
-              ...(style.border ? { border: `1px solid ${style.border}` } : {}),
-            }}
-          >
-            {feeStatus}
-          </span>
-        )
-      },
+      cell: ({ row }) => <FeeStatusPill status={row.original.status} />,
       sortingFn: makeGroupSortFn(firstRecords, 'status'),
       enableSorting: true,
       filterFn: (row, _id, value) => {

@@ -1,19 +1,12 @@
 /**
- * DocumentUploadSheet — Side panel for adding a document record.
+ * DocumentUploadFormSheet — Side panel for adding a document record.
  *
- * Uses a Sheet (drawer) instead of Dialog for vertical space.
  * Form content wrapped in FormSection tile for consistent styling.
  * Integrates UploadDropzone for real drag-and-drop file selection.
  */
 
 import * as React from 'react'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet'
+import { FormSheet } from '@/components/form/FormSheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,19 +35,19 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 
-interface DocumentUploadSheetProps {
+interface DocumentUploadFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (data: Omit<DocumentItem, 'id'>) => void
   isSaving: boolean
 }
 
-export function DocumentUploadSheet({
+export function DocumentUploadFormSheet({
   open,
   onOpenChange,
   onSave,
   isSaving,
-}: DocumentUploadSheetProps) {
+}: DocumentUploadFormSheetProps) {
   const [name, setName] = React.useState('')
   const [type, setType] = React.useState('PDF')
   const [file, setFile] = React.useState<File | null>(null)
@@ -90,13 +83,21 @@ export function DocumentUploadSheet({
   }, [canSave, name, type, file, onSave])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" size="lg" className="flex flex-col p-0 gap-0">
-        <SheetHeader className="px-6 pt-6 pb-0">
-          <SheetTitle>Upload Document</SheetTitle>
-        </SheetHeader>
-
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Upload Document"
+      footer={
+        <>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={!canSave || isSaving}>
+            {isSaving ? 'Uploading...' : 'Upload'}
+          </Button>
+        </>
+      }
+    >
           <FormSection title="Document Details" width={12}>
             <div className="space-y-2">
               <Label htmlFor="doc-name">Document Name <span className="text-destructive">*</span></Label>
@@ -142,17 +143,6 @@ export function DocumentUploadSheet({
               height="h-48"
             />
           </FormSection>
-        </div>
-
-        <SheetFooter className="px-6 pb-6 pt-4 flex gap-2 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!canSave || isSaving}>
-            {isSaving ? 'Uploading...' : 'Upload'}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+    </FormSheet>
   )
 }

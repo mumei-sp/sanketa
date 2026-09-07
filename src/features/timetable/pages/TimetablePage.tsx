@@ -10,7 +10,7 @@ import { fetchAllClassTimetables, fetchClassTimetable } from '@/api/services/tim
 import { useClassTimetable } from '../hooks/use-class-timetable'
 import { TimetableGrid } from '../components/TimetableGrid'
 import { TimetableToolbar } from '../components/TimetableToolbar'
-import { TimetableSlotEditor } from '../components/TimetableSlotEditor'
+import { TimetableSlotFormSheet } from '../components/TimetableSlotFormSheet'
 import type { TimetableSlot } from '../types'
 
 const breadcrumbs = [
@@ -204,7 +204,7 @@ export function TimetablePage() {
       </Tile>
 
       {/* Slot Editor Modal */}
-      <TimetableSlotEditor
+      <TimetableSlotFormSheet
         open={editorOpen}
         onOpenChange={setEditorOpen}
         dayOfWeek={editingDay}

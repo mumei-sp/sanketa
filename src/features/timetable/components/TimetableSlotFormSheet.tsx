@@ -1,11 +1,5 @@
 import * as React from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { FormSheet } from '@/components/form/FormSheet'
 import { Button } from '@/components/ui/button'
 import { text, border, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
@@ -14,8 +8,8 @@ import { teachersData } from '@/mocks/teachers/teachers'
 import type { TimetableSlot } from '../types'
 import { DAY_LABELS } from '../types'
 
-interface TimetableSlotEditorProps {
-  /** Whether the dialog is open */
+interface TimetableSlotFormSheetProps {
+  /** Whether the panel is open */
   open: boolean
   /** Close handler */
   onOpenChange: (open: boolean) => void
@@ -34,10 +28,10 @@ interface TimetableSlotEditorProps {
 }
 
 /**
- * Modal for editing a single timetable slot.
+ * Panel for editing a single timetable slot.
  * Subject dropdown, teacher dropdown, room input.
  */
-export function TimetableSlotEditor({
+export function TimetableSlotFormSheet({
   open,
   onOpenChange,
   dayOfWeek,
@@ -46,7 +40,7 @@ export function TimetableSlotEditor({
   currentSlot,
   onSave,
   onClear,
-}: TimetableSlotEditorProps) {
+}: TimetableSlotFormSheetProps) {
   const [subjectId, setSubjectId] = React.useState('')
   const [teacherId, setTeacherId] = React.useState('')
   const [room, setRoom] = React.useState('')
@@ -87,13 +81,46 @@ export function TimetableSlotEditor({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle style={{ color: 'var(--heading)' }}>
-            {DAY_LABELS[dayOfWeek]} — {periodLabel}
-          </DialogTitle>
-        </DialogHeader>
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`${DAY_LABELS[dayOfWeek]} — ${periodLabel}`}
+      size="md"
+      footer={
+        <>
+    {currentSlot && onClear && (
+    <button
+    type="button"
+    onClick={() => { onClear(); onOpenChange(false) }}
+    className="text-xs font-medium cursor-pointer"
+    style={{ color: text.muted }}
+    >
+    Clear slot
+    </button>
+    )}
+    <div className="flex items-center gap-2 ml-auto">
+    <Button
+    variant="outline"
+    onClick={() => onOpenChange(false)}
+    className="text-sm"
+    >
+    Cancel
+    </Button>
+    <Button
+    onClick={handleSave}
+    disabled={!subjectId || !teacherId}
+    className="text-sm"
+    style={{
+    backgroundColor: 'var(--heading)',
+    color: background.card,
+    }}
+    >
+    Save
+    </Button>
+    </div>
+        </>
+      }
+    >
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
           {/* Subject */}
@@ -150,39 +177,6 @@ export function TimetableSlotEditor({
           </div>
         </div>
 
-        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-          {currentSlot && onClear && (
-            <button
-              type="button"
-              onClick={() => { onClear(); onOpenChange(false) }}
-              className="text-xs font-medium cursor-pointer"
-              style={{ color: text.muted }}
-            >
-              Clear slot
-            </button>
-          )}
-          <div className="flex items-center gap-2 ml-auto">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="text-sm"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!subjectId || !teacherId}
-              className="text-sm"
-              style={{
-                backgroundColor: 'var(--heading)',
-                color: background.card,
-              }}
-            >
-              Save
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </FormSheet>
   )
 }

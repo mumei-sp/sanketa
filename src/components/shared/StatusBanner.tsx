@@ -5,7 +5,6 @@
  * submitted / draft / not-entered status with consistent styling.
  */
 
-import { colors, baseColors, darken } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 
 interface StatusBannerProps {

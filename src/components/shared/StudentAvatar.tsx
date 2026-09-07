@@ -6,7 +6,6 @@
  */
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { colors } from '@/theme/colors'
 import { getInitials } from '@/utils/format'
 
 interface StudentAvatarProps {

@@ -133,7 +133,7 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onViewReportCard(row.original.studentId) }}
-            className="flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors cursor-pointer whitespace-nowrap"
+            className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors cursor-pointer whitespace-nowrap"
             style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
           >
             <Eye className="w-3.5 h-3.5" />

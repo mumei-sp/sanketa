@@ -1,4 +1,4 @@
-import { colors, darken, baseColors } from '@/theme/colors'
+import { colors } from '@/theme/colors'
 import { StudentAvatar } from '@/components/shared/StudentAvatar'
 import { MobileCardItem } from '@/components/shared/MobileCardItem'
 import { AttendanceStatusSelect } from './AttendanceStatusSelect'

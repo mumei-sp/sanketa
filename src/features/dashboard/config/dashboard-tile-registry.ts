@@ -25,7 +25,6 @@ import {
   Calendar,
   ClipboardList,
 } from 'lucide-react'
-import { baseColors } from '@/theme/colors'
 import type { DashboardStat } from '../types'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
 import { studentsData } from '@/mocks/students/students'
