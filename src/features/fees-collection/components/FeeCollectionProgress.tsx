@@ -68,7 +68,7 @@ export function FeeCollectionProgress({ data, isLoading = false }: FeeCollection
         {/* Title row */}
         <div className="flex items-center justify-between mb-3">
           <Skeleton className="h-5 w-[200px]" />
-          <Skeleton className="h-8 w-8 rounded-md" />
+          <Skeleton className="size-8 rounded-md" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[...Array(4)].map((_, i) => (
@@ -95,7 +95,7 @@ export function FeeCollectionProgress({ data, isLoading = false }: FeeCollection
       {/* Title row */}
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <h3 className="text-section-title">Fees Collection Progress</h3>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button variant="ghost" size="icon" className="size-8">
           <Ellipsis className="h-4 w-4" />
         </Button>
       </div>

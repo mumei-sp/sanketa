@@ -62,7 +62,7 @@ export function DailyAttendanceSkeleton() {
             <div key={i} className="flex items-center gap-4 py-1">
               <Skeleton className="h-4 w-[30px]" />
               <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="size-8 rounded-full" />
                 <Skeleton className="h-4 w-[120px]" />
               </div>
               <Skeleton className="h-4 w-[40px]" />

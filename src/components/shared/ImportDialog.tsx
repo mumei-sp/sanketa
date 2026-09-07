@@ -241,7 +241,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                   backgroundColor: isDragging ? accent.base : 'transparent',
                 }}
               >
-                <Upload className="w-8 h-8" style={{ color: isDragging ? text.heading : border.default }} />
+                <Upload className="size-8" style={{ color: isDragging ? text.heading : border.default }} />
                 <div className="text-center">
                   <p style={{ fontSize: '14px', fontWeight: 500, color: text.heading }}>
                     Drop CSV file here or click to browse

@@ -30,7 +30,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <div className="relative z-10 flex flex-col items-center text-center">
           {/* Logo */}
           <div className="mb-6 flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm">
               <span className="text-xl font-bold text-white">S</span>
             </div>
             <span className="text-xl font-bold text-white">Sanketa</span>

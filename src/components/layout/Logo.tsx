@@ -24,7 +24,11 @@ export function Logo({ logoPath, className }: LogoProps) {
         {logoPath ? (
           <img src={logoPath} alt="Sanketa" className="h-8 w-auto shrink-0 object-contain" />
         ) : (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-[0_6px_16px_-6px_rgb(21_68_110_/_0.35)]">
+          // `w-8` is not the width that pairs with `h-8` here: the compact
+          // scale gives heights their own tokens, so this drew 21×32 and the
+          // radius rounded that into an egg. `aspect-square` takes the width
+          // from the height, whatever the height token is worth.
+          <div className="flex h-8 aspect-square shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent shadow-[0_6px_16px_-6px_rgb(21_68_110_/_0.35)]">
             <span className="text-lg font-extrabold" style={{ color: 'var(--heading)' }}>
               S
             </span>

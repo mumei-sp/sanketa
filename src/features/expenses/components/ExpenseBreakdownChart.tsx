@@ -39,7 +39,7 @@ export function ExpenseBreakdownChart({
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Expense Breakdown</h3>
             <CardAction>
-              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="size-8 rounded-full" />
             </CardAction>
           </CardHeader>
           <CardContent className="px-6 pt-2 pb-4 flex-1 min-h-0">
@@ -63,7 +63,7 @@ export function ExpenseBreakdownChart({
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Expense Breakdown</h3>
           <CardAction>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="size-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </CardAction>

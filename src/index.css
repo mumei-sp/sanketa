@@ -509,6 +509,10 @@ html[data-density="compact"] [data-slot="card"] {
     width: var(--height-10);
     height: var(--height-10);
   }
+  .size-11 {
+    width: var(--height-11);
+    height: var(--height-11);
+  }
   .size-12 {
     width: 2.571rem;
     height: 2.571rem;

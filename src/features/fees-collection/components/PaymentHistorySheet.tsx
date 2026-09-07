@@ -97,7 +97,7 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
       {/* Transaction list */}
       {transactions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 gap-2">
-          <Clock className="w-8 h-8" style={{ color: text.muted }} />
+          <Clock className="size-8" style={{ color: text.muted }} />
           <span className="text-sm text-text-muted">No payment history yet.</span>
         </div>
       ) : (

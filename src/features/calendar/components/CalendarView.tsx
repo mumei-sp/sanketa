@@ -197,7 +197,7 @@ export function CalendarView({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="size-8"
                   onClick={() => setPickerYear(y => y - 1)}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -208,7 +208,7 @@ export function CalendarView({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="size-8"
                   onClick={() => setPickerYear(y => y + 1)}
                 >
                   <ChevronRight className="h-4 w-4" />

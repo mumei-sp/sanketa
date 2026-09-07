@@ -244,7 +244,7 @@ export function GradeSheetPage() {
         ) : rows.length === 0 || rows.every(r => r.total === 0) ? (
           <Tile id="sheet-empty" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
             <div className="flex flex-col items-center justify-center py-16 gap-2">
-              <FileSpreadsheet className="w-8 h-8" style={{ color: colors.text.muted }} />
+              <FileSpreadsheet className="size-8" style={{ color: colors.text.muted }} />
               <span className="text-sm text-text-muted">{GRADE_MESSAGES.EMPTY_SHEET}</span>
             </div>
           </Tile>

@@ -108,7 +108,7 @@ export function CalendarCategoryTabs({
             </span>
           </div>
           <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center"
+            className="size-9 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: allTab.iconBgColor }}
           >
             <AllIcon className="w-4.5 h-4.5" style={{ color: allTab.iconColor }} />
@@ -147,7 +147,7 @@ export function CalendarCategoryTabs({
                   </span>
                 </div>
                 <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  className="size-9 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: tab.iconBgColor }}
                 >
                   <Icon className="w-4.5 h-4.5" style={{ color: tab.iconColor }} />

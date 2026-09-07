@@ -154,10 +154,10 @@ export function AttendancePageLayout({
             <div className="flex items-center justify-between pt-2">
               <Skeleton className="h-4 w-[150px]" />
               <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-8 rounded" />
-                <Skeleton className="h-8 w-8 rounded" />
-                <Skeleton className="h-8 w-8 rounded" />
-                <Skeleton className="h-8 w-8 rounded" />
+                <Skeleton className="size-8 rounded" />
+                <Skeleton className="size-8 rounded" />
+                <Skeleton className="size-8 rounded" />
+                <Skeleton className="size-8 rounded" />
               </div>
             </div>
           </div>
