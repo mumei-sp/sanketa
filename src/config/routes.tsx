@@ -1,21 +1,36 @@
+import { lazy } from 'react'
 import { Navigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import { navigationItems, type NavItem, type LeafPaths } from './navigation'
-import Dashboard from '../pages/Dashboard'
-import Calendar from '../pages/Calendar'
-import Teachers from '../pages/Teachers'
-import Students from '../pages/Students'
-import StudentPromotion from '../pages/StudentPromotion'
-import Attendance from '../pages/Attendance'
-import DailyAttendance from '../pages/DailyAttendance'
-import Timetable from '../pages/Timetable'
-import GradeEntry from '../pages/GradeEntry'
-import GradeSheet from '../pages/GradeSheet'
-import Assignments from '../pages/Assignments'
-import FeesCollection from '../pages/FeesCollection'
-import Expenses from '../pages/Expenses'
-import NoticeBoard from '../pages/NoticeBoard'
-import Transport from '../pages/Transport'
+
+/**
+ * Every page is loaded on demand.
+ *
+ * Statically imported, all fifteen screens plus their charts, tables and form
+ * schemas landed in one entry chunk — a phone opening the dashboard paid for
+ * the transport charts, the grade sheet and the theme studio before it could
+ * paint. Each page now becomes its own chunk that arrives when someone
+ * actually navigates to it.
+ *
+ * `import()` needs a literal path Vite can see at build time, so these cannot
+ * be generated from the navigation config — hence a line each, which the
+ * `Record<LeafPaths, …>` below still forces to stay in step with navigation.
+ */
+const Dashboard = lazy(() => import('../pages/Dashboard'))
+const Calendar = lazy(() => import('../pages/Calendar'))
+const Teachers = lazy(() => import('../pages/Teachers'))
+const Students = lazy(() => import('../pages/Students'))
+const StudentPromotion = lazy(() => import('../pages/StudentPromotion'))
+const Attendance = lazy(() => import('../pages/Attendance'))
+const DailyAttendance = lazy(() => import('../pages/DailyAttendance'))
+const Timetable = lazy(() => import('../pages/Timetable'))
+const GradeEntry = lazy(() => import('../pages/GradeEntry'))
+const GradeSheet = lazy(() => import('../pages/GradeSheet'))
+const Assignments = lazy(() => import('../pages/Assignments'))
+const FeesCollection = lazy(() => import('../pages/FeesCollection'))
+const Expenses = lazy(() => import('../pages/Expenses'))
+const NoticeBoard = lazy(() => import('../pages/NoticeBoard'))
+const Transport = lazy(() => import('../pages/Transport'))
 
 /**
  * Type-safe route configuration.
@@ -23,7 +38,9 @@ import Transport from '../pages/Transport'
  *
  * If you add a new route to navigation, TypeScript will error here until you add the component.
  */
-const routeConfig: Record<LeafPaths<typeof navigationItems>, React.ComponentType> = {
+type RouteComponent = React.ComponentType | React.LazyExoticComponent<React.ComponentType>
+
+const routeConfig: Record<LeafPaths<typeof navigationItems>, RouteComponent> = {
   '/': Dashboard,
   '/calendar': Calendar,
   '/teachers': Teachers,
@@ -44,7 +61,7 @@ const routeConfig: Record<LeafPaths<typeof navigationItems>, React.ComponentType
 /**
  * Helper function to get component for a path with type safety
  */
-function getComponent(path: string): React.ComponentType | undefined {
+function getComponent(path: string): RouteComponent | undefined {
   return routeConfig[path as LeafPaths<typeof navigationItems>]
 }
 

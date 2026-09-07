@@ -1,24 +1,36 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { SchoolConfigProvider } from '@/config/SchoolConfigContext'
 import { Toaster } from './components/ui/sonner'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AppLayout } from './components/layout'
+import { AuthRouteFallback } from './components/layout/RouteFallback'
 import { generateRoutesFromNavigation } from './config/routes'
 import { AuthGuard, GuestGuard } from './features/auth/components/RouteGuards'
-import AddStudent from './features/students/pages/AddStudent'
-import EditStudent from './features/students/pages/EditStudent'
-import StudentDetails from './features/students/pages/StudentDetails'
-import TeacherDetails from './features/teachers/pages/TeacherDetails'
-import AddTeacher from './features/teachers/pages/AddTeacher'
-import EditTeacher from './features/teachers/pages/EditTeacher'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import NotFound from './pages/NotFound'
+
+/**
+ * The shell — guards, layout, router — stays eager: it renders on every route,
+ * so deferring it would only add a round trip before the first paint. The
+ * screens behind it are all split (see `config/routes.tsx` for the rest).
+ */
+const AddStudent = lazy(() => import('./features/students/pages/AddStudent'))
+const EditStudent = lazy(() => import('./features/students/pages/EditStudent'))
+const StudentDetails = lazy(() => import('./features/students/pages/StudentDetails'))
+const TeacherDetails = lazy(() => import('./features/teachers/pages/TeacherDetails'))
+const AddTeacher = lazy(() => import('./features/teachers/pages/AddTeacher'))
+const EditTeacher = lazy(() => import('./features/teachers/pages/EditTeacher'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 const router = createBrowserRouter([
   // ── Auth routes (guest only — redirects to / if already logged in) ──
   {
-    element: <GuestGuard />,
+    element: (
+      <Suspense fallback={<AuthRouteFallback />}>
+        <GuestGuard />
+      </Suspense>
+    ),
     children: [
       {
         path: '/login',
@@ -72,7 +84,11 @@ const router = createBrowserRouter([
   // ── 404 ──
   {
     path: '*',
-    element: <NotFound />,
+    element: (
+      <Suspense fallback={<AuthRouteFallback />}>
+        <NotFound />
+      </Suspense>
+    ),
   },
 ])
 
