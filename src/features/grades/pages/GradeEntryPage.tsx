@@ -25,8 +25,9 @@ import { getGradeBreadcrumbs } from '../utils/breadcrumbs'
 import { EXAMS_BY_TERM } from '../constants'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
-import { ClassPicker } from '@/components/shared/ClassPicker'
-import { withOpacity } from '@/theme/colors'
+import { ClassWorkspaceStrip } from '@/components/shared/ClassWorkspaceStrip'
+import { TOOLBAR_CONTROL_HEIGHT, TOOLBAR_HALF, TOOLBAR_FULL } from '@/components/table'
+import { cn } from '@/lib/utils'
 import {
   fetchGradeableSubjects,
   fetchGradeSubmission,
@@ -170,66 +171,30 @@ export function GradeEntryPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
         {/* ═══ TOOLBAR ═══ */}
         <div
-          className="rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap"
+          className="rounded-lg border flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 flex-wrap"
           style={{
             backgroundColor: colors.background.card,
             borderColor: colors.border.default,
             padding: spacing['3'],
           }}
         >
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap max-md:w-full max-md:gap-2">
             {/* Class workspace — see DailyAttendancePage for the same pattern. */}
-            <div
-              className="flex items-center gap-1 rounded-md border"
-              style={{
-                borderColor: colors.border.default,
-                backgroundColor: colors.background.card,
-                padding: 3,
-              }}
-            >
-              {loadedClasses.length === 0 ? (
-                <span
-                  className="text-xs px-2"
-                  style={{ color: colors.text.muted, paddingBlock: 4 }}
-                >
-                  Pick one or more classes
-                </span>
-              ) : (
-                loadedClasses.map(cls => {
-                  const active = cls === selectedClass
-                  return (
-                    <button
-                      key={cls}
-                      type="button"
-                      onClick={() => handleParamChange('class', cls)}
-                      className="tap-target text-xs font-medium rounded transition-colors"
-                      style={{
-                        padding: '4px 10px',
-                        backgroundColor: active
-                          ? withOpacity('var(--accent)', 0.55)
-                          : 'transparent',
-                        color: 'var(--heading)',
-                      }}
-                    >
-                      {cls}
-                    </button>
-                  )
-                })
-              )}
-              <ClassPicker
-                storageKey="grade-entry-workspace"
-                mode="section"
-                max={6}
-                defaultSelected={classes.slice(0, 1)}
-                onChange={setLoadedClasses}
-              />
-            </div>
+            <ClassWorkspaceStrip
+              storageKey="grade-entry-workspace"
+              classes={classes}
+              loadedClasses={loadedClasses}
+              selectedClass={selectedClass}
+              onSelect={cls => handleParamChange('class', cls)}
+              onLoadedChange={setLoadedClasses}
+              className={TOOLBAR_FULL}
+            />
 
             {/* Exam selector (grouped by term) */}
             <select
               value={selectedExam}
               onChange={e => handleParamChange('exam', e.target.value)}
-              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+              className={cn('rounded-md border px-3 text-sm outline-none', TOOLBAR_CONTROL_HEIGHT, TOOLBAR_HALF)}
               style={{
                 borderColor: colors.border.default,
                 color: 'var(--heading)',
@@ -251,7 +216,7 @@ export function GradeEntryPage() {
             <select
               value={selectedSubject}
               onChange={e => handleParamChange('subject', e.target.value)}
-              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+              className={cn('rounded-md border px-3 text-sm outline-none', TOOLBAR_CONTROL_HEIGHT, TOOLBAR_HALF)}
               style={{
                 borderColor: colors.border.default,
                 color: 'var(--heading)',

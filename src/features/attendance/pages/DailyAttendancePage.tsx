@@ -3,13 +3,14 @@ import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, UserCheck, History, Download } from 'lucide-react'
 import { StatusBanner } from '@/components/shared/StatusBanner'
 import { cn } from '@/lib/utils'
+import { TOOLBAR_HALF } from '@/components/table'
 import { colors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
 import { useAttendanceHistory } from '../hooks/use-attendance-history'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
-import { ClassPicker } from '@/components/shared/ClassPicker'
+import { ClassWorkspaceStrip } from '@/components/shared/ClassWorkspaceStrip'
 import { AttendanceMarkingTable } from '../components/AttendanceMarkingTable'
 import { AttendanceMarkingCards } from '../components/AttendanceMarkingCards'
 import { AttendanceDailySummaryBar } from '../components/AttendanceDailySummaryBar'
@@ -41,9 +42,6 @@ function formatDisplayDate(dateStr: string): string {
  * Route: /attendance/daily
  * Supports query params: ?class=9A&date=2035-03-25
  */
-/** Class picker and date share the first toolbar line on a phone. */
-const HALF_ON_MOBILE = 'max-md:min-w-0 max-md:flex-1 max-md:basis-[calc(50%-0.25rem)]'
-
 export function DailyAttendancePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = React.useState<ViewMode>('mark')
@@ -236,58 +234,22 @@ export function DailyAttendancePage() {
              *     adding / removing loaded classes. The picker owns its own
              *     localStorage so a teacher's workspace survives reloads.
              */}
-            <div
-              className={cn('flex items-center gap-1 overflow-x-auto rounded-md border', HALF_ON_MOBILE)}
-              style={{
-                borderColor: colors.border.default,
-                backgroundColor: colors.background.card,
-                padding: 3,
-              }}
-            >
-              {loadedClasses.length === 0 ? (
-                <span
-                  className="text-xs px-2"
-                  style={{ color: colors.text.muted, paddingBlock: 4 }}
-                >
-                  Pick one or more classes
-                </span>
-              ) : (
-                loadedClasses.map(cls => {
-                  const active = cls === selectedClass
-                  return (
-                    <button
-                      key={cls}
-                      type="button"
-                      onClick={() => handleClassChange(cls)}
-                      className="tap-target text-xs font-medium rounded transition-colors"
-                      style={{
-                        padding: `4px 10px`,
-                        backgroundColor: active
-                          ? withOpacity('var(--accent)', 0.55)
-                          : 'transparent',
-                        color: 'var(--heading)',
-                      }}
-                    >
-                      {cls}
-                    </button>
-                  )
-                })
-              )}
-              <ClassPicker
-                storageKey="daily-attendance-workspace"
-                mode="section"
-                max={6}
-                defaultSelected={classes.slice(0, 1)}
-                onChange={setLoadedClasses}
-              />
-            </div>
+            <ClassWorkspaceStrip
+              storageKey="daily-attendance-workspace"
+              classes={classes}
+              loadedClasses={loadedClasses}
+              selectedClass={selectedClass}
+              onSelect={handleClassChange}
+              onLoadedChange={setLoadedClasses}
+              className={TOOLBAR_HALF}
+            />
 
             {/* Date picker */}
             <input
               type="date"
               value={selectedDate}
               onChange={e => handleDateChange(e.target.value)}
-              className={cn('h-control rounded-md border px-3 text-sm outline-none', HALF_ON_MOBILE)}
+              className={cn('h-control rounded-md border px-3 text-sm outline-none', TOOLBAR_HALF)}
               style={{
                 borderColor: colors.border.default,
                 color: 'var(--heading)',
