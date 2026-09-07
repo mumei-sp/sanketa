@@ -2,6 +2,7 @@ import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, UserCheck, History, Download } from 'lucide-react'
 import { StatusBanner } from '@/components/shared/StatusBanner'
+import { cn } from '@/lib/utils'
 import { colors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
@@ -40,6 +41,9 @@ function formatDisplayDate(dateStr: string): string {
  * Route: /attendance/daily
  * Supports query params: ?class=9A&date=2035-03-25
  */
+/** Class picker and date share the first toolbar line on a phone. */
+const HALF_ON_MOBILE = 'max-md:min-w-0 max-md:flex-1 max-md:basis-[calc(50%-0.25rem)]'
+
 export function DailyAttendancePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = React.useState<ViewMode>('mark')
@@ -217,14 +221,14 @@ export function DailyAttendancePage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
         {/* ═══ TOOLBAR ═══ */}
         <div
-          className="rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap"
+          className="rounded-lg border flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 flex-wrap"
           style={{
             backgroundColor: colors.background.card,
             borderColor: colors.border.default,
             padding: spacing['3'],
           }}
         >
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap max-md:w-full max-md:gap-2">
             {/* ── Class workspace ─────────────────────────────────────
              *  1. Segmented chips show the classes the teacher has loaded
              *     (e.g. 9A, 9B). Clicking a chip switches the visible roster.
@@ -233,7 +237,7 @@ export function DailyAttendancePage() {
              *     localStorage so a teacher's workspace survives reloads.
              */}
             <div
-              className="flex items-center gap-1 rounded-md border"
+              className={cn('flex items-center gap-1 overflow-x-auto rounded-md border', HALF_ON_MOBILE)}
               style={{
                 borderColor: colors.border.default,
                 backgroundColor: colors.background.card,
@@ -283,7 +287,7 @@ export function DailyAttendancePage() {
               type="date"
               value={selectedDate}
               onChange={e => handleDateChange(e.target.value)}
-              className="text-sm rounded-md border px-3 py-1.5 outline-none"
+              className={cn('h-control rounded-md border px-3 text-sm outline-none', HALF_ON_MOBILE)}
               style={{
                 borderColor: colors.border.default,
                 color: 'var(--heading)',
@@ -296,7 +300,7 @@ export function DailyAttendancePage() {
               <button
                 type="button"
                 onClick={handleMarkAllPresent}
-                className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80"
+                className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80 max-md:w-full"
                 style={{
                   backgroundColor: withOpacity('var(--primary)', 0.4),
                   color: 'var(--heading)',
@@ -309,12 +313,12 @@ export function DailyAttendancePage() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-md:w-full">
           {/* Export */}
           <button
             type="button"
             onClick={handleExport}
-            className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80 border"
+            className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors hover:opacity-80 border max-md:flex-1"
             style={{
               borderColor: colors.border.default,
               color: 'var(--heading)',
@@ -327,13 +331,13 @@ export function DailyAttendancePage() {
 
           {/* View toggle */}
           <div
-            className="flex items-center rounded-md border overflow-hidden"
+            className="flex items-center overflow-hidden rounded-md border max-md:flex-1"
             style={{ borderColor: colors.border.default }}
           >
             <button
               type="button"
               onClick={() => setViewMode('mark')}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
+              className="tap-target flex flex-1 items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
               style={{
                 backgroundColor: viewMode === 'mark' ? 'var(--heading)' : colors.background.card,
                 color: viewMode === 'mark' ? colors.background.card : colors.text.muted,
@@ -345,7 +349,7 @@ export function DailyAttendancePage() {
             <button
               type="button"
               onClick={() => setViewMode('history')}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
+              className="tap-target flex flex-1 items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 transition-colors"
               style={{
                 backgroundColor: viewMode === 'history' ? 'var(--heading)' : colors.background.card,
                 color: viewMode === 'history' ? colors.background.card : colors.text.muted,

@@ -37,7 +37,10 @@ export function AttendanceMarkingCards({
         const note = entry?.note ?? ''
         const showNote = status === 'late' || status === 'absent'
 
-        // Border & background using brand colors: blue (present), pink (late), navy (absent)
+        // Border & background using brand colors: blue (present), pink (late),
+        // navy (absent). Each fill is a wash of that status' own colour —
+        // absent previously used a flat grey, which read as disabled rather
+        // than marked.
         let borderColor: string = colors.border.default
         let bgColor: string = colors.background.card
         if (status === 'present') {
@@ -48,7 +51,7 @@ export function AttendanceMarkingCards({
           bgColor = colors.primary.soft
         } else if (status === 'absent') {
           borderColor = 'var(--heading)'
-          bgColor = colors.accent.muted
+          bgColor = 'color-mix(in srgb, var(--heading) 7%, var(--card))'
         }
 
         return (
@@ -58,7 +61,9 @@ export function AttendanceMarkingCards({
             bgColor={bgColor}
             className="transition-all"
           >
-            {/* Header: Avatar + Name + Roll */}
+            {/* Header: avatar + name/roll on the left, an "Unmarked" nudge on
+                the right. The chip disappears once a status is chosen, so what
+                is still outstanding stays scannable down the list. */}
             <div className="flex items-center gap-2.5 mb-2.5">
               <StudentAvatar name={student.name} avatarUrl={student.avatarUrl} />
               <div className="flex-1 min-w-0">
@@ -72,6 +77,14 @@ export function AttendanceMarkingCards({
                   Roll #{student.rollNumber}
                 </div>
               </div>
+              {!status && (
+                <span
+                  className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                  style={{ backgroundColor: colors.border.subtle, color: colors.text.muted }}
+                >
+                  Unmarked
+                </span>
+              )}
             </div>
 
             {/* Status buttons */}
@@ -79,6 +92,7 @@ export function AttendanceMarkingCards({
               value={status}
               onChange={s => onStatusChange(student.id, s)}
               disabled={disabled}
+              layout="card"
             />
 
             {/* Note input (slides in when Late/Absent) */}
@@ -87,9 +101,10 @@ export function AttendanceMarkingCards({
                 type="text"
                 value={note}
                 onChange={e => onNoteChange(student.id, e.target.value)}
-                placeholder="Add reason..."
+                placeholder="Add a reason…"
                 disabled={disabled}
-                className="w-full text-xs rounded-md border px-2.5 py-1.5 mt-2 outline-none"
+                aria-label={`Reason for ${student.name}`}
+                className="h-control mt-2 w-full rounded-md border px-3 text-xs outline-none focus-visible:border-ring"
                 style={{
                   borderColor: colors.border.default,
                   color: colors.text.body,

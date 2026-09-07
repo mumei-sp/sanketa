@@ -9,6 +9,13 @@ interface AttendanceStatusSelectProps {
   onChange: (status: MarkableAttendanceStatus) => void
   /** Disable interaction */
   disabled?: boolean
+  /**
+   * 'table' → compact icon buttons for a dense desktop row.
+   * 'card'  → full-width labelled pills, matching the promotion cards'
+   *           DecisionToggle. Icons alone carry no meaning on a phone, where
+   *           this is the primary control.
+   */
+  layout?: 'table' | 'card'
 }
 
 /**
@@ -64,9 +71,12 @@ export function AttendanceStatusSelect({
   value,
   onChange,
   disabled = false,
+  layout = 'table',
 }: AttendanceStatusSelectProps) {
+  const isCard = layout === 'card'
+
   return (
-    <div className="flex items-center gap-1">
+    <div className={isCard ? 'flex items-stretch gap-1.5' : 'flex items-center gap-1'}>
       {statusOptions.map(opt => {
         const isSelected = value === opt.value
         return (
@@ -75,19 +85,27 @@ export function AttendanceStatusSelect({
             type="button"
             disabled={disabled}
             onClick={() => onChange(opt.value)}
-            className="flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all border"
+            className={
+              isCard
+                ? 'tap-target flex flex-1 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-all border'
+                : 'flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all border'
+            }
             style={{
               backgroundColor: isSelected ? opt.bgColor : colors.background.card,
               borderColor: isSelected ? opt.color : colors.border.default,
-              color: isSelected ? (opt.textColor ?? opt.color) : 'var(--heading)',
-              opacity: disabled ? 0.5 : 1,
+              // On the pastel fills, navy reads better than the darkened border
+              // colour; absent keeps its light-on-navy override.
+              color: isSelected
+                ? (opt.textColor ?? (isCard ? 'var(--heading)' : opt.color))
+                : 'var(--heading)',
+              opacity: disabled ? 0.5 : isSelected ? 1 : 0.7,
               cursor: disabled ? 'not-allowed' : 'pointer',
             }}
             aria-label={opt.label}
             aria-pressed={isSelected}
           >
             {opt.icon}
-            <span className="hidden sm:inline">{opt.shortLabel}</span>
+            {isCard ? opt.label : <span className="hidden sm:inline">{opt.shortLabel}</span>}
           </button>
         )
       })}

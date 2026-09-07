@@ -181,20 +181,32 @@ function DayPeriodRow({
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
     >
-      {/* Period + time rail */}
-      <div className="flex w-[72px] shrink-0 flex-col justify-center">
-        <span className="text-xs font-bold leading-tight" style={{ color: 'var(--heading)' }}>
-          P{periodNumber}
+      {/* Time rail — start over end, right-aligned against the divider so the
+          numerals line up down the day. */}
+      <div className="flex w-[46px] shrink-0 flex-col items-end justify-center">
+        <span
+          className="text-xs font-semibold leading-tight"
+          style={{ color: 'var(--heading)', fontVariantNumeric: 'tabular-nums' }}
+        >
+          {period.startTime}
         </span>
         <span
           className="text-[10px] leading-tight"
           style={{ color: text.muted, fontVariantNumeric: 'tabular-nums' }}
         >
-          {timeRange}
+          {period.endTime}
         </span>
       </div>
 
-      {/* Subject detail */}
+      {/* Hairline separating the rail from the subject */}
+      <span
+        aria-hidden
+        className="w-px self-stretch rounded-full"
+        style={{ backgroundColor: withOpacity(isEmpty ? border.default : tintColor, 0.35) }}
+      />
+
+      {/* Subject detail — the period number rides with the teacher so the
+          headline stays a single strong line. */}
       <div className="flex min-w-0 flex-1 flex-col justify-center">
         {isEmpty ? (
           <span className="text-body-muted" style={{ color: text.muted }}>
@@ -212,26 +224,28 @@ function DayPeriodRow({
               {slot?.subjectName ?? exception?.newSubject ?? ''}
             </span>
             <span className="text-caption leading-tight break-words" style={{ color: text.muted }}>
-              {slot?.teacherName ?? exception?.newTeacherName ?? ''}
+              P{periodNumber}
+              {(slot?.teacherName ?? exception?.newTeacherName) &&
+                ` · ${slot?.teacherName ?? exception?.newTeacherName}`}
             </span>
-            {slot?.room && (
-              <span
-                className="mt-1.5 inline-block w-fit rounded-full text-[10px] font-medium leading-tight"
-                style={{
-                  color: 'var(--heading)',
-                  backgroundColor: withOpacity(tintColor, 0.15),
-                  padding: '2px 8px',
-                }}
-              >
-                {slot.room}
-              </span>
-            )}
           </>
         )}
       </div>
 
-      {/* Status affordance */}
-      <div className="flex shrink-0 items-center">
+      {/* Right column — room and status, filling the width the text left bare */}
+      <div className="flex shrink-0 items-center gap-2">
+        {slot?.room && (
+          <span
+            className="rounded-full text-[10px] font-medium leading-tight whitespace-nowrap"
+            style={{
+              color: 'var(--heading)',
+              backgroundColor: withOpacity(tintColor, 0.2),
+              padding: '3px 9px',
+            }}
+          >
+            {slot.room}
+          </span>
+        )}
         {isEditMode ? (
           <Pencil className="size-4" style={{ color: 'var(--heading)' }} />
         ) : (

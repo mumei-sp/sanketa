@@ -75,12 +75,25 @@ export function ScheduleDetails({
     <Card className={className}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <h3
-            className="text-sm font-semibold"
-            style={{ color: 'var(--heading)' }}
-          >
-            Schedule Details
-          </h3>
+          <div className="min-w-0">
+            <h3
+              className="text-sm font-semibold"
+              style={{ color: 'var(--heading)' }}
+            >
+              Schedule Details
+            </h3>
+            {/* The compact rows below drop the date — it belongs to the whole
+                panel, not to each event, so it is stated once here. */}
+            {selectedDate && (
+              <p className="text-caption text-muted-foreground">
+                {selectedDate.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </p>
+            )}
+          </div>
           <Button
             variant="ghost"
             size="icon"
