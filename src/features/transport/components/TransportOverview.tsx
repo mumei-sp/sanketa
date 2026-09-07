@@ -138,8 +138,13 @@ export function TransportOverview() {
                           )
                         }}
                       />
-                      <Bar dataKey="capacity" fill={'var(--accent)'} radius={[4, 4, 0, 0]} name="Capacity" />
-                      <Bar dataKey="students" fill={'var(--primary)'} radius={[4, 4, 0, 0]} name="Students" />
+                      {/* `radius` makes Recharts draw each bar as a custom
+                          rounded path, and those freeze at their entry-animation
+                          start frame — every bar rendered as a ~10px stub under
+                          a 0-60 axis. The pie charts below already opt out; these
+                          two were missed. */}
+                      <Bar dataKey="capacity" fill={'var(--accent)'} radius={[4, 4, 0, 0]} name="Capacity" isAnimationActive={false} />
+                      <Bar dataKey="students" fill={'var(--primary)'} radius={[4, 4, 0, 0]} name="Students" isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
