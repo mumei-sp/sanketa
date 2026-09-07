@@ -1,4 +1,4 @@
-import { createContext, Suspense, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import {
   SidebarProvider,
@@ -15,9 +15,18 @@ import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { SchoolSettingsPanel } from '@/components/settings/SchoolSettingsPanel'
 import { RouteFallback } from './RouteFallback'
 import { UserMenu } from './UserMenu'
-import { GlobalSearch, useGlobalSearchShortcut } from '@/features/search/GlobalSearch'
+import { useGlobalSearchShortcut } from '@/features/search/use-search-shortcut'
 import { NotificationProvider } from '@/features/notifications/NotificationContext'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
+
+/**
+ * The palette is a chunk of its own — several hundred kilobytes of index and
+ * ranking that most sessions never open. The ⌘K listener stays eager; this
+ * arrives the first time someone actually reaches for it.
+ */
+const GlobalSearch = lazy(() =>
+  import('@/features/search/GlobalSearch').then(module => ({ default: module.GlobalSearch })),
+)
 
 interface AppLayoutProps {
   logoPath?: string
@@ -115,7 +124,11 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
   const { config } = useSchoolConfig()
   const location = useLocation()
   const [searchOpen, setSearchOpen] = useState(false)
-  const openSearch = useCallback(() => setSearchOpen(true), [])
+  const [searchMounted, setSearchMounted] = useState(false)
+  const openSearch = useCallback(() => {
+    setSearchMounted(true)
+    setSearchOpen(true)
+  }, [])
   useGlobalSearchShortcut(openSearch)
 
   // Use uploaded school logo if available, otherwise fall back to prop
@@ -194,7 +207,13 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
       {/* School settings side panel — opens on gear icon click */}
       <SchoolSettingsPanel />
 
-      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+      {/* Mounted on first open and kept mounted after, so the dialog's own
+          close animation has something to run on. */}
+      {searchMounted && (
+        <Suspense fallback={null}>
+          <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+        </Suspense>
+      )}
     </>
   )
 }

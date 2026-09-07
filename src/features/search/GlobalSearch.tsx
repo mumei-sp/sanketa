@@ -1,96 +1,134 @@
 /**
- * Global search — the top bar's search field, made real.
+ * The command palette behind the top bar's search field and ⌘K.
  *
- * The field had a placeholder and a ⌘K hint and did nothing, which is worse
- * than no field: it advertises a capability and then swallows what you type.
+ * It is a palette rather than a search box: alongside records it carries the
+ * things people actually open the bar to *do* — add a student, mark a
+ * register — because the fastest route to "create a notice" is typing four
+ * letters, not two clicks through a menu.
  *
- * Scope is deliberately narrow. It searches the two record types someone
- * actually hunts for by name — students and teachers — plus the app's own
- * destinations, so "expen" jumps to Expenses. It is not a full-text search
- * over notices, grades and fees; that wants a backend index, not a client
- * filtering arrays.
+ * What it searches, and what it deliberately does not: students, teachers and
+ * notices by name, plus every destination and a handful of actions. Not the
+ * full text of grades, fees or attendance records — that wants a backend index,
+ * not a client filtering arrays, and pretending otherwise would mean a palette
+ * that misses things without saying so.
  *
- * People are fetched once when the dialog first opens and filtered in memory.
- * With a school-sized roster that is instant and costs one request, where a
- * per-keystroke round trip would spend dozens. When a real search endpoint
- * exists, `useSearchIndex` is the one thing that changes.
+ * Records are fetched once when the palette first opens and ranked in memory.
+ * At school scale that is instant and costs one round of requests, where a
+ * per-keystroke fetch would spend dozens. `useSearchIndex` is the single thing
+ * that changes the day a real search endpoint exists.
+ *
+ * Ranking, highlighting and recents live in `search-index.ts`.
  */
 
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, CornerDownLeft, GraduationCap, Users, ArrowRight } from 'lucide-react'
+import {
+  Search,
+  CornerDownLeft,
+  GraduationCap,
+  Users,
+  ArrowRight,
+  Megaphone,
+  Clock,
+  Sparkles,
+  UserPlus,
+  CalendarPlus,
+  FilePlus2,
+  CheckSquare,
+  type LucideIcon,
+} from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { withOpacity } from '@/theme/colors'
 import { fetchStudents } from '@/api/services/student-service'
 import { fetchTeachers } from '@/api/services/teacher-service'
+import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
 import { navigationItems } from '@/config/navigation'
+import {
+  rankItems,
+  highlightParts,
+  readRecents,
+  rememberRecent,
+  type SearchItem,
+  type ScoredItem,
+  type ResultGroup,
+} from './search-index'
 
-interface SearchResult {
-  id: string
-  label: string
-  detail?: string
-  route: string
-  group: 'Go to' | 'Students' | 'Teachers'
-}
-
-/** Flatten navigation into destinations, parents included via their children. */
-function collectDestinations(): SearchResult[] {
-  const out: SearchResult[] = []
-  navigationItems.forEach(item => {
-    if (item.children?.length) {
-      item.children.forEach(child => {
-        out.push({
-          id: `nav:${child.path}`,
-          label: child.title,
-          detail: item.title,
-          route: child.path,
-          group: 'Go to',
-        })
-      })
-    } else {
-      out.push({ id: `nav:${item.path}`, label: item.title, route: item.path, group: 'Go to' })
-    }
-  })
-  return out
-}
-
-const DESTINATIONS = collectDestinations()
+// ── The static half of the index ──────────────────────────────────────
 
 /**
- * A person's display name.
+ * Things to do, not places to go.
  *
- * The two record types disagree: students carry `name`, teachers carry
- * `fullName` / `displayName` from the shared UserProfile shape. Rather than
- * pick one and quietly show ids for the other, take whichever is populated.
+ * Every one lands on a route that opens the relevant form, so the palette
+ * never has to reach across the app to trigger a sheet on a page that is not
+ * mounted yet.
  */
-function personName(person: {
-  name?: string
-  fullName?: string
-  displayName?: string
-}): string | undefined {
+const ACTIONS: SearchItem[] = [
+  { id: 'act:add-student', label: 'Add student', detail: 'Enrol a new student', route: '/students/add', group: 'Actions', icon: UserPlus, weight: 40 },
+  { id: 'act:add-teacher', label: 'Add teacher', detail: 'Add a staff member', route: '/teachers/add', group: 'Actions', icon: UserPlus, weight: 40 },
+  { id: 'act:mark-attendance', label: 'Mark attendance', detail: "Today's register", route: '/attendance/daily', group: 'Actions', icon: CheckSquare, weight: 40 },
+  { id: 'act:enter-grades', label: 'Enter grades', detail: 'Record exam marks', route: '/grades/entry', group: 'Actions', icon: FilePlus2, weight: 40 },
+  { id: 'act:new-notice', label: 'Create notice', detail: 'Post to the notice board', route: '/notice-board', group: 'Actions', icon: Megaphone, weight: 40 },
+  { id: 'act:new-event', label: 'Add calendar event', detail: 'Schedule something', route: '/calendar', group: 'Actions', icon: CalendarPlus, weight: 40 },
+]
+
+/** Every destination in the sidebar, parents flattened to their children. */
+const DESTINATIONS: SearchItem[] = navigationItems.flatMap(item =>
+  item.children?.length
+    ? item.children.map(child => ({
+        id: `nav:${child.path}`,
+        label: child.title,
+        detail: item.title,
+        route: child.path,
+        group: 'Go to' as const,
+      }))
+    : [{ id: `nav:${item.path}`, label: item.title, route: item.path, group: 'Go to' as const }],
+)
+
+const GROUP_ICONS: Record<ResultGroup, LucideIcon> = {
+  Actions: Sparkles,
+  'Go to': ArrowRight,
+  Students: GraduationCap,
+  Teachers: Users,
+  Notices: Megaphone,
+}
+
+/** Brand tint per group, so the eye sorts results before reading them. */
+const GROUP_COLORS: Record<ResultGroup, string> = {
+  Actions: 'var(--primary)',
+  'Go to': 'var(--heading)',
+  Students: 'var(--accent)',
+  Teachers: 'var(--accent)',
+  Notices: 'var(--primary)',
+}
+
+const GROUP_ORDER: ResultGroup[] = ['Actions', 'Go to', 'Students', 'Teachers', 'Notices']
+const RESULT_LIMIT = 12
+
+/** A person's display name — students carry `name`, teachers `fullName`. */
+function personName(person: { name?: string; fullName?: string; displayName?: string }) {
   return person.displayName || person.fullName || person.name || undefined
 }
 
 /**
- * People, loaded once per session on first open.
+ * Records, loaded once per session on first open.
  *
- * Deferred until the dialog is actually opened so the roster never sits on the
- * critical path of a page that may never search.
+ * Deferred until the palette is actually opened, so a roster never sits on the
+ * critical path of a page that may never be searched.
  */
 function useSearchIndex(enabled: boolean) {
-  const [people, setPeople] = React.useState<SearchResult[] | null>(null)
-  const loadingRef = React.useRef(false)
+  const [records, setRecords] = React.useState<SearchItem[] | null>(null)
+  const startedRef = React.useRef(false)
 
   React.useEffect(() => {
-    if (!enabled || people !== null || loadingRef.current) return
-    loadingRef.current = true
+    if (!enabled || startedRef.current) return
+    startedRef.current = true
 
-    Promise.all([fetchStudents(), fetchTeachers()])
-      .then(([students, teachers]) => {
-        setPeople([
+    Promise.all([fetchStudents(), fetchTeachers(), fetchNoticeBoardEntries()])
+      .then(([students, teachers, notices]) => {
+        setRecords([
           ...students.map(student => ({
             id: `student:${student.studentId}`,
             label: personName(student) ?? student.studentId,
@@ -105,28 +143,118 @@ function useSearchIndex(enabled: boolean) {
             route: `/teachers/details/${teacher.teacherId}`,
             group: 'Teachers' as const,
           })),
+          ...notices.map(notice => ({
+            id: `notice:${notice.id}`,
+            label: notice.title,
+            detail: [notice.tags[0]?.label, notice.audience].filter(Boolean).join(' · '),
+            route: '/notice-board',
+            group: 'Notices' as const,
+          })),
         ])
       })
       .catch(error => {
         console.error('Failed to build the search index', error)
-        setPeople([])
+        setRecords([])
       })
-      .finally(() => {
-        loadingRef.current = false
-      })
-  }, [enabled, people])
+  }, [enabled])
 
-  return people
+  return records
 }
 
-const GROUP_ICONS = {
-  'Go to': ArrowRight,
-  Students: GraduationCap,
-  Teachers: Users,
-} as const
+// ── Presentation ──────────────────────────────────────────────────────
 
-/** Cap per group so one big roster cannot bury the others. */
-const PER_GROUP_LIMIT = 5
+function ResultRow({
+  item,
+  active,
+  onSelect,
+  onHover,
+}: {
+  item: ScoredItem
+  active: boolean
+  onSelect: () => void
+  onHover: () => void
+}) {
+  const Icon = item.icon ?? GROUP_ICONS[item.group]
+  const tint = GROUP_COLORS[item.group]
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      onMouseMove={onHover}
+      data-active={active || undefined}
+      className={cn(
+        'group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left',
+        'transition-[background-color,transform] duration-150',
+        active && 'bg-[color-mix(in_srgb,var(--primary)_16%,transparent)]',
+      )}
+    >
+      {/* Active marker — the same navy tab the sidebar uses for the current
+          page, so "where the keyboard is" reads the same everywhere. */}
+      <span
+        aria-hidden
+        className={cn(
+          'absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full transition-opacity duration-150',
+          active ? 'opacity-100' : 'opacity-0',
+        )}
+        style={{ backgroundColor: 'var(--heading)' }}
+      />
+
+      <span
+        aria-hidden
+        className="flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors"
+        style={{ backgroundColor: withOpacity(tint, active ? 0.28 : 0.14) }}
+      >
+        <Icon className="size-4" style={{ color: 'var(--heading)' }} />
+      </span>
+
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-body" style={{ color: 'var(--heading)' }}>
+          {highlightParts(item.label, item.matches).map((part, index) =>
+            part.hit ? (
+              <mark
+                key={index}
+                className="rounded-[3px] bg-transparent px-0 font-semibold"
+                style={{ color: 'var(--heading)', backgroundColor: withOpacity('var(--primary)', 0.45) }}
+              >
+                {part.text}
+              </mark>
+            ) : (
+              <React.Fragment key={index}>{part.text}</React.Fragment>
+            ),
+          )}
+        </span>
+        {item.detail && (
+          <span className="truncate text-caption text-muted-foreground">{item.detail}</span>
+        )}
+      </span>
+
+      <CornerDownLeft
+        aria-hidden
+        className={cn(
+          'size-3.5 shrink-0 text-muted-foreground transition-opacity duration-150',
+          active ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+    </button>
+  )
+}
+
+/** ⌘/⌃ depending on platform, so the hint matches the key that works. */
+function useModifierSymbol() {
+  return React.useMemo(
+    () => (typeof navigator !== 'undefined' && /mac/i.test(navigator.platform) ? '⌘' : 'Ctrl'),
+    [],
+  )
+}
+
+function Hint({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="rounded border border-border bg-card px-1.5 py-0.5 font-sans text-[10px] font-semibold text-muted-foreground">
+      {children}
+    </kbd>
+  )
+}
 
 export function GlobalSearch({
   open,
@@ -137,168 +265,220 @@ export function GlobalSearch({
 }) {
   const [query, setQuery] = React.useState('')
   const [activeIndex, setActiveIndex] = React.useState(0)
+  const [recents, setRecents] = React.useState<SearchItem[]>([])
   const navigate = useNavigate()
-  const people = useSearchIndex(open)
+  const records = useSearchIndex(open)
+  const modifier = useModifierSymbol()
+  const listRef = React.useRef<HTMLDivElement>(null)
 
-  // Start clean on every open — a stale query from last time is never what
-  // someone means by pressing ⌘K.
   React.useEffect(() => {
-    if (open) {
-      setQuery('')
-      setActiveIndex(0)
-    }
+    if (!open) return
+    // A stale query from last time is never what ⌘K means.
+    setQuery('')
+    setActiveIndex(0)
+    setRecents(readRecents())
   }, [open])
 
-  const results = React.useMemo<SearchResult[]>(() => {
-    const term = query.trim().toLowerCase()
-    // With no query, destinations alone: a list of every student in the school
-    // is not a useful thing to open onto.
-    const pool = term ? [...DESTINATIONS, ...(people ?? [])] : DESTINATIONS
-    const matched = term
-      ? pool.filter(
-          item =>
-            item.label.toLowerCase().includes(term) ||
-            (item.detail?.toLowerCase().includes(term) ?? false),
-        )
-      : pool
+  const results = React.useMemo<ScoredItem[]>(() => {
+    const term = query.trim()
 
-    const groups: SearchResult['group'][] = ['Go to', 'Students', 'Teachers']
-    return groups.flatMap(group =>
-      matched.filter(item => item.group === group).slice(0, PER_GROUP_LIMIT),
-    )
-  }, [query, people])
+    // Empty query: what you opened last, then the things you might want to do.
+    // Not the roster — a list of every student is not a useful thing to open onto.
+    if (!term) {
+      const seed = [
+        ...recents.map(item => ({ ...item, score: 0, matches: [] as number[] })),
+        ...ACTIONS.map(item => ({ ...item, score: 0, matches: [] as number[] })),
+      ]
+      return seed.slice(0, RESULT_LIMIT)
+    }
+
+    return rankItems([...ACTIONS, ...DESTINATIONS, ...(records ?? [])], term, RESULT_LIMIT)
+  }, [query, records, recents])
+
+  // Group headings are emitted as the group changes, so keyboard indexing stays
+  // one flat sequence rather than a nested one.
+  const rows = React.useMemo(() => {
+    if (!query.trim()) {
+      // Preserve recents-then-actions order rather than re-sorting into groups.
+      return results.map((item, index) => ({
+        item,
+        index,
+        heading:
+          index === 0
+            ? recents.length > 0
+              ? 'Recent'
+              : 'Quick actions'
+            : index === recents.length && recents.length > 0
+              ? 'Quick actions'
+              : null,
+      }))
+    }
+    const seen = new Set<ResultGroup>()
+    const ordered = GROUP_ORDER.flatMap(group => results.filter(item => item.group === group))
+    return ordered.map((item, index) => {
+      const heading = seen.has(item.group) ? null : item.group
+      seen.add(item.group)
+      return { item, index, heading }
+    })
+  }, [results, query, recents])
 
   React.useEffect(() => {
     setActiveIndex(0)
   }, [query])
 
+  // Keep the highlighted row on screen when arrowing past the fold.
+  React.useEffect(() => {
+    listRef.current
+      ?.querySelector('[data-active]')
+      ?.scrollIntoView({ block: 'nearest' })
+  }, [activeIndex])
+
   const select = React.useCallback(
-    (result: SearchResult) => {
+    (item: SearchItem) => {
+      setRecents(rememberRecent(item))
       onOpenChange(false)
-      navigate(result.route)
+      navigate(item.route)
     },
     [navigate, onOpenChange],
   )
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (results.length === 0) return
+    if (rows.length === 0) return
     if (event.key === 'ArrowDown') {
       event.preventDefault()
-      setActiveIndex(index => (index + 1) % results.length)
+      setActiveIndex(index => (index + 1) % rows.length)
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
-      setActiveIndex(index => (index - 1 + results.length) % results.length)
+      setActiveIndex(index => (index - 1 + rows.length) % rows.length)
     } else if (event.key === 'Enter') {
       event.preventDefault()
-      select(results[activeIndex])
+      const row = rows.find(candidate => candidate.index === activeIndex)
+      if (row) select(row.item)
     }
   }
 
-  // Headings are emitted as the group changes down the flat list, so keyboard
-  // indexing stays a single sequence rather than a nested one.
-  let lastGroup: SearchResult['group'] | null = null
+  const isIndexing = Boolean(query.trim()) && records === null
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-[10%] max-w-lg translate-y-0 gap-0 overflow-hidden p-0 [&>button]:hidden">
+      <DialogContent
+        showCloseButton={false}
+        className={cn(
+          'top-[8%] max-w-xl translate-y-0 gap-0 overflow-hidden border-0 p-0',
+          // Frosted over the aurora rather than an opaque slab, matching the
+          // mobile top bar and the app's card surfaces.
+          'glass-card shadow-2xl',
+        )}
+        style={{
+          borderRadius: 'var(--radius-xl, 1rem)',
+          boxShadow:
+            '0 24px 64px -24px color-mix(in srgb, var(--heading) 45%, transparent), 0 0 0 1px color-mix(in srgb, var(--heading) 10%, transparent)',
+        }}
+      >
         <DialogHeader className="sr-only">
-          <DialogTitle>Search</DialogTitle>
+          <DialogTitle>Search and commands</DialogTitle>
         </DialogHeader>
 
-        <div className="relative border-b">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+        {/* Brand hairline — the one flourish, and it doubles as the seam
+            between the query and its results. */}
+        <span
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent)',
+          }}
+        />
+
+        <div className="relative flex items-center gap-3 px-4 py-3.5">
+          <Search className="size-4 shrink-0 text-muted-foreground" />
+          <input
             autoFocus
             value={query}
             onChange={event => setQuery(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search students, teachers and pages"
-            aria-label="Search students, teachers and pages"
-            className="h-12 rounded-none border-0 pl-11 text-sm shadow-none focus-visible:ring-0"
+            placeholder="Search or jump to…"
+            aria-label="Search students, teachers, notices, pages and actions"
+            className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+            style={{ color: 'var(--heading)' }}
           />
+          <Hint>esc</Hint>
         </div>
 
-        <div className="scrollbar-thin max-h-[min(24rem,60vh)] overflow-y-auto p-2">
-          {query && people === null ? (
+        <span aria-hidden className="block h-px bg-border/60" />
+
+        <div className="relative">
+          {/* Fade at the fold. The list scrolls, and without this the row it
+              clips reads as a rendering fault rather than "there is more". */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8"
+            style={{
+              background:
+                'linear-gradient(to top, color-mix(in srgb, var(--card) 80%, transparent), transparent)',
+            }}
+          />
+          <div
+            ref={listRef}
+            className="scrollbar-thin max-h-[min(26rem,58vh)] overflow-y-auto overscroll-contain p-2"
+          >
+          {isIndexing ? (
             <div className="space-y-1 p-1">
-              {[0, 1, 2].map(row => (
-                <Skeleton key={row} className="h-10 w-full rounded-md" />
+              {[0, 1, 2, 3].map(row => (
+                <Skeleton key={row} className="h-12 w-full rounded-xl" />
               ))}
             </div>
-          ) : results.length === 0 ? (
+          ) : rows.length === 0 ? (
             <EmptyState
               icon={<Search />}
-              title="No matches"
-              description={`Nothing for "${query}".`}
+              title="Nothing found"
+              description={`No students, teachers, notices or pages match "${query.trim()}".`}
               className="py-10"
             />
           ) : (
-            results.map((result, index) => {
-              const Icon = GROUP_ICONS[result.group]
-              const heading = result.group !== lastGroup ? result.group : null
-              lastGroup = result.group
+            rows.map(({ item, index, heading }) => (
+              <React.Fragment key={item.id}>
+                {heading && (
+                  <p className="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {heading}
+                  </p>
+                )}
+                <ResultRow
+                  item={item}
+                  active={index === activeIndex}
+                  onSelect={() => select(item)}
+                  onHover={() => setActiveIndex(index)}
+                />
+              </React.Fragment>
+              ))
+            )}
+          </div>
+        </div>
 
-              return (
-                <React.Fragment key={result.id}>
-                  {heading && (
-                    <p className="px-2 pt-2 pb-1 text-caption font-medium text-muted-foreground">
-                      {heading}
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => select(result)}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    className={cn(
-                      'flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors',
-                      index === activeIndex ? 'bg-muted' : 'hover:bg-muted/60',
-                    )}
-                  >
-                    <Icon className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span
-                        className="truncate text-body font-medium"
-                        style={{ color: 'var(--heading)' }}
-                      >
-                        {result.label}
-                      </span>
-                      {result.detail && (
-                        <span className="truncate text-caption text-muted-foreground">
-                          {result.detail}
-                        </span>
-                      )}
-                    </span>
-                    {index === activeIndex && (
-                      <CornerDownLeft className="size-3.5 shrink-0 text-muted-foreground" />
-                    )}
-                  </button>
-                </React.Fragment>
-              )
-            })
-          )}
+        <span aria-hidden className="block h-px bg-border/60" />
+
+        <div className="flex items-center gap-4 px-4 py-2.5 text-[11px] text-muted-foreground">
+          {/* Keyboard hints only where there is a keyboard. On a phone they
+              describe keys that do not exist, so the count takes their place —
+              which is the thing worth knowing when the list is scrolled. */}
+          <span className="flex items-center gap-1.5 touch:hidden">
+            <Hint>↑</Hint>
+            <Hint>↓</Hint>
+            navigate
+          </span>
+          <span className="flex items-center gap-1.5 touch:hidden">
+            <Hint>↵</Hint>
+            open
+          </span>
+          <span className="hidden touch:inline">
+            {rows.length} {rows.length === 1 ? 'result' : 'results'}
+          </span>
+          <span className="ml-auto flex items-center gap-1.5 touch:hidden">
+            <Clock className="size-3" />
+            {modifier} K
+          </span>
         </div>
       </DialogContent>
     </Dialog>
   )
-}
-
-/**
- * Opens the dialog on ⌘K / Ctrl-K.
- *
- * Bound at the shell so the shortcut works from any page, and suppressed while
- * a text field has focus so it never eats a keystroke someone meant for a form.
- */
-export function useGlobalSearchShortcut(onOpen: () => void) {
-  React.useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== 'k' || !(event.metaKey || event.ctrlKey)) return
-      const target = event.target as HTMLElement | null
-      const tag = target?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return
-      event.preventDefault()
-      onOpen()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onOpen])
 }
