@@ -62,6 +62,7 @@ import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { TimetableSettingsSection } from './TimetableSettingsSection'
 import { GradingSettingsSection } from './GradingSettingsSection'
+import { NotificationSettingsSection } from './NotificationSettingsSection'
 import { AppearanceSettingsSection } from './AppearanceSettingsSection'
 import type { Subject } from '@/config/school-config'
 import type { ClassSection } from '@/config/school-config'
@@ -83,7 +84,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: 'academic', label: 'Academic Calendar', description: 'Year & term structure', icon: Calendar, enabled: true },
   { id: 'timetable', label: 'Timetable', description: 'Periods, days & subjects', icon: Clock, enabled: true },
   { id: 'grades', label: 'Grades', description: 'Grade scale & report cards', icon: GraduationCap, enabled: true },
-  { id: 'notifications', label: 'Notifications', description: 'Alerts & reminders', icon: Bell, enabled: false },
+  { id: 'notifications', label: 'Notifications', description: 'Alerts & reminders', icon: Bell, enabled: true },
   { id: 'appearance', label: 'Appearance', description: 'Theme & layout', icon: Palette, enabled: true },
   { id: 'security', label: 'Security', description: 'Access & permissions', icon: Shield, enabled: false },
 ]
@@ -765,6 +766,7 @@ export function SchoolSettingsPanel() {
       case 'academic': return <AcademicSection draft={draft} setDraft={setDraft} />
       case 'timetable': return <TimetableSettingsSection draft={draft} setDraft={setDraft} />
       case 'grades': return <GradingSettingsSection draft={draft} setDraft={setDraft} />
+      case 'notifications': return <NotificationSettingsSection draft={draft} setDraft={setDraft} />
       case 'appearance': return <AppearanceSettingsSection draft={draft} setDraft={setDraft} />
       default: {
         const s = SETTINGS_SECTIONS.find(x => x.id === activeSection)

@@ -56,9 +56,46 @@ export interface SchoolConfig {
   /** Grade scale configuration */
   grading: GradingConfig
 
+  // ── Notifications ──
+  /** Which notification categories reach this user — see NotificationConfig */
+  notifications: NotificationConfig
+
   // ── Appearance ──
   /** Theme, colors, density, radius — see src/theme/appearance.ts */
   appearance: AppearanceConfig
+}
+
+// ── Notifications ──
+
+/**
+ * Which notification categories the user wants to see.
+ *
+ * One switch per category rather than per event type: a school admin thinks in
+ * "I don't care about timetable churn", not in "mute timetable.exception_added
+ * but keep timetable.updated". Event-level control is a preference page nobody
+ * finishes reading.
+ *
+ * Only in-app delivery is represented. Email and push belong here too, but
+ * they cannot be honoured without a backend that sends them, and a switch that
+ * silently does nothing is worse than an absent one.
+ */
+export interface NotificationConfig {
+  /** Category id → whether it reaches the feed. Missing keys read as enabled. */
+  categories: Record<string, boolean>
+}
+
+export const DEFAULT_NOTIFICATION_CONFIG: NotificationConfig = {
+  // Everything on. Someone who has never opened this page should not be
+  // missing notifications because of a default we chose for them.
+  categories: {
+    attendance: true,
+    grades: true,
+    finance: true,
+    notices: true,
+    people: true,
+    timetable: true,
+    system: true,
+  },
 }
 
 /** A single period/break slot in the school day (re-exported from timetable types for convenience) */
@@ -239,6 +276,10 @@ export const DEFAULT_SCHOOL_CONFIG: SchoolConfig = {
   classSections: DEFAULT_CLASS_SECTIONS.map(s => ({ ...s })),
   subjects: DEFAULT_SUBJECTS.map(s => ({ ...s })),
   grading: { ...DEFAULT_GRADING_CONFIG, entries: DEFAULT_GRADING_CONFIG.entries.map(e => ({ ...e })) },
+  notifications: {
+    ...DEFAULT_NOTIFICATION_CONFIG,
+    categories: { ...DEFAULT_NOTIFICATION_CONFIG.categories },
+  },
   appearance: { ...DEFAULT_APPEARANCE },
 }
 

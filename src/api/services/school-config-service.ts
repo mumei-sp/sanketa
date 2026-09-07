@@ -105,6 +105,14 @@ export function loadSchoolConfig(): SchoolConfig {
       ...DEFAULT_SCHOOL_CONFIG,
       ...parsed,
       ...(migratedSubjects ? { subjects: migratedSubjects } : {}),
+      // Deep-merged like `appearance`, so a config stored before a category
+      // existed still gets a default for it rather than treating it as muted.
+      notifications: {
+        categories: {
+          ...DEFAULT_SCHOOL_CONFIG.notifications.categories,
+          ...(parsed.notifications?.categories ?? {}),
+        },
+      },
       appearance: { ...DEFAULT_APPEARANCE, ...migrateAppearance(parsed.appearance) },
     }
   } catch {

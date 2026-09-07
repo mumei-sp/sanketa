@@ -25,10 +25,12 @@ import {
   markAllNotificationsRead,
   dismissNotification,
 } from '@/api/services/notification-service'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { createNotificationTransport } from './transport'
 import type { Notification, NotificationBatch } from './types'
 
 interface NotificationContextValue {
+  /** Muted categories already removed — see the filter in the provider. */
   notifications: Notification[]
   unreadCount: number
   /** True only for the very first load, so the panel can show skeletons once. */
@@ -65,6 +67,17 @@ function applyBatch(current: Notification[], incoming: Notification[]): Notifica
 }
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const { config } = useSchoolConfig()
+  /**
+   * Muted categories are filtered on read, not on receipt.
+   *
+   * Nothing is dropped from state, so turning a category back on restores its
+   * history at once instead of leaving a hole until the next event arrives.
+   * A real backend would filter at fan-out and these would never cross the
+   * wire — this is the client standing in for that, and it degrades to a
+   * no-op the day the server takes over.
+   */
+  const mutedCategories = config.notifications.categories
   const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -149,11 +162,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const markAllRead = React.useCallback(() => {
     const readAt = new Date().toISOString()
-    const previouslyUnread = notifications.filter(item => item.readAt === null).map(item => item.id)
+    // Only what the user can actually see — "mark all read" should never clear
+    // a badge for notifications they were never shown.
+    const previouslyUnread = notifications
+      .filter(item => item.readAt === null && mutedCategories[item.category] !== false)
+      .map(item => item.id)
     if (previouslyUnread.length === 0) return
 
+    const clearing = new Set(previouslyUnread)
     setNotifications(current =>
-      current.map(item => (item.readAt === null ? { ...item, readAt } : item)),
+      current.map(item => (clearing.has(item.id) ? { ...item, readAt } : item)),
     )
     void markAllNotificationsRead().catch(cause => {
       console.error('Failed to mark all notifications read', cause)
@@ -162,7 +180,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         current.map(item => (unreadAgain.has(item.id) ? { ...item, readAt: null } : item)),
       )
     })
-  }, [notifications])
+  }, [notifications, mutedCategories])
 
   const dismiss = React.useCallback(
     (id: string) => {
@@ -176,14 +194,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     [notifications],
   )
 
+  const visible = React.useMemo(
+    () => notifications.filter(item => mutedCategories[item.category] !== false),
+    [notifications, mutedCategories],
+  )
+
   const unreadCount = React.useMemo(
-    () => notifications.filter(item => item.readAt === null).length,
-    [notifications],
+    () => visible.filter(item => item.readAt === null).length,
+    [visible],
   )
 
   const value = React.useMemo<NotificationContextValue>(
     () => ({
-      notifications,
+      notifications: visible,
       unreadCount,
       isLoading,
       error,
@@ -192,7 +215,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       dismiss,
       refresh: () => void reconcile(),
     }),
-    [notifications, unreadCount, isLoading, error, markRead, markAllRead, dismiss, reconcile],
+    [visible, unreadCount, isLoading, error, markRead, markAllRead, dismiss, reconcile],
   )
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>
