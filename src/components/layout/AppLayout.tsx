@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import {
   SidebarProvider,
@@ -10,14 +10,14 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Logo } from './Logo'
 import { useIsDesktop } from '@/hooks/use-mobile'
 import { Search, Settings, Menu } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { SchoolSettingsPanel } from '@/components/settings/SchoolSettingsPanel'
+import { RouteFallback } from './RouteFallback'
+import { UserMenu } from './UserMenu'
+import { GlobalSearch, useGlobalSearchShortcut } from '@/features/search/GlobalSearch'
 import { NotificationProvider } from '@/features/notifications/NotificationContext'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
-import { useCurrentUser } from '@/hooks/use-current-user'
-import { getInitials } from '@/utils/format'
 
 interface AppLayoutProps {
   logoPath?: string
@@ -64,23 +64,33 @@ function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' })
 }
 
 /** Search bar + settings + notifications + avatar — styled to match figma */
-function TopActions() {
-  const currentUser = useCurrentUser()
+function TopActions({ onOpenSearch }: { onOpenSearch: () => void }) {
   return (
     <div className="hidden md:flex items-center gap-3">
-      {/* ── Search bar (desktop) ── */}
-      <div className="relative hidden lg:flex items-center">
+      {/* ── Search (desktop) ──
+           A button dressed as a field rather than a real input: the search
+           itself happens in a dialog, and a text box you can type into that
+           then throws the keystrokes away to open something else is a worse
+           lie than the placeholder this replaces. */}
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        className="relative hidden lg:flex h-10 w-[240px] items-center rounded-full border border-border bg-card pl-11 pr-12 text-left text-sm text-muted-foreground shadow-sm transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
+      >
         <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search anything"
-          className="pl-11 pr-12 h-10 w-[240px] bg-card border border-border rounded-full shadow-sm text-sm placeholder:text-muted-foreground"
-        />
+        Search anything
         <kbd className="absolute right-3 rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
           ⌘K
         </kbd>
-      </div>
+      </button>
       {/* Search icon (tablet only) */}
-      <Button variant="ghost" size="icon" className="lg:hidden size-10 rounded-full" aria-label="Search">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="lg:hidden size-10 rounded-full"
+        aria-label="Search"
+        onClick={onOpenSearch}
+      >
         <Search className="h-4 w-4" />
       </Button>
 
@@ -88,26 +98,7 @@ function TopActions() {
       <GlobalActionButtons />
 
       {/* ── User avatar with pink ring — profile from the auth session ── */}
-      {currentUser && (
-        <div className="flex items-center gap-2.5">
-          <div
-            className="size-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-            style={{
-              backgroundColor: 'var(--heading)',
-              color: 'var(--card)',
-              boxShadow: '0 0 0 2px var(--card), 0 0 0 4px var(--primary)',
-            }}
-          >
-            {getInitials(currentUser.fullName)}
-          </div>
-          <div className="hidden lg:block">
-            <p className="text-sm font-semibold leading-tight whitespace-nowrap" style={{ color: 'var(--heading)' }}>
-              {currentUser.fullName}
-            </p>
-            <p className="text-xs text-muted-foreground leading-tight">{currentUser.role}</p>
-          </div>
-        </div>
-      )}
+      <UserMenu />
     </div>
   )
 }
@@ -123,6 +114,9 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
   const { setOpen, isMobile, toggleSidebar } = useSidebar()
   const { config } = useSchoolConfig()
   const location = useLocation()
+  const [searchOpen, setSearchOpen] = useState(false)
+  const openSearch = useCallback(() => setSearchOpen(true), [])
+  useGlobalSearchShortcut(openSearch)
 
   // Use uploaded school logo if available, otherwise fall back to prop
   const effectiveLogoPath = config.schoolLogo ?? logoPath
@@ -164,18 +158,34 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
           </Button>
           <Logo logoPath={effectiveLogoPath} className="min-w-0 flex-1 px-1 py-0" />
           <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10 rounded-lg hover:bg-muted"
+              aria-label="Search"
+              onClick={openSearch}
+            >
+              <Search className="h-[18px] w-[18px]" />
+            </Button>
             <GlobalActionButtons variant="bar" />
           </div>
         </header>
 
         {/* No separate desktop header — TopActions render inside PageHeader via context */}
-        <TopActionsContext.Provider value={<TopActions />}>
+        <TopActionsContext.Provider value={<TopActions onOpenSearch={openSearch} />}>
           <main
             key={location.pathname}
             className="page-enter scrollbar-thin flex flex-1 flex-col gap-3 p-3 sm:gap-4 sm:p-4 overflow-y-auto overflow-x-clip min-h-0 min-w-0 pb-[max(env(safe-area-inset-bottom),0.75rem)]"
           >
             <ErrorBoundary>
-              <Outlet />
+              {/* One boundary for every protected route: each page is its own
+                  chunk now, and this covers the moment between the click and
+                  that chunk arriving. Inside the ErrorBoundary so a chunk that
+                  fails to load surfaces as an error rather than a spinner that
+                  never resolves. */}
+              <Suspense fallback={<RouteFallback />}>
+                <Outlet />
+              </Suspense>
             </ErrorBoundary>
           </main>
         </TopActionsContext.Provider>
@@ -183,6 +193,8 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
       {/* School settings side panel — opens on gear icon click */}
       <SchoolSettingsPanel />
+
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </>
   )
 }

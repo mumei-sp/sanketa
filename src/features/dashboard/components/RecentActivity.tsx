@@ -11,9 +11,8 @@
  * for them. Rows still navigate, because a feed you cannot follow is a poster.
  */
 
-import { Ellipsis } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Tile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useNotifications } from '@/features/notifications/NotificationContext'
@@ -60,12 +59,9 @@ export function RecentActivity() {
     >
       <Card className="pt-4 pb-4 flex flex-col gap-0 h-full border-0 shadow-none bg-transparent">
         <CardHeader className="flex-shrink-0 pb-2">
+          {/* The ⋯ that used to sit here opened nothing. A control that looks
+              like a menu and isn't is worse than no control. */}
           <h3 className="text-section-title">Recent Activity</h3>
-          <CardAction>
-            <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
-              <Ellipsis className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0 overflow-y-auto space-y-5">
           {isLoading ? (
