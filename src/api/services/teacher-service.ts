@@ -3,7 +3,7 @@
  *
  * Mock path (in-memory teachersData) + HTTP path (apiClient). VITE_USE_MOCK_API picks which runs.
  */
-import type { Teacher } from '@/features/teachers/types'
+import type { DepartmentData, Teacher, TeacherStatistics } from '@/features/teachers/types'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
@@ -11,8 +11,6 @@ import { teachersData } from '@/mocks/teachers/teachers'
 import {
   teacherStatisticsData,
   departmentDistributionData,
-  type TeacherStatistics,
-  type DepartmentData,
 } from '@/mocks/teachers/statistics'
 import { teacherWorkloadData } from '@/mocks/teachers/workload'
 

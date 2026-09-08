@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
-import type { TeacherStatistics } from '@/mocks/teachers/statistics'
+import type { TeacherStatistics } from '@/features/teachers/types'
 
 export interface TeacherTileConfig {
   id: string

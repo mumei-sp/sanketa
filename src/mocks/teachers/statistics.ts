@@ -3,18 +3,8 @@
  * TODO: Replace with real API calls when backend is ready
  */
 
-export interface TeacherStatistics {
-  total: number
-  fullTime: number
-  partTime: number
-  substitute: number
-}
+import type { DepartmentData, TeacherStatistics } from '@/features/teachers/types'
 
-export interface DepartmentData {
-  name: string
-  count: number
-  percentage: number
-}
 
 /**
  * Mock teacher statistics

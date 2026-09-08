@@ -42,3 +42,32 @@ export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
 // Re-export types for convenience
 export type { UserProfile, ProfileType } from '@/types/user-profile'
 
+/**
+ * Aggregate counts for the teachers dashboard.
+ *
+ * Here rather than beside the fixture that happens to supply it today. A type
+ * describes the shape the app agrees on; the mock is one producer of that
+ * shape and the backend will be another, so components importing it from
+ * `@/mocks/` had the dependency pointing the wrong way.
+ */
+export interface TeacherStatistics {
+  total: number
+  fullTime: number
+  partTime: number
+  substitute: number
+}
+
+/** One slice of the department-distribution chart. */
+export interface DepartmentData {
+  name: string
+  count: number
+  percentage: number
+}
+
+/** One teacher's load within a subject, for the workload chart. */
+export interface TeacherWorkloadData {
+  teacherName: string
+  totalClasses: number
+  teachingHours: number
+  extraDuties: number
+}

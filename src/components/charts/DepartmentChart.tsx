@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { useBrandColors } from '@/hooks/use-brand-colors'
-import type { DepartmentData } from '@/mocks/teachers/statistics'
+import type { DepartmentData } from '@/features/teachers/types'
 
 interface DepartmentChartProps {
   data: DepartmentData[]

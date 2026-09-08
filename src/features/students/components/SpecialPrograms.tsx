@@ -2,7 +2,7 @@ import { MoreHorizontal } from 'lucide-react'
 import { text, border, withOpacity } from '@/theme/colors'
 import * as React from 'react'
 import { fetchSpecialPrograms } from '@/api/services/student-service'
-import type { SpecialProgramEntry } from '@/mocks/students/programs'
+import type { SpecialProgramEntry } from '@/features/students/types'
 
 const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
   'Enrichment': { bg: withOpacity('var(--accent)', 0.3), color: 'var(--accent)' },

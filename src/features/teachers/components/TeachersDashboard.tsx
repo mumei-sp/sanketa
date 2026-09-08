@@ -6,7 +6,7 @@ import { fontWeights } from '@/config/typography'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
 import { CountUp } from '@/components/shared/CountUp'
 import { useTileSelection } from '@/hooks/use-tile-selection'
-import type { TeacherStatistics } from '@/mocks/teachers/statistics'
+import type { TeacherStatistics } from '@/features/teachers/types'
 import {
   teacherTileRegistry,
   DEFAULT_TEACHER_TILE_IDS,

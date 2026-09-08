@@ -5,12 +5,7 @@
  * When backend is ready, replace with API calls.
  */
 
-export interface TeacherWorkloadData {
-  teacherName: string
-  totalClasses: number
-  teachingHours: number
-  extraDuties: number
-}
+import type { TeacherWorkloadData } from '@/features/teachers/types'
 
 /** Helper to generate varied but realistic workload data for a set of teachers */
 function generateWorkload(

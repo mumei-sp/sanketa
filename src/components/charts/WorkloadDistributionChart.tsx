@@ -21,7 +21,7 @@ import { Tile } from '@/components/tile'
 import { colors } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { fetchTeacherWorkload } from '@/api/services/teacher-service'
-import type { TeacherWorkloadData } from '@/mocks/teachers/workload'
+import type { TeacherWorkloadData } from '@/features/teachers/types'
 
 interface WorkloadDistributionChartProps {
   isLoading?: boolean

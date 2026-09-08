@@ -1,15 +1,6 @@
 /** Mock data for Special Programs / Scholarships widget on Students page */
 
-export interface SpecialProgramEntry {
-  id: string
-  name: string
-  studentId: string
-  classLabel: string
-  /** Displayed as a badge — comma-separated if multiple */
-  categories: string[]
-  program: string
-  avatarColor: string
-}
+import type { SpecialProgramEntry } from '@/features/students/types'
 
 export const specialProgramsData: SpecialProgramEntry[] = [
   {

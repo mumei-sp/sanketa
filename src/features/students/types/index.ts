@@ -145,3 +145,27 @@ export interface StudentDetailData {
 // Re-export types for convenience
 export type { StudentFormValues } from '../schemas/student-schema'
 export type { UserProfile, Gender, ProfileType } from '@/types/user-profile'
+
+/**
+ * One month of the academic-performance chart.
+ *
+ * The index signature is the point: grade keys are built from the school's
+ * configured class sections, so the shape is `month` plus a `grade{N}` per
+ * grade that exists, not a hardcoded 7/8/9 slice.
+ */
+export interface AcademicPerformanceEntry {
+  month: string
+  [gradeKey: `grade${string}`]: number | string
+}
+
+/** A student on a scholarship or enrichment programme. */
+export interface SpecialProgramEntry {
+  id: string
+  name: string
+  studentId: string
+  classLabel: string
+  /** Displayed as a badge — comma-separated if multiple */
+  categories: string[]
+  program: string
+  avatarColor: string
+}

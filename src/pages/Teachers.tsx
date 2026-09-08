@@ -20,7 +20,7 @@ import {
 import { Plus, Download, Upload } from 'lucide-react'
 import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution, deleteTeacher, createTeacher } from '@/api/services/teacher-service'
 import type { Teacher } from '@/features/teachers/types'
-import type { TeacherStatistics, DepartmentData } from '@/mocks/teachers/statistics'
+import type { TeacherStatistics, DepartmentData } from '@/features/teachers/types'
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'

@@ -19,7 +19,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { text, border, withOpacity } from '@/theme/colors'
 import { ClassPicker } from '@/components/shared/ClassPicker'
-import type { AcademicPerformanceEntry } from '@/mocks/students/academic-performance'
+import type { AcademicPerformanceEntry } from '@/features/students/types'
 import { fetchAcademicPerformance } from '@/api/services/student-service'
 
 type Period = 'last' | 'this'

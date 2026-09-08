@@ -8,11 +8,7 @@
 
 import { loadSchoolConfig } from '@/api/services/school-config-service'
 import { getUniqueGrades } from '@/utils/class-section-helpers'
-
-export interface AcademicPerformanceEntry {
-  month: string
-  [gradeKey: `grade${string}`]: number | string
-}
+import type { AcademicPerformanceEntry } from '@/features/students/types'
 
 /** Stable pseudo-random 0..1 per (grade, month) so the chart doesn't jitter per render. */
 function seededFraction(seed: string): number {

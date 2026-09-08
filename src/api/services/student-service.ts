@@ -24,7 +24,7 @@ import {
   academicPerformanceLastSemester,
   academicPerformanceThisSemester,
 } from '@/mocks/students/academic-performance'
-import type { AcademicPerformanceEntry } from '@/mocks/students/academic-performance'
+import type { AcademicPerformanceEntry } from '@/features/students/types'
 
 // ---------------------------------------------------------------------------
 // Reads
