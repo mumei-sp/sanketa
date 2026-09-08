@@ -9,7 +9,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, txnId, newId, CURRENCY } from '@/mocks/_shared'
-import { visibleToCaller } from '@/mocks/_shared/caller'
+import { callerIsNarrowed, visibleToCaller } from '@/mocks/_shared/caller'
 import { studentsData } from '@/mocks/students/students'
 import type {
   FeeStat,
@@ -44,6 +44,11 @@ export async function fetchFeeStats(): Promise<FeeStat[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      // A school-wide figure, with no rows to narrow. For a family the honest
+      // answer is not a smaller number but none: what the school collected, or
+      // how it attended overall, is not their child's data in aggregate — it
+      // is somebody else's, summed.
+      if (callerIsNarrowed('read', 'Finance')) return []
       let collected = 0
       let pending = 0
       let overdue = 0
@@ -204,7 +209,12 @@ export async function fetchPaymentHistory(studentId?: string): Promise<PaymentTr
       const filtered = studentId
         ? paymentTransactions.filter(t => t.studentId === studentId)
         : paymentTransactions
-      return filtered.map(t => ({ ...t }))
+      // Same translation as the fee rows: payments key on the human code and a
+      // scope holds profile ids.
+      return visibleToCaller(filtered.map(t => ({ ...t })), 'read', 'Finance', txn => {
+        const student = studentsData.find(c => c.studentId === txn.studentId)
+        return student ? { studentId: String(student.id) } : undefined
+      })
     },
     async () => {
       const { data } = await apiClient.get<PaymentTransaction[]>('/finance/payments', {

@@ -10,7 +10,7 @@ import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
-import { visibleToCaller } from '@/mocks/_shared/caller'
+import { visibleRecordToCaller, visibleToCaller } from '@/mocks/_shared/caller'
 import { classSectionOf } from '@/utils/class-section-helpers'
 import { studentsData } from '@/mocks/students/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
@@ -62,7 +62,13 @@ export async function fetchStudentById(id: string): Promise<Student | undefined>
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 400 })
-      return studentsData.find(s => s.id === id)
+      const found = studentsData.find(s => s.id === id)
+      // By-id reads take the id from the caller, so filtering the list read did
+      // nothing for them: a parent could name any student and receive them.
+      return visibleRecordToCaller(found, 'read', 'Student', student => ({
+        studentId: String(student.id),
+        classSection: classSectionOf(student),
+      }))
     },
     async () => {
       try {
@@ -117,10 +123,35 @@ export async function fetchAttendanceOverview(): Promise<AttendanceData[]> {
  *
  * @apiRoute GET /api/v1/students/{id}/details
  */
+/**
+ * What a caller who may not see this student gets instead.
+ *
+ * Empty rather than an error, for the same reason `visibleRecordToCaller`
+ * returns undefined: a refusal that names the record confirms it exists.
+ */
+const EMPTY_STUDENT_DETAIL: StudentDetailData = {
+  documents: [],
+  scholarships: [],
+  healthRecords: [],
+  extracurriculars: [],
+  behaviorLog: [],
+  monthlyAttendance: {},
+}
+
 export async function fetchStudentDetailData(_id: string): Promise<StudentDetailData> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 400 })
+      // Gated on the student the detail is *about*, not on the record itself:
+      // the mock ships one shared detail blob, so there is nothing in the
+      // returned value to attribute. The id is the only thing that says whose
+      // page this is, which makes it the thing to check.
+      const subject = studentsData.find(student => String(student.id) === String(_id))
+      const allowed = visibleRecordToCaller(subject, 'read', 'Student', student => ({
+        studentId: String(student.id),
+        classSection: classSectionOf(student),
+      }))
+      if (subject && !allowed) return EMPTY_STUDENT_DETAIL
       // The mock dataset currently ships a single shared detail record.
       return studentDetailData
     },
@@ -239,7 +270,13 @@ export async function fetchPromotionCandidates(
     async () => {
       await withLatency({ min: 300, max: 700 })
       const students = studentsData.filter(s => s.class === classLabel)
-      return students.map(s => {
+      // Promotion rows name a student and their marks, so they narrow like any
+      // other per-student read.
+      const visible = visibleToCaller(students, 'read', 'Student', student => ({
+        studentId: String(student.id),
+        classSection: classSectionOf(student),
+      }))
+      return visible.map(s => {
         const pct = s.percentage ?? 0
         const isAtRisk = s.performance === 'At Risk'
         const recommendation = pct >= passingThreshold && !isAtRisk ? 'promote' : 'retain'

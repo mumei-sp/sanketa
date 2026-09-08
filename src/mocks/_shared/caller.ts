@@ -79,3 +79,41 @@ function isNarrowed(ability: AppAbility, action: Action, subject: Subject): bool
   const rules = ability.rulesFor(action, subject)
   return rules.length > 0 && rules.every(rule => rule.conditions !== undefined)
 }
+
+/**
+ * One record, or nothing.
+ *
+ * The list reads were the easy half. A read that takes an id — `fetchStudentById`,
+ * `fetchStudentReportCard` — takes it straight from the caller, which makes it
+ * the one somebody would actually poke at, and filtering a list does nothing
+ * for it. Signed in as a parent of student 7, `fetchStudentById('23')` handed
+ * back another child's record until this existed.
+ *
+ * Returns `undefined` rather than throwing: a caller asking for a record they
+ * may not see should be told it is not there, not that it exists and is
+ * forbidden. "No such student" leaks nothing; "not yours" confirms the id.
+ */
+export function visibleRecordToCaller<T>(
+  row: T | undefined | null,
+  action: Action,
+  subject: Subject,
+  key: (row: T) => SubjectFields | undefined,
+): T | undefined {
+  if (!row) return undefined
+  const [only] = visibleToCaller([row], action, subject, key)
+  return only
+}
+
+/**
+ * Is this caller narrowed on this pair at all?
+ *
+ * For reads that return a school-wide aggregate — fee totals, attendance
+ * trends — where there are no rows to filter and the honest answer for a
+ * family is not a smaller number but none: a parent has no business knowing
+ * what the school collected this term. Callers use it to return an empty
+ * result rather than a figure that is not theirs.
+ */
+export function callerIsNarrowed(action: Action, subject: Subject): boolean {
+  if (!authUtils.getUser()) return false
+  return isNarrowed(abilityForCurrentSession(), action, subject)
+}

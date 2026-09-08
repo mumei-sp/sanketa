@@ -8,7 +8,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
-import { visibleToCaller } from '@/mocks/_shared/caller'
+import { visibleRecordToCaller, visibleToCaller } from '@/mocks/_shared/caller'
 import { classRosters } from '@/mocks/attendance/daily'
 import { gradeSubmissions, findSubmission, upsertSubmission } from '@/mocks/grades/grades'
 import { EXAMS, GRADEABLE_SUBJECT_IDS } from '@/features/grades/constants'
@@ -116,7 +116,16 @@ export async function fetchGradeSubmission(
       await withLatency({ min: 250, max: 500 })
       const sub = findSubmission(classId, examId, subjectId)
       if (!sub) return null
-      return { ...sub, entries: sub.entries.map(e => ({ ...e })) }
+      // Class-shaped: the submission itself is not about one student, its
+      // entries are. So the envelope survives and the lines inside it narrow —
+      // a family gets their own child's mark, not a class's worth of them.
+      const entries = visibleToCaller(
+        sub.entries.map(e => ({ ...e })),
+        'read',
+        'Grade',
+        entry => ({ studentId: entry.studentId, classSection: classId }),
+      )
+      return { ...sub, entries }
     },
     async () => {
       try {
@@ -323,7 +332,14 @@ export async function fetchGradeSheet(
       const failCount = rows.filter(r => r.percentage > 0 && r.percentage < passingThreshold).length
 
       return {
-        rows,
+        // Narrowed, while the summary below is not: a class average is the
+        // class's fact, not any student's, and blanking it would make a
+        // family's report card unreadable rather than private. What must not
+        // leak is the per-student rows, and those do narrow.
+        rows: visibleToCaller(rows, 'read', 'Grade', row => ({
+          studentId: row.studentId,
+          classSection: classId,
+        })),
         summary: {
           subjectAverages,
           classAverage,
@@ -382,6 +398,14 @@ export async function fetchStudentReportCard(
       const { rows } = await fetchGradeSheet(classId, examId, calculateGrade, passingThreshold)
       const gradeRow = rows.find(r => r.studentId === studentId)
       if (!gradeRow) return null
+      // A report card is one student's, named by id in the arguments — the
+      // by-id shape that filtering the sheet does nothing for.
+      if (!visibleRecordToCaller(gradeRow, 'read', 'Grade', row => ({
+        studentId: row.studentId,
+        classSection: classId,
+      }))) {
+        return null
+      }
 
       const subjectList = subjects
         .filter(s => (GRADEABLE_SUBJECT_IDS as readonly string[]).includes(s.id))

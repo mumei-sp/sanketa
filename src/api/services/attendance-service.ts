@@ -15,7 +15,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
-import { visibleToCaller } from '@/mocks/_shared/caller'
+import { callerIsNarrowed, visibleToCaller } from '@/mocks/_shared/caller'
 import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
 import { attendanceOverviewMonthlyData } from '@/mocks/attendance/overview'
 import {
@@ -35,6 +35,11 @@ export async function fetchAttendanceRecords(days: number = 21): Promise<Attenda
   return mockOrHttp(
     async () => {
       await withLatency()
+      // A school-wide figure, with no rows to narrow. For a family the honest
+      // answer is not a smaller number but none: what the school collected, or
+      // how it attended overall, is not their child's data in aggregate — it
+      // is somebody else's, summed.
+      if (callerIsNarrowed('read', 'Attendance')) return []
       return generateMockAttendanceData(days)
     },
     async () => {
@@ -101,7 +106,16 @@ export async function fetchAttendanceSubmission(
     async () => {
       await withLatency({ min: 200, max: 400 })
       const submission = getSubmissionForDate(classId, date)
-      return submission ? { ...submission, entries: [...submission.entries] } : null
+      if (!submission) return null
+      // Same class shape as a grade submission: the register belongs to the
+      // class, the lines belong to students.
+      const entries = visibleToCaller(
+        [...submission.entries],
+        'read',
+        'Attendance',
+        entry => ({ studentId: entry.studentId, classSection: classId }),
+      )
+      return { ...submission, entries }
     },
     async () => {
       try {
