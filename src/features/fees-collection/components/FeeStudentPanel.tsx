@@ -12,6 +12,7 @@ import { text, border, background, status as statusColors, withOpacity, statusVi
 import { spacing } from '@/config/spacing'
 import { fetchPaymentHistory } from '@/api/services/fees-collection-service'
 import { PaymentFormSheet } from './PaymentFormSheet'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { PAYMENT_METHOD_LABELS } from '../types'
 import { toast } from 'sonner'
 import type { FeeCollectionRecord, FeeStatus, PaymentTransaction } from '../types'
@@ -38,6 +39,11 @@ interface FeeStudentPanelProps {
 }
 
 export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStudentPanelProps) {
+  // `finance.view` gets you this panel; recording money against it is the
+  // other half. Not scoped — fees are the school's ledger, not a class's.
+  const { can } = usePermissions()
+  const canManage = can('finance.manage')
+
   const studentRecords = React.useMemo(
     () => allRecords.filter(r => r.studentId === studentId),
     [allRecords, studentId],
@@ -150,7 +156,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
         </div>
 
         {/* Send Reminder — only when pending */}
-        {pendingAmount > 0 && (
+        {canManage && pendingAmount > 0 && (
           <button
             type="button"
             onClick={() => toast.success(`Reminder sent to ${student.studentName}'s guardian`, { description: `₹${pendingAmount.toLocaleString('en-IN')} pending via SMS & Email` })}
@@ -221,7 +227,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
                       <Check className="w-3 h-3" style={{ color: statusColors.success.base }} />
                       <span style={{ fontSize: '10px', color: statusColors.success.base, fontWeight: 500 }}>Paid</span>
                     </div>
-                  ) : (
+                  ) : canManage ? (
                     <button
                       type="button"
                       onClick={() => setMarkingRecord(record)}
@@ -230,6 +236,12 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
                     >
                       Mark as Paid
                     </button>
+                  ) : (
+                    <span
+                      style={{ fontSize: '10px', color: text.muted, display: 'block', marginTop: '3px' }}
+                    >
+                      Unpaid
+                    </span>
                   )}
                 </div>
               </div>

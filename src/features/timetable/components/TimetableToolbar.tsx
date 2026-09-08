@@ -15,6 +15,14 @@ interface TimetableToolbarProps {
   onClassChange: (classId: string) => void
   isEditMode: boolean
   onToggleEditMode: () => void
+  /**
+   * Whether the viewer may change the timetable.
+   *
+   * Passed in rather than checked here: the toolbar is a presentational
+   * component used by the page, and the page is where the permission and the
+   * copy-from source list already live.
+   */
+  canManage?: boolean
   onPrint?: () => void
   isSaving?: boolean
   /** Classes that have timetables available to copy from (excluding current class) */
@@ -34,6 +42,7 @@ export function TimetableToolbar({
   onClassChange,
   isEditMode,
   onToggleEditMode,
+  canManage = true,
   onPrint,
   isSaving,
   copyableSources = [],
@@ -110,7 +119,7 @@ export function TimetableToolbar({
         )}
 
         {/* Copy from another class — only in edit mode */}
-        {isEditMode && copyableSources.length > 0 && onCopyFrom && (
+        {canManage && isEditMode && copyableSources.length > 0 && onCopyFrom && (
           <div ref={copyRef} className="relative">
             <button
               type="button"
@@ -159,7 +168,9 @@ export function TimetableToolbar({
           </div>
         )}
 
-        {/* Edit/View toggle */}
+        {/* Edit/View toggle — absent entirely for a viewer, rather than
+            present and refusing. */}
+        {canManage && (
         <button
           type="button"
           onClick={onToggleEditMode}
@@ -182,6 +193,7 @@ export function TimetableToolbar({
             </>
           )}
         </button>
+        )}
       </div>
     </div>
   )

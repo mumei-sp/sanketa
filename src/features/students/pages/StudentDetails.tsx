@@ -25,6 +25,8 @@ import { ExtracurricularFormSheet } from '../components/detail-crud/Extracurricu
 import { BehaviorFormSheet } from '../components/detail-crud/BehaviorFormSheet'
 import { DocumentUploadFormSheet } from '../components/detail-crud/DocumentUploadFormSheet'
 import { DeleteConfirmDialog } from '../components/detail-crud/DeleteConfirmDialog'
+import { usePermissions } from '@/features/auth/PermissionContext'
+import { classSectionOf } from '@/utils/class-section-helpers'
 
 // Services
 import * as detailService from '@/api/services/student-detail-service'
@@ -56,6 +58,7 @@ interface DeleteTarget {
 export default function StudentDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { can } = usePermissions()
   const { student, isLoading, error } = useStudentById(id)
   const { detailData } = useStudentDetailData(id)
 
@@ -78,6 +81,24 @@ export default function StudentDetails() {
 
   // ── Navigation ──
   const handleBack = React.useCallback(() => navigate('/students'), [navigate])
+
+  /**
+   * Everything on this page that writes, in one answer.
+   *
+   * A scoped holder reads every student and edits only their own classes, so
+   * the question is per-record rather than per-page — the route cannot ask it,
+   * because it does not know which student is about to load.
+   *
+   * `writable` hands each section its handler or nothing. The sections already
+   * hide a control whose handler is missing, which is the right shape: a
+   * record you may not change should not offer a pencil that explains itself
+   * on click.
+   */
+  const canEditThisStudent =
+    !student || can('students.manage', { classSection: classSectionOf(student) })
+  const writable = <T,>(handler: T): T | undefined =>
+    canEditThisStudent ? handler : undefined
+
 
   const handleMonthChange = React.useCallback((year: number, month: number) => {
     setCalYear(year)
@@ -245,11 +266,11 @@ export default function StudentDetails() {
             <StudentProfileCard student={student} />
             <StudentDocuments
               documents={localData?.documents ?? []}
-              onAdd={() => setActiveModal({ type: 'document' })}
-              onDelete={docId => {
+              onAdd={writable(() => setActiveModal({ type: 'document' }))}
+              onDelete={writable((docId: string) => {
                 const doc = localData?.documents.find(d => d.id === docId)
                 setDeleteTarget({ section: 'document', id: docId, label: doc?.name ?? 'this document' })
-              }}
+              })}
             />
           </div>
 
@@ -264,21 +285,21 @@ export default function StudentDetails() {
             />
             <StudentScholarships
               scholarships={localData?.scholarships ?? []}
-              onAdd={() => setActiveModal({ type: 'scholarship', record: null })}
-              onEdit={sch => setActiveModal({ type: 'scholarship', record: sch })}
-              onDelete={schId => {
+              onAdd={writable(() => setActiveModal({ type: 'scholarship', record: null }))}
+              onEdit={writable((sch: StudentScholarship) => setActiveModal({ type: 'scholarship', record: sch }))}
+              onDelete={writable((schId: string) => {
                 const sch = localData?.scholarships.find(s => s.id === schId)
                 setDeleteTarget({ section: 'scholarship', id: schId, label: sch?.title ?? 'this scholarship' })
-              }}
+              })}
             />
             <StudentHealthInfo
               records={localData?.healthRecords ?? []}
-              onAdd={() => setActiveModal({ type: 'health', record: null })}
-              onEdit={rec => setActiveModal({ type: 'health', record: rec })}
-              onDelete={recId => {
+              onAdd={writable(() => setActiveModal({ type: 'health', record: null }))}
+              onEdit={writable((rec: StudentHealthRecord) => setActiveModal({ type: 'health', record: rec }))}
+              onDelete={writable((recId: string) => {
                 const rec = localData?.healthRecords.find(r => r.id === recId)
                 setDeleteTarget({ section: 'health', id: recId, label: rec?.title ?? 'this record' })
-              }}
+              })}
             />
           </div>
 
@@ -294,21 +315,21 @@ export default function StudentDetails() {
             />
             <StudentExtracurricular
               activities={localData?.extracurriculars ?? []}
-              onAdd={() => setActiveModal({ type: 'extracurricular', record: null })}
-              onEdit={act => setActiveModal({ type: 'extracurricular', record: act })}
-              onDelete={actId => {
+              onAdd={writable(() => setActiveModal({ type: 'extracurricular', record: null }))}
+              onEdit={writable((act: StudentActivity) => setActiveModal({ type: 'extracurricular', record: act }))}
+              onDelete={writable((actId: string) => {
                 const act = localData?.extracurriculars.find(a => a.id === actId)
                 setDeleteTarget({ section: 'extracurricular', id: actId, label: act?.club ?? 'this activity' })
-              }}
+              })}
             />
             <StudentBehaviorLog
               entries={localData?.behaviorLog ?? []}
-              onAdd={() => setActiveModal({ type: 'behavior', record: null })}
-              onEdit={entry => setActiveModal({ type: 'behavior', record: entry })}
-              onDelete={entryId => {
+              onAdd={writable(() => setActiveModal({ type: 'behavior', record: null }))}
+              onEdit={writable((entry: StudentBehaviorEntry) => setActiveModal({ type: 'behavior', record: entry }))}
+              onDelete={writable((entryId: string) => {
                 const entry = localData?.behaviorLog.find(b => b.id === entryId)
                 setDeleteTarget({ section: 'behavior', id: entryId, label: entry?.details?.slice(0, 30) ?? 'this entry' })
-              }}
+              })}
             />
           </div>
         </div>

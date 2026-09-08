@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import type { Table as TanStackTable, Row } from '@tanstack/react-table'
 import { Plus, X, GraduationCap } from 'lucide-react'
 import {
@@ -45,6 +46,10 @@ interface StudentsTableProps {
  */
 export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTableProps, 'onImport' | 'onExport'>) {
   const navigate = useNavigate()
+  // Unscoped: "may you enrol anywhere". Which class a new student lands in is
+  // not known until the form is filled, so AddStudent makes the scoped check.
+  const { can } = usePermissions()
+  const canEnrol = can('students.manage')
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
   // Section-level filter: empty array = "All Classes", otherwise only rows
   // whose `class` label matches one of these pass the filter.
@@ -165,18 +170,20 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
             },
           ]}
           primaryAction={
-            <Button
-              onClick={() => navigate('/students/add')}
-              className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
-            >
-              <Plus className="size-4" />
-              Add Student
-            </Button>
+            canEnrol ? (
+              <Button
+                onClick={() => navigate('/students/add')}
+                className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
+              >
+                <Plus className="size-4" />
+                Add Student
+              </Button>
+            ) : undefined
           }
         />
       )
     },
-    [navigate, statusFilter, selectedSections, applySectionFilter, clearSections],
+    [navigate, canEnrol, statusFilter, selectedSections, applySectionFilter, clearSections],
   )
 
   // Custom pagination using shared component

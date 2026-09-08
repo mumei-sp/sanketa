@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Lock } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { StudentForm } from '../components/StudentForm'
 import type { StudentFormValues } from '../schemas/student-schema'
@@ -12,6 +13,8 @@ import { updateStudent } from '@/api/services/student-service'
 import { formToStudent } from '../utils/transform'
 import { STUDENT_MESSAGES, STUDENT_LABELS } from '../constants'
 import { useAppToast } from '@/hooks/use-app-toast'
+import { usePermissions } from '@/features/auth/PermissionContext'
+import { classSectionOf } from '@/utils/class-section-helpers'
 
 export default function EditStudent() {
   const { id } = useParams<{ id: string }>()
@@ -19,10 +22,34 @@ export default function EditStudent() {
   const { student, isLoading, error } = useStudentById(id)
   const { handleHandlersReady, handleSaveClick } = useStudentFormHandlers()
   const { showSuccess, showError } = useAppToast()
+  const { can } = usePermissions()
+
+  /**
+   * Whether this particular student may be edited.
+   *
+   * The route only asks "may you edit students at all"; a scoped holder also
+   * has to own the class this one is in. Checked against the *stored* class
+   * rather than the form's, so moving a student out of your class does not
+   * grant you the edit — and against the form's on save, so you cannot move
+   * one into a class that is not yours either.
+   */
+  const canEditThisStudent =
+    !student || can('students.manage', { classSection: classSectionOf(student) })
 
   const onSubmit = React.useCallback(
     async (data: StudentFormValues) => {
       if (!id) return
+      if (!canEditThisStudent) {
+        showError('This student is not in one of your classes')
+        return
+      }
+      const destination = classSectionOf(formToStudent(data))
+      if (!can('students.manage', { classSection: destination })) {
+        showError('That class is not yours', {
+          description: `You cannot move a student into ${destination ?? 'that class'}.`,
+        })
+        return
+      }
       try {
         const studentData = formToStudent(data)
         await updateStudent(id, studentData)
@@ -32,7 +59,7 @@ export default function EditStudent() {
         showError('Failed to update student', { description: 'Please try again.' })
       }
     },
-    [navigate, id, showSuccess, showError],
+    [navigate, id, can, canEditThisStudent, showSuccess, showError],
   )
 
   const handleCancel = React.useCallback(() => {
@@ -63,18 +90,37 @@ export default function EditStudent() {
     >
       {defaultValues && (
         <>
+          {/* Said once, up front, rather than only when Save is pressed —
+              filling in a form you were never allowed to submit is the worst
+              way to find out. */}
+          {!canEditThisStudent && (
+            <div
+              role="status"
+              className="mb-4 flex items-start gap-2 rounded-lg border px-3 py-2.5"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <Lock className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--heading)' }} />
+              <p className="text-caption text-muted-foreground">
+                This student is not in one of your assigned classes, so you can read their
+                record but not change it.
+              </p>
+            </div>
+          )}
+
           <StudentForm
             defaultValues={defaultValues}
             onSubmit={onSubmit}
             onHandlersReady={handleHandlersReady}
           />
 
-          <StudentFormActions
-            onCancel={handleCancel}
-            onSave={handleSaveClick}
-            saveLabel={STUDENT_LABELS.SAVE_CHANGES}
-            cancelLabel={STUDENT_LABELS.CANCEL}
-          />
+          {canEditThisStudent && (
+            <StudentFormActions
+              onCancel={handleCancel}
+              onSave={handleSaveClick}
+              saveLabel={STUDENT_LABELS.SAVE_CHANGES}
+              cancelLabel={STUDENT_LABELS.CANCEL}
+            />
+          )}
         </>
       )}
     </DetailPageLayout>

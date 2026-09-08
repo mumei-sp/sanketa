@@ -10,6 +10,7 @@ import { fetchAllClassTimetables, fetchClassTimetable } from '@/api/services/tim
 import { useClassTimetable } from '../hooks/use-class-timetable'
 import { TimetableGrid } from '../components/TimetableGrid'
 import { TimetableToolbar } from '../components/TimetableToolbar'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { TimetableSlotFormSheet } from '../components/TimetableSlotFormSheet'
 import type { TimetableSlot } from '../types'
 
@@ -51,6 +52,10 @@ export function TimetablePage() {
   const { timetable, isLoading, updateSlots, isSaving } = useClassTimetable(selectedClassId)
 
   // Edit mode
+  const { can } = usePermissions()
+  // Not scoped: a timetable belongs to the school's schedule, not to whoever
+  // teaches in it, so there is no per-class narrowing to apply here.
+  const canManage = can('timetable.manage')
   const [isEditMode, setIsEditMode] = React.useState(false)
   const [editingSlots, setEditingSlots] = React.useState<TimetableSlot[]>([])
 
@@ -66,12 +71,14 @@ export function TimetablePage() {
   const [editingCurrentSlot, setEditingCurrentSlot] = React.useState<TimetableSlot | null>(null)
 
   const handleSlotClick = React.useCallback((dayOfWeek: number, periodId: string, currentSlot: TimetableSlot | null) => {
-    if (!isEditMode) return
+    // Edit mode is unreachable without the permission, but the grid is a
+    // separate component and a stale `isEditMode` should not become a way in.
+    if (!isEditMode || !canManage) return
     setEditingDay(dayOfWeek)
     setEditingPeriodId(periodId)
     setEditingCurrentSlot(currentSlot)
     setEditorOpen(true)
-  }, [isEditMode])
+  }, [isEditMode, canManage])
 
   const handleSlotSave = React.useCallback((newSlot: TimetableSlot) => {
     setEditingSlots(prev => {
@@ -157,6 +164,7 @@ export function TimetablePage() {
           selectedClassId={selectedClassId}
           onClassChange={setSelectedClassId}
           isEditMode={isEditMode}
+          canManage={canManage}
           onToggleEditMode={handleToggleEditMode}
           onPrint={handlePrint}
           isSaving={isSaving}
@@ -192,13 +200,15 @@ export function TimetablePage() {
             <p className="text-sm text-text-muted mb-2">
               No timetable configured for Class {selectedLabel}
             </p>
-            <button
-              type="button"
-              onClick={() => setIsEditMode(true)}
-              className="text-sm font-medium text-text-heading underline cursor-pointer"
-            >
-              Create timetable
-            </button>
+            {canManage && (
+              <button
+                type="button"
+                onClick={() => setIsEditMode(true)}
+                className="text-sm font-medium text-text-heading underline cursor-pointer"
+              >
+                Create timetable
+              </button>
+            )}
           </div>
         )}
       </Tile>

@@ -251,12 +251,19 @@ export function wouldOrphanSettings(roles: Role[]): boolean {
  * "Manage teachers" look like independent switches in the editor when they are
  * not. Toggling view off while manage stays on changed nothing, which is worse
  * than a disabled control: it looks like it worked.
+ *
+ * *Every* action, not just `read`. This checked `action === 'read'` at first,
+ * which quietly missed the one case where it mattered most: `students.promote`
+ * is a bespoke verb on the same subject, so "Manage students" grants it too,
+ * and "Run promotions" sat there as a live switch that could not turn anything
+ * off. Written against the wildcard rather than a list of actions, so a new
+ * verb is covered the day it is added.
  */
 export function impliedBy(id: Permission, held: Permission[]): PermissionDefinition | undefined {
   const definition = (PERMISSION_DEFINITIONS as readonly PermissionDefinition[]).find(
     candidate => candidate.id === id,
   )
-  if (!definition || definition.action !== 'read') return undefined
+  if (!definition || definition.action === 'manage') return undefined
 
   return (PERMISSION_DEFINITIONS as readonly PermissionDefinition[]).find(
     candidate =>

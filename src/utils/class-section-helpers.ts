@@ -58,3 +58,24 @@ export function getGroupedByGrade(sections: ClassSection[]): [string, ClassSecti
   }
   return Array.from(map.entries()).sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
 }
+
+/**
+ * The class label a student belongs to — '7A', '10B' — or undefined.
+ *
+ * Student records carry grade and section as separate fields, while every
+ * class-scoped rule is written against the combined label the rest of the app
+ * uses (`ClassSection.label`, the strings a teacher is assigned). Deriving it
+ * here rather than adding a third stored copy keeps one source of truth: the
+ * two fields the record already has.
+ *
+ * Undefined when either half is missing, which a permission check must read as
+ * "no class" — and therefore as denied for a scoped holder — rather than
+ * guessing.
+ */
+export function classSectionOf(student: {
+  gradeLevel?: string
+  section?: string
+}): string | undefined {
+  if (!student.gradeLevel || !student.section) return undefined
+  return `${student.gradeLevel}${student.section}`
+}

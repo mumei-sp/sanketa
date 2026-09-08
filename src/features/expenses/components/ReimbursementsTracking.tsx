@@ -12,6 +12,7 @@ import { Tile } from '@/components/tile'
 import { CircleDollarSign, FileText, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react'
 import { colors, statusVivid } from '@/theme/colors'
 import type { Reimbursement, ReimbursementStatus } from '../types'
+import { usePermissions } from '@/features/auth/PermissionContext'
 
 interface ReimbursementsTrackingProps {
   data: Reimbursement[]
@@ -49,6 +50,9 @@ export function ReimbursementsTracking({
   data,
   isLoading = false,
 }: ReimbursementsTrackingProps) {
+  // Approving a reimbursement moves money. `finance.view` gets you the list.
+  const { can } = usePermissions()
+  const canManage = can('finance.manage')
   const [timeRange, setTimeRange] = React.useState('this-week')
   const [sortKey, setSortKey] = React.useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc')
@@ -313,7 +317,7 @@ export function ReimbursementsTracking({
                 </a>
 
                 {/* ── Status ── */}
-                {item.status === 'Pending' ? (
+                {item.status === 'Pending' && canManage ? (
                   <span className="flex items-center gap-2 whitespace-nowrap">
                     <button
                       className="text-xs font-medium"
