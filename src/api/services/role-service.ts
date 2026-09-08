@@ -11,7 +11,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/roles'
-import type { Permission, Role } from '@/config/permissions'
+import type { Permission, Role, ScopeAxis } from '@/config/permissions'
 
 /**
  * Every role the school has defined.
@@ -38,7 +38,7 @@ export async function createRole(input: {
   name: string
   description?: string
   permissions: Permission[]
-  scopedToAssignedClasses?: boolean
+  scopeBy?: ScopeAxis | 'none'
 }): Promise<Role> {
   return mockOrHttp(
     async () => {
@@ -61,7 +61,7 @@ export async function updateRole(
     name?: string
     description?: string
     permissions?: Permission[]
-    scopedToAssignedClasses?: boolean
+    scopeBy?: ScopeAxis | 'none'
   },
 ): Promise<Role | null> {
   return mockOrHttp(

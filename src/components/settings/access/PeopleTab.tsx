@@ -287,7 +287,7 @@ export function PeopleTab({
       <div className="flex flex-col gap-3">
         {visible.map(user => {
           const role = roles.find(candidate => candidate.id === user.roleId)
-          const scoped = role?.scopedToAssignedClasses === true
+          const scoped = role?.scopeBy === 'classes'
           const assigned = user.assignedClasses ?? []
           const isSelf = currentUser?.id === user.id
           const busy = savingId === user.id
@@ -333,7 +333,13 @@ export function PeopleTab({
                     onClick={() => {
                       startPreview({
                         roleId: user.roleId,
-                        assignedClasses: user.assignedClasses ?? [],
+                        // A person's own scope, which is the faithful preview.
+                        // `studentIds` stays empty until accounts are linked
+                        // to student records; a staff account has none.
+                        scope: {
+                          classSections: user.assignedClasses ?? [],
+                          studentIds: [],
+                        },
                         personName: user.fullName,
                       })
                       setSettingsOpen(false)

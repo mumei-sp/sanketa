@@ -42,6 +42,13 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import {
   AlertDialog,
@@ -58,7 +65,12 @@ import { border, text } from '@/theme/colors'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { defineAbilityFor, permissionDefinition, subjectFor } from '@/config/ability'
+import {
+  defineAbilityFor,
+  permissionDefinition,
+  subjectFor,
+  type AbilityScope,
+} from '@/config/ability'
 import { navigationItems, visibleNavigationItems } from '@/config/navigation'
 import {
   createRole as createRoleRequest,
@@ -73,6 +85,7 @@ import {
   type Permission,
   type PermissionDefinition,
   type Role,
+  type ScopeAxis,
 } from '@/config/permissions'
 import type { SchoolUser } from '@/api/services/user-service'
 import type { RecordAccessEvent } from './AccessSettingsSection'
@@ -86,15 +99,16 @@ import { describePermissionChange } from './helpers'
  * than by listing screens by hand, so it cannot drift: a permission that stops
  * gating a page stops appearing here on the same commit.
  *
- * Scoped roles are previewed as though the holder has classes assigned —
- * `classLabels` — because the question here is "what does this role unlock",
- * not "what can this particular person reach today". The People tab answers
- * the second one.
+ * Narrowed roles are previewed as though the holder has something on their
+ * axis — every class for a class-scoped role, a representative student for a
+ * family one — because the question here is "what does this role unlock", not
+ * "what can this particular person reach today". The People tab answers the
+ * second one.
  */
-function useEffectiveAccess(role: Role | null, classLabels: string[]): string[] {
+function useEffectiveAccess(role: Role | null, scope: AbilityScope): string[] {
   return React.useMemo(() => {
     if (!role) return []
-    const ability = defineAbilityFor(role, classLabels)
+    const ability = defineAbilityFor(role, scope)
     const can = (permission: Permission) => {
       const definition = permissionDefinition(permission)
       return definition ? ability.can(definition.action, subjectFor(definition.subject)) : false
@@ -111,7 +125,7 @@ function useEffectiveAccess(role: Role | null, classLabels: string[]): string[] 
     if (can('users.read')) admin.push('People')
 
     return [...destinations, ...admin]
-  }, [role, classLabels])
+  }, [role, scope])
 }
 
 /** Does this permission match what someone typed into the search box? */
@@ -254,7 +268,8 @@ function CompareGrid({
 interface RolesTabProps {
   /** The directory, for member counts. Null while it is still loading. */
   users: SchoolUser[] | null
-  classLabels: string[]
+  /** What a role's preview stands in for on each axis — see the section. */
+  previewScope: AbilityScope
   /** Open the People tab filtered to one role. */
   onManagePeople: (roleId: string) => void
   canManagePeople: boolean
@@ -263,7 +278,7 @@ interface RolesTabProps {
 
 export function RolesTab({
   users,
-  classLabels,
+  previewScope,
   onManagePeople,
   canManagePeople,
   record,
@@ -303,7 +318,7 @@ export function RolesTab({
     [users],
   )
   const members = selected ? membersOf(selected.id) : []
-  const destinations = useEffectiveAccess(selected, classLabels)
+  const destinations = useEffectiveAccess(selected, previewScope)
 
   const patch = React.useCallback(
     async (id: string, changes: Parameters<typeof updateRoleRequest>[1]) => {
@@ -414,26 +429,29 @@ export function RolesTab({
     )
   }
 
-  const setScoped = (value: boolean) => {
+  const setScopeAxis = (value: ScopeAxis | 'none') => {
     if (!selected) return
     const name = selected.name
-    // Normalised to a boolean rather than stored as-is: a role that has never
-    // had the field set holds `undefined`, and `updateRole` skips undefined,
-    // so undoing "turned scoping on" would silently do nothing.
-    const was = selected.scopedToAssignedClasses === true
-    void patch(selected.id, { scopedToAssignedClasses: value }).then(ok => {
+    // 'none' rather than undefined on the wire: `updateRole` skips undefined,
+    // so clearing the axis would otherwise silently do nothing — and undoing
+    // "turned scoping on" would too.
+    const was: ScopeAxis | 'none' = selected.scopeBy ?? 'none'
+    void patch(selected.id, { scopeBy: value }).then(ok => {
       if (ok) {
         record({
           kind: 'role.update',
           target: name,
-          summary: value
-            ? `Limited ${name} to its holders' assigned classes`
-            : `Removed the class limit from ${name}`,
+          summary:
+            value === 'none'
+              ? `Removed the limit from ${name}`
+              : value === 'classes'
+                ? `Limited ${name} to its holders' assigned classes`
+                : `Limited ${name} to its holders' own records`,
           change: {
             entity: 'role',
             id: selected.id,
-            before: { scopedToAssignedClasses: was },
-            after: { scopedToAssignedClasses: value },
+            before: { scopeBy: was },
+            after: { scopeBy: value },
           },
         })
       }
@@ -481,7 +499,7 @@ export function RolesTab({
         name: `${source.name} copy`,
         description: source.description,
         permissions: [...source.permissions],
-        scopedToAssignedClasses: source.scopedToAssignedClasses,
+        scopeBy: source.scopeBy,
       })
       await refresh()
       setSelectedId(created.id)
@@ -674,9 +692,9 @@ export function RolesTab({
                   <span className="flex flex-wrap items-center gap-1.5">
                     <AvatarStack names={holders} max={3} />
                     <span className="flex-1" />
-                    {role.scopedToAssignedClasses && (
+                    {role.scopeBy && (
                       <Badge variant="outline" className="text-[10px]">
-                        Class-scoped
+                        {role.scopeBy === 'classes' ? 'Class-scoped' : 'Own records'}
                       </Badge>
                     )}
                     {role.builtin && (
@@ -790,7 +808,7 @@ export function RolesTab({
                 variant="outline"
                 className="gap-1.5"
                 onClick={() => {
-                  startPreview({ roleId: selected.id, assignedClasses: classLabels })
+                  startPreview({ roleId: selected.id, scope: previewScope })
                   setSettingsOpen(false)
                 }}
               >
@@ -801,26 +819,42 @@ export function RolesTab({
               {/* Class scoping. Its own control rather than a permission,
                   because it does not grant anything — it narrows what the
                   permissions below already grant to the holder's own classes. */}
+              {/* How this role is narrowed. A select rather than a switch
+                  because there are now three answers, and the third one —
+                  "their own records" — is what a student or parent account
+                  will hold. It is not a permission: it does not grant
+                  anything, it narrows what the permissions below already
+                  grant. */}
               <div
-                className="flex items-center gap-3 rounded-lg border px-3 py-2.5"
+                className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5"
                 style={{ borderColor: border.default }}
               >
                 <div className="min-w-0 flex-1">
-                  <Label htmlFor="role-scoped" className="cursor-pointer text-body font-medium">
-                    Limit to assigned classes
+                  <Label htmlFor="role-scope" className="text-body font-medium">
+                    Limit what this role reaches
                   </Label>
                   <p className="text-caption text-muted-foreground">
-                    Holders read every class but add and edit only the ones assigned to them.
-                    Affects attendance, marks and student records.
+                    {selected.scopeBy === 'classes'
+                      ? 'Holders read every class but add and edit only the ones assigned to them.'
+                      : selected.scopeBy === 'students'
+                        ? "Holders read only their own records — a student's, or a parent's children's."
+                        : 'Holders reach everything their permissions allow, everywhere.'}
                   </p>
                 </div>
-                <Switch
-                  id="role-scoped"
-                  checked={selected.scopedToAssignedClasses === true}
+                <Select
+                  value={selected.scopeBy ?? 'none'}
                   disabled={isSaving}
-                  onCheckedChange={setScoped}
-                  aria-label="Limit to assigned classes"
-                />
+                  onValueChange={value => setScopeAxis(value as ScopeAxis | 'none')}
+                >
+                  <SelectTrigger id="role-scope" className="h-control w-[210px] max-md:w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not limited</SelectItem>
+                    <SelectItem value="classes">To assigned classes</SelectItem>
+                    <SelectItem value="students">To their own records</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* What the switches below add up to. Derived from the same
@@ -932,9 +966,14 @@ export function RolesTab({
                                 className="cursor-pointer text-body font-medium"
                               >
                                 {definition.label}
-                                {definition.scoped && (
+                                {definition.scopableBy?.includes('classes') && (
                                   <Badge variant="outline" className="ml-2 text-[10px] font-normal">
-                                    Scopable
+                                    By class
+                                  </Badge>
+                                )}
+                                {definition.scopableBy?.includes('students') && (
+                                  <Badge variant="outline" className="ml-2 text-[10px] font-normal">
+                                    Own records
                                   </Badge>
                                 )}
                               </Label>

@@ -15,7 +15,13 @@
  * *renamed* rather than dropped are handled before that, by `RENAMED`.
  */
 
-import { BUILTIN_ROLES, ALL_PERMISSIONS, type Permission, type Role } from '@/config/permissions'
+import {
+  BUILTIN_ROLES,
+  ALL_PERMISSIONS,
+  type Permission,
+  type Role,
+  type ScopeAxis,
+} from '@/config/permissions'
 
 /**
  * Permission ids that have been renamed, and what they became.
@@ -101,7 +107,7 @@ function seed(): Database {
  *
  *   Fields added to a built-in role since the row was written are backfilled,
  *   but *only* when the stored row has no opinion at all (`undefined`). A
- *   release that adds `scopedToAssignedClasses` has to reach schools that
+ *   release that adds `scopeBy` has to reach schools that
  *   already have a Teacher row, or the new behaviour silently never arrives —
  *   which is exactly what happened the first time. Once a school has set the
  *   field either way, their choice is theirs and survives every upgrade.
@@ -113,9 +119,17 @@ function reconcile(role: Role, newPermissions: Set<string>): Role {
 
   const next: Role = { ...role, permissions }
 
+  // `scopedToAssignedClasses: true` was the only scoping there was, so it
+  // means the classes axis. Read off the row rather than deleted from it: the
+  // stored copy is harmless, and leaving it means a browser that loads an
+  // older build of the app still finds what it expects.
+  const legacy = (role as Role & { scopedToAssignedClasses?: boolean })
+    .scopedToAssignedClasses
+  if (next.scopeBy === undefined && legacy === true) next.scopeBy = 'classes'
+
   if (builtin) {
-    if (next.scopedToAssignedClasses === undefined) {
-      next.scopedToAssignedClasses = builtin.scopedToAssignedClasses
+    if (next.scopeBy === undefined && legacy === undefined) {
+      next.scopeBy = builtin.scopeBy
     }
     // Permissions the build has never offered before are granted per the
     // built-in definition. Ones it has offered are left alone, so a removal
@@ -230,7 +244,7 @@ export function createRole(input: {
   description?: string
   permissions: Permission[]
   /** Carried on create so duplicating a scoped role produces a scoped one. */
-  scopedToAssignedClasses?: boolean
+  scopeBy?: ScopeAxis | 'none'
 }): Role {
   const database = load()
   const role: Role = {
@@ -238,7 +252,7 @@ export function createRole(input: {
     name: input.name.trim(),
     description: input.description?.trim() || undefined,
     permissions: [...input.permissions],
-    scopedToAssignedClasses: input.scopedToAssignedClasses,
+    scopeBy: input.scopeBy === 'none' ? undefined : input.scopeBy,
   }
   database.rows.push(role)
   persist()
@@ -258,7 +272,7 @@ export function updateRole(
     name?: string
     description?: string
     permissions?: Permission[]
-    scopedToAssignedClasses?: boolean
+    scopeBy?: ScopeAxis | 'none'
   },
 ): Role | null {
   const database = load()
@@ -268,8 +282,10 @@ export function updateRole(
   if (patch.name !== undefined) role.name = patch.name.trim()
   if (patch.description !== undefined) role.description = patch.description.trim() || undefined
   if (patch.permissions !== undefined) role.permissions = [...patch.permissions]
-  if (patch.scopedToAssignedClasses !== undefined) {
-    role.scopedToAssignedClasses = patch.scopedToAssignedClasses
+  if (patch.scopeBy !== undefined) {
+    // `null` from a caller clearing the axis arrives as undefined through the
+    // JSON boundary, so an explicit 'none' is how "not narrowed" is set.
+    role.scopeBy = patch.scopeBy === 'none' ? undefined : patch.scopeBy
   }
 
   persist()

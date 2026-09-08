@@ -19,8 +19,8 @@ export function PreviewBanner() {
   const { preview, stopPreview, realRole } = usePermissions()
   if (!preview) return null
 
-  const { role, personName, assignedClasses, withheld } = preview
-  const scoped = role.scopedToAssignedClasses === true
+  const { role, personName, scope, withheld } = preview
+  const axis = role.scopeBy
 
   return (
     <div
@@ -48,10 +48,14 @@ export function PreviewBanner() {
           </span>
           <span className="hidden opacity-80 sm:inline">
             {personName ? ` · ${role.name}` : ''}
-            {scoped &&
-              (assignedClasses.length === 0
+            {axis === 'classes' &&
+              (scope.classSections.length === 0
                 ? ' · no classes assigned'
-                : ` · ${assignedClasses.length} ${assignedClasses.length === 1 ? 'class' : 'classes'}`)}
+                : ` · ${scope.classSections.length} ${scope.classSections.length === 1 ? 'class' : 'classes'}`)}
+            {axis === 'students' &&
+              (scope.studentIds.length === 0
+                ? ' · no records linked'
+                : ` · ${scope.studentIds.length} ${scope.studentIds.length === 1 ? 'record' : 'records'}`)}
             {/* Saving still happens as the real user — the preview changes
                 what is drawn, not who is signed in. Worth one clause. */}
             {' · you still act as '}

@@ -28,6 +28,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppToast } from '@/hooks/use-app-toast'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
+import { fetchStudents } from '@/api/services/student-service'
+import type { AbilityScope } from '@/config/ability'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import {
@@ -87,6 +89,24 @@ export function AccessSettingsSection() {
   )
 
   const [users, setUsers] = React.useState<SchoolUser[] | null>(null)
+  /**
+   * A couple of real student ids, for previewing a role narrowed to "their own
+   * records".
+   *
+   * No account is linked to a student record yet, so a family role's scope
+   * would otherwise be empty and its preview would show an app that reaches
+   * nothing — which is true of a student with no record and useless as a
+   * preview of the role. Real ids rather than a placeholder, because the
+   * condition matches on them and a placeholder would match nothing.
+   */
+  const [sampleStudentIds, setSampleStudentIds] = React.useState<string[]>([])
+
+  /** What a preview of a role stands in for, on each axis. */
+  const previewScope = React.useMemo<AbilityScope>(
+    () => ({ classSections: classLabels, studentIds: sampleStudentIds }),
+    [classLabels, sampleStudentIds],
+  )
+
   const [events, setEvents] = React.useState<AccessEvent[] | null>(null)
   const [savingId, setSavingId] = React.useState<string | null>(null)
   const [isUndoing, setIsUndoing] = React.useState(false)
@@ -100,6 +120,9 @@ export function AccessSettingsSection() {
         console.error('Failed to load people', error)
         setUsers([])
       })
+    fetchStudents()
+      .then(students => setSampleStudentIds(students.slice(0, 2).map(student => String(student.id))))
+      .catch(error => console.error('Failed to load a sample student', error))
     fetchAccessEvents()
       .then(setEvents)
       .catch(error => {
@@ -213,7 +236,7 @@ export function AccessSettingsSection() {
   }
 
   const customRoles = roles.filter(role => !role.builtin).length
-  const scopedRoles = roles.filter(role => role.scopedToAssignedClasses).length
+  const scopedRoles = roles.filter(role => role.scopeBy !== undefined).length
 
   return (
     <div className="flex flex-col gap-4">
@@ -268,7 +291,7 @@ export function AccessSettingsSection() {
           <TabsContent value="roles" forceMount hidden={tab !== 'roles'}>
             <RolesTab
               users={users}
-              classLabels={classLabels}
+              previewScope={previewScope}
               onManagePeople={openPeopleFor}
               canManagePeople={canManagePeople}
               record={record}

@@ -23,33 +23,34 @@ import {
   defineAbilityFor,
   permissionDefinition,
   subjectFor,
+  type AbilityScope,
   type AppAbility,
+  type SubjectFields,
 } from '@/config/ability'
 import { useCurrentUser } from '@/hooks/use-current-user'
 
 /**
- * Where an action is being attempted.
+ * Where an action is being attempted — the record it is about.
  *
- * Only class sections today. If scoping ever grows a second axis — subjects,
- * departments — this is the type that gains a field, and every call site that
- * already passes a scope keeps working.
+ * Pass whichever fields you have. A caller with a class in hand passes the
+ * class; one looking at a student's record passes the student; a caller with
+ * neither passes nothing and gets the "anywhere?" answer, which is what a
+ * toolbar button wants.
  */
-export interface PermissionScope {
-  classSection?: string
-}
+export type PermissionScope = SubjectFields
 
 /** What the caller asks for when starting a preview. */
 export interface PreviewRequest {
   roleId: string
   /**
-   * Classes the previewed holder covers.
+   * What the previewed holder is narrowed to, on both axes.
    *
    * Previewing a *person* passes theirs, which is the faithful view. Previewing
-   * a *role* has no person to ask, so the Roles tab passes every class — a
-   * scoped role with no classes can write nothing, and a preview that showed
-   * that would hide the very behaviour being previewed.
+   * a *role* has no person to ask, so the Roles tab passes a representative
+   * set — a narrowed role with nothing on its axis can do nothing, and a
+   * preview that showed that would hide the very behaviour being previewed.
    */
-  assignedClasses: string[]
+  scope: AbilityScope
   /** Set when previewing a particular person rather than a bare role. */
   personName?: string
 }
@@ -58,7 +59,7 @@ export interface PreviewRequest {
 export interface ActivePreview {
   role: Role
   personName?: string
-  assignedClasses: string[]
+  scope: AbilityScope
   /**
    * What the previewed role holds and the real user does not.
    *
@@ -154,7 +155,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
         ),
       },
       personName: request.personName,
-      assignedClasses: request.assignedClasses,
+      scope: request.scope,
       withheld: previewed.permissions.filter(
         permission => !realRole.permissions.includes(permission),
       ),
@@ -163,16 +164,23 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
 
   const role = preview?.role ?? realRole
 
-  const isClassScoped = role?.scopedToAssignedClasses === true
-  const assignedClasses = React.useMemo(() => {
-    if (!isClassScoped) return []
-    return preview ? preview.assignedClasses : (currentUser?.assignedClasses ?? [])
-  }, [isClassScoped, preview, currentUser?.assignedClasses])
+  /**
+   * What this account is narrowed to, on both axes.
+   *
+   * Assembled here because this is the only place that knows both the session
+   * and the running preview. `studentIds` is empty for every real session
+   * today: no account is linked to a student record yet, which is the accounts
+   * project's job. The axis works regardless, and the preview proves it.
+   */
+  const scope = React.useMemo<AbilityScope>(() => {
+    if (preview) return preview.scope
+    return {
+      classSections: currentUser?.assignedClasses ?? [],
+      studentIds: [],
+    }
+  }, [preview, currentUser?.assignedClasses])
 
-  const ability = React.useMemo(
-    () => defineAbilityFor(role, assignedClasses),
-    [role, assignedClasses],
-  )
+  const ability = React.useMemo(() => defineAbilityFor(role, scope), [role, scope])
 
   const value = React.useMemo<PermissionContextValue>(() => {
     /**
@@ -186,10 +194,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     const can = (permission: Permission, scope?: PermissionScope) => {
       const definition = permissionDefinition(permission)
       if (!definition) return false
-      return ability.can(
-        definition.action,
-        subjectFor(definition.subject, scope?.classSection),
-      )
+      return ability.can(definition.action, subjectFor(definition.subject, scope))
     }
     return {
       ability,

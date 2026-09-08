@@ -39,6 +39,7 @@ import {
 } from '@/api/services/user-service'
 import { wouldOrphanSettings, type Permission, type Role } from '@/config/permissions'
 import type { AccessChange, AccessEvent } from '@/api/services/access-log-service'
+import type { ScopeAxis } from '@/config/permissions'
 import { describeClassChange, describePermissionChange, stillHasAnAdmin } from './helpers'
 
 export interface UndoContext {
@@ -138,8 +139,12 @@ function rolePatch(fields: Record<string, unknown>) {
   if ('name' in fields) patch.name = fields.name as string
   if ('description' in fields) patch.description = (fields.description as string) ?? ''
   if ('permissions' in fields) patch.permissions = fields.permissions as Permission[]
-  if ('scopedToAssignedClasses' in fields) {
-    patch.scopedToAssignedClasses = fields.scopedToAssignedClasses === true
+  // Both spellings: entries written before the second scoping axis carry the
+  // old boolean, and an audit log is exactly the place old shapes survive.
+  if ('scopeBy' in fields) {
+    patch.scopeBy = (fields.scopeBy as ScopeAxis | 'none' | undefined) ?? 'none'
+  } else if ('scopedToAssignedClasses' in fields) {
+    patch.scopeBy = fields.scopedToAssignedClasses === true ? 'classes' : 'none'
   }
   return patch
 }

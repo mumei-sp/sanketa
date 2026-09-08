@@ -78,6 +78,17 @@ export type Action =
   | 'transfer'
   | 'assign'
 
+/**
+ * The two ways a grant can be narrowed.
+ *
+ * `classes` is a staff idea: a teacher writes to the sections assigned to
+ * them. `students` is a family one: a student reads their own records, a
+ * parent their children's. They are different axes, not degrees of the same
+ * one, which is why a permission declares which of them it can be narrowed on
+ * and a role declares which one to use.
+ */
+export type ScopeAxis = 'classes' | 'students'
+
 /** One capability. Grouped by the area of the app it belongs to. */
 export interface PermissionDefinition {
   id: string
@@ -95,14 +106,21 @@ export interface PermissionDefinition {
   label: string
   description: string
   /**
-   * Whether holding this can be limited to a teacher's own classes.
+   * The axes this permission can be narrowed on. Absent means never narrowed.
    *
-   * Declared rather than inferred, so which permissions answer "where?" as
-   * well as "whether?" is visible in one place. Reading is deliberately never
-   * scoped: a teacher should be able to look up any class's attendance or
-   * marks — it is changing them that belongs to whoever owns the class.
+   * Declared per permission rather than inferred, because the two axes apply
+   * to opposite halves of the catalogue and the old single flag could not say
+   * so. `attendance.mark` narrows by class — a teacher marks their own
+   * sections — and must *not* narrow by student, because a teacher is not a
+   * student. `attendance.read` is the mirror image: unscoped for staff, who
+   * should be able to look up any class, and narrowed to their own records for
+   * a family, who must not.
+   *
+   * That asymmetry is why "reading is never scoped" — true, and deliberate,
+   * while every account belonged to staff — could not survive families
+   * arriving.
    */
-  scoped?: boolean
+  scopableBy?: readonly ScopeAxis[]
 }
 
 /**
@@ -141,26 +159,26 @@ export const PERMISSION_DEFINITIONS = [
   { id: 'notices.read', action: 'read', subject: 'Notice', group: 'General', label: 'View notices', description: 'Read the notice board.' },
   { id: 'notices.manage', action: 'manage', subject: 'Notice', group: 'General', label: 'Manage notices', description: 'Publish, pin and remove notices.' },
 
-  { id: 'students.read', action: 'read', subject: 'Student', group: 'People', label: 'View students', description: 'See the student roster and profiles.' },
-  { id: 'students.create', action: 'create', subject: 'Student', group: 'People', label: 'Enrol students', description: 'Add a student to the roster.', scoped: true },
-  { id: 'students.update', action: 'update', subject: 'Student', group: 'People', label: 'Edit student records', description: 'Change a student\'s details, documents and history.', scoped: true },
-  { id: 'students.delete', action: 'delete', subject: 'Student', group: 'People', label: 'Remove students', description: 'Delete a student record permanently.', scoped: true },
+  { id: 'students.read', action: 'read', subject: 'Student', group: 'People', label: 'View students', description: 'See the student roster and profiles.', scopableBy: ['students'] },
+  { id: 'students.create', action: 'create', subject: 'Student', group: 'People', label: 'Enrol students', description: 'Add a student to the roster.', scopableBy: ['classes'] },
+  { id: 'students.update', action: 'update', subject: 'Student', group: 'People', label: 'Edit student records', description: 'Change a student\'s details, documents and history.', scopableBy: ['classes'] },
+  { id: 'students.delete', action: 'delete', subject: 'Student', group: 'People', label: 'Remove students', description: 'Delete a student record permanently.', scopableBy: ['classes'] },
   { id: 'students.promote', action: 'promote', subject: 'Student', group: 'People', label: 'Run promotions', description: 'Move students between years.' },
-  { id: 'students.transfer', action: 'transfer', subject: 'Student', group: 'People', label: 'Transfer students', description: 'Move a student between classes or sections.', scoped: true },
+  { id: 'students.transfer', action: 'transfer', subject: 'Student', group: 'People', label: 'Transfer students', description: 'Move a student between classes or sections.', scopableBy: ['classes'] },
   { id: 'teachers.read', action: 'read', subject: 'Teacher', group: 'People', label: 'View teachers', description: 'See the staff list and profiles.' },
   { id: 'teachers.manage', action: 'manage', subject: 'Teacher', group: 'People', label: 'Manage teachers', description: 'Add and edit staff records.' },
 
-  { id: 'attendance.read', action: 'read', subject: 'Attendance', group: 'Academics', label: 'View attendance', description: 'See attendance records and history.' },
-  { id: 'attendance.mark', action: 'mark', subject: 'Attendance', group: 'Academics', label: 'Mark attendance', description: 'Submit and amend a class register.', scoped: true },
-  { id: 'grades.read', action: 'read', subject: 'Grade', group: 'Academics', label: 'View grades', description: 'See grade sheets and report cards.' },
-  { id: 'grades.create', action: 'create', subject: 'Grade', group: 'Academics', label: 'Enter grades', description: 'Record marks for an exam.', scoped: true },
-  { id: 'grades.update', action: 'update', subject: 'Grade', group: 'Academics', label: 'Amend grades', description: 'Change marks already recorded.', scoped: true },
-  { id: 'grades.delete', action: 'delete', subject: 'Grade', group: 'Academics', label: 'Delete grades', description: 'Remove a grade record permanently.', scoped: true },
+  { id: 'attendance.read', action: 'read', subject: 'Attendance', group: 'Academics', label: 'View attendance', description: 'See attendance records and history.', scopableBy: ['students'] },
+  { id: 'attendance.mark', action: 'mark', subject: 'Attendance', group: 'Academics', label: 'Mark attendance', description: 'Submit and amend a class register.', scopableBy: ['classes'] },
+  { id: 'grades.read', action: 'read', subject: 'Grade', group: 'Academics', label: 'View grades', description: 'See grade sheets and report cards.', scopableBy: ['students'] },
+  { id: 'grades.create', action: 'create', subject: 'Grade', group: 'Academics', label: 'Enter grades', description: 'Record marks for an exam.', scopableBy: ['classes'] },
+  { id: 'grades.update', action: 'update', subject: 'Grade', group: 'Academics', label: 'Amend grades', description: 'Change marks already recorded.', scopableBy: ['classes'] },
+  { id: 'grades.delete', action: 'delete', subject: 'Grade', group: 'Academics', label: 'Delete grades', description: 'Remove a grade record permanently.', scopableBy: ['classes'] },
   { id: 'timetable.read', action: 'read', subject: 'Timetable', group: 'Academics', label: 'View timetable', description: 'See the class timetable.' },
   { id: 'timetable.manage', action: 'manage', subject: 'Timetable', group: 'Academics', label: 'Manage timetable', description: 'Edit periods and add substitutions.' },
-  { id: 'assignments.read', action: 'read', subject: 'Assignment', group: 'Academics', label: 'View assignments', description: 'See assignments.' },
+  { id: 'assignments.read', action: 'read', subject: 'Assignment', group: 'Academics', label: 'View assignments', description: 'See assignments.', scopableBy: ['students'] },
 
-  { id: 'finance.read', action: 'read', subject: 'Finance', group: 'Finance', label: 'View finance', description: 'See fee collection and expenses.' },
+  { id: 'finance.read', action: 'read', subject: 'Finance', group: 'Finance', label: 'View finance', description: 'See fee collection and expenses.', scopableBy: ['students'] },
   { id: 'finance.manage', action: 'manage', subject: 'Finance', group: 'Finance', label: 'Manage finance', description: 'Record payments and log expenses.' },
   { id: 'transport.read', action: 'read', subject: 'Transport', group: 'Transport', label: 'View transport', description: 'See routes, vehicles and drivers.' },
   { id: 'transport.manage', action: 'manage', subject: 'Transport', group: 'Transport', label: 'Manage transport', description: 'Edit routes, vehicles, drivers and transport fees.' },
@@ -203,15 +221,16 @@ export interface Role {
   description?: string
   permissions: Permission[]
   /**
-   * Limit this role's scoped permissions to the classes its holders are
-   * assigned.
+   * Which axis this role's narrowable permissions are narrowed on.
    *
-   * The role says *whether* to narrow; the user says *what to*. Keeping the
-   * two apart is what lets "Principals write everywhere" and "Teachers write
-   * their own classes" be one mechanism instead of two: both hold
-   * `attendance.mark`, and only one of them is scoped.
+   * The role says *how* to narrow; the account says *what to*. Keeping the two
+   * apart is what lets "Principals write everywhere", "Teachers write their
+   * own classes" and "students read their own records" be one mechanism rather
+   * than three: all three hold `attendance.read`, and only the axis differs.
+   *
+   * Absent means the role is not narrowed at all.
    */
-  scopedToAssignedClasses?: boolean
+  scopeBy?: ScopeAxis
   /**
    * Seeded with the app and not deletable.
    *
@@ -254,7 +273,7 @@ export const BUILTIN_ROLES: Role[] = [
     id: 'teacher',
     name: 'Teacher',
     description: 'Reads every class; writes only their own.',
-    scopedToAssignedClasses: true,
+    scopeBy: 'classes',
     permissions: [
       ...EVERYONE,
       'students.read',
@@ -274,6 +293,46 @@ export const BUILTIN_ROLES: Role[] = [
       'students.read',
       'finance.read', 'finance.manage',
       'transport.read', 'transport.manage',
+    ],
+    builtin: true,
+  },
+  /**
+   * The two family roles.
+   *
+   * Seeded before any account can hold one, so the narrowing they depend on
+   * can be built and previewed before the accounts project lands. Both are
+   * narrowed by `students`, which is the whole reason the second axis exists:
+   * they hold the same read permissions staff do, and see a hundredth of the
+   * rows.
+   */
+  {
+    id: 'student',
+    name: 'Student',
+    description: 'Reads their own records. No accounts hold this yet.',
+    scopeBy: 'students',
+    permissions: [
+      ...EVERYONE,
+      'students.read',
+      'attendance.read',
+      'grades.read',
+      'timetable.read',
+      'assignments.read',
+    ],
+    builtin: true,
+  },
+  {
+    id: 'parent',
+    name: 'Parent',
+    description: "Reads their children's records, fees included. No accounts hold this yet.",
+    scopeBy: 'students',
+    permissions: [
+      ...EVERYONE,
+      'students.read',
+      'attendance.read',
+      'grades.read',
+      'timetable.read',
+      'assignments.read',
+      'finance.read',
     ],
     builtin: true,
   },
