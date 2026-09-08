@@ -85,8 +85,16 @@ export function readFileAsCsv(file: File): Promise<CsvParseResult> {
 // Generate CSV
 // ============================================================================
 
-/** Convert an array of objects to CSV string using Papa Parse's unparser */
-export function generateCsv<T extends Record<string, unknown>>(
+/**
+ * Convert an array of objects to a CSV string using Papa Parse's unparser.
+ *
+ * Unconstrained in `T` on purpose. It used to require
+ * `Record<string, unknown>`, which no domain interface satisfies without an
+ * index signature — so every one of the nine call sites reached for `as any`
+ * to get past it, throwing away the column-key checking this signature exists
+ * to provide. `keyof T` indexes any object type perfectly well.
+ */
+export function generateCsv<T>(
   data: T[],
   columns: { key: keyof T; header: string }[],
 ): string {

@@ -1,5 +1,7 @@
 import * as React from 'react'
 import type { Row, Table as TanStackTable } from '@tanstack/react-table'
+import { Download, Receipt } from 'lucide-react'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { DataTable, MobileRecordCard } from '@/components/table'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -29,9 +31,26 @@ interface ExpensesTableProps {
 
 const CATEGORIES: ExpenseCategory[] = ['Salaries', 'Supplies', 'Maintenance', 'Events', 'Others']
 
+const EXPORT_COLUMNS = [
+  { key: 'expenseId' as const, header: 'Expense ID' },
+  { key: 'date' as const, header: 'Date' },
+  { key: 'department' as const, header: 'Department' },
+  { key: 'category' as const, header: 'Category' },
+  { key: 'description' as const, header: 'Description' },
+  { key: 'quantity' as const, header: 'Quantity' },
+  { key: 'amount' as const, header: 'Amount' },
+]
+
 export function ExpensesTable({ data, isLoading = false }: ExpensesTableProps) {
   const [categoryFilter, setCategoryFilter] = React.useState<string>('all')
   const [timeFilter, setTimeFilter] = React.useState<string>('this-month')
+
+  const exportCsv = useCsvExport({
+    rows: data,
+    columns: EXPORT_COLUMNS,
+    filename: 'expenses',
+    label: 'expenses',
+  })
 
   const renderToolbar = React.useCallback(
     (table: TanStackTable<Expense>) => {
@@ -85,10 +104,13 @@ export function ExpensesTable({ data, isLoading = false }: ExpensesTableProps) {
               ),
             },
           ]}
+          secondaryActions={[
+            { id: 'export', label: 'Export', icon: <Download className="size-4" />, onSelect: exportCsv },
+          ]}
         />
       )
     },
-    [categoryFilter, timeFilter],
+    [categoryFilter, timeFilter, exportCsv],
   )
 
   const renderPagination = React.useCallback((table: TanStackTable<Expense>) => {
@@ -161,7 +183,11 @@ export function ExpensesTable({ data, isLoading = false }: ExpensesTableProps) {
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
       renderMobileCard={renderMobileCard}
-      mobileEmptyMessage="No expenses match these filters."
+      empty={{
+        icon: <Receipt />,
+        title: 'No expenses yet',
+        description: 'Recorded spending will appear here once it is logged.',
+      }}
       tableOptions={{
         initialState: {
           pagination: {

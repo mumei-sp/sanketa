@@ -68,6 +68,9 @@ export type { DataTableSearchProps } from './toolbar/DataTableSearch'
 export { DataTableViewOptions } from './toolbar/DataTableViewOptions'
 export type { DataTableViewOptionsProps } from './toolbar/DataTableViewOptions'
 
+export { DataTableEmptyState } from './DataTableEmptyState'
+export type { DataTableEmptyProps } from './DataTableEmptyState'
+
 // Narrow-viewport presentation
 export { MobileRecordCard } from './MobileRecordCard'
 export type { MobileRecordCardProps, MobileRecordField } from './MobileRecordCard'

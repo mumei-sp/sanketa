@@ -19,13 +19,14 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Tile } from '@/components/tile'
 import { text } from '@/theme/colors'
 import { useIsDesktop } from '@/hooks/use-mobile'
-import { ClipboardList, Plus } from 'lucide-react'
+import { ClipboardList, Plus, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { fetchNoticeBoardEntries, deleteNoticeBoardEntry, createNoticeBoardEntry, updateNoticeBoardEntry, incrementNoticeViews, toggleNoticePin } from '@/api/services/notice-board-service'
 import { useAppToast } from '@/hooks/use-app-toast'
 import { EmptyState } from '@/components/ui/empty-state'
 import { NoticeCard, NoticeDetailBoard, CreateNoticeForm } from '@/features/notice-board/components'
+import { useCsvExport } from '@/lib/use-csv-export'
 import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import type { NoticeBoardEntry, NoticeCategory } from '@/features/notice-board/types'
@@ -118,6 +119,48 @@ export default function NoticeBoard() {
 
     return sorted
   }, [notices, categoryFilter, sortOption])
+
+  /**
+   * Exports what the filters currently show, flattened.
+   *
+   * `tags` is an array of objects and `attachments` a list of files, neither of
+   * which means anything in a cell, so the category is lifted out and the rest
+   * left behind.
+   */
+  const exportRows = React.useMemo(
+    () =>
+      filteredAndSorted.map(notice => ({
+        id: notice.id,
+        title: notice.title,
+        category: notice.tags[0]?.label ?? '',
+        audience: notice.audience,
+        status: notice.status,
+        postDate: notice.postDate,
+        expiryDate: notice.expiryDate,
+        createdBy: notice.createdBy,
+        views: notice.views,
+        pinned: notice.pinned ? 'Yes' : 'No',
+      })),
+    [filteredAndSorted],
+  )
+
+  const exportCsv = useCsvExport({
+    rows: exportRows,
+    columns: [
+      { key: 'id', header: 'ID' },
+      { key: 'title', header: 'Title' },
+      { key: 'category', header: 'Category' },
+      { key: 'audience', header: 'Audience' },
+      { key: 'status', header: 'Status' },
+      { key: 'postDate', header: 'Posted' },
+      { key: 'expiryDate', header: 'Expires' },
+      { key: 'createdBy', header: 'Created By' },
+      { key: 'views', header: 'Views' },
+      { key: 'pinned', header: 'Pinned' },
+    ],
+    filename: 'notices',
+    label: 'notices',
+  })
 
   const paginatedNotices = React.useMemo(() => {
     const start = (currentPage - 1) * pageSize
@@ -401,6 +444,9 @@ export default function NoticeBoard() {
                       </Select>
                     ),
                   },
+                ]}
+                secondaryActions={[
+                  { id: 'export', label: 'Export', icon: <Download className="size-4" />, onSelect: exportCsv },
                 ]}
                 primaryAction={
                   <Button

@@ -1,4 +1,6 @@
 import * as React from 'react'
+import { Download, Wallet } from 'lucide-react'
+import { useCsvExport } from '@/lib/use-csv-export'
 import type { Row, Table as TanStackTable } from '@tanstack/react-table'
 import { DataTable, MobileRecordCard } from '@/components/table'
 import { GridPagination } from '@/components/pagination/GridPagination'
@@ -32,6 +34,20 @@ interface FeeCollectionTableProps {
 }
 const STATUSES: FeeStatus[] = ['Paid', 'Pending', 'Partially Paid', 'Overdue']
 
+const EXPORT_COLUMNS = [
+  { key: 'studentId' as const, header: 'Student ID' },
+  { key: 'studentName' as const, header: 'Student' },
+  { key: 'class' as const, header: 'Class' },
+  { key: 'feeCategory' as const, header: 'Fee Category' },
+  { key: 'totalAmount' as const, header: 'Total' },
+  { key: 'paidAmount' as const, header: 'Paid' },
+  { key: 'dueDate' as const, header: 'Due Date' },
+  { key: 'status' as const, header: 'Status' },
+  { key: 'paymentMethod' as const, header: 'Method' },
+  { key: 'transactionId' as const, header: 'Transaction ID' },
+  { key: 'receiptId' as const, header: 'Receipt ID' },
+]
+
 /**
  * Group records by studentId, preserving category order within each group.
  */
@@ -57,6 +73,13 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
 
   // Always keep student records grouped together
   const groupedData = React.useMemo(() => ensureStudentGrouping(data ?? []), [data])
+
+  const exportCsv = useCsvExport({
+    rows: groupedData,
+    columns: EXPORT_COLUMNS,
+    filename: 'fees-collection',
+    label: 'fee records',
+  })
 
   // Build a map of studentId → first record (for group-level sort comparisons)
   // Columns use this via closure so same-student rows stay together during sort
@@ -166,10 +189,13 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
               ),
             },
           ]}
+          secondaryActions={[
+            { id: 'export', label: 'Export', icon: <Download className="size-4" />, onSelect: exportCsv },
+          ]}
         />
       )
     },
-    [classFilter, statusFilter, timeFilter],
+    [classFilter, statusFilter, timeFilter, exportCsv],
   )
 
   const renderPagination = React.useCallback((table: TanStackTable<FeeCollectionRecord>) => {
@@ -254,7 +280,11 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
       renderMobileCard={renderMobileCard}
-      mobileEmptyMessage="No fee records match these filters."
+      empty={{
+        icon: <Wallet />,
+        title: 'No fee records',
+        description: 'Fees appear here once they are raised against a student.',
+      }}
       bodyProps={{
         rowClassName,
         renderRow: onRowClick ? (row) => (

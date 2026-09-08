@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Table as TanStackTable, Row } from '@tanstack/react-table'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, GraduationCap } from 'lucide-react'
 import {
   DataTable,
   DataTableCell,
@@ -274,7 +274,11 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
       renderMobileCard={renderMobileCard}
-      mobileEmptyMessage="No students match these filters."
+      empty={{
+        icon: <GraduationCap />,
+        title: 'No students yet',
+        description: 'Enrolled students will be listed here.',
+      }}
 
       bodyProps={{
         renderRow,

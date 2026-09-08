@@ -13,6 +13,7 @@ import { Table } from "@/components/ui/table";
 import { DataTableProvider } from "./DataTableContext";
 import { DataTableHeader } from "./header/DataTableHeader";
 import { DataTableBody } from "./body/DataTableBody";
+import { DataTableEmptyState, type DataTableEmptyProps } from "./DataTableEmptyState";
 import { DataTableToolbar } from "./toolbar/DataTableToolbar";
 import { DataTablePagination } from "./pagination/DataTablePagination";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,18 @@ export interface DataTableProps<TData, TValue> {
    * Toolbar and pagination are shared by both presentations.
    */
   renderMobileCard?: (row: Row<TData>, table: TanStackTable<TData>) => React.ReactNode;
-  /** Message shown in place of the card list when a filter matches nothing. */
+  /**
+   * What the table says when it has no rows.
+   *
+   * One definition serves both presentations, and the table itself works out
+   * whether the list is genuinely empty or merely filtered to nothing — see
+   * `DataTableEmptyState`.
+   */
+  empty?: DataTableEmptyProps;
+  /**
+   * @deprecated Use `empty` instead. Kept so call sites that only ever passed
+   * a one-line string keep working while they migrate.
+   */
   mobileEmptyMessage?: string;
   layout?: "default" | "compact" | "spacious";
   showBorder?: boolean;
@@ -138,7 +150,8 @@ export function DataTable<TData, TValue>({
   renderBody,
   renderPagination,
   renderMobileCard,
-  mobileEmptyMessage = "No results.",
+  empty,
+  mobileEmptyMessage,
   layout = "default",
   showBorder = true,
   borderClassName,
@@ -266,16 +279,29 @@ export function DataTable<TData, TValue>({
             {renderBody ? (
               renderBody(table)
             ) : (
-              <DataTableBody<TData> {...bodyProps} />
+              <DataTableBody<TData>
+                {...bodyProps}
+                renderEmpty={bodyProps?.renderEmpty ?? (emptyTable => (
+                  <tr>
+                    <td colSpan={emptyTable.getVisibleLeafColumns().length}>
+                      <DataTableEmptyState table={emptyTable} empty={empty} />
+                    </td>
+                  </tr>
+                ))}
+              />
             )}
           </Table>
         </div>
         {renderMobileCard && (
           <div className="flex flex-col gap-3 lg:hidden">
             {table.getRowModel().rows.length === 0 ? (
-              <p className="py-8 text-center text-body-muted text-muted-foreground">
-                {mobileEmptyMessage}
-              </p>
+              mobileEmptyMessage ? (
+                <p className="py-8 text-center text-body-muted text-muted-foreground">
+                  {mobileEmptyMessage}
+                </p>
+              ) : (
+                <DataTableEmptyState table={table} empty={empty} />
+              )
             ) : (
               table
                 .getRowModel()

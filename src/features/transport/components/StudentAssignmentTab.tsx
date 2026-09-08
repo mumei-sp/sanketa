@@ -25,7 +25,7 @@ import { CompactTable, type CompactTableColumn } from '@/components/ui/compact-t
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
 import { text, accent } from '@/theme/colors'
-import { generateCsv, downloadCsv } from '@/lib/csv'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 import { mockStudentAssignments, mockRoutes, mockVehicles } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
@@ -33,6 +33,19 @@ import { AssignStudentFormSheet } from './AssignStudentFormSheet'
 import type { StudentTransportAssignment } from '../types'
 
 type GroupBy = 'none' | 'route' | 'vehicle' | 'pickup-stop' | 'drop-stop'
+
+/** Columns the CSV export writes, in order. */
+const EXPORT_COLUMNS = [
+      { key: 'studentName' as const, header: 'Student Name' },
+      { key: 'class' as const, header: 'Class' },
+      { key: 'section' as const, header: 'Section' },
+      { key: 'routeName' as const, header: 'Route' },
+      { key: 'stopName' as const, header: 'Stop' },
+      { key: 'pickupTime' as const, header: 'Pickup' },
+      { key: 'dropTime' as const, header: 'Drop' },
+      { key: 'type' as const, header: 'Type' },
+      { key: 'feeStatus' as const, header: 'Fee Status' },
+]
 
 export function StudentAssignmentTab() {
   const [assignments, setAssignments] = useState<StudentTransportAssignment[]>(mockStudentAssignments)
@@ -105,20 +118,12 @@ export function StudentAssignmentTab() {
     setEditingAssignment(null)
   }, [editingAssignment])
 
-  const handleExport = useCallback(() => {
-    const csv = generateCsv(assignments as any, [
-      { key: 'studentName', header: 'Student Name' },
-      { key: 'class', header: 'Class' },
-      { key: 'section', header: 'Section' },
-      { key: 'routeName', header: 'Route' },
-      { key: 'stopName', header: 'Stop' },
-      { key: 'pickupTime', header: 'Pickup' },
-      { key: 'dropTime', header: 'Drop' },
-      { key: 'type', header: 'Type' },
-      { key: 'feeStatus', header: 'Fee Status' },
-    ])
-    downloadCsv(csv, 'student-transport-export.csv')
-  }, [assignments])
+  const handleExport = useCsvExport({
+    rows: assignments,
+    columns: EXPORT_COLUMNS,
+    filename: 'student-transport',
+    label: 'assignments',
+  })
 
   const importColumns: ImportColumn[] = useMemo(() => [
     { csvHeader: 'Student Name', fieldKey: 'studentName', label: 'Student Name', required: true },

@@ -23,13 +23,28 @@ import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { text, accent, border } from '@/theme/colors'
-import { generateCsv, downloadCsv } from '@/lib/csv'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 import { mockRoutes } from '@/mocks/transport'
 import { ROUTE_STATUS_OPTIONS, ROUTE_STATUS_COLORS } from '../constants'
 import { getOccupancyColor, getOccupancyPercent } from '../utils/transport-utils'
 import { RouteFormSheet } from './RouteFormSheet'
 import type { TransportRoute } from '../types'
+
+/** Columns the CSV export writes, in order. */
+const EXPORT_COLUMNS = [
+      { key: 'code' as const, header: 'Code' },
+      { key: 'name' as const, header: 'Name' },
+      { key: 'startLocation' as const, header: 'Start' },
+      { key: 'endLocation' as const, header: 'End' },
+      { key: 'type' as const, header: 'Type' },
+      { key: 'distanceKm' as const, header: 'Distance (km)' },
+      { key: 'vehicleName' as const, header: 'Vehicle' },
+      { key: 'driverName' as const, header: 'Driver' },
+      { key: 'studentsAssigned' as const, header: 'Students' },
+      { key: 'capacity' as const, header: 'Capacity' },
+      { key: 'status' as const, header: 'Status' },
+]
 
 export function RoutesTab() {
   const [routes, setRoutes] = useState<TransportRoute[]>(mockRoutes)
@@ -68,22 +83,12 @@ export function RoutesTab() {
     setEditingRoute(null)
   }, [editingRoute])
 
-  const handleExport = useCallback(() => {
-    const csv = generateCsv(routes as any, [
-      { key: 'code', header: 'Code' },
-      { key: 'name', header: 'Name' },
-      { key: 'startLocation', header: 'Start' },
-      { key: 'endLocation', header: 'End' },
-      { key: 'type', header: 'Type' },
-      { key: 'distanceKm', header: 'Distance (km)' },
-      { key: 'vehicleName', header: 'Vehicle' },
-      { key: 'driverName', header: 'Driver' },
-      { key: 'studentsAssigned', header: 'Students' },
-      { key: 'capacity', header: 'Capacity' },
-      { key: 'status', header: 'Status' },
-    ])
-    downloadCsv(csv, 'routes-export.csv')
-  }, [routes])
+  const handleExport = useCsvExport({
+    rows: routes,
+    columns: EXPORT_COLUMNS,
+    filename: 'routes',
+    label: 'routes',
+  })
 
   const toggleExpand = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation()

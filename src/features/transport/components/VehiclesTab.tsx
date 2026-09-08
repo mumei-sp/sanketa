@@ -19,13 +19,25 @@ import {
 import { TileWrapper, Tile } from '@/components/tile'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { text, accent } from '@/theme/colors'
-import { generateCsv, downloadCsv } from '@/lib/csv'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 import { mockVehicles } from '@/mocks/transport'
 import { VEHICLE_STATUS_OPTIONS } from '../constants'
 import { VehicleCard } from './VehicleCard'
 import { VehicleFormSheet } from './VehicleFormSheet'
 import type { Vehicle } from '../types'
+
+/** Columns the CSV export writes, in order. */
+const EXPORT_COLUMNS = [
+      { key: 'registrationNumber' as const, header: 'Registration' },
+      { key: 'type' as const, header: 'Type' },
+      { key: 'make' as const, header: 'Make' },
+      { key: 'model' as const, header: 'Model' },
+      { key: 'capacity' as const, header: 'Capacity' },
+      { key: 'driverName' as const, header: 'Driver' },
+      { key: 'routeName' as const, header: 'Route' },
+      { key: 'status' as const, header: 'Status' },
+]
 
 export function VehiclesTab() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles)
@@ -80,19 +92,12 @@ export function VehiclesTab() {
     setEditingVehicle(null)
   }, [editingVehicle])
 
-  const handleExport = useCallback(() => {
-    const csv = generateCsv(vehicles as any, [
-      { key: 'registrationNumber', header: 'Registration' },
-      { key: 'type', header: 'Type' },
-      { key: 'make', header: 'Make' },
-      { key: 'model', header: 'Model' },
-      { key: 'capacity', header: 'Capacity' },
-      { key: 'driverName', header: 'Driver' },
-      { key: 'routeName', header: 'Route' },
-      { key: 'status', header: 'Status' },
-    ])
-    downloadCsv(csv, 'vehicles-export.csv')
-  }, [vehicles])
+  const handleExport = useCsvExport({
+    rows: vehicles,
+    columns: EXPORT_COLUMNS,
+    filename: 'vehicles',
+    label: 'vehicles',
+  })
 
   return (
     <div className="space-y-4">

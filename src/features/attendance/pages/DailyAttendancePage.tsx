@@ -192,7 +192,7 @@ export function DailyAttendancePage() {
       ])
       downloadCsv(csv, `attendance-${selectedClass}-${selectedDate}.csv`)
     } else {
-      const csv = generateCsv(historyRows as any, [
+      const csv = generateCsv(historyRows, [
         { key: 'date', header: 'Date' },
         { key: 'present', header: 'Present' },
         { key: 'late', header: 'Late' },

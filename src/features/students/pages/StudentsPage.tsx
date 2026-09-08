@@ -15,7 +15,7 @@ import {
   fetchEnrollmentTrends,
   fetchAttendanceOverview,
 } from '@/api/services/student-service'
-import { generateCsv, downloadCsv } from '@/lib/csv'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 import type { Student } from '@/features/students/types'
 import { Tile, TileWrapper } from '@/components/tile'
@@ -23,6 +23,22 @@ import { EnrollmentTrendsChart } from '@/components/charts/EnrollmentTrendsChart
 import { AttendanceOverviewChart } from '@/components/charts/AttendanceOverviewChart'
 import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
+
+/** Columns the CSV export writes, in order. */
+const EXPORT_COLUMNS = [
+      { key: 'studentId' as const, header: 'Student ID' },
+      { key: 'firstName' as const, header: 'First Name' },
+      { key: 'lastName' as const, header: 'Last Name' },
+      { key: 'class' as const, header: 'Class' },
+      { key: 'section' as const, header: 'Section' },
+      { key: 'gpa' as const, header: 'GPA' },
+      { key: 'percentage' as const, header: 'Percentage' },
+      { key: 'performance' as const, header: 'Performance' },
+      { key: 'status' as const, header: 'Status' },
+      { key: 'dateOfBirth' as const, header: 'Date of Birth' },
+      { key: 'primaryPhone' as const, header: 'Phone' },
+      { key: 'admissionNumber' as const, header: 'Admission Number' },
+]
 
 export function StudentsPage() {
   const [students, setStudents] = React.useState<Student[]>([])
@@ -119,23 +135,12 @@ export function StudentsPage() {
     toast.success(`${rows.length} students imported`)
   }, [])
 
-  const handleExport = React.useCallback(() => {
-    const csv = generateCsv(students as any, [
-      { key: 'studentId', header: 'Student ID' },
-      { key: 'firstName', header: 'First Name' },
-      { key: 'lastName', header: 'Last Name' },
-      { key: 'class', header: 'Class' },
-      { key: 'section', header: 'Section' },
-      { key: 'gpa', header: 'GPA' },
-      { key: 'percentage', header: 'Percentage' },
-      { key: 'performance', header: 'Performance' },
-      { key: 'status', header: 'Status' },
-      { key: 'dateOfBirth', header: 'Date of Birth' },
-      { key: 'primaryPhone', header: 'Phone' },
-      { key: 'admissionNumber', header: 'Admission Number' },
-    ])
-    downloadCsv(csv, 'students-export.csv')
-  }, [students])
+  const handleExport = useCsvExport({
+    rows: students,
+    columns: EXPORT_COLUMNS,
+    filename: 'students',
+    label: 'students',
+  })
 
   return (
     <>

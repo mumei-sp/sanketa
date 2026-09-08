@@ -23,7 +23,7 @@ import { DataTableColumnHeader } from '@/components/table/header/DataTableColumn
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { DashboardStatCard } from '@/features/dashboard/components/DashboardStatCard'
 import { text, accent } from '@/theme/colors'
-import { generateCsv, downloadCsv } from '@/lib/csv'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 import { mockFeeStructures, mockStudentAssignments } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
@@ -40,6 +40,15 @@ function getStudentFee(
   if (!fee) return 0
   return assignment.type === 'one-way' ? fee.oneWayFee : fee.twoWayFee
 }
+
+/** Columns the CSV export writes, in order. */
+const EXPORT_COLUMNS = [
+      { key: 'studentName' as const, header: 'Student' },
+      { key: 'class' as const, header: 'Class' },
+      { key: 'routeName' as const, header: 'Route' },
+      { key: 'type' as const, header: 'Type' },
+      { key: 'feeStatus' as const, header: 'Status' },
+]
 
 export function TransportFeesTab() {
   const [feeStructures, setFeeStructures] = useState<TransportFeeStructure[]>(mockFeeStructures)
@@ -138,16 +147,12 @@ export function TransportFeesTab() {
   }, [])
 
   // Export respects current filters
-  const handleExport = useCallback(() => {
-    const csv = generateCsv(filteredStudents as any, [
-      { key: 'studentName', header: 'Student' },
-      { key: 'class', header: 'Class' },
-      { key: 'routeName', header: 'Route' },
-      { key: 'type', header: 'Type' },
-      { key: 'feeStatus', header: 'Status' },
-    ])
-    downloadCsv(csv, 'transport-fees-export.csv')
-  }, [filteredStudents])
+  const handleExport = useCsvExport({
+    rows: filteredStudents,
+    columns: EXPORT_COLUMNS,
+    filename: 'transport-fees',
+    label: 'students',
+  })
 
   const feeColumns: ColumnDef<TransportFeeStructure>[] = useMemo(() => [
     {

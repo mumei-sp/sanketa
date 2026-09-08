@@ -19,13 +19,24 @@ import {
 import { TileWrapper, Tile } from '@/components/tile'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { text, accent } from '@/theme/colors'
-import { generateCsv, downloadCsv } from '@/lib/csv'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 import { mockDrivers } from '@/mocks/transport'
 import { DRIVER_STATUS_OPTIONS } from '../constants'
 import { DriverCard } from './DriverCard'
 import { DriverFormSheet } from './DriverFormSheet'
 import type { TransportDriver } from '../types'
+
+/** Columns the CSV export writes, in order. */
+const EXPORT_COLUMNS = [
+      { key: 'firstName' as const, header: 'First Name' },
+      { key: 'lastName' as const, header: 'Last Name' },
+      { key: 'phone' as const, header: 'Phone' },
+      { key: 'licenseNumber' as const, header: 'License No' },
+      { key: 'licenseExpiry' as const, header: 'License Expiry' },
+      { key: 'experience' as const, header: 'Experience (yrs)' },
+      { key: 'status' as const, header: 'Status' },
+]
 
 export function DriversTab() {
   const [drivers, setDrivers] = useState<TransportDriver[]>(mockDrivers)
@@ -79,18 +90,12 @@ export function DriversTab() {
     setEditingDriver(null)
   }, [editingDriver])
 
-  const handleExport = useCallback(() => {
-    const csv = generateCsv(drivers as any, [
-      { key: 'firstName', header: 'First Name' },
-      { key: 'lastName', header: 'Last Name' },
-      { key: 'phone', header: 'Phone' },
-      { key: 'licenseNumber', header: 'License No' },
-      { key: 'licenseExpiry', header: 'License Expiry' },
-      { key: 'experience', header: 'Experience (yrs)' },
-      { key: 'status', header: 'Status' },
-    ])
-    downloadCsv(csv, 'drivers-export.csv')
-  }, [drivers])
+  const handleExport = useCsvExport({
+    rows: drivers,
+    columns: EXPORT_COLUMNS,
+    filename: 'drivers',
+    label: 'drivers',
+  })
 
   return (
     <div className="space-y-4">

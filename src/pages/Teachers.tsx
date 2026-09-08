@@ -33,7 +33,7 @@ import type { AttendanceData } from '@/data/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TileWrapper, Tile } from '@/components/tile'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
-import { generateCsv, downloadCsv } from '@/lib/csv'
+import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'
@@ -93,6 +93,16 @@ function TeacherCardSkeleton() {
  * Teachers page component
  * Displays teachers in a grid layout with search, filter, sort, and pagination
  */
+/** Columns the CSV export writes, in order. */
+const EXPORT_COLUMNS = [
+      { key: 'teacherId' as const, header: 'Teacher ID' },
+      { key: 'firstName' as const, header: 'First Name' },
+      { key: 'lastName' as const, header: 'Last Name' },
+      { key: 'subject' as const, header: 'Subject' },
+      { key: 'email' as const, header: 'Email' },
+      { key: 'primaryPhone' as const, header: 'Phone' },
+]
+
 export default function Teachers() {
   const navigate = useNavigate()
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
@@ -286,17 +296,12 @@ export default function Teachers() {
     toast.success(`${rows.length} teachers imported`)
   }, [])
 
-  const handleExport = React.useCallback(() => {
-    const csv = generateCsv(teachers as any, [
-      { key: 'teacherId', header: 'Teacher ID' },
-      { key: 'firstName', header: 'First Name' },
-      { key: 'lastName', header: 'Last Name' },
-      { key: 'subject', header: 'Subject' },
-      { key: 'email', header: 'Email' },
-      { key: 'primaryPhone', header: 'Phone' },
-    ])
-    downloadCsv(csv, 'teachers-export.csv')
-  }, [teachers])
+  const handleExport = useCsvExport({
+    rows: teachers,
+    columns: EXPORT_COLUMNS,
+    filename: 'teachers',
+    label: 'teachers',
+  })
 
   const totalTeachers = teacherStatistics?.total ?? 86
 

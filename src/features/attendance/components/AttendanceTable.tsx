@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { CalendarCheck } from 'lucide-react'
 import type { Row, Table as TanStackTable } from '@tanstack/react-table'
 import { DataTable, MobileRecordCard, TOOLBAR_HALF } from '@/components/table'
 import { cn } from '@/lib/utils'
@@ -235,7 +236,11 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
       renderToolbar={renderToolbar}
       renderPagination={renderPagination}
       renderMobileCard={renderMobileCard}
-      mobileEmptyMessage="No attendance records for this selection."
+      empty={{
+        icon: <CalendarCheck />,
+        title: 'No attendance recorded',
+        description: 'Nothing has been marked for this class and month yet.',
+      }}
       bodyProps={{
         rowProps: {
           className: 'h-12',

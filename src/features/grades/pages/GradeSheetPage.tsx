@@ -211,7 +211,7 @@ export function GradeSheetPage() {
                     subjectList.forEach(s => { flat[`sub_${s.id}`] = r.subjects[s.id]?.marks ?? '' })
                     return flat
                   })
-                  const csv = generateCsv(csvData as Record<string, unknown>[], csvCols as { key: string; header: string }[])
+                  const csv = generateCsv(csvData, csvCols)
                   downloadCsv(csv, `grades-${selectedClass}-${selectedExam}.csv`)
                 }}
                 className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 cursor-pointer transition-colors"
