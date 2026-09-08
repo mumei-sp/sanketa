@@ -214,6 +214,33 @@ export function SecuritySettingsSection() {
             <p className="text-caption text-muted-foreground">{selected.description}</p>
           )}
 
+          {/* Class scoping. Its own control rather than a permission, because
+              it does not grant anything — it narrows what the permissions
+              below already grant to the holder's own classes. */}
+          <div
+            className="flex items-center gap-3 rounded-lg border px-3 py-2.5"
+            style={{ borderColor: border.default }}
+          >
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="role-scoped" className="cursor-pointer text-body font-medium">
+                Limit to assigned classes
+              </Label>
+              <p className="text-caption text-muted-foreground">
+                Holders read every class but add and edit only the ones assigned to them.
+                Affects attendance, marks and student records.
+              </p>
+            </div>
+            <Switch
+              id="role-scoped"
+              checked={selected.scopedToAssignedClasses === true}
+              disabled={isSaving}
+              onCheckedChange={value =>
+                void patch(selected.id, { scopedToAssignedClasses: value })
+              }
+              aria-label="Limit to assigned classes"
+            />
+          </div>
+
           {selected.id === myRole?.id && (
             <p className="text-caption" style={{ color: 'var(--heading)' }}>
               This is your own role — changes here take effect for you immediately.

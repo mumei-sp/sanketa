@@ -13,8 +13,12 @@ import type { GradeEntry } from '../types'
 interface GradeSummaryBarProps {
   entries: GradeEntry[]
   isSaving: boolean
-  onSaveDraft: () => void
-  onSubmit: () => void
+  /**
+   * Omit both for a read-only view. The tallies still tell someone looking at
+   * a colleague's class where it stands.
+   */
+  onSaveDraft?: () => void
+  onSubmit?: () => void
 }
 
 export function GradeSummaryBar({
@@ -71,8 +75,11 @@ export function GradeSummaryBar({
         ))}
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons — absent rather than disabled when no handler was
+          given, since a greyed-out button invites a click that explains
+          nothing. */}
       <div className="flex items-center gap-2">
+        {onSaveDraft && (
         <button
           type="button"
           onClick={onSaveDraft}
@@ -88,6 +95,8 @@ export function GradeSummaryBar({
         >
           {isSaving ? 'Saving...' : 'Save Draft'}
         </button>
+        )}
+        {onSubmit && (
         <button
           type="button"
           onClick={onSubmit}
@@ -102,6 +111,7 @@ export function GradeSummaryBar({
         >
           {isSaving ? 'Submitting...' : 'Submit Grades'}
         </button>
+        )}
       </div>
     </div>
   )

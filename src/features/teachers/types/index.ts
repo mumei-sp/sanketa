@@ -19,6 +19,18 @@ export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
   /** Subject or specialization taught by the teacher */
   subject: string
 
+  /**
+   * Class sections this teacher may add to and amend — registers, marks and
+   * student records.
+   *
+   * Stated rather than derived from the timetable: a schedule says where
+   * someone teaches this term, which is usually but not always who should be
+   * allowed to change a register, and authorisation that shifts silently when
+   * a timetable is edited surprises people at the worst moment. Empty or
+   * absent means they can read everything and write nothing.
+   */
+  assignedClasses?: string[]
+
   /** Email address */
   email: string
 

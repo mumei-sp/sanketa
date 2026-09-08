@@ -9,8 +9,9 @@
  * Seeding, not merging. The built-in roles are written on first run and then
  * belong to the school: if an admin removes `finance.view` from Principal,
  * that decision survives, where a merge-on-load would quietly restore it every
- * refresh. New *permissions* added by a release are a different matter and are
- * handled in `load` — an unknown id is dropped rather than left dangling.
+ * refresh. What a release adds is a different matter and is handled by
+ * `reconcile` on load: unknown permission ids are dropped, and fields added to
+ * a built-in role since the row was written are backfilled.
  */
 
 import { BUILTIN_ROLES, ALL_PERMISSIONS, type Permission, type Role } from '@/config/permissions'
@@ -27,11 +28,32 @@ function seed(): Database {
   return { rows: BUILTIN_ROLES.map(role => ({ ...role, permissions: [...role.permissions] })) }
 }
 
-/** Drop permission ids the running build no longer defines. */
-function prune(role: Role): Role {
+/**
+ * Bring a stored row up to date with the running build.
+ *
+ * Two different jobs, and the distinction matters:
+ *
+ *   Permissions the build no longer defines are dropped — a stored id with no
+ *   definition behind it can never be granted, and leaving it makes the role
+ *   editor show a switch for something that does not exist.
+ *
+ *   Fields added to a built-in role since the row was written are backfilled,
+ *   but *only* when the stored row has no opinion at all (`undefined`). A
+ *   release that adds `scopedToAssignedClasses` has to reach schools that
+ *   already have a Teacher row, or the new behaviour silently never arrives —
+ *   which is exactly what happened the first time. Once a school has set the
+ *   field either way, their choice is theirs and survives every upgrade.
+ */
+function reconcile(role: Role): Role {
   const known = new Set<string>(ALL_PERMISSIONS)
   const permissions = role.permissions.filter(permission => known.has(permission))
-  return permissions.length === role.permissions.length ? role : { ...role, permissions }
+  const builtin = BUILTIN_ROLES.find(candidate => candidate.id === role.id)
+
+  const next: Role = { ...role, permissions }
+  if (builtin && next.scopedToAssignedClasses === undefined) {
+    next.scopedToAssignedClasses = builtin.scopedToAssignedClasses
+  }
+  return next
 }
 
 function load(): Database {
@@ -50,7 +72,7 @@ function load(): Database {
           ...role,
           permissions: [...role.permissions],
         }))
-        db = { rows: [...parsed.rows.map(prune), ...missing] }
+        db = { rows: [...parsed.rows.map(reconcile), ...missing] }
         return db
       }
     }
@@ -129,7 +151,12 @@ export function createRole(input: {
  */
 export function updateRole(
   id: string,
-  patch: { name?: string; description?: string; permissions?: Permission[] },
+  patch: {
+    name?: string
+    description?: string
+    permissions?: Permission[]
+    scopedToAssignedClasses?: boolean
+  },
 ): Role | null {
   const database = load()
   const role = database.rows.find(candidate => candidate.id === id)
@@ -138,6 +165,9 @@ export function updateRole(
   if (patch.name !== undefined) role.name = patch.name.trim()
   if (patch.description !== undefined) role.description = patch.description.trim() || undefined
   if (patch.permissions !== undefined) role.permissions = [...patch.permissions]
+  if (patch.scopedToAssignedClasses !== undefined) {
+    role.scopedToAssignedClasses = patch.scopedToAssignedClasses
+  }
 
   persist()
   return clone(role)

@@ -1,9 +1,10 @@
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CheckCircle, AlertTriangle, UserCheck, History, Download } from 'lucide-react'
+import { CheckCircle, AlertTriangle, UserCheck, History, Download, Lock } from 'lucide-react'
 import { StatusBanner } from '@/components/shared/StatusBanner'
 import { cn } from '@/lib/utils'
 import { TOOLBAR_HALF } from '@/components/table'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { colors, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import { useDailyAttendance } from '../hooks/use-daily-attendance'
@@ -82,6 +83,16 @@ export function DailyAttendancePage() {
     saveAttendance,
     isSaving,
   } = useDailyAttendance(selectedClass, selectedDate)
+
+  /**
+   * Whether this register may be changed — not merely read.
+   *
+   * Asked per class rather than once for the page, because a scoped teacher
+   * reads every class and writes only their own: the same screen is editable
+   * for 8A and read-only for 9A.
+   */
+  const { can } = usePermissions()
+  const canMarkThisClass = can('attendance.mark', { classSection: selectedClass })
 
   const {
     rows: historyRows,
@@ -258,7 +269,7 @@ export function DailyAttendancePage() {
             />
 
             {/* Mark All Present button */}
-            {viewMode === 'mark' && (
+            {viewMode === 'mark' && canMarkThisClass && (
               <button
                 type="button"
                 onClick={handleMarkAllPresent}
@@ -341,6 +352,18 @@ export function DailyAttendancePage() {
           </StatusBanner>
         ) : null}
 
+        {/* Why this register is read-only.
+
+            Named rather than implied: a teacher looking at a colleague's class
+            with every control greyed out has no way to tell whether they lack
+            the permission, picked the wrong date, or hit a bug. */}
+        {viewMode === 'mark' && selectedClass && !canMarkThisClass && (
+          <StatusBanner icon={<Lock className="w-4 h-4" />}>
+            You can view <strong>{selectedClass}</strong> but not change it — this class isn't
+            assigned to you.
+          </StatusBanner>
+        )}
+
         {/* ═══ CONTENT ═══ */}
         {viewMode === 'mark' ? (
           <>
@@ -368,7 +391,7 @@ export function DailyAttendancePage() {
                       entries={entries}
                       onStatusChange={handleStatusChange}
                       onNoteChange={handleNoteChange}
-                      disabled={isSaving}
+                      disabled={isSaving || !canMarkThisClass}
                     />
                   </div>
 
@@ -379,7 +402,7 @@ export function DailyAttendancePage() {
                       entries={entries}
                       onStatusChange={handleStatusChange}
                       onNoteChange={handleNoteChange}
-                      disabled={isSaving}
+                      disabled={isSaving || !canMarkThisClass}
                     />
                   </div>
                 </Tile>
@@ -390,7 +413,7 @@ export function DailyAttendancePage() {
                     entries={entriesForSummary}
                     totalStudents={roster.length}
                     isSaving={isSaving}
-                    onSave={handleSave}
+                    onSave={canMarkThisClass ? handleSave : undefined}
                     allMarked={allMarked}
                   />
                 )}

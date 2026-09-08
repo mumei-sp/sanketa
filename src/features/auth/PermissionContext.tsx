@@ -18,17 +18,44 @@
 
 import * as React from 'react'
 import { fetchRoles } from '@/api/services/role-service'
-import { findRole, type Permission, type Role } from '@/config/permissions'
+import {
+  findRole,
+  SCOPED_PERMISSIONS,
+  type Permission,
+  type Role,
+} from '@/config/permissions'
 import { useCurrentUser } from '@/hooks/use-current-user'
+
+/**
+ * Where an action is being attempted.
+ *
+ * Only class sections today. If scoping ever grows a second axis — subjects,
+ * departments — this is the type that gains a field, and every call site that
+ * already passes a scope keeps working.
+ */
+export interface PermissionScope {
+  classSection?: string
+}
 
 interface PermissionContextValue {
   /** The current user's role, or null when signed out or unassigned. */
   role: Role | null
+  /** Classes this user may write to. Empty when their role is not scoped. */
+  assignedClasses: string[]
+  /** True when this role's write permissions are limited to those classes. */
+  isClassScoped: boolean
   /** Every role the school has. Only the role editor needs this. */
   roles: Role[]
   /** False until the roles table has arrived — see the note above. */
   isReady: boolean
-  can: (permission: Permission) => boolean
+  /**
+   * Held, and held *here*.
+   *
+   * Called without a scope on a scoped permission, this answers "can you do
+   * this anywhere" — which is what a toolbar button needs to decide whether to
+   * exist at all. Pass a scope to ask about one class.
+   */
+  can: (permission: Permission, scope?: PermissionScope) => boolean
   canAny: (permissions: Permission[]) => boolean
   /** Re-reads the table after the role editor saves. */
   refresh: () => Promise<void>
@@ -65,17 +92,36 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
 
   const granted = React.useMemo(() => new Set(role?.permissions ?? []), [role])
 
+  const isClassScoped = role?.scopedToAssignedClasses === true
+  const assignedClasses = React.useMemo(
+    () => (isClassScoped ? (currentUser?.assignedClasses ?? []) : []),
+    [isClassScoped, currentUser?.assignedClasses],
+  )
+
   const value = React.useMemo<PermissionContextValue>(() => {
-    const can = (permission: Permission) => granted.has(permission)
+    const can = (permission: Permission, scope?: PermissionScope) => {
+      if (!granted.has(permission)) return false
+      // Unscoped roles hold everything they hold, everywhere.
+      if (!isClassScoped) return true
+      // Reading is never narrowed — a teacher looks up any class's register;
+      // it is changing one that belongs to whoever owns the class.
+      if (!SCOPED_PERMISSIONS.has(permission)) return true
+      // No class named means "anywhere?", which a teacher with any assignment
+      // can answer yes to. The per-class question is asked with a scope.
+      if (!scope?.classSection) return assignedClasses.length > 0
+      return assignedClasses.includes(scope.classSection)
+    }
     return {
       role,
       roles,
+      assignedClasses,
+      isClassScoped,
       isReady,
       can,
-      canAny: permissions => permissions.some(can),
+      canAny: permissions => permissions.some(permission => can(permission)),
       refresh: load,
     }
-  }, [role, roles, isReady, granted, load])
+  }, [role, roles, isReady, granted, load, isClassScoped, assignedClasses])
 
   return <PermissionContext.Provider value={value}>{children}</PermissionContext.Provider>
 }

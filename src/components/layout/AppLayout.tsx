@@ -227,10 +227,10 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
 export function AppLayout({ logoPath }: AppLayoutProps) {
   return (
-    // Inside the router (the bell navigates on select) and outside the sidebar
-    // so the feed keeps streaming while the mobile drawer is open.
-    // Permissions outermost: the sidebar, the routes and the search palette all
-    // gate on them, and every one of those sits inside this.
+    // Permissions outermost: the sidebar, the routes, the search palette and
+    // the notification feed all gate on them. Notifications sit inside the
+    // router (the bell navigates on select) but outside the sidebar, so the
+    // feed keeps streaming while the mobile drawer is open.
     <PermissionProvider>
       <NotificationProvider>
         <SidebarProvider>

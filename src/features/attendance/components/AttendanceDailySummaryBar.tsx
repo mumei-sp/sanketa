@@ -10,8 +10,11 @@ interface AttendanceDailySummaryBarProps {
   totalStudents: number
   /** Whether save is in progress */
   isSaving: boolean
-  /** Called when user clicks Save */
-  onSave: () => void
+  /**
+   * Called when user clicks Save. Omit for a read-only view — the counts are
+   * still worth showing to someone who may look but not amend.
+   */
+  onSave?: () => void
   /** Whether all students have been marked */
   allMarked: boolean
 }
@@ -70,7 +73,9 @@ export function AttendanceDailySummaryBar({
         </div>
       </div>
 
-      {/* Save button */}
+      {/* Save button. Absent rather than disabled when there is no handler: a
+          greyed-out button invites the click that explains nothing. */}
+      {onSave && (
       <button
         type="button"
         onClick={onSave}
@@ -85,6 +90,7 @@ export function AttendanceDailySummaryBar({
       >
         {isSaving ? 'Saving...' : 'Save Attendance'}
       </button>
+      )}
     </div>
   )
 }

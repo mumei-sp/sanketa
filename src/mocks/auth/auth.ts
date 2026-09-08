@@ -34,7 +34,15 @@ const MOCK_ACCOUNTS: AuthResponse[] = [
   {
     token: 'mock-jwt-token-sanketa-teacher',
     refreshToken: 'mock-refresh-token-sanketa-teacher',
-    user: { id: '3', fullName: 'Meera Iyengar', email: 'teacher@sanketa.edu', role: 'teacher' },
+    // Matches teacher T-1006 in the roster. A backend would read the teacher
+    // record and stamp these into the token; the mock does the same by hand.
+    user: {
+      id: '3',
+      fullName: 'Meera Iyengar',
+      email: 'teacher@sanketa.edu',
+      role: 'teacher',
+      assignedClasses: ['8A', '8B'],
+    },
   },
   {
     token: 'mock-jwt-token-sanketa-accountant',

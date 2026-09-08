@@ -10,7 +10,7 @@
 
 import * as React from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CheckCircle, AlertTriangle, FileEdit } from 'lucide-react'
+import { CheckCircle, AlertTriangle, FileEdit, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { StatusBanner } from '@/components/shared/StatusBanner'
 import { colors } from '@/theme/colors'
@@ -26,6 +26,7 @@ import { EXAMS_BY_TERM } from '../constants'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
 import { ClassWorkspaceStrip } from '@/components/shared/ClassWorkspaceStrip'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { TOOLBAR_CONTROL_HEIGHT, TOOLBAR_HALF, TOOLBAR_FULL } from '@/components/table'
 import { cn } from '@/lib/utils'
 import {
@@ -79,6 +80,11 @@ export function GradeEntryPage() {
   const maxMarks = examObj?.maxMarks ?? 100
 
   // ── Grade entries + existing submission ──
+  // Asked per class: a scoped teacher reads every class's marks and enters
+  // only their own, so the same screen is editable for 8A and read-only for 9A.
+  const { can } = usePermissions()
+  const canEnterForClass = can('grades.enter', { classSection: selectedClass })
+
   const [entries, setEntries] = React.useState<GradeEntry[]>([])
   const [existingSubmission, setExistingSubmission] = React.useState<GradeSubmission | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
@@ -256,6 +262,16 @@ export function GradeEntryPage() {
           </StatusBanner>
         ) : null}
 
+        {/* Why the marks are read-only. Named rather than implied — greyed-out
+            inputs alone leave someone guessing between a missing permission,
+            the wrong exam, and a bug. */}
+        {selectedClass && !canEnterForClass && (
+          <StatusBanner icon={<Lock className="w-4 h-4" />}>
+            You can view <strong>{selectedClass}</strong> but not enter marks — this class isn't
+            assigned to you.
+          </StatusBanner>
+        )}
+
         {/* ═══ CONTENT ═══ */}
         {isLoading ? (
           <Tile id="grade-loading" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
@@ -296,7 +312,7 @@ export function GradeEntryPage() {
                   entries={entries}
                   onMarksChange={handleMarksChange}
                   onRemarksChange={handleRemarksChange}
-                  disabled={isSaving}
+                  disabled={isSaving || !canEnterForClass}
                 />
               </div>
 
@@ -306,7 +322,7 @@ export function GradeEntryPage() {
                   entries={entries}
                   onMarksChange={handleMarksChange}
                   onRemarksChange={handleRemarksChange}
-                  disabled={isSaving}
+                  disabled={isSaving || !canEnterForClass}
                 />
               </div>
             </Tile>
@@ -315,8 +331,8 @@ export function GradeEntryPage() {
             <GradeSummaryBar
               entries={entries}
               isSaving={isSaving}
-              onSaveDraft={handleSaveDraft}
-              onSubmit={handleSubmit}
+              onSaveDraft={canEnterForClass ? handleSaveDraft : undefined}
+              onSubmit={canEnterForClass ? handleSubmit : undefined}
             />
           </>
         )}

@@ -56,7 +56,12 @@ export async function createRole(input: {
  */
 export async function updateRole(
   id: string,
-  patch: { name?: string; description?: string; permissions?: Permission[] },
+  patch: {
+    name?: string
+    description?: string
+    permissions?: Permission[]
+    scopedToAssignedClasses?: boolean
+  },
 ): Promise<Role | null> {
   return mockOrHttp(
     async () => {
