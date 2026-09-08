@@ -270,6 +270,10 @@ interface RolesTabProps {
   users: SchoolUser[] | null
   /** What a role's preview stands in for on each axis — see the section. */
   previewScope: AbilityScope
+  /** False until the representative student ids have arrived. */
+  studentSampleReady: boolean
+  /** Ask for them. Called only when a role narrowed to own records is open. */
+  onNeedStudentSample: () => void
   /** Open the People tab filtered to one role. */
   onManagePeople: (roleId: string) => void
   canManagePeople: boolean
@@ -279,6 +283,8 @@ interface RolesTabProps {
 export function RolesTab({
   users,
   previewScope,
+  studentSampleReady,
+  onNeedStudentSample,
   onManagePeople,
   canManagePeople,
   record,
@@ -318,6 +324,19 @@ export function RolesTab({
     [users],
   )
   const members = selected ? membersOf(selected.id) : []
+
+  /**
+   * A role narrowed to own records cannot be previewed against nothing, so ask
+   * for the representative ids the first time one is opened.
+   */
+  const needsStudentSample = selected?.scopeBy === 'students'
+  React.useEffect(() => {
+    if (needsStudentSample) onNeedStudentSample()
+  }, [needsStudentSample, onNeedStudentSample])
+
+  /** Whether the preview has anything to stand in for on this role's axis. */
+  const scopeReady = !needsStudentSample || studentSampleReady
+
   const destinations = useEffectiveAccess(selected, previewScope)
 
   const patch = React.useCallback(
@@ -807,13 +826,17 @@ export function RolesTab({
               <Button
                 variant="outline"
                 className="gap-1.5"
+                // Disabled rather than allowed-and-wrong: starting a preview
+                // before the representative ids land captures an empty axis,
+                // and the snapshot never catches up.
+                disabled={!scopeReady}
                 onClick={() => {
                   startPreview({ roleId: selected.id, scope: previewScope })
                   setSettingsOpen(false)
                 }}
               >
                 <Eye className="size-4" />
-                View the app as {selected.name}
+                {scopeReady ? `View the app as ${selected.name}` : 'Working out what it reaches…'}
               </Button>
 
               {/* Class scoping. Its own control rather than a permission,
@@ -867,7 +890,9 @@ export function RolesTab({
                     Where this role can go
                   </span>
                 </div>
-                {destinations.length === 0 ? (
+                {!scopeReady ? (
+                  <p className="text-caption text-muted-foreground">Working it out…</p>
+                ) : destinations.length === 0 ? (
                   <p className="text-caption text-muted-foreground">
                     Nothing yet — a holder would sign in to an empty app.
                   </p>

@@ -23,14 +23,19 @@ import { studentDetailData } from '@/mocks/students/details'
  *
  * @apiRoute GET /api/v1/students
  */
-export async function fetchStudents(): Promise<Student[]> {
+export async function fetchStudents(options?: { limit?: number }): Promise<Student[]> {
+  const limit = options?.limit
   return mockOrHttp(
     async () => {
       await withLatency()
-      return [...studentsData]
+      return limit === undefined ? [...studentsData] : studentsData.slice(0, limit)
     },
     async () => {
-      const { data } = await apiClient.get<Student[]>('/students')
+      // Sent as a query rather than sliced after the fact: a caller that wants
+      // two rows should not pull a whole school's roster over the wire.
+      const { data } = await apiClient.get<Student[]>('/students', {
+        params: limit === undefined ? undefined : { limit },
+      })
       return data
     },
   )

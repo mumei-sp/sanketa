@@ -20,6 +20,10 @@
  */
 
 import { newId } from '@/mocks/_shared'
+import {
+  migratePermissionIds,
+  needsPermissionMigration,
+} from '@/config/permissions'
 import type {
   DomainEvent,
   Notification,
@@ -122,7 +126,24 @@ function load(): Database {
       // A stored database missing its bookkeeping is corrupt, not merely old;
       // reseeding beats serving a feed whose cursor can never advance.
       if (Array.isArray(parsed.rows) && typeof parsed.lastSeq === 'number') {
-        db = parsed
+        // Audiences are permission ids, so a release that renames one has to
+        // reach this table as well as the roles table. It did not the first
+        // time, and every row written beforehand addressed an audience nobody
+        // held any more — a feed that silently emptied rather than erroring.
+        const renamed = parsed.rows.some(row =>
+          needsPermissionMigration(row.audience ?? []),
+        )
+        db = renamed
+          ? {
+              ...parsed,
+              rows: parsed.rows.map(row =>
+                row.audience
+                  ? { ...row, audience: migratePermissionIds(row.audience) }
+                  : row,
+              ),
+            }
+          : parsed
+        if (renamed) persist()
         return db
       }
     }

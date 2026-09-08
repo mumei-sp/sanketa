@@ -98,12 +98,36 @@ export function AccessSettingsSection() {
    * nothing — which is true of a student with no record and useless as a
    * preview of the role. Real ids rather than a placeholder, because the
    * condition matches on them and a placeholder would match nothing.
+   *
+   * `null` means "not fetched", which is not the same as "none" and has to be
+   * told apart from it: a preview started while this was still an empty array
+   * captured an empty student axis and, because the preview holds a snapshot,
+   * never recovered when the fetch landed.
    */
-  const [sampleStudentIds, setSampleStudentIds] = React.useState<string[]>([])
+  const [sampleStudentIds, setSampleStudentIds] = React.useState<string[] | null>(null)
+  const sampleRequested = React.useRef(false)
+
+  /**
+   * Fetched on demand rather than on open.
+   *
+   * Only a role narrowed to own records needs it, and most visits to this
+   * screen never select one — so the roster request now happens when the
+   * Roles tab actually asks, at most once.
+   */
+  const requestStudentSample = React.useCallback(() => {
+    if (sampleRequested.current) return
+    sampleRequested.current = true
+    fetchStudents({ limit: 2 })
+      .then(students => setSampleStudentIds(students.map(student => String(student.id))))
+      .catch(error => {
+        console.error('Failed to load a sample student', error)
+        setSampleStudentIds([])
+      })
+  }, [])
 
   /** What a preview of a role stands in for, on each axis. */
   const previewScope = React.useMemo<AbilityScope>(
-    () => ({ classSections: classLabels, studentIds: sampleStudentIds }),
+    () => ({ classSections: classLabels, studentIds: sampleStudentIds ?? [] }),
     [classLabels, sampleStudentIds],
   )
 
@@ -120,9 +144,6 @@ export function AccessSettingsSection() {
         console.error('Failed to load people', error)
         setUsers([])
       })
-    fetchStudents()
-      .then(students => setSampleStudentIds(students.slice(0, 2).map(student => String(student.id))))
-      .catch(error => console.error('Failed to load a sample student', error))
     fetchAccessEvents()
       .then(setEvents)
       .catch(error => {
@@ -292,6 +313,8 @@ export function AccessSettingsSection() {
             <RolesTab
               users={users}
               previewScope={previewScope}
+              studentSampleReady={sampleStudentIds !== null}
+              onNeedStudentSample={requestStudentSample}
               onManagePeople={openPeopleFor}
               canManagePeople={canManagePeople}
               record={record}

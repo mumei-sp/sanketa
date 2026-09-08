@@ -119,6 +119,19 @@ export interface PermissionDefinition {
    * That asymmetry is why "reading is never scoped" — true, and deliberate,
    * while every account belonged to staff — could not survive families
    * arriving.
+   *
+   * ── The `students` axis is declared ahead of its enforcement ───────────
+   * Nothing in the app passes a `studentId` to a permission check yet, so
+   * every `['students']` entry below currently narrows nothing: an unscoped
+   * check asks "anywhere?", and a conditional rule answers yes. That is
+   * correct for a toolbar button and wrong for a family, and it is safe only
+   * because no account can hold a family role.
+   *
+   * Two things have to land before it is real, both in the accounts project:
+   * the reads have to be asked *about a student* at the call site, and the
+   * services have to filter rows before returning them. Until then, treat a
+   * `['students']` entry as a statement of intent — not a guarantee — and do
+   * not build a family-facing page on the strength of it.
    */
   scopableBy?: readonly ScopeAxis[]
 }
@@ -345,6 +358,65 @@ export const BUILTIN_ROLES: Role[] = [
  * that would put it back — the one mistake in a role editor you cannot undo
  * from inside the app.
  */
+/**
+ * Permission ids that have been renamed, and what they became.
+ *
+ * Lives with the catalogue rather than in one store because more than one
+ * table persists permission ids: the roles table stores what a role grants,
+ * and the notification table stores the audience a row was addressed to. The
+ * first rename migrated only the roles table, and every notification written
+ * before it became invisible to everyone — the audience said `students.view`
+ * and no role granted that any more. Anything that persists an id imports this.
+ *
+ * One old id can become several. `students.manage` was a single write switch
+ * and is now create, update, delete and transfer — a school that granted the
+ * one thing meant to grant all of it, so migrating to the whole set preserves
+ * what they actually chose.
+ *
+ * Keep entries forever. A stored row is only migrated when it is next read,
+ * and a browser that has not been opened since the rename is still out there.
+ */
+export const RENAMED_PERMISSIONS: Readonly<Record<string, readonly Permission[]>> = {
+  'dashboard.view': ['dashboard.read'],
+  'calendar.view': ['calendar.read'],
+  'notices.view': ['notices.read'],
+  'students.view': ['students.read'],
+  'students.manage': ['students.create', 'students.update', 'students.delete', 'students.transfer'],
+  'teachers.view': ['teachers.read'],
+  'attendance.view': ['attendance.read'],
+  'grades.view': ['grades.read'],
+  'grades.enter': ['grades.create', 'grades.update'],
+  'timetable.view': ['timetable.read'],
+  'assignments.view': ['assignments.read'],
+  'finance.view': ['finance.read'],
+  'transport.view': ['transport.read'],
+  'settings.manage': ['system.settings'],
+  'users.manage': ['users.read', 'users.create', 'users.update', 'roles.assign'],
+}
+
+/**
+ * Run stored ids through the rename map, keeping order and deduping.
+ *
+ * Ids with no entry pass through untouched, including ones this build no
+ * longer defines — dropping those is `reconcile`'s job, and doing it here too
+ * would mean a caller that only wants renaming silently gets pruning.
+ */
+export function migratePermissionIds(ids: readonly string[]): Permission[] {
+  const out: Permission[] = []
+  ids.forEach(id => {
+    const next = RENAMED_PERMISSIONS[id] ?? [id as Permission]
+    next.forEach(candidate => {
+      if (!out.includes(candidate)) out.push(candidate)
+    })
+  })
+  return out
+}
+
+/** Whether the map would change anything — a real comparison, not a length. */
+export function needsPermissionMigration(ids: readonly string[]): boolean {
+  return ids.some(id => id in RENAMED_PERMISSIONS)
+}
+
 export function wouldOrphanSettings(roles: Role[]): boolean {
   return !roles.some(role => role.permissions.includes('system.settings'))
 }

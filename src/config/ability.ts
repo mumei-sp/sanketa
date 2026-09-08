@@ -18,6 +18,13 @@
  * Running these rules in the browser decides what to render. Running the same
  * rules on the server decides what is true. Both are needed; only the second
  * one protects anything.
+ *
+ * That was an acceptable trade while every account belonged to staff, who are
+ * trusted with the data either way. It stops being one the moment a family can
+ * sign in: "the client filtered the rows" then means another child's marks
+ * reached this browser and were merely not drawn. The `students` axis exists
+ * so the same rules can do the filtering at the service — see the note on
+ * `scopableBy` for what is still missing.
  */
 
 import {

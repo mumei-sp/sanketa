@@ -37,9 +37,14 @@ import {
   restoreUser,
   type SchoolUser,
 } from '@/api/services/user-service'
-import { wouldOrphanSettings, type Permission, type Role } from '@/config/permissions'
+import {
+  migratePermissionIds,
+  wouldOrphanSettings,
+  type Permission,
+  type Role,
+  type ScopeAxis,
+} from '@/config/permissions'
 import type { AccessChange, AccessEvent } from '@/api/services/access-log-service'
-import type { ScopeAxis } from '@/config/permissions'
 import { describeClassChange, describePermissionChange, stillHasAnAdmin } from './helpers'
 
 export interface UndoContext {
@@ -138,7 +143,15 @@ function rolePatch(fields: Record<string, unknown>) {
   const patch: Parameters<typeof updateRole>[1] = {}
   if ('name' in fields) patch.name = fields.name as string
   if ('description' in fields) patch.description = (fields.description as string) ?? ''
-  if ('permissions' in fields) patch.permissions = fields.permissions as Permission[]
+  if ('permissions' in fields) {
+    // Through the rename map on the way out: the log is the one place a
+    // pre-rename shape is *supposed* to survive, and writing those ids back
+    // verbatim would hand the role grants the catalogue no longer defines.
+    // `defineAbilityFor` skips unknown ids, so the role would quietly lose
+    // them until the next load migrated the row — an intermittent-looking
+    // failure with a very boring cause.
+    patch.permissions = migratePermissionIds(fields.permissions as string[])
+  }
   // Both spellings: entries written before the second scoping axis carry the
   // old boolean, and an audit log is exactly the place old shapes survive.
   if ('scopeBy' in fields) {
@@ -182,7 +195,13 @@ function reversalSummary(summary: string): string {
 /** What the reversal did, in the same words the original entry would use. */
 function describeReversal(before: Record<string, unknown>, after: Record<string, unknown>) {
   if (Array.isArray(before.permissions) && Array.isArray(after.permissions)) {
-    return describePermissionChange(after.permissions as Permission[], before.permissions as Permission[])
+    // Both sides through the rename map, for the same reason `rolePatch` does
+    // it: a pre-rename entry otherwise describes itself with raw ids on one
+    // side and human labels on the other, in the same sentence.
+    return describePermissionChange(
+      migratePermissionIds(after.permissions as string[]),
+      migratePermissionIds(before.permissions as string[]),
+    )
   }
   if (Array.isArray(before.assignedClasses) || Array.isArray(after.assignedClasses)) {
     return describeClassChange(
