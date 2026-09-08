@@ -38,11 +38,40 @@ import { createNotificationTransport } from './transport'
  * and each pass walks every fee record and every class.
  */
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000
+
+/**
+ * How recent a notification must be to interrupt.
+ *
+ * The catch-up gate covers the moment a session opens. This covers the other
+ * way a backlog arrives: a laptop sleeps for three hours, wakes, and the
+ * visibility listener reconciles a batch of everything raised meanwhile. The
+ * gate opened hours ago, so without this every critical in that batch would
+ * toast at once — the same wall of red, arriving by a different door.
+ *
+ * A minute is generous for "while you were looking" and far short of any
+ * plausible sleep.
+ */
+const TOAST_MAX_AGE_MS = 60 * 1000
 import type { Notification, NotificationBatch, NotificationViewer } from './types'
 
 interface NotificationContextValue {
   /** Muted categories already removed — see the filter in the provider. */
   notifications: Notification[]
+  /**
+   * What happened, as opposed to what might need you.
+   *
+   * The dashboard's Recent Activity tile used to render the top of
+   * `notifications`, which put the same six rows on screen as the bell badge
+   * sitting directly above it — one screen saying the same thing twice, which
+   * is most of what makes an app feel cluttered.
+   *
+   * Split on severity because that axis already exists and already means this:
+   * `info` and `success` are receipts — a payment recorded, a register
+   * submitted, grades entered. They are worth seeing and never worth chasing.
+   * `warning` and `critical` are requests, and they belong to the bell, where
+   * someone has gone looking for them.
+   */
+  activity: Notification[]
   unreadCount: number
   /** True only for the very first load, so the panel can show skeletons once. */
   isLoading: boolean
@@ -185,8 +214,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     // open the bell. Widening this to `warning` would make the app shout during
     // a routine morning and teach people to dismiss without reading.
     if (!isCaughtUp()) return
+    const now = Date.now()
     batch.items
-      .filter(item => item.severity === 'critical' && item.readAt === null)
+      .filter(
+        item =>
+          item.severity === 'critical' &&
+          item.readAt === null &&
+          now - new Date(item.createdAt).getTime() < TOAST_MAX_AGE_MS,
+      )
       .forEach(item => {
         toast.error(item.title, { description: item.body })
       })
@@ -333,6 +368,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     [notifications, mutedCategories],
   )
 
+  const activity = React.useMemo(
+    () => visible.filter(item => item.severity === 'info' || item.severity === 'success'),
+    [visible],
+  )
+
   const unreadCount = React.useMemo(
     () => visible.filter(item => item.readAt === null).length,
     [visible],
@@ -341,6 +381,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const value = React.useMemo<NotificationContextValue>(
     () => ({
       notifications: visible,
+      activity,
       unreadCount,
       isLoading,
       error,
@@ -349,7 +390,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       dismiss,
       refresh: () => void reconcile(),
     }),
-    [visible, unreadCount, isLoading, error, markRead, markAllRead, dismiss, reconcile],
+    [visible, activity, unreadCount, isLoading, error, markRead, markAllRead, dismiss, reconcile],
   )
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>

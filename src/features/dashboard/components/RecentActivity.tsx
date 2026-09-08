@@ -9,6 +9,12 @@
  * It stays a *view*, not a second panel: no read state, no dismiss, no
  * mark-all. Those belong to the bell, where someone has actually gone looking
  * for them. Rows still navigate, because a feed you cannot follow is a poster.
+ *
+ * And it shows a different half of the feed than the bell does. Rendering the
+ * top of the same list put the same six rows under a badge that was counting
+ * them — one screen telling you the same thing twice. This tile answers "what
+ * happened", the bell answers "what needs me"; see `activity` on the context
+ * for why severity is the right seam.
  */
 
 import { useNavigate } from 'react-router-dom'
@@ -44,9 +50,9 @@ function ActivitySkeleton() {
 }
 
 export function RecentActivity() {
-  const { notifications, isLoading } = useNotifications()
+  const { activity, isLoading } = useNotifications()
   const navigate = useNavigate()
-  const items = notifications.slice(0, VISIBLE_COUNT)
+  const items = activity.slice(0, VISIBLE_COUNT)
 
   return (
     <Tile
