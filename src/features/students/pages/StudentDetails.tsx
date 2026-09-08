@@ -25,6 +25,22 @@ import { ExtracurricularFormSheet } from '../components/detail-crud/Extracurricu
 import { BehaviorFormSheet } from '../components/detail-crud/BehaviorFormSheet'
 import { DocumentUploadFormSheet } from '../components/detail-crud/DocumentUploadFormSheet'
 import { DeleteConfirmDialog } from '../components/detail-crud/DeleteConfirmDialog'
+import { StudentGuardians } from '../components/StudentGuardians'
+import {
+  GuardianFormSheet,
+  type GuardianDraft,
+} from '../components/detail-crud/GuardianFormSheet'
+import {
+  createParent,
+  fetchParents,
+  fetchParentsOfStudent,
+  linkParent,
+  unlinkParent,
+  updateParent,
+  type Parent,
+  type ParentOfStudent,
+} from '@/api/services/parent-service'
+import { fetchUsers, type SchoolUser } from '@/api/services/user-service'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { classSectionOf } from '@/utils/class-section-helpers'
 
@@ -38,6 +54,7 @@ import type { DocumentItem } from '@/components/ui/documents-list'
 
 type ModalState =
   | { type: 'health'; record: StudentHealthRecord | null }
+  | { type: 'guardian'; record: ParentOfStudent | null }
   | { type: 'scholarship'; record: StudentScholarship | null }
   | { type: 'extracurricular'; record: StudentActivity | null }
   | { type: 'behavior'; record: StudentBehaviorEntry | null }
@@ -78,6 +95,95 @@ export default function StudentDetails() {
   const [isDeleting, setIsDeleting] = React.useState(false)
 
   const studentId = id ?? ''
+
+  /**
+   * The guardians on this student, and everyone the school already knows.
+   *
+   * The candidate list is fetched whole rather than searched, because it is one
+   * row per parent in the school and the point of offering it is to stop a
+   * second row being created for someone already on file.
+   */
+  const [guardians, setGuardians] = React.useState<ParentOfStudent[]>([])
+  const [allParents, setAllParents] = React.useState<Parent[]>([])
+  const [accounts, setAccounts] = React.useState<SchoolUser[]>([])
+  const [isSavingGuardian, setIsSavingGuardian] = React.useState(false)
+
+  const loadGuardians = React.useCallback(async () => {
+    if (!studentId) return
+    try {
+      const [mine, everyone, users] = await Promise.all([
+        fetchParentsOfStudent(studentId),
+        fetchParents(),
+        fetchUsers(),
+      ])
+      setGuardians(mine)
+      setAllParents(everyone)
+      setAccounts(users)
+    } catch (error) {
+      console.error('Failed to load guardians', error)
+    }
+  }, [studentId])
+
+  React.useEffect(() => {
+    void loadGuardians()
+  }, [loadGuardians])
+
+  const guardianHasAccount = React.useCallback(
+    (parentProfileId: string) => accounts.some(user => user.parentId === parentProfileId),
+    [accounts],
+  )
+
+  const handleSaveGuardian = React.useCallback(
+    async (draft: GuardianDraft) => {
+      if (!studentId) return
+      setIsSavingGuardian(true)
+      try {
+        // Either a person the school knows, or one it is about to.
+        let parentProfileId = draft.parentProfileId
+        if (parentProfileId === null) {
+          const created = await createParent({
+            fullName: draft.fullName,
+            email: draft.email,
+            phone: draft.phone,
+          })
+          parentProfileId = created.profileId
+        } else {
+          await updateParent(parentProfileId, {
+            fullName: draft.fullName,
+            email: draft.email,
+            phone: draft.phone,
+          })
+        }
+
+        await linkParent({
+          studentProfileId: studentId,
+          parentProfileId,
+          relationship: draft.relationship,
+          isPrimary: draft.isPrimary,
+        })
+        await loadGuardians()
+        setActiveModal(null)
+      } catch (error) {
+        console.error('Failed to save the guardian', error)
+      } finally {
+        setIsSavingGuardian(false)
+      }
+    },
+    [studentId, loadGuardians],
+  )
+
+  const handleUnlinkGuardian = React.useCallback(
+    async (parentProfileId: string) => {
+      if (!studentId) return
+      try {
+        await unlinkParent(studentId, parentProfileId)
+        await loadGuardians()
+      } catch (error) {
+        console.error('Failed to unlink the guardian', error)
+      }
+    },
+    [studentId, loadGuardians],
+  )
 
   // ── Navigation ──
   const handleBack = React.useCallback(() => navigate('/students'), [navigate])
@@ -264,6 +370,17 @@ export default function StudentDetails() {
           {/* ═══ LEFT COLUMN ═══ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
             <StudentProfileCard student={student} />
+            <StudentGuardians
+              guardians={guardians}
+              hasAccount={guardianHasAccount}
+              onAdd={writable(() => setActiveModal({ type: 'guardian', record: null }))}
+              onEdit={writable((guardian: ParentOfStudent) =>
+                setActiveModal({ type: 'guardian', record: guardian }),
+              )}
+              onUnlink={writable((parentProfileId: string) =>
+                void handleUnlinkGuardian(parentProfileId),
+              )}
+            />
             <StudentDocuments
               documents={localData?.documents ?? []}
               onAdd={writable(() => setActiveModal({ type: 'document' }))}
@@ -336,6 +453,19 @@ export default function StudentDetails() {
       )}
 
       {/* ═══ CRUD DIALOGS ═══ */}
+      <GuardianFormSheet
+        open={activeModal?.type === 'guardian'}
+        onOpenChange={open => {
+          if (!open) setActiveModal(null)
+        }}
+        guardian={activeModal?.type === 'guardian' ? activeModal.record : null}
+        candidates={allParents.filter(
+          parent => !guardians.some(mine => mine.profileId === parent.profileId),
+        )}
+        onSave={handleSaveGuardian}
+        isSaving={isSavingGuardian}
+      />
+
       <HealthRecordFormSheet
         open={activeModal?.type === 'health'}
         onOpenChange={open => { if (!open) setActiveModal(null) }}

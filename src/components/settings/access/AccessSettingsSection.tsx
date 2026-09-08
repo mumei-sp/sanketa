@@ -330,6 +330,7 @@ export function AccessSettingsSection() {
               savingId={savingId}
               onPatch={patchUser}
               onAdd={addUser}
+              onProvisioned={user => setUsers(current => (current ? [...current, user] : [user]))}
               roleFilter={roleFilter}
               onRoleFilterChange={setRoleFilter}
               record={record}

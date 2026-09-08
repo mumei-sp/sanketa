@@ -1,10 +1,9 @@
-import { Separator } from '@/components/ui/separator'
 import { Tile } from '@/components/tile'
 import { ProfileCard } from '@/components/ui/profile-card'
 import { InfoRow } from '@/components/ui/info-row'
 import { StatusBadge } from './StatusBadge'
 import { Cake, Phone, MapPin } from 'lucide-react'
-import { fontSizes, fontWeights } from '@/config/typography'
+import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
 import type { Student } from '../types'
 import {
@@ -88,132 +87,20 @@ export function StudentProfileCard({ student }: StudentProfileCardProps) {
         </div>
       </Tile>
 
-      {/* Parent/Guardian Info Section */}
-      {(student.guardians?.father ||
-        student.guardians?.mother ||
-        student.guardians?.alternativeGuardian) && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
-          <div>
-            <h3 className="font-semibold" style={{ fontSize: fontSizes.lg }}>
-              Parent/Guardian Info
-            </h3>
-          </div>
+      {/* The guardian list used to sit here, reading the contact fields
+          embedded on the student record. `StudentGuardians` on the detail page
+          shows the same people from the `parents` table, with the relationship,
+          the email and whether they have an account — everything this had and
+          the things that matter for access. Two sections naming the same people
+          is the clutter, so this one went.
 
-          <Tile
-            id="guardian-info-section"
-            layoutMode="block"
-            background="muted"
-            borderRadius={spacing['4']}
-            style={{ padding: spacing['4'] }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {student.guardians.father && student.guardians.father.name && (
-                <>
-                  <GuardianRow
-                    label="Father"
-                    name={student.guardians.father.name}
-                    phone={student.guardians.father.phone}
-                    phoneCountryCode={student.guardians.father.phoneCountryCode}
-                  />
-                  {(student.guardians.mother?.name ||
-                    student.guardians.alternativeGuardian?.name) && (
-                    <Separator
-                      className="my-0.5"
-                      style={{ marginTop: spacing['2'], marginBottom: spacing['2'] }}
-                    />
-                  )}
-                </>
-              )}
-
-              {student.guardians.mother && student.guardians.mother.name && (
-                <>
-                  <GuardianRow
-                    label="Mother"
-                    name={student.guardians.mother.name}
-                    phone={student.guardians.mother.phone}
-                    phoneCountryCode={student.guardians.mother.phoneCountryCode}
-                  />
-                  {student.guardians.alternativeGuardian?.name && (
-                    <Separator
-                      className="my-0.5"
-                      style={{ marginTop: spacing['2'], marginBottom: spacing['2'] }}
-                    />
-                  )}
-                </>
-              )}
-
-              {student.guardians.alternativeGuardian &&
-                student.guardians.alternativeGuardian.name && (
-                  <GuardianRow
-                    label={`Alternative Guardian${
-                      student.guardians.alternativeGuardian.relation
-                        ? ` (${student.guardians.alternativeGuardian.relation})`
-                        : ''
-                    }`}
-                    name={student.guardians.alternativeGuardian.name}
-                    phone={student.guardians.alternativeGuardian.phone}
-                    phoneCountryCode={student.guardians.alternativeGuardian.phoneCountryCode}
-                  />
-                )}
-            </div>
-          </Tile>
-        </div>
-      )}
+          The embedded fields are still the student form's to edit, and are
+          still what seeds the table on first run. That they are now two copies
+          of one fact is a real wart: editing a guardian on the form will not
+          move the table. Making the form write through is the fix, and belongs
+          with the provisioning work rather than here. */}
     </ProfileCard>
   )
 }
 
 /** Helper for rendering a single guardian row */
-function GuardianRow({
-  label,
-  name,
-  phone,
-  phoneCountryCode,
-}: {
-  label: string
-  name: string
-  phone?: string
-  phoneCountryCode?: string
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        minHeight: '2.75rem',
-      }}
-    >
-      <span
-        className="text-muted-foreground"
-        style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-      >
-        {label}
-      </span>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          maxWidth: '60%',
-          gap: spacing['1'],
-        }}
-      >
-        <p
-          className="font-semibold"
-          style={{ fontSize: fontSizes.sm, textAlign: 'right', fontWeight: fontWeights.semibold }}
-        >
-          {name}
-        </p>
-        {phone && (
-          <p
-            className="text-muted-foreground"
-            style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.regular }}
-          >
-            {formatPhone(phone, phoneCountryCode)}
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}

@@ -21,7 +21,7 @@
  */
 
 import * as React from 'react'
-import { Info, AlertTriangle, Layers, UserPlus, Eye } from 'lucide-react'
+import { Info, AlertTriangle, Layers, UserPlus, Eye, Users } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -53,6 +53,7 @@ import type { SchoolUser } from '@/api/services/user-service'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'
+import { ProvisionDialog } from './ProvisionDialog'
 import { describeClassChange, stillHasAnAdmin } from './helpers'
 
 /**
@@ -99,6 +100,8 @@ interface PeopleTabProps {
     email: string
     roleId: string
   }) => Promise<SchoolUser | null>
+  /** An account created by provisioning, so the list picks it up. */
+  onProvisioned: (user: SchoolUser) => void
   /** Set by the Roles tab when someone follows "Manage people" from a role. */
   roleFilter: string
   onRoleFilterChange: (roleId: string) => void
@@ -111,6 +114,7 @@ export function PeopleTab({
   savingId,
   onPatch,
   onAdd,
+  onProvisioned,
   roleFilter,
   onRoleFilterChange,
   record,
@@ -134,6 +138,7 @@ export function PeopleTab({
   const [kindFilter, setKindFilter] = React.useState(ALL_KINDS)
 
   const [addOpen, setAddOpen] = React.useState(false)
+  const [provisionOpen, setProvisionOpen] = React.useState(false)
   const [draft, setDraft] = React.useState({ fullName: '', email: '', roleId: '' })
   const [isAdding, setIsAdding] = React.useState(false)
 
@@ -269,10 +274,25 @@ export function PeopleTab({
           sign-in.
         </p>
         {canAddPeople && (
-          <Button size="sm" className="shrink-0 gap-1.5" onClick={openAdd}>
-            <UserPlus className="size-4" />
-            Add person
-          </Button>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            {/* Two different jobs. "Add person" types in someone new — a
+                member of staff joining. "Give parents accounts" works off
+                records the school already has, which is how every family
+                account should be created. */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setProvisionOpen(true)}
+            >
+              <Users className="size-4" />
+              Give parents accounts
+            </Button>
+            <Button size="sm" className="gap-1.5" onClick={openAdd}>
+              <UserPlus className="size-4" />
+              Add person
+            </Button>
+          </div>
         )}
       </div>
 
@@ -512,6 +532,13 @@ export function PeopleTab({
           )
         })}
       </div>
+
+      <ProvisionDialog
+        open={provisionOpen}
+        onOpenChange={setProvisionOpen}
+        users={users}
+        onCreated={onProvisioned}
+      />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>

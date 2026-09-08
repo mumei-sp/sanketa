@@ -1,3 +1,5 @@
+import type { ProfileTypeName } from '@/types/user-profile'
+
 export interface LoginRequest {
   /** Email address or phone number */
   identifier: string
@@ -27,13 +29,13 @@ export interface AuthResponse {
  * points at, and therefore which way its access narrows. A school can decide
  * what a Parent may see; it cannot decide that a parent is a member of staff.
  *
- * The values and their order come from the backend's `profile_type_enum`
- * (`0=STUDENT, 1=TEACHER, 2=PARENT, 3=ADMIN, 4=STAFF, 5=GUARDIAN`), so the
- * mock and the schema describe the same column. `guardian` is distinct from
- * `parent` there — a legal guardian who is not a parent — and both narrow the
- * same way.
+ * An alias of `ProfileTypeName`, which lives with the profile types because
+ * that is where the column is declared — this was briefly a second type of the
+ * same name, which is how two encodings of one column start drifting.
+ * `guardian` is distinct from `parent` in the schema — a legal guardian who is
+ * not a parent — and both narrow the same way.
  */
-export type ProfileType = 'student' | 'teacher' | 'parent' | 'admin' | 'staff' | 'guardian'
+export type ProfileType = ProfileTypeName
 
 /** Whether an account can be signed into. */
 export type AccountStatus = 'invited' | 'active' | 'disabled'
