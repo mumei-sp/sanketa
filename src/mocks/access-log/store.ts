@@ -28,6 +28,28 @@ export type AccessEventKind =
   | 'user.classes'
   | 'user.create'
 
+/** Which table a change landed on. */
+export type AccessEntity = 'role' | 'user'
+
+/**
+ * The change in a form something other than a person can read.
+ *
+ * Before and after rather than a description of the operation, because that is
+ * what makes an entry reversible: undoing is writing `before` back, whatever
+ * the operation was. `null` on either side means the row did not exist then —
+ * `before: null` is a creation, `after: null` is a deletion.
+ *
+ * Only the fields that changed are carried. A permission edit stores two
+ * permission arrays, not two whole roles, so the log does not quietly become a
+ * second copy of the tables it describes.
+ */
+export interface AccessChange {
+  entity: AccessEntity
+  id: string
+  before: Record<string, unknown> | null
+  after: Record<string, unknown> | null
+}
+
 export interface AccessEvent {
   id: string
   /** ISO timestamp. */
@@ -40,6 +62,16 @@ export interface AccessEvent {
   summary: string
   /** The change itself, when there is something to spell out. */
   detail?: string
+  /** What actually moved, for undo. Absent on entries that predate it. */
+  change?: AccessChange
+  /**
+   * The entry this one reverses.
+   *
+   * An undo is a new line, never a flag set on the old one — the log stays
+   * append-only, and "this was undone" is derived by looking for an entry
+   * pointing at it. A record the people it records can amend is not a record.
+   */
+  undoOf?: string
 }
 
 const DB_KEY = 'sanketa:mock-db:access-log'

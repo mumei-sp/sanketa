@@ -213,6 +213,25 @@ export function updateRole(
   return clone(role)
 }
 
+/**
+ * Put a deleted role back, keeping its id.
+ *
+ * The id is what every user row points at, so a "restore" that minted a new
+ * one would bring the role back and leave its holders orphaned — which is the
+ * thing undoing a deletion is for. Refuses when the id is taken rather than
+ * overwriting whatever now holds it.
+ *
+ * Its position in the list is not restored; the row goes back on the end.
+ * Order here is insertion order and carries no meaning.
+ */
+export function restoreRole(role: Role): Role | null {
+  const database = load()
+  if (database.rows.some(existing => existing.id === role.id)) return null
+  database.rows.push({ ...role, permissions: [...role.permissions] })
+  persist()
+  return clone(role)
+}
+
 /** Built-in roles refuse deletion; every other row goes. */
 export function deleteRole(id: string): boolean {
   const database = load()

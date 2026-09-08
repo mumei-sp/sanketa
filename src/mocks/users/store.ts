@@ -161,6 +161,38 @@ export function updateUser(
   return clone(user)
 }
 
+/**
+ * Remove an account.
+ *
+ * Only exists so adding one can be undone. Whether removing a particular
+ * person would lock the school out of its own settings is not a question this
+ * table can answer — it does not know what a role grants — so that guard lives
+ * with the caller, next to the roles it needs to read.
+ */
+export function deleteUser(id: string): boolean {
+  const database = load()
+  const index = database.rows.findIndex(user => user.id === id)
+  if (index === -1) return false
+  database.rows.splice(index, 1)
+  persist()
+  return true
+}
+
+/**
+ * Put a removed account back, keeping its id.
+ *
+ * The mirror of `restoreRole`, and needed for the same reason: undoing is
+ * itself a change, so removing an account has to be reversible or the log
+ * would have a one-way door in it. Refuses when the id is taken.
+ */
+export function restoreUser(user: SchoolUser): SchoolUser | null {
+  const database = load()
+  if (database.rows.some(existing => existing.id === user.id)) return null
+  database.rows.push(clone(user))
+  persist()
+  return clone(user)
+}
+
 /** Wipe and reseed — the equivalent of re-running the backend's seed script. */
 export function resetUsers(): void {
   db = seed()

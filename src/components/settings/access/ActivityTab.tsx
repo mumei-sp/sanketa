@@ -13,6 +13,19 @@
  * Grouped by day rather than paged. An audit trail is read backwards from now
  * ("what happened this week?"), not searched from the beginning, and a date
  * heading answers that faster than a timestamp on every row.
+ *
+ * Undo
+ * ----
+ * Read-only does not mean inert: an entry can be *taken back*, which appends a
+ * new line rather than erasing the old one. Two things decide whether the
+ * button appears at all, and they are different in kind:
+ *
+ *   Structure, decided here. Only the newest change to a given row can be
+ *   reversed, because undoing an older one would silently discard everything
+ *   done to it since — and an entry already reversed is not offered twice.
+ *
+ *   Consequence, decided by `undoBlocker`. Whether putting `before` back would
+ *   lock everyone out, or land on a role that no longer exists.
  */
 
 import * as React from 'react'
@@ -24,17 +37,33 @@ import {
   UserPlus,
   Layers,
   History,
+  Undo2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { border, text } from '@/theme/colors'
+import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/format'
 import {
   formatRelativeTime,
   formatAbsoluteTime,
 } from '@/features/notifications/utils/notification-display'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import type { AccessEvent, AccessEventKind } from '@/api/services/access-log-service'
 import { SearchField } from './parts'
+import { undoBlocker, type UndoContext } from './undo'
 
 const ICONS: Record<AccessEventKind, LucideIcon> = {
   'role.create': ShieldPlus,
@@ -70,11 +99,47 @@ function detailParts(detail: string): string[] {
     .filter(Boolean)
 }
 
-export function ActivityTab({ events }: { events: AccessEvent[] | null }) {
+interface ActivityTabProps {
+  events: AccessEvent[] | null
+  /** Null while the directory is still loading — undo needs it for its guards. */
+  undoContext: UndoContext | null
+  onUndo: (event: AccessEvent) => Promise<void>
+  isUndoing: boolean
+}
+
+export function ActivityTab({ events, undoContext, onUndo, isUndoing }: ActivityTabProps) {
+  const { can } = usePermissions()
   const [query, setQuery] = React.useState('')
+  const [pending, setPending] = React.useState<AccessEvent | null>(null)
   // One `now` for the whole render, so two rows a millisecond apart cannot
   // land under different headings.
   const now = React.useMemo(() => new Date(), [events])
+
+  /**
+   * Which entries have been taken back, and which are still the newest word on
+   * their row.
+   *
+   * Both derived from the log rather than stored on it, which is what keeps it
+   * append-only: an undo names the entry it reverses, and "reversed" is the
+   * existence of that pointer. Computed over every entry, not the filtered
+   * view, or a search would make an older entry look like the newest one.
+   */
+  const { reversed, newest } = React.useMemo(() => {
+    const reversedIds = new Set<string>()
+    const newestForRow = new Set<string>()
+    const seenRows = new Set<string>()
+
+    ;(events ?? []).forEach(event => {
+      if (event.undoOf) reversedIds.add(event.undoOf)
+      if (!event.change) return
+      const row = `${event.change.entity}:${event.change.id}`
+      if (seenRows.has(row)) return
+      seenRows.add(row)
+      newestForRow.add(event.id)
+    })
+
+    return { reversed: reversedIds, newest: newestForRow }
+  }, [events])
 
   if (events === null) {
     return (
@@ -84,6 +149,17 @@ export function ActivityTab({ events }: { events: AccessEvent[] | null }) {
         ))}
       </div>
     )
+  }
+
+  /** Null when this entry can be taken back; otherwise why it cannot. */
+  const blockerFor = (event: AccessEvent): string | null => {
+    if (!event.change) return 'Entries from before this feature cannot be taken back.'
+    if (reversed.has(event.id)) return 'Already taken back.'
+    if (!newest.has(event.id)) return 'Something newer has changed this since.'
+    const needed = event.change.entity === 'role' ? 'roles.manage' : 'users.manage'
+    if (!can(needed)) return 'You cannot change this.'
+    if (!undoContext) return 'Still loading.'
+    return undoBlocker(event, undoContext)
   }
 
   const needle = query.trim().toLowerCase()
@@ -150,8 +226,16 @@ export function ActivityTab({ events }: { events: AccessEvent[] | null }) {
           >
             {day.events.map(event => {
               const Icon = ICONS[event.kind] ?? ShieldCheck
+              const isReversed = reversed.has(event.id)
+              const blocker = blockerFor(event)
               return (
-                <div key={event.id} className="relative flex items-start gap-2.5">
+                <div
+                  key={event.id}
+                  className={cn(
+                    'group relative flex items-start gap-2.5',
+                    isReversed && 'opacity-60',
+                  )}
+                >
                   <span
                     aria-hidden
                     className="absolute -left-[25px] top-1 flex size-4 items-center justify-center rounded-full ring-4"
@@ -166,8 +250,25 @@ export function ActivityTab({ events }: { events: AccessEvent[] | null }) {
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <p className="text-body" style={{ color: 'var(--heading)' }}>
-                      {event.summary}
+                    <p
+                      className="text-body"
+                      style={{ color: 'var(--heading)' }}
+                    >
+                      <span className={cn(isReversed && 'line-through')}>{event.summary}</span>
+                      {isReversed && (
+                        <Badge variant="outline" className="ml-2 text-[10px]">
+                          Taken back
+                        </Badge>
+                      )}
+                      {/* "Reversal", not "Undo": the button on the right of
+                          this same row already says Undo, and two controls
+                          reading the same word mean two different things. */}
+                      {event.undoOf && (
+                        <Badge variant="secondary" className="ml-2 gap-1 text-[10px]">
+                          <Undo2 className="size-2.5" />
+                          Reversal
+                        </Badge>
+                      )}
                     </p>
 
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-caption text-muted-foreground">
@@ -205,12 +306,65 @@ export function ActivityTab({ events }: { events: AccessEvent[] | null }) {
                       </div>
                     )}
                   </div>
+
+                  {/* Shown only where it would work. A disabled button that
+                      says why beats a hidden one for an entry someone expected
+                      to be reversible; nothing at all for the great majority
+                      that are simply not the newest word on their row. */}
+                  {blocker === null ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={isUndoing}
+                      onClick={() => setPending(event)}
+                      className="shrink-0 gap-1 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100"
+                    >
+                      <Undo2 className="size-3.5" />
+                      Undo
+                    </Button>
+                  ) : (
+                    event.change &&
+                    !reversed.has(event.id) &&
+                    newest.has(event.id) && (
+                      <span
+                        title={blocker}
+                        className="shrink-0 cursor-help px-2 text-caption"
+                        style={{ color: text.muted }}
+                      >
+                        Can't undo
+                      </span>
+                    )
+                  )}
                 </div>
               )
             })}
           </div>
         </div>
       ))}
+
+      <AlertDialog open={pending !== null} onOpenChange={open => !open && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Take this change back?</AlertDialogTitle>
+            <AlertDialogDescription>
+              “{pending?.summary}” will be reversed, and the reversal recorded as its own entry.
+              Nothing is erased from the log.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const event = pending
+                setPending(null)
+                if (event) void onUndo(event)
+              }}
+            >
+              Take it back
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

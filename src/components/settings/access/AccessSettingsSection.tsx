@@ -39,6 +39,7 @@ import {
 import {
   fetchAccessEvents,
   recordAccessEvent,
+  type AccessChange,
   type AccessEvent,
   type AccessEventKind,
 } from '@/api/services/access-log-service'
@@ -47,6 +48,7 @@ import { StatTile } from './parts'
 import { RolesTab } from './RolesTab'
 import { PeopleTab, ALL_ROLES } from './PeopleTab'
 import { ActivityTab } from './ActivityTab'
+import { undoEvent } from './undo'
 
 /** What a tab hands the recorder. The actor is filled in here. */
 export interface AccessEventDraft {
@@ -54,14 +56,23 @@ export interface AccessEventDraft {
   target: string
   summary: string
   detail?: string
+  /**
+   * What moved, in fields rather than prose.
+   *
+   * Optional on the type but written by every control, because an entry
+   * without it cannot be taken back — see `undo.ts`.
+   */
+  change?: AccessChange
+  /** Set only by an undo, naming the entry it reverses. */
+  undoOf?: string
 }
 
 export type RecordAccessEvent = (draft: AccessEventDraft) => void
 
 export function AccessSettingsSection() {
-  const { can, roles } = usePermissions()
+  const { can, roles, refresh } = usePermissions()
   const { config } = useSchoolConfig()
-  const { showError } = useAppToast()
+  const { showError, showSuccess } = useAppToast()
   const currentUser = useCurrentUser()
 
   const canManageRoles = can('roles.manage')
@@ -75,6 +86,7 @@ export function AccessSettingsSection() {
   const [users, setUsers] = React.useState<SchoolUser[] | null>(null)
   const [events, setEvents] = React.useState<AccessEvent[] | null>(null)
   const [savingId, setSavingId] = React.useState<string | null>(null)
+  const [isUndoing, setIsUndoing] = React.useState(false)
   const [tab, setTab] = React.useState(canManageRoles ? 'roles' : 'people')
   const [roleFilter, setRoleFilter] = React.useState<string>(ALL_ROLES)
 
@@ -146,6 +158,50 @@ export function AccessSettingsSection() {
       return created
     },
     [],
+  )
+
+  /**
+   * Take an entry back.
+   *
+   * Lives here rather than in the Activity tab because reversing a change
+   * touches the same two tables the other tabs write, and afterwards the roles
+   * table, the directory and the log all have to be re-read — the Roles tab is
+   * showing permission counts that just moved. One place that writes, one place
+   * that refreshes.
+   */
+  const handleUndo = React.useCallback(
+    async (event: AccessEvent) => {
+      if (!users) return
+      setIsUndoing(true)
+      try {
+        const outcome = await undoEvent(event, { roles, users, currentUserId: currentUser?.id })
+        if (!outcome.ok) {
+          showError('Could not take that back', { description: outcome.reason })
+          return
+        }
+
+        await refresh()
+        setUsers(await fetchUsers())
+        // The reversal is a new entry pointing at the old one — never an edit
+        // of it. `record` re-reads the log, so the row it came from picks up
+        // its "taken back" mark on the same pass.
+        record({
+          kind: event.kind,
+          target: event.target,
+          summary: outcome.summary,
+          detail: outcome.detail,
+          change: outcome.change,
+          undoOf: event.id,
+        })
+        showSuccess(outcome.summary)
+      } catch (error) {
+        console.error('Failed to undo an access change', error)
+        showError('Could not take that back')
+      } finally {
+        setIsUndoing(false)
+      }
+    },
+    [users, roles, currentUser?.id, refresh, record, showError, showSuccess],
   )
 
   const openPeopleFor = (roleId: string) => {
@@ -233,7 +289,12 @@ export function AccessSettingsSection() {
         )}
 
         <TabsContent value="activity" forceMount hidden={tab !== 'activity'}>
-          <ActivityTab events={events} />
+          <ActivityTab
+            events={events}
+            undoContext={users ? { roles, users, currentUserId: currentUser?.id } : null}
+            onUndo={handleUndo}
+            isUndoing={isUndoing}
+          />
         </TabsContent>
       </Tabs>
     </div>

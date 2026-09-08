@@ -77,6 +77,27 @@ export async function updateRole(
 }
 
 /**
+ * Put a deleted role back under its original id.
+ *
+ * A restore rather than a create, because the id is a foreign key every user
+ * row holds — see the store. Resolves to null when the id is already taken.
+ *
+ * @apiRoute POST /api/v1/roles/{id}/restore
+ */
+export async function restoreRole(role: Role): Promise<Role | null> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return mockServer.restoreRole(role)
+    },
+    async () => {
+      const { data } = await apiClient.post<Role>(`/roles/${role.id}/restore`, role)
+      return data
+    },
+  )
+}
+
+/**
  * Built-in roles refuse deletion — see the store for why.
  *
  * @apiRoute DELETE /api/v1/roles/{id}

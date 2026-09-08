@@ -50,38 +50,9 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import type { SchoolUser } from '@/api/services/user-service'
-import type { Role } from '@/config/permissions'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'
-
-/** Would anybody still be able to reach this screen after the change? */
-function stillHasAnAdmin(
-  users: SchoolUser[],
-  roles: Role[],
-  changing: { id: string; roleId: string },
-): boolean {
-  const canManage = (roleId: string) =>
-    roles.find(role => role.id === roleId)?.permissions.includes('settings.manage') === true
-
-  return users.some(user => canManage(user.id === changing.id ? changing.roleId : user.roleId))
-}
-
-/** What changed about someone's classes, in words, for the log. */
-function describeClasses(before: string[], after: string[]): string | undefined {
-  const added = after.filter(label => !before.includes(label))
-  const removed = before.filter(label => !after.includes(label))
-  if (added.length === 0 && removed.length === 0) return undefined
-
-  const parts: string[] = []
-  const push = (labels: string[], sign: string) => {
-    if (labels.length === 0) return
-    if (labels.length > 5) parts.push(`${sign} ${labels.length} classes`)
-    else labels.forEach(label => parts.push(`${sign} ${label}`))
-  }
-  push(added, '+')
-  push(removed, '−')
-  return parts.join(', ')
-}
+import { describeClassChange, stillHasAnAdmin } from './helpers'
 
 /**
  * Enough of an email to be a plausible login.
@@ -154,6 +125,12 @@ export function PeopleTab({
         target: user.fullName,
         summary: `Made ${user.fullName} ${now}`,
         detail: was ? `was ${was}` : undefined,
+        change: {
+          entity: 'user',
+          id: user.id,
+          before: { roleId: user.roleId },
+          after: { roleId },
+        },
       })
       showSuccess(`${user.fullName} is now ${now}`, {
         description: 'Takes effect at their next sign-in.',
@@ -163,7 +140,7 @@ export function PeopleTab({
 
   const setClasses = async (user: SchoolUser, next: string[]) => {
     const before = user.assignedClasses ?? []
-    const detail = describeClasses(before, next)
+    const detail = describeClassChange(before, next)
     if (await onPatch(user.id, { assignedClasses: next })) {
       record({
         kind: 'user.classes',
@@ -173,6 +150,12 @@ export function PeopleTab({
             ? `Removed every class from ${user.fullName}`
             : `Set ${user.fullName}'s classes to ${next.length} of ${classLabels.length}`,
         detail,
+        change: {
+          entity: 'user',
+          id: user.id,
+          before: { assignedClasses: before },
+          after: { assignedClasses: next },
+        },
       })
     }
   }
@@ -208,6 +191,7 @@ export function PeopleTab({
         target: created.fullName,
         summary: `Added ${created.fullName} as ${roleName}`,
         detail: created.email,
+        change: { entity: 'user', id: created.id, before: null, after: { ...created } },
       })
       setAddOpen(false)
       showSuccess(`Added ${created.fullName}`, {

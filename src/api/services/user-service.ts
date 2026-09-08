@@ -76,3 +76,43 @@ export async function updateUserAccess(
     },
   )
 }
+
+/**
+ * Remove an account.
+ *
+ * Only reached by undoing the creation of one. Whether the removal would leave
+ * nobody able to manage settings is checked by the caller, which is the layer
+ * that can see the roles.
+ *
+ * @apiRoute DELETE /api/v1/users/{id}
+ */
+export async function deleteUser(id: string): Promise<boolean> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return mockServer.deleteUser(id)
+    },
+    async () => {
+      await apiClient.delete(`/users/${id}`)
+      return true
+    },
+  )
+}
+
+/**
+ * Put a removed account back under its original id.
+ *
+ * @apiRoute POST /api/v1/users/{id}/restore
+ */
+export async function restoreUser(user: SchoolUser): Promise<SchoolUser | null> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return mockServer.restoreUser(user)
+    },
+    async () => {
+      const { data } = await apiClient.post<SchoolUser>(`/users/${user.id}/restore`, user)
+      return data
+    },
+  )
+}

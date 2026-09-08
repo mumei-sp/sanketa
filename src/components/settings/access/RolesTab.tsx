@@ -77,6 +77,7 @@ import {
 import type { SchoolUser } from '@/api/services/user-service'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { AvatarStack, CoverageBar, SearchField } from './parts'
+import { describePermissionChange } from './helpers'
 
 /**
  * The places a holder of this role would find in the sidebar.
@@ -123,36 +124,6 @@ function matches(definition: PermissionDefinition, query: string): boolean {
     definition.group.toLowerCase().includes(needle) ||
     definition.id.toLowerCase().includes(needle)
   )
-}
-
-/** Human names for a set of permission ids, for the log. */
-function labelsFor(ids: Permission[]): string[] {
-  return ids.map(id => permissionDefinition(id)?.label ?? id)
-}
-
-/**
- * "+ Manage finance, − View transport" — what changed, in words.
- *
- * Capped, because granting a whole group at once produces a line nobody reads;
- * past a handful the count is the useful fact.
- */
-function describeChange(before: Permission[], after: Permission[]): string | undefined {
-  const added = after.filter(permission => !before.includes(permission))
-  const removed = before.filter(permission => !after.includes(permission))
-  if (added.length === 0 && removed.length === 0) return undefined
-
-  const parts: string[] = []
-  const push = (ids: Permission[], sign: string) => {
-    if (ids.length === 0) return
-    if (ids.length > 4) {
-      parts.push(`${sign} ${ids.length} permissions`)
-      return
-    }
-    labelsFor(ids).forEach(label => parts.push(`${sign} ${label}`))
-  }
-  push(added, '+')
-  push(removed, '−')
-  return parts.join(', ')
 }
 
 // ── Compare view ──────────────────────────────────────────────────────
@@ -365,6 +336,7 @@ export function RolesTab({
           kind: 'role.update',
           target: name,
           summary: `Renamed the role ${was} to ${name}`,
+          change: { entity: 'role', id: selected.id, before: { name: was }, after: { name } },
         })
       }
     })
@@ -401,8 +373,9 @@ export function RolesTab({
       }
     }
 
-    const detail = describeChange(selected.permissions, next)
+    const detail = describePermissionChange(selected.permissions, next)
     const name = selected.name
+    const held = [...selected.permissions]
     void patch(selected.id, { permissions: next }).then(ok => {
       if (ok && detail) {
         record({
@@ -410,6 +383,12 @@ export function RolesTab({
           target: name,
           summary: `Changed what ${name} can do`,
           detail,
+          change: {
+            entity: 'role',
+            id: selected.id,
+            before: { permissions: held },
+            after: { permissions: next },
+          },
         })
       }
     })
@@ -438,6 +417,10 @@ export function RolesTab({
   const setScoped = (value: boolean) => {
     if (!selected) return
     const name = selected.name
+    // Normalised to a boolean rather than stored as-is: a role that has never
+    // had the field set holds `undefined`, and `updateRole` skips undefined,
+    // so undoing "turned scoping on" would silently do nothing.
+    const was = selected.scopedToAssignedClasses === true
     void patch(selected.id, { scopedToAssignedClasses: value }).then(ok => {
       if (ok) {
         record({
@@ -446,6 +429,12 @@ export function RolesTab({
           summary: value
             ? `Limited ${name} to its holders' assigned classes`
             : `Removed the class limit from ${name}`,
+          change: {
+            entity: 'role',
+            id: selected.id,
+            before: { scopedToAssignedClasses: was },
+            after: { scopedToAssignedClasses: value },
+          },
         })
       }
     })
@@ -463,7 +452,12 @@ export function RolesTab({
       await refresh()
       setSelectedId(created.id)
       setView('edit')
-      record({ kind: 'role.create', target: created.name, summary: `Created the role ${created.name}` })
+      record({
+        kind: 'role.create',
+        target: created.name,
+        summary: `Created the role ${created.name}`,
+        change: { entity: 'role', id: created.id, before: null, after: { ...created } },
+      })
       showSuccess('Role created', { description: 'Give it a name and choose what it can do.' })
     } catch (error) {
       console.error('Failed to create role', error)
@@ -497,6 +491,7 @@ export function RolesTab({
         target: created.name,
         summary: `Created ${created.name} from ${source.name}`,
         detail: `${source.permissions.length} permissions copied`,
+        change: { entity: 'role', id: created.id, before: null, after: { ...created } },
       })
       showSuccess(`Copied ${source.name}`, { description: 'Rename it and adjust what it can do.' })
     } catch (error) {
@@ -530,6 +525,7 @@ export function RolesTab({
         target: role.name,
         summary: `Deleted the role ${role.name}`,
         detail: holders > 0 ? `${holders} left without a role` : undefined,
+        change: { entity: 'role', id: role.id, before: { ...role }, after: null },
       })
       showSuccess(`Deleted ${role.name}`)
     } catch (error) {

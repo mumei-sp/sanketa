@@ -14,9 +14,9 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/access-log'
-import type { AccessEvent, AccessEventKind } from '@/mocks/access-log'
+import type { AccessEvent, AccessEventKind, AccessChange, AccessEntity } from '@/mocks/access-log'
 
-export type { AccessEvent, AccessEventKind }
+export type { AccessEvent, AccessEventKind, AccessChange, AccessEntity }
 
 /**
  * The change history, newest first.
@@ -47,6 +47,8 @@ export async function recordAccessEvent(input: {
   target: string
   summary: string
   detail?: string
+  change?: AccessChange
+  undoOf?: string
 }): Promise<AccessEvent | null> {
   return mockOrHttp(
     async () => mockServer.recordEvent(input),

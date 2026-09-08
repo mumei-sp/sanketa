@@ -11,5 +11,6 @@ export {
   createRole,
   updateRole,
   deleteRole,
+  restoreRole,
   resetRoles,
 } from './store'

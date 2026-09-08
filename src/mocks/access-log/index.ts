@@ -6,4 +6,4 @@
  */
 
 export { listEvents, recordEvent, resetEvents } from './store'
-export type { AccessEvent, AccessEventKind } from './store'
+export type { AccessEvent, AccessEventKind, AccessChange, AccessEntity } from './store'
