@@ -82,7 +82,11 @@ function rosterFromDirectory(classLabel: string): ClassRosterStudent[] {
       return {
         id: String(student.id),
         name,
-        rollNumber: student.rollNumber ?? String(index + 1).padStart(2, '0'),
+        // Just the number. A record's roll number reads `07A-15`, while a
+        // generated roster's reads `01`, so a register showed two formats in
+        // one column depending on whether the class had anyone in it — and
+        // sorted them lexically.
+        rollNumber: student.rollNumber?.split('-').pop() ?? String(index + 1).padStart(2, '0'),
         avatarUrl:
           student.profilePictureUrl ??
           `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,

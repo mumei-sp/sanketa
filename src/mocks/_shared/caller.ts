@@ -44,8 +44,12 @@ function abilityForCurrentSession(): AppAbility {
  * attribute is exactly the row a narrowed caller should not receive, and
  * letting it through is how a filter fails open.
  *
- * With no session at all — sign-in screen, tests — nothing is filtered. That
- * is the mock's own boundary, not a policy: there is no caller to narrow to.
+ * With no session there is no caller, and the answer is nothing. A backend
+ * meets a tokenless request with a 401, not with the whole table, and the
+ * point of this file is to behave like one — returning every row when nobody
+ * is signed in would put the widest hole in the component whose job is to be
+ * the boundary. The router keeps that path unreachable today; this makes it
+ * safe if it ever is not.
  */
 export function visibleToCaller<T>(
   rows: T[],
@@ -53,12 +57,12 @@ export function visibleToCaller<T>(
   subject: Subject,
   key: (row: T) => SubjectFields | undefined,
 ): T[] {
-  if (!authUtils.getUser()) return rows
+  if (!authUtils.getUser()) return []
 
   const ability = abilityForCurrentSession()
-  // An unnarrowed caller matches every row, so skip the per-row work rather
-  // than asking CASL forty times for an answer that cannot vary.
-  if (ability.can(action, subject) && !isNarrowed(ability, action, subject)) return rows
+  // A caller who may see every row matches all of them, so skip the per-row
+  // work rather than asking CASL forty times for an answer that cannot vary.
+  if (seesEveryRow(ability, action, subject)) return rows
 
   return rows.filter(row => {
     const fields = key(row)
@@ -68,16 +72,31 @@ export function visibleToCaller<T>(
 }
 
 /**
- * Does any rule for this pair carry a condition?
+ * May this caller see every row of this kind?
  *
- * `can(action, subject)` with a bare name answers "anywhere?", which is true
- * for a narrowed caller as well as an unnarrowed one — so it cannot tell them
- * apart on its own. The rules can: a rule with no `conditions` matches every
- * record, and if the caller has one of those there is nothing to filter.
+ * True only when they hold a rule with no conditions on it — one that matches
+ * any record. That is the question, and getting it wrong is what let two
+ * aggregates leak.
+ *
+ * The first version asked the opposite one, "is this caller *narrowed*", as
+ * `rules.length > 0 && rules.every(has conditions)`. A caller holding no rule
+ * at all scores false there, exactly like an admin, because there is nothing
+ * to be narrowed. So a Teacher — who holds no finance permission whatsoever —
+ * passed the fee-stats guard and received the school's totals, and an
+ * Accountant with no attendance permission received every attendance record.
+ * The list reads gave both of them nothing, which is what kept it hidden.
+ *
+ * `can(action, subject)` cannot stand in for this: with a bare subject name it
+ * answers "anywhere?", which a narrowed caller also answers yes to.
+ *
+ * Inverted rules (`cannot`) are excluded. Nothing writes one today, but one
+ * would be a *removal* of access, and counting it as permission to see
+ * everything is the same failing-open shape as the bug above.
  */
-function isNarrowed(ability: AppAbility, action: Action, subject: Subject): boolean {
-  const rules = ability.rulesFor(action, subject)
-  return rules.length > 0 && rules.every(rule => rule.conditions !== undefined)
+function seesEveryRow(ability: AppAbility, action: Action, subject: Subject): boolean {
+  return ability
+    .rulesFor(action, subject)
+    .some(rule => rule.conditions === undefined && !rule.inverted)
 }
 
 /**
@@ -105,15 +124,15 @@ export function visibleRecordToCaller<T>(
 }
 
 /**
- * Is this caller narrowed on this pair at all?
+ * May this caller see a school-wide aggregate of this kind?
  *
- * For reads that return a school-wide aggregate — fee totals, attendance
- * trends — where there are no rows to filter and the honest answer for a
- * family is not a smaller number but none: a parent has no business knowing
- * what the school collected this term. Callers use it to return an empty
- * result rather than a figure that is not theirs.
+ * For reads that return one figure rather than rows — fee totals, attendance
+ * trends — where there is nothing to filter. Only a caller who may see every
+ * row may see them summed: a narrowed family has no business knowing what the
+ * school collected, and neither has a member of staff holding no permission on
+ * the subject at all.
  */
-export function callerIsNarrowed(action: Action, subject: Subject): boolean {
+export function callerSeesEveryRow(action: Action, subject: Subject): boolean {
   if (!authUtils.getUser()) return false
-  return isNarrowed(abilityForCurrentSession(), action, subject)
+  return seesEveryRow(abilityForCurrentSession(), action, subject)
 }

@@ -328,18 +328,26 @@ export async function fetchGradeSheet(
         rows.length > 0
           ? Math.round((rows.reduce((a, r) => a + r.percentage, 0) / rows.length) * 10) / 10
           : 0
-      const passCount = rows.filter(r => r.percentage >= passingThreshold).length
-      const failCount = rows.filter(r => r.percentage > 0 && r.percentage < passingThreshold).length
+      // Counted over the rows this caller may see, not the whole class.
+      // `classAverage` below is deliberately the class's — a report card needs
+      // it and one number reveals nobody — but "two failed" in a class of five,
+      // next to your own child's row, is a much closer read on other people's
+      // results than an average is.
+      const visibleRows = visibleToCaller(rows, 'read', 'Grade', row => ({
+        studentId: row.studentId,
+        classSection: classId,
+      }))
+      const passCount = visibleRows.filter(r => r.percentage >= passingThreshold).length
+      const failCount = visibleRows.filter(
+        r => r.percentage > 0 && r.percentage < passingThreshold,
+      ).length
 
       return {
         // Narrowed, while the summary below is not: a class average is the
         // class's fact, not any student's, and blanking it would make a
         // family's report card unreadable rather than private. What must not
         // leak is the per-student rows, and those do narrow.
-        rows: visibleToCaller(rows, 'read', 'Grade', row => ({
-          studentId: row.studentId,
-          classSection: classId,
-        })),
+        rows: visibleRows,
         summary: {
           subjectAverages,
           classAverage,

@@ -15,7 +15,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
-import { callerIsNarrowed, visibleToCaller } from '@/mocks/_shared/caller'
+import { callerSeesEveryRow, visibleToCaller } from '@/mocks/_shared/caller'
 import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
 import { attendanceOverviewMonthlyData } from '@/mocks/attendance/overview'
 import {
@@ -39,7 +39,7 @@ export async function fetchAttendanceRecords(days: number = 21): Promise<Attenda
       // answer is not a smaller number but none: what the school collected, or
       // how it attended overall, is not their child's data in aggregate — it
       // is somebody else's, summed.
-      if (callerIsNarrowed('read', 'Attendance')) return []
+      if (!callerSeesEveryRow('read', 'Attendance')) return []
       return generateMockAttendanceData(days)
     },
     async () => {
@@ -81,7 +81,13 @@ export async function fetchClassRoster(classId: string): Promise<ClassRosterStud
       // one else's. Filler rows in classes with no enrolment carry an id no
       // scope can match, so a narrowed caller sees none of them — which is
       // correct: nobody's child is in a filler class.
-      return visibleToCaller([...roster], 'read', 'Student', student => ({
+      // Gated on Attendance, not Student. Who is in a register is attendance
+      // data, and gating it on `students.read` meant an Accountant with no
+      // attendance permission received the register's roster — and that a
+      // school removing attendance access from a role would not remove this.
+      // It also made the two calls in this file disagree about which
+      // permission governs the same screen.
+      return visibleToCaller([...roster], 'read', 'Attendance', student => ({
         studentId: student.id,
         classSection: classId,
       }))

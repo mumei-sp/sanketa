@@ -10,7 +10,11 @@ import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
-import { visibleRecordToCaller, visibleToCaller } from '@/mocks/_shared/caller'
+import {
+  callerSeesEveryRow,
+  visibleRecordToCaller,
+  visibleToCaller,
+} from '@/mocks/_shared/caller'
 import { classSectionOf } from '@/utils/class-section-helpers'
 import { studentsData } from '@/mocks/students/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
@@ -147,11 +151,18 @@ export async function fetchStudentDetailData(_id: string): Promise<StudentDetail
       // returned value to attribute. The id is the only thing that says whose
       // page this is, which makes it the thing to check.
       const subject = studentsData.find(student => String(student.id) === String(_id))
-      const allowed = visibleRecordToCaller(subject, 'read', 'Student', student => ({
-        studentId: String(student.id),
-        classSection: classSectionOf(student),
-      }))
-      if (subject && !allowed) return EMPTY_STUDENT_DETAIL
+      // An id matching no student used to skip the check entirely — `subject &&`
+      // short-circuited — so asking for a student who does not exist returned
+      // the shared record to anyone. The bypass was easier than guessing a real
+      // id. An unresolvable id is now only answered for a caller who may see
+      // every student anyway.
+      const allowed = subject
+        ? visibleRecordToCaller(subject, 'read', 'Student', student => ({
+            studentId: String(student.id),
+            classSection: classSectionOf(student),
+          })) !== undefined
+        : callerSeesEveryRow('read', 'Student')
+      if (!allowed) return EMPTY_STUDENT_DETAIL
       // The mock dataset currently ships a single shared detail record.
       return studentDetailData
     },

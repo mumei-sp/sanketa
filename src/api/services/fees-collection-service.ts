@@ -9,7 +9,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, txnId, newId, CURRENCY } from '@/mocks/_shared'
-import { callerIsNarrowed, visibleToCaller } from '@/mocks/_shared/caller'
+import { callerSeesEveryRow, visibleToCaller } from '@/mocks/_shared/caller'
 import { studentsData } from '@/mocks/students/students'
 import type {
   FeeStat,
@@ -48,7 +48,7 @@ export async function fetchFeeStats(): Promise<FeeStat[]> {
       // answer is not a smaller number but none: what the school collected, or
       // how it attended overall, is not their child's data in aggregate — it
       // is somebody else's, summed.
-      if (callerIsNarrowed('read', 'Finance')) return []
+      if (!callerSeesEveryRow('read', 'Finance')) return []
       let collected = 0
       let pending = 0
       let overdue = 0
