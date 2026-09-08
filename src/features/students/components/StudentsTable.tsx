@@ -49,7 +49,7 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
   // Unscoped: "may you enrol anywhere". Which class a new student lands in is
   // not known until the form is filled, so AddStudent makes the scoped check.
   const { can } = usePermissions()
-  const canEnrol = can('students.manage')
+  const canEnrol = can('students.create')
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
   // Section-level filter: empty array = "All Classes", otherwise only rows
   // whose `class` label matches one of these pass the filter.

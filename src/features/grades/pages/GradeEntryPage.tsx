@@ -83,7 +83,7 @@ export function GradeEntryPage() {
   // Asked per class: a scoped teacher reads every class's marks and enters
   // only their own, so the same screen is editable for 8A and read-only for 9A.
   const { can } = usePermissions()
-  const canEnterForClass = can('grades.enter', { classSection: selectedClass })
+  const canEnterForClass = can('grades.create', { classSection: selectedClass })
 
   const [entries, setEntries] = React.useState<GradeEntry[]>([])
   const [existingSubmission, setExistingSubmission] = React.useState<GradeSubmission | null>(null)

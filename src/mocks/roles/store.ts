@@ -11,10 +11,59 @@
  * that decision survives, where a merge-on-load would quietly restore it every
  * refresh. What a release adds is a different matter and is handled by
  * `reconcile` on load: unknown permission ids are dropped, and fields added to
- * a built-in role since the row was written are backfilled.
+ * a built-in role since the row was written are backfilled. Ids that were
+ * *renamed* rather than dropped are handled before that, by `RENAMED`.
  */
 
 import { BUILTIN_ROLES, ALL_PERMISSIONS, type Permission, type Role } from '@/config/permissions'
+
+/**
+ * Permission ids that have been renamed, and what they became.
+ *
+ * The catalogue was realigned to the backend's `{resource}.{action}` naming,
+ * and a rename without this map is a silent data loss: `reconcile` drops ids
+ * the build no longer defines, so every school's saved role would have come
+ * back with `students.view` quietly gone rather than renamed.
+ *
+ * One old id can become several. `students.manage` was a single write switch
+ * and is now create, update, delete and transfer — a school that had granted
+ * the one thing meant to grant all of it, so migrating to the whole set
+ * preserves what they actually chose. Splitting it further is their decision
+ * to make afterwards, in the editor, rather than one made silently here.
+ *
+ * Keep entries forever. A database is only migrated when it is next loaded,
+ * and a browser that has not been opened since the rename is still out there.
+ */
+const RENAMED: Record<string, Permission[]> = {
+  'dashboard.view': ['dashboard.read'],
+  'calendar.view': ['calendar.read'],
+  'notices.view': ['notices.read'],
+  'students.view': ['students.read'],
+  'students.manage': ['students.create', 'students.update', 'students.delete', 'students.transfer'],
+  'teachers.view': ['teachers.read'],
+  'attendance.view': ['attendance.read'],
+  'grades.view': ['grades.read'],
+  'grades.enter': ['grades.create', 'grades.update'],
+  'timetable.view': ['timetable.read'],
+  'assignments.view': ['assignments.read'],
+  'finance.view': ['finance.read'],
+  'transport.view': ['transport.read'],
+  'settings.manage': ['system.settings'],
+  'users.manage': ['users.read', 'users.create', 'users.update', 'roles.assign'],
+}
+
+/** Run a stored id list through the rename map, keeping order and deduping. */
+function migrateIds(ids: readonly string[]): Permission[] {
+  const out: Permission[] = []
+  ids.forEach(id => {
+    const replacement = RENAMED[id]
+    const next = replacement ?? [id as Permission]
+    next.forEach(candidate => {
+      if (!out.includes(candidate)) out.push(candidate)
+    })
+  })
+  return out
+}
 
 const DB_KEY = 'sanketa:mock-db:roles'
 
@@ -97,19 +146,33 @@ function load(): Database {
           permissions: [...role.permissions],
         }))
 
+        // Renames first: everything below compares stored ids against the
+        // catalogue, and a pre-rename database would lose every comparison.
+        const migrated = parsed.rows.map(role => ({
+          ...role,
+          permissions: migrateIds(role.permissions),
+        }))
+
         // A database written before `knownPermissions` existed predates every
         // permission it does not already grant, so treat what it has as what
-        // it knew.
+        // it knew. Migrated too, or a renamed permission would read as brand
+        // new and be re-granted to a built-in role that had it removed.
         const known = new Set(
-          parsed.knownPermissions ?? parsed.rows.flatMap(role => role.permissions),
+          migrateIds(parsed.knownPermissions ?? migrated.flatMap(role => role.permissions)),
         )
         const brandNew = new Set(ALL_PERMISSIONS.filter(permission => !known.has(permission)))
 
+        const renamed = migrated.some(
+          (role, index) => role.permissions.length !== parsed.rows[index].permissions.length,
+        )
+
         db = {
-          rows: [...parsed.rows.map(role => reconcile(role, brandNew)), ...missing],
+          rows: [...migrated.map(role => reconcile(role, brandNew)), ...missing],
           knownPermissions: [...ALL_PERMISSIONS],
         }
-        if (brandNew.size > 0) persist()
+        // Write back when anything actually moved, so the migration runs once
+        // rather than on every load.
+        if (brandNew.size > 0 || renamed || missing.length > 0) persist()
         return db
       }
     }

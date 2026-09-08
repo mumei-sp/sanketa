@@ -67,18 +67,19 @@ const router = createBrowserRouter([
           // what its reader is allowed to know about.
           { path: 'notifications', element: <NotificationsPage /> },
           {
-            element: <RequirePermission permission="students.view" />,
+            element: <RequirePermission permission="students.read" />,
             children: [{ path: 'students/details/:id', element: <StudentDetails /> }],
           },
           {
-            element: <RequirePermission permission="students.manage" />,
-            children: [
-              { path: 'students/add', element: <AddStudent /> },
-              { path: 'students/edit/:id', element: <EditStudent /> },
-            ],
+            element: <RequirePermission permission="students.create" />,
+            children: [{ path: 'students/add', element: <AddStudent /> }],
           },
           {
-            element: <RequirePermission permission="teachers.view" />,
+            element: <RequirePermission permission="students.update" />,
+            children: [{ path: 'students/edit/:id', element: <EditStudent /> }],
+          },
+          {
+            element: <RequirePermission permission="teachers.read" />,
             children: [{ path: 'teachers/details/:id', element: <TeacherDetails /> }],
           },
           {

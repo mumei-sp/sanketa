@@ -94,16 +94,16 @@ function summarise(names: string[], shown = 3): string {
  * treats that as unrestricted — but none needs to yet, and spelling out the
  * permission is what makes the fan-out reviewable.
  */
-const SEES_FINANCE: Permission[] = ['finance.view']
-const SEES_ATTENDANCE: Permission[] = ['attendance.view']
-const SEES_GRADES: Permission[] = ['grades.view']
-const SEES_STUDENTS: Permission[] = ['students.view']
-const SEES_TEACHERS: Permission[] = ['teachers.view']
-const SEES_NOTICES: Permission[] = ['notices.view']
-const SEES_CALENDAR: Permission[] = ['calendar.view']
-const SEES_TIMETABLE: Permission[] = ['timetable.view']
+const SEES_FINANCE: Permission[] = ['finance.read']
+const SEES_ATTENDANCE: Permission[] = ['attendance.read']
+const SEES_GRADES: Permission[] = ['grades.read']
+const SEES_STUDENTS: Permission[] = ['students.read']
+const SEES_TEACHERS: Permission[] = ['teachers.read']
+const SEES_NOTICES: Permission[] = ['notices.read']
+const SEES_CALENDAR: Permission[] = ['calendar.read']
+const SEES_TIMETABLE: Permission[] = ['timetable.read']
 const MANAGES_NOTICES: Permission[] = ['notices.manage']
-const MANAGES_SETTINGS: Permission[] = ['settings.manage']
+const MANAGES_SETTINGS: Permission[] = ['system.settings']
 
 const RULES: Record<string, Rule> = {
   // ── Attendance ──────────────────────────────────────────────────────

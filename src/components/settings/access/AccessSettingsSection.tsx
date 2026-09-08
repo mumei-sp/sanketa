@@ -76,7 +76,10 @@ export function AccessSettingsSection() {
   const currentUser = useCurrentUser()
 
   const canManageRoles = can('roles.manage')
-  const canManagePeople = can('users.manage')
+  // Reaching the People tab is a read. Every control inside it carries its own
+  // verb — `roles.assign` on the role picker, `users.update` on the classes,
+  // `users.create` on Add person — which is the point of splitting them.
+  const canManagePeople = can('users.read')
 
   const classLabels = React.useMemo(
     () => getClassLabels(config.classSections),

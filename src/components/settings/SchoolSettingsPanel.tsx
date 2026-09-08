@@ -98,7 +98,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: 'grades', label: 'Grades', description: 'Grade scale & report cards', icon: GraduationCap, enabled: true },
   { id: 'notifications', label: 'Notifications', description: 'Alerts & reminders', icon: Bell, enabled: true },
   { id: 'appearance', label: 'Appearance', description: 'Theme & layout', icon: Palette, enabled: true },
-  { id: 'access', label: 'Access', description: 'Roles, permissions & people', icon: Shield, enabled: true, permissions: ['roles.manage', 'users.manage'] },
+  { id: 'access', label: 'Access', description: 'Roles, permissions & people', icon: Shield, enabled: true, permissions: ['roles.read', 'users.read'] },
 ]
 
 // ============================================================================
@@ -748,7 +748,7 @@ export function SchoolSettingsPanel() {
       SETTINGS_SECTIONS.filter(
         section =>
           section.enabled &&
-          (section.permissions ? canAny(section.permissions) : can('settings.manage')),
+          (section.permissions ? canAny(section.permissions) : can('system.settings')),
       ),
     [can, canAny],
   )

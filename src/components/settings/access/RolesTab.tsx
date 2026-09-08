@@ -106,9 +106,9 @@ function useEffectiveAccess(role: Role | null, classLabels: string[]): string[] 
     // named here or a role that can only administer would look like it
     // reaches nothing.
     const admin: string[] = []
-    if (can('settings.manage')) admin.push('School settings')
+    if (can('system.settings')) admin.push('School settings')
     if (can('roles.manage')) admin.push('Roles')
-    if (can('users.manage')) admin.push('People')
+    if (can('users.read')) admin.push('People')
 
     return [...destinations, ...admin]
   }, [role, classLabels])
@@ -361,7 +361,7 @@ export function RolesTab({
   const setPermissions = (next: Permission[]) => {
     if (!selected) return
 
-    if (!next.includes('settings.manage') && selected.permissions.includes('settings.manage')) {
+    if (!next.includes('system.settings') && selected.permissions.includes('system.settings')) {
       const after = roles.map(role =>
         role.id === selected.id ? { ...role, permissions: next } : role,
       )
@@ -447,7 +447,7 @@ export function RolesTab({
       // rather than an empty role whose holder sees a blank app.
       const created = await createRoleRequest({
         name: 'New role',
-        permissions: ['dashboard.view', 'notices.view'],
+        permissions: ['dashboard.read', 'notices.read'],
       })
       await refresh()
       setSelectedId(created.id)

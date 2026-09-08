@@ -22,11 +22,11 @@ export default function AddStudent() {
   const onSubmit = React.useCallback(async (data: StudentFormValues) => {
     const studentData = formToStudent(data)
 
-    // The scoped half of `students.manage`, and the only place it can be
+    // The scoped half of `students.create`, and the only place it can be
     // asked: which class a new student joins is a value on the form, so the
     // toolbar button that opened this page could only check "anywhere".
     const classSection = classSectionOf(studentData)
-    if (!can('students.manage', { classSection })) {
+    if (!can('students.create', { classSection })) {
       showError('That class is not yours', {
         description: classSection
           ? `You can only enrol students into the classes assigned to you. ${classSection} is not one of them.`

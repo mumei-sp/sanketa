@@ -93,7 +93,18 @@ export function PeopleTab({
   onRoleFilterChange,
   record,
 }: PeopleTabProps) {
-  const { roles, startPreview } = usePermissions()
+  const { roles, startPreview, can } = usePermissions()
+  /**
+   * Three verbs, three controls.
+   *
+   * Until the catalogue was realigned this whole screen sat behind one
+   * `users.manage`, so an office administrator who should only be moving
+   * people between roles could also rewrite everyone's class list. The
+   * backend split these; now the UI can honour the split.
+   */
+  const canAssignRole = can('roles.assign')
+  const canEditAccess = can('users.update')
+  const canAddPeople = can('users.create')
   const { setSettingsOpen } = useSchoolConfig()
   const currentUser = useCurrentUser()
   const { showSuccess, showError } = useAppToast()
@@ -232,10 +243,12 @@ export function PeopleTab({
           Which role each person holds. Changes save as you make them and apply at their next
           sign-in.
         </p>
-        <Button size="sm" className="shrink-0 gap-1.5" onClick={openAdd}>
-          <UserPlus className="size-4" />
-          Add person
-        </Button>
+        {canAddPeople && (
+          <Button size="sm" className="shrink-0 gap-1.5" onClick={openAdd}>
+            <UserPlus className="size-4" />
+            Add person
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -337,7 +350,7 @@ export function PeopleTab({
                   </Label>
                   <Select
                     value={role ? user.roleId : ''}
-                    disabled={busy}
+                    disabled={busy || !canAssignRole}
                     onValueChange={value => void changeRole(user, value)}
                   >
                     <SelectTrigger id={`role-${user.id}`} className="h-control w-full">
@@ -381,7 +394,7 @@ export function PeopleTab({
                     <span className="flex-1" />
                     <button
                       type="button"
-                      disabled={busy}
+                      disabled={busy || !canEditAccess}
                       onClick={() =>
                         void setClasses(
                           user,
@@ -402,7 +415,7 @@ export function PeopleTab({
                         <button
                           key={label}
                           type="button"
-                          disabled={busy}
+                          disabled={busy || !canEditAccess}
                           onClick={() => toggleClass(user, label)}
                           aria-pressed={on}
                           className={cn(

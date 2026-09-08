@@ -95,7 +95,7 @@ export default function StudentDetails() {
    * on click.
    */
   const canEditThisStudent =
-    !student || can('students.manage', { classSection: classSectionOf(student) })
+    !student || can('students.update', { classSection: classSectionOf(student) })
   const writable = <T,>(handler: T): T | undefined =>
     canEditThisStudent ? handler : undefined
 

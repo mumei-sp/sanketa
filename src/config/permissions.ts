@@ -53,12 +53,30 @@ export type Subject =
 /**
  * What may be done to a subject.
  *
- * `manage` is CASL's wildcard — it implies every other action — which is why
- * "mark attendance" maps to `manage Attendance` rather than a bespoke verb:
- * whoever may amend a register may obviously read one, and saying so once
- * beats restating it.
+ * `manage` is CASL's wildcard — it implies every other action. It is still
+ * used where a school delegates one write job rather than several: whoever may
+ * edit the calendar may obviously add and remove events, and three switches
+ * for that would be three switches nobody sets differently.
+ *
+ * Where the school *does* delegate the pieces separately — students, grades —
+ * the verbs are explicit, which is also what the backend's permission table
+ * settled on. See the note above `PERMISSION_DEFINITIONS`.
+ *
+ * `mark`, `promote`, `transfer`, `grade` and `assign` are bespoke verbs, and
+ * deliberately not shades of `manage`: the wildcard would otherwise hand every
+ * one of them to anyone holding `manage` on the same subject, which is how
+ * "Run promotions" quietly became ungrantable once.
  */
-export type Action = 'read' | 'create' | 'update' | 'delete' | 'manage' | 'promote'
+export type Action =
+  | 'read'
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'manage'
+  | 'mark'
+  | 'promote'
+  | 'transfer'
+  | 'assign'
 
 /** One capability. Grouped by the area of the app it belongs to. */
 export interface PermissionDefinition {
@@ -95,35 +113,65 @@ export interface PermissionDefinition {
  * and naming them after the job makes a role editor readable by the person
  * configuring it rather than by the person who wrote the table.
  */
+/**
+ * The catalogue.
+ *
+ * Ids follow the backend's `{resource}.{action}` convention, and where the
+ * backend's permission table already names a capability — `students.read`,
+ * `grades.update`, `attendance.mark`, `system.settings` — this uses that name
+ * exactly. A mock that invents its own vocabulary makes every service written
+ * before the backend lands something a person has to translate by hand, and
+ * turns the `@apiRoute` comments into a description rather than a contract.
+ *
+ * Two deliberate departures, both recorded rather than accidental:
+ *
+ *   The backend splits roles and users five and six ways. This keeps
+ *   `roles.manage` whole, because the app has one role editor and the split
+ *   would produce switches nobody sets differently. Split them the day the
+ *   backend insists.
+ *
+ *   The backend has no permission for calendar, notices, timetable, transport
+ *   or fees. Those keep a single `manage` here and are offered to the backend
+ *   as-is rather than being bent into a CRUD shape nothing asked for.
+ */
 export const PERMISSION_DEFINITIONS = [
-  { id: 'dashboard.view', action: 'read', subject: 'Dashboard', group: 'General', label: 'View dashboard', description: 'See the home dashboard and its summaries.' },
-  { id: 'calendar.view', action: 'read', subject: 'CalendarEvent', group: 'General', label: 'View calendar', description: 'See the school calendar.' },
+  { id: 'dashboard.read', action: 'read', subject: 'Dashboard', group: 'General', label: 'View dashboard', description: 'See the home dashboard and its summaries.' },
+  { id: 'calendar.read', action: 'read', subject: 'CalendarEvent', group: 'General', label: 'View calendar', description: 'See the school calendar.' },
   { id: 'calendar.manage', action: 'manage', subject: 'CalendarEvent', group: 'General', label: 'Manage calendar', description: 'Create, edit and cancel events.' },
-  { id: 'notices.view', action: 'read', subject: 'Notice', group: 'General', label: 'View notices', description: 'Read the notice board.' },
+  { id: 'notices.read', action: 'read', subject: 'Notice', group: 'General', label: 'View notices', description: 'Read the notice board.' },
   { id: 'notices.manage', action: 'manage', subject: 'Notice', group: 'General', label: 'Manage notices', description: 'Publish, pin and remove notices.' },
 
-  { id: 'students.view', action: 'read', subject: 'Student', group: 'People', label: 'View students', description: 'See the student roster and profiles.' },
-  { id: 'students.manage', action: 'manage', subject: 'Student', group: 'People', label: 'Manage students', description: 'Enrol students and edit their records.', scoped: true },
+  { id: 'students.read', action: 'read', subject: 'Student', group: 'People', label: 'View students', description: 'See the student roster and profiles.' },
+  { id: 'students.create', action: 'create', subject: 'Student', group: 'People', label: 'Enrol students', description: 'Add a student to the roster.', scoped: true },
+  { id: 'students.update', action: 'update', subject: 'Student', group: 'People', label: 'Edit student records', description: 'Change a student\'s details, documents and history.', scoped: true },
+  { id: 'students.delete', action: 'delete', subject: 'Student', group: 'People', label: 'Remove students', description: 'Delete a student record permanently.', scoped: true },
   { id: 'students.promote', action: 'promote', subject: 'Student', group: 'People', label: 'Run promotions', description: 'Move students between years.' },
-  { id: 'teachers.view', action: 'read', subject: 'Teacher', group: 'People', label: 'View teachers', description: 'See the staff list and profiles.' },
+  { id: 'students.transfer', action: 'transfer', subject: 'Student', group: 'People', label: 'Transfer students', description: 'Move a student between classes or sections.', scoped: true },
+  { id: 'teachers.read', action: 'read', subject: 'Teacher', group: 'People', label: 'View teachers', description: 'See the staff list and profiles.' },
   { id: 'teachers.manage', action: 'manage', subject: 'Teacher', group: 'People', label: 'Manage teachers', description: 'Add and edit staff records.' },
 
-  { id: 'attendance.view', action: 'read', subject: 'Attendance', group: 'Academics', label: 'View attendance', description: 'See attendance records and history.' },
-  { id: 'attendance.mark', action: 'manage', subject: 'Attendance', group: 'Academics', label: 'Mark attendance', description: "Submit and amend a class register.", scoped: true },
-  { id: 'grades.view', action: 'read', subject: 'Grade', group: 'Academics', label: 'View grades', description: 'See grade sheets and report cards.' },
-  { id: 'grades.enter', action: 'manage', subject: 'Grade', group: 'Academics', label: 'Enter grades', description: 'Record and submit exam marks.', scoped: true },
-  { id: 'timetable.view', action: 'read', subject: 'Timetable', group: 'Academics', label: 'View timetable', description: 'See the class timetable.' },
+  { id: 'attendance.read', action: 'read', subject: 'Attendance', group: 'Academics', label: 'View attendance', description: 'See attendance records and history.' },
+  { id: 'attendance.mark', action: 'mark', subject: 'Attendance', group: 'Academics', label: 'Mark attendance', description: 'Submit and amend a class register.', scoped: true },
+  { id: 'grades.read', action: 'read', subject: 'Grade', group: 'Academics', label: 'View grades', description: 'See grade sheets and report cards.' },
+  { id: 'grades.create', action: 'create', subject: 'Grade', group: 'Academics', label: 'Enter grades', description: 'Record marks for an exam.', scoped: true },
+  { id: 'grades.update', action: 'update', subject: 'Grade', group: 'Academics', label: 'Amend grades', description: 'Change marks already recorded.', scoped: true },
+  { id: 'grades.delete', action: 'delete', subject: 'Grade', group: 'Academics', label: 'Delete grades', description: 'Remove a grade record permanently.', scoped: true },
+  { id: 'timetable.read', action: 'read', subject: 'Timetable', group: 'Academics', label: 'View timetable', description: 'See the class timetable.' },
   { id: 'timetable.manage', action: 'manage', subject: 'Timetable', group: 'Academics', label: 'Manage timetable', description: 'Edit periods and add substitutions.' },
-  { id: 'assignments.view', action: 'read', subject: 'Assignment', group: 'Academics', label: 'View assignments', description: 'See assignments.' },
+  { id: 'assignments.read', action: 'read', subject: 'Assignment', group: 'Academics', label: 'View assignments', description: 'See assignments.' },
 
-  { id: 'finance.view', action: 'read', subject: 'Finance', group: 'Finance', label: 'View finance', description: 'See fee collection and expenses.' },
+  { id: 'finance.read', action: 'read', subject: 'Finance', group: 'Finance', label: 'View finance', description: 'See fee collection and expenses.' },
   { id: 'finance.manage', action: 'manage', subject: 'Finance', group: 'Finance', label: 'Manage finance', description: 'Record payments and log expenses.' },
-  { id: 'transport.view', action: 'read', subject: 'Transport', group: 'Transport', label: 'View transport', description: 'See routes, vehicles and drivers.' },
+  { id: 'transport.read', action: 'read', subject: 'Transport', group: 'Transport', label: 'View transport', description: 'See routes, vehicles and drivers.' },
   { id: 'transport.manage', action: 'manage', subject: 'Transport', group: 'Transport', label: 'Manage transport', description: 'Edit routes, vehicles, drivers and transport fees.' },
 
-  { id: 'settings.manage', action: 'manage', subject: 'Settings', group: 'Administration', label: 'Manage school settings', description: 'Change school, academic, timetable and appearance settings.' },
+  { id: 'system.settings', action: 'manage', subject: 'Settings', group: 'Administration', label: 'Manage school settings', description: 'Change school, academic, timetable and appearance settings.' },
+  { id: 'roles.read', action: 'read', subject: 'Role', group: 'Administration', label: 'View roles', description: 'See the roles and what each one can do.' },
   { id: 'roles.manage', action: 'manage', subject: 'Role', group: 'Administration', label: 'Manage roles', description: 'Create roles and change what each one can do.' },
-  { id: 'users.manage', action: 'manage', subject: 'User', group: 'Administration', label: 'Manage people', description: 'Change which role each person holds and which classes they cover.' },
+  { id: 'users.read', action: 'read', subject: 'User', group: 'Administration', label: 'View people', description: 'See who has an account.' },
+  { id: 'users.create', action: 'create', subject: 'User', group: 'Administration', label: 'Add people', description: 'Create an account for someone.' },
+  { id: 'users.update', action: 'update', subject: 'User', group: 'Administration', label: 'Edit access', description: 'Change which classes a person covers.' },
+  { id: 'roles.assign', action: 'assign', subject: 'User', group: 'Administration', label: 'Assign roles', description: 'Change which role a person holds.' },
 ] as const satisfies readonly PermissionDefinition[]
 
 export type Permission = (typeof PERMISSION_DEFINITIONS)[number]['id']
@@ -174,7 +222,7 @@ export interface Role {
   builtin?: boolean
 }
 
-const EVERYONE: Permission[] = ['dashboard.view', 'calendar.view', 'notices.view']
+const EVERYONE: Permission[] = ['dashboard.read', 'calendar.read', 'notices.read']
 
 export const BUILTIN_ROLES: Role[] = [
   {
@@ -191,14 +239,14 @@ export const BUILTIN_ROLES: Role[] = [
     permissions: [
       ...EVERYONE,
       'calendar.manage', 'notices.manage',
-      'students.view', 'students.manage', 'students.promote',
-      'teachers.view', 'teachers.manage',
-      'attendance.view', 'attendance.mark',
-      'grades.view', 'grades.enter',
-      'timetable.view', 'timetable.manage',
-      'assignments.view',
-      'finance.view',
-      'transport.view',
+      'students.read', 'students.create', 'students.update', 'students.promote', 'students.transfer',
+      'teachers.read', 'teachers.manage',
+      'attendance.read', 'attendance.mark',
+      'grades.read', 'grades.create', 'grades.update',
+      'timetable.read', 'timetable.manage',
+      'assignments.read',
+      'finance.read',
+      'transport.read',
     ],
     builtin: true,
   },
@@ -209,11 +257,11 @@ export const BUILTIN_ROLES: Role[] = [
     scopedToAssignedClasses: true,
     permissions: [
       ...EVERYONE,
-      'students.view',
-      'attendance.view', 'attendance.mark',
-      'grades.view', 'grades.enter',
-      'timetable.view',
-      'assignments.view',
+      'students.read',
+      'attendance.read', 'attendance.mark',
+      'grades.read', 'grades.create', 'grades.update',
+      'timetable.read',
+      'assignments.read',
     ],
     builtin: true,
   },
@@ -223,23 +271,23 @@ export const BUILTIN_ROLES: Role[] = [
     description: 'Fees, expenses and transport charges.',
     permissions: [
       ...EVERYONE,
-      'students.view',
-      'finance.view', 'finance.manage',
-      'transport.view', 'transport.manage',
+      'students.read',
+      'finance.read', 'finance.manage',
+      'transport.read', 'transport.manage',
     ],
     builtin: true,
   },
 ]
 
 /**
- * Roles that must keep `settings.manage` between them.
+ * Roles that must keep `system.settings` between them.
  *
  * Stripping it from the last role holding it locks everyone out of the panel
  * that would put it back — the one mistake in a role editor you cannot undo
  * from inside the app.
  */
 export function wouldOrphanSettings(roles: Role[]): boolean {
-  return !roles.some(role => role.permissions.includes('settings.manage'))
+  return !roles.some(role => role.permissions.includes('system.settings'))
 }
 
 /**

@@ -67,7 +67,7 @@ function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' })
   const { canAny } = usePermissions()
   // The panel holds school configuration and the role editor; someone who can
   // do neither has nothing to open.
-  const canOpenSettings = canAny(['settings.manage', 'roles.manage', 'users.manage'])
+  const canOpenSettings = canAny(['system.settings', 'roles.manage', 'users.read'])
   const shape =
     variant === 'pill'
       ? 'size-10 rounded-full bg-card border border-border shadow-sm'

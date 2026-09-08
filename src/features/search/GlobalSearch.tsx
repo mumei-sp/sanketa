@@ -68,10 +68,10 @@ import {
  * mounted yet.
  */
 const ACTIONS: (SearchItem & { permission: Permission })[] = [
-  { id: 'act:add-student', label: 'Add student', detail: 'Enrol a new student', route: '/students/add', group: 'Actions', icon: UserPlus, weight: 40, permission: 'students.manage' },
+  { id: 'act:add-student', label: 'Add student', detail: 'Enrol a new student', route: '/students/add', group: 'Actions', icon: UserPlus, weight: 40, permission: 'students.create' },
   { id: 'act:add-teacher', label: 'Add teacher', detail: 'Add a staff member', route: '/teachers/add', group: 'Actions', icon: UserPlus, weight: 40, permission: 'teachers.manage' },
   { id: 'act:mark-attendance', label: 'Mark attendance', detail: "Today's register", route: '/attendance/daily', group: 'Actions', icon: CheckSquare, weight: 40, permission: 'attendance.mark' },
-  { id: 'act:enter-grades', label: 'Enter grades', detail: 'Record exam marks', route: '/grades/entry', group: 'Actions', icon: FilePlus2, weight: 40, permission: 'grades.enter' },
+  { id: 'act:enter-grades', label: 'Enter grades', detail: 'Record exam marks', route: '/grades/entry', group: 'Actions', icon: FilePlus2, weight: 40, permission: 'grades.create' },
   { id: 'act:new-notice', label: 'Create notice', detail: 'Post to the notice board', route: '/notice-board', group: 'Actions', icon: Megaphone, weight: 40, permission: 'notices.manage' },
   { id: 'act:new-event', label: 'Add calendar event', detail: 'Schedule something', route: '/calendar', group: 'Actions', icon: CalendarPlus, weight: 40, permission: 'calendar.manage' },
 ]
@@ -125,9 +125,9 @@ const GROUP_ORDER: ResultGroup[] = ['Actions', 'Go to', 'Students', 'Teachers', 
  * sitting at the top of an empty palette.
  */
 const GROUP_PERMISSION: Partial<Record<ResultGroup, Permission>> = {
-  Students: 'students.view',
-  Teachers: 'teachers.view',
-  Notices: 'notices.view',
+  Students: 'students.read',
+  Teachers: 'teachers.read',
+  Notices: 'notices.read',
 }
 const RESULT_LIMIT = 12
 
@@ -145,9 +145,9 @@ function personName(person: { name?: string; fullName?: string; displayName?: st
 function useSearchIndex(enabled: boolean, can: (permission: Permission) => boolean) {
   const [records, setRecords] = React.useState<SearchItem[] | null>(null)
 
-  const canStudents = can('students.view')
-  const canTeachers = can('teachers.view')
-  const canNotices = can('notices.view')
+  const canStudents = can('students.read')
+  const canTeachers = can('teachers.read')
+  const canNotices = can('notices.read')
 
   /**
    * What the last successful build was allowed to see.

@@ -27,7 +27,7 @@ export function stillHasAnAdmin(
   changing: { id: string; roleId: string | null },
 ): boolean {
   const canManage = (roleId: string) =>
-    roles.find(role => role.id === roleId)?.permissions.includes('settings.manage') === true
+    roles.find(role => role.id === roleId)?.permissions.includes('system.settings') === true
 
   return users.some(user => {
     if (user.id !== changing.id) return canManage(user.roleId)

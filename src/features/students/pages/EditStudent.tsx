@@ -34,7 +34,7 @@ export default function EditStudent() {
    * one into a class that is not yours either.
    */
   const canEditThisStudent =
-    !student || can('students.manage', { classSection: classSectionOf(student) })
+    !student || can('students.update', { classSection: classSectionOf(student) })
 
   const onSubmit = React.useCallback(
     async (data: StudentFormValues) => {
@@ -44,7 +44,7 @@ export default function EditStudent() {
         return
       }
       const destination = classSectionOf(formToStudent(data))
-      if (!can('students.manage', { classSection: destination })) {
+      if (!can('students.update', { classSection: destination })) {
         showError('That class is not yours', {
           description: `You cannot move a student into ${destination ?? 'that class'}.`,
         })

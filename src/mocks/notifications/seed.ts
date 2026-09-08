@@ -7,9 +7,14 @@
  * sensible however long the branch sits unopened. Ordering is oldest-first
  * because the store stamps `seq` in array order.
  *
- * The mix is deliberate: every category appears at least once, a few are
- * already read so the unread badge is not simply the total, and the newest
+ * The mix is deliberate: every category appears at least once, and the newest
  * entries are the ones a user would most plausibly act on.
+ *
+ * Most of it is already read, which is what an app someone has been using
+ * actually looks like. Seeding six unread rows made a fresh install open with
+ * a badge in the high teens once the swept alerts landed on top — and a count
+ * that is never near zero is decoration, because people stop reading it. Two
+ * unread is enough to show the badge works.
  */
 
 import type { Permission } from '@/config/permissions'
@@ -52,7 +57,7 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     target: null,
     createdAt: ago(4 * DAY),
     readAt: readAfter(4 * DAY, 2 * HOUR),
-    audience: ['settings.manage'],
+    audience: ['system.settings'],
   },
   {
     id: 'ntf-seed-02',
@@ -64,7 +69,7 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     target: { kind: 'student', id: 'S-2102', route: '/students/details/S-2102' },
     createdAt: ago(3 * DAY),
     readAt: readAfter(3 * DAY, 40 * MINUTE),
-    audience: ['students.view'],
+    audience: ['students.read'],
   },
   {
     id: 'ntf-seed-03',
@@ -76,7 +81,7 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     target: { kind: 'fee-payment', id: 'PAY-3301', route: '/finance/fees-collection' },
     createdAt: ago(2 * DAY + 5 * HOUR),
     readAt: readAfter(2 * DAY + 5 * HOUR, 3 * HOUR),
-    audience: ['finance.view'],
+    audience: ['finance.read'],
   },
   {
     id: 'ntf-seed-04',
@@ -87,8 +92,8 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     actor: { id: 'U-008', name: 'Meera Iyengar' },
     target: { kind: 'timetable', id: 'TTX-118', route: '/timetable' },
     createdAt: ago(2 * DAY),
-    readAt: null,
-    audience: ['timetable.view'],
+    readAt: readAfter(2 * DAY, 30 * MINUTE),
+    audience: ['timetable.read'],
   },
   {
     id: 'ntf-seed-05',
@@ -100,7 +105,7 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     target: { kind: 'notice', id: 'nb-2', route: '/notice-board' },
     createdAt: ago(1 * DAY + 6 * HOUR),
     readAt: readAfter(1 * DAY + 6 * HOUR, 25 * MINUTE),
-    audience: ['notices.view'],
+    audience: ['notices.read'],
   },
   {
     id: 'ntf-seed-06',
@@ -111,8 +116,8 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     actor: { id: 'U-011', name: 'Rahul Menon' },
     target: { kind: 'grade-submission', id: 'GS-441', route: '/grades/sheet?class=8B&exam=ut1' },
     createdAt: ago(1 * DAY + 2 * HOUR),
-    readAt: null,
-    audience: ['grades.view'],
+    readAt: readAfter(1 * DAY + 2 * HOUR, 30 * MINUTE),
+    audience: ['grades.read'],
   },
   {
     id: 'ntf-seed-07',
@@ -127,8 +132,8 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
       route: '/attendance/daily?class=7A',
     },
     createdAt: ago(22 * HOUR),
-    readAt: null,
-    audience: ['attendance.view'],
+    readAt: readAfter(22 * HOUR, 30 * MINUTE),
+    audience: ['attendance.read'],
   },
   {
     id: 'ntf-seed-08',
@@ -139,8 +144,8 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     actor: { id: 'U-021', name: 'Finance Office' },
     target: { kind: 'notice', id: 'nb-6', route: '/notice-board' },
     createdAt: ago(5 * HOUR),
-    readAt: null,
-    audience: ['notices.view'],
+    readAt: readAfter(5 * HOUR, 30 * MINUTE),
+    audience: ['notices.read'],
   },
   {
     id: 'ntf-seed-09',
@@ -152,7 +157,7 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     target: { kind: 'promotion', id: 'PR-2026', route: '/students/promotion' },
     createdAt: ago(3 * HOUR),
     readAt: null,
-    audience: ['students.view'],
+    audience: ['students.read'],
   },
   {
     id: 'ntf-seed-10',
@@ -164,6 +169,6 @@ export const SEED_NOTIFICATIONS: SeededNotification[] = [
     target: { kind: 'calendar-event', id: 'EV-77', route: '/calendar' },
     createdAt: ago(40 * MINUTE),
     readAt: null,
-    audience: ['calendar.view'],
+    audience: ['calendar.read'],
   },
 ]

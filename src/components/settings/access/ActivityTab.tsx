@@ -62,6 +62,7 @@ import {
 } from '@/features/notifications/utils/notification-display'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import type { AccessEvent, AccessEventKind } from '@/api/services/access-log-service'
+import type { Permission } from '@/config/permissions'
 import { SearchField } from './parts'
 import { undoBlocker, type UndoContext } from './undo'
 
@@ -105,6 +106,16 @@ interface ActivityTabProps {
   undoContext: UndoContext | null
   onUndo: (event: AccessEvent) => Promise<void>
   isUndoing: boolean
+}
+
+/** The permission each kind of change needed when it was made. */
+const UNDO_NEEDS: Record<AccessEventKind, Permission> = {
+  'role.create': 'roles.manage',
+  'role.update': 'roles.manage',
+  'role.delete': 'roles.manage',
+  'user.role': 'roles.assign',
+  'user.classes': 'users.update',
+  'user.create': 'users.create',
 }
 
 export function ActivityTab({ events, undoContext, onUndo, isUndoing }: ActivityTabProps) {
@@ -156,8 +167,11 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
     if (!event.change) return 'Entries from before this feature cannot be taken back.'
     if (reversed.has(event.id)) return 'Already taken back.'
     if (!newest.has(event.id)) return 'Something newer has changed this since.'
-    const needed = event.change.entity === 'role' ? 'roles.manage' : 'users.manage'
-    if (!can(needed)) return 'You cannot change this.'
+    // Taking a change back is making it again in reverse, so it needs the
+    // permission the original write needed — which the kind names exactly.
+    // Before the verbs were split this could only ask "role or user?", and a
+    // person allowed to set classes but not assign roles could undo either.
+    if (!can(UNDO_NEEDS[event.kind])) return 'You cannot change this.'
     if (!undoContext) return 'Still loading.'
     return undoBlocker(event, undoContext)
   }
