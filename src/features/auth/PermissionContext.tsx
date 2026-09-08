@@ -18,12 +18,13 @@
 
 import * as React from 'react'
 import { fetchRoles } from '@/api/services/role-service'
+import { findRole, type Permission, type Role } from '@/config/permissions'
 import {
-  findRole,
-  SCOPED_PERMISSIONS,
-  type Permission,
-  type Role,
-} from '@/config/permissions'
+  defineAbilityFor,
+  permissionDefinition,
+  subjectFor,
+  type AppAbility,
+} from '@/config/ability'
 import { useCurrentUser } from '@/hooks/use-current-user'
 
 /**
@@ -38,6 +39,12 @@ export interface PermissionScope {
 }
 
 interface PermissionContextValue {
+  /**
+   * The raw ability, for checks that want CASL's own vocabulary — including
+   * `ability.can('update', subject('Attendance', record))` against a whole
+   * record rather than a class name.
+   */
+  ability: AppAbility
   /** The current user's role, or null when signed out or unassigned. */
   role: Role | null
   /** Classes this user may write to. Empty when their role is not scoped. */
@@ -90,28 +97,36 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     [roles, currentUser?.role],
   )
 
-  const granted = React.useMemo(() => new Set(role?.permissions ?? []), [role])
-
   const isClassScoped = role?.scopedToAssignedClasses === true
   const assignedClasses = React.useMemo(
     () => (isClassScoped ? (currentUser?.assignedClasses ?? []) : []),
     [isClassScoped, currentUser?.assignedClasses],
   )
 
+  const ability = React.useMemo(
+    () => defineAbilityFor(role, assignedClasses),
+    [role, assignedClasses],
+  )
+
   const value = React.useMemo<PermissionContextValue>(() => {
+    /**
+     * Permission-id checks, answered by the ability.
+     *
+     * Kept as the everyday call because a permission id is what a role stores
+     * and what the editor toggles, so `can('attendance.mark')` reads the same
+     * as the switch someone flipped. It resolves to the (action, subject) pair
+     * and asks CASL, which is where scoping actually happens.
+     */
     const can = (permission: Permission, scope?: PermissionScope) => {
-      if (!granted.has(permission)) return false
-      // Unscoped roles hold everything they hold, everywhere.
-      if (!isClassScoped) return true
-      // Reading is never narrowed — a teacher looks up any class's register;
-      // it is changing one that belongs to whoever owns the class.
-      if (!SCOPED_PERMISSIONS.has(permission)) return true
-      // No class named means "anywhere?", which a teacher with any assignment
-      // can answer yes to. The per-class question is asked with a scope.
-      if (!scope?.classSection) return assignedClasses.length > 0
-      return assignedClasses.includes(scope.classSection)
+      const definition = permissionDefinition(permission)
+      if (!definition) return false
+      return ability.can(
+        definition.action,
+        subjectFor(definition.subject, scope?.classSection),
+      )
     }
     return {
+      ability,
       role,
       roles,
       assignedClasses,
@@ -121,7 +136,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       canAny: permissions => permissions.some(permission => can(permission)),
       refresh: load,
     }
-  }, [role, roles, isReady, granted, load, isClassScoped, assignedClasses])
+  }, [ability, role, roles, isReady, load, isClassScoped, assignedClasses])
 
   return <PermissionContext.Provider value={value}>{children}</PermissionContext.Provider>
 }

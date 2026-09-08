@@ -12,7 +12,6 @@ import { useIsDesktop } from '@/hooks/use-mobile'
 import { Search, Settings, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { SchoolSettingsPanel } from '@/components/settings/SchoolSettingsPanel'
 import { RouteFallback } from './RouteFallback'
 import { UserMenu } from './UserMenu'
 import { useGlobalSearchShortcut } from '@/features/search/use-search-shortcut'
@@ -27,6 +26,17 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
  */
 const GlobalSearch = lazy(() =>
   import('@/features/search/GlobalSearch').then(module => ({ default: module.GlobalSearch })),
+)
+
+/**
+ * The settings panel is the app's largest single component — six sections, a
+ * colour picker and a sortable list — mounted on every page and opened on
+ * almost none. Same treatment as the palette: it arrives when the gear is.
+ */
+const SchoolSettingsPanel = lazy(() =>
+  import('@/components/settings/SchoolSettingsPanel').then(module => ({
+    default: module.SchoolSettingsPanel,
+  })),
 )
 
 interface AppLayoutProps {
@@ -128,10 +138,13 @@ function TopActions({ onOpenSearch }: { onOpenSearch: () => void }) {
 function LayoutContent({ logoPath }: AppLayoutProps) {
   const isDesktop = useIsDesktop()
   const { setOpen, isMobile, toggleSidebar } = useSidebar()
-  const { config } = useSchoolConfig()
+  const { config, isSettingsOpen } = useSchoolConfig()
   const location = useLocation()
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchMounted, setSearchMounted] = useState(false)
+  // Latches on first open and never resets: unmounting the moment the panel
+  // closes would cut its own exit animation short.
+  const [settingsMounted, setSettingsMounted] = useState(false)
   const openSearch = useCallback(() => {
     setSearchMounted(true)
     setSearchOpen(true)
@@ -140,6 +153,10 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
   // Use uploaded school logo if available, otherwise fall back to prop
   const effectiveLogoPath = config.schoolLogo ?? logoPath
+
+  useEffect(() => {
+    if (isSettingsOpen) setSettingsMounted(true)
+  }, [isSettingsOpen])
 
   // Sync sidebar state with screen width
   useEffect(() => {
@@ -211,8 +228,13 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
         </TopActionsContext.Provider>
       </SidebarInset>
 
-      {/* School settings side panel — opens on gear icon click */}
-      <SchoolSettingsPanel />
+      {/* School settings side panel — mounted on first open and kept after, so
+          the sheet's own close animation has something to run on. */}
+      {settingsMounted && (
+        <Suspense fallback={null}>
+          <SchoolSettingsPanel />
+        </Suspense>
+      )}
 
       {/* Mounted on first open and kept mounted after, so the dialog's own
           close animation has something to run on. */}
