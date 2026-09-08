@@ -15,10 +15,27 @@
  * harmless rather than correct, and the fix is the same as everywhere else in
  * `src/mocks/` — move it server-side.
  *
- * Firing at most once per subject per day is the whole trick. The condition
- * that produced the notification is still true the next time the sweep runs —
- * an overdue fee stays overdue — so without a key it would raise the same
- * alarm every few minutes until someone paid.
+ * Firing at most once per day is the whole trick. The condition that produced
+ * the notification is still true the next time the sweep runs — an overdue fee
+ * stays overdue — so without a key it would raise the same alarm every few
+ * minutes until someone paid.
+ *
+ * One notification per *rule*, not per subject
+ * -------------------------------------------
+ * The first version published one row per match, which is the obvious shape
+ * and the wrong one. A school with sixteen class sections got sixteen
+ * near-identical rows every morning — half the feed was one sentence with a
+ * different class name in it, and the unread badge opened at twenty-three.
+ * A count that is never near zero is decoration, and people stop reading it.
+ *
+ * So each rule now raises a single digest: the count, the total, and enough
+ * names to recognise what it is about. The reader who needs the full list
+ * follows the link to the page that already shows it — which is a better list
+ * than a notification feed can ever be, because it is sortable and current.
+ *
+ * A digest of one still names its subject. "1 register not submitted" is a
+ * worse sentence than "7A register not submitted", and the singular case is
+ * common enough to be worth the branch.
  */
 
 import { feeCollectionData } from '@/mocks/fees'
@@ -52,33 +69,36 @@ const ATTENDANCE_CUTOFF_HOUR = 10
 
 /** Fees whose due date has passed and which are not settled. */
 function sweepOverdueFees(now: Date): number {
-  const today = dayKey(now)
-  let raised = 0
+  const overdue = feeCollectionData
+    .filter(record => record.status !== 'Paid')
+    .map(record => ({ record, due: parseDueDate(record.dueDate) }))
+    .filter((entry): entry is { record: (typeof feeCollectionData)[number]; due: Date } => {
+      return entry.due !== null && entry.due < now
+    })
 
-  feeCollectionData.forEach(record => {
-    if (record.status === 'Paid') return
-    const due = parseDueDate(record.dueDate)
-    if (!due || due >= now) return
+  if (overdue.length === 0) return 0
 
-    const daysLate = Math.floor((now.getTime() - due.getTime()) / 86_400_000)
-    const published = publishDerived(
-      `fee-overdue:${record.studentId}:${record.feeCategory}:${today}`,
-      {
-        type: 'fees.overdue',
-        payload: {
-          studentId: record.studentId,
-          studentName: record.studentName,
-          className: record.class,
-          amount: record.totalAmount,
-          daysLate,
-          feeCategory: record.feeCategory,
-        },
-      },
-    )
-    if (published) raised += 1
+  const daysLate = (due: Date) => Math.floor((now.getTime() - due.getTime()) / 86_400_000)
+
+  const published = publishDerived(`fees-overdue:${dayKey(now)}`, {
+    type: 'fees.overdue',
+    payload: {
+      count: overdue.length,
+      totalAmount: overdue.reduce((sum, entry) => sum + entry.record.totalAmount, 0),
+      // The worst of them sets the tone: one fee three weeks late deserves the
+      // same attention in a digest of four as it would have on its own.
+      worstDaysLate: Math.max(...overdue.map(entry => daysLate(entry.due))),
+      // Unique students, not one entry per record: the count is of *fees*,
+      // and a student with two overdue items would otherwise be named twice
+      // in a sentence meant to tell you who is involved.
+      names: [...new Set(overdue.map(entry => entry.record.studentName))],
+      // Only meaningful for a digest of one, where the rule names the subject.
+      className: overdue[0].record.class,
+      feeCategory: overdue[0].record.feeCategory,
+    },
   })
 
-  return raised
+  return published ? 1 : 0
 }
 
 /** Classes with no register submitted for today, once the morning is gone. */
@@ -89,26 +109,28 @@ function sweepMissingRegisters(now: Date): number {
   if (day === 0 || day === 6) return 0
 
   const today = dayKey(now)
-  let raised = 0
+  const missing = availableClasses.filter(className => !getSubmissionForDate(className, today))
+  if (missing.length === 0) return 0
 
-  availableClasses.forEach(className => {
-    if (getSubmissionForDate(className, today)) return
-    const published = publishDerived(`register-missing:${className}:${today}`, {
-      type: 'attendance.missing',
-      payload: { className, date: today, cutoffHour: ATTENDANCE_CUTOFF_HOUR },
-    })
-    if (published) raised += 1
+  const published = publishDerived(`registers-missing:${today}`, {
+    type: 'attendance.missing',
+    payload: {
+      count: missing.length,
+      classNames: missing,
+      date: today,
+      cutoffHour: ATTENDANCE_CUTOFF_HOUR,
+    },
   })
 
-  return raised
+  return published ? 1 : 0
 }
 
 /**
  * Run every time-derived rule once.
  *
- * Returns how many notifications were raised, which is zero on nearly every
- * call — the interesting number is only non-zero the first time a day's
- * conditions are met.
+ * Returns how many notifications were raised — at most one per rule, and zero
+ * on nearly every call, since the day's digests go out the first time the
+ * conditions are met and not again.
  */
 export function sweep(now: Date = new Date()): number {
   return sweepOverdueFees(now) + sweepMissingRegisters(now)

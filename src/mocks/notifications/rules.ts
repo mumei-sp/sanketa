@@ -62,6 +62,28 @@ function num(payload: Record<string, unknown>, key: string, fallback = 0): numbe
   return typeof value === 'number' ? value : fallback
 }
 
+/** Read a list of names off the payload. */
+function list(payload: Record<string, unknown>, key: string): string[] {
+  const value = payload[key]
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+}
+
+/**
+ * "1A, 1B, 2A and 10 more" — enough to recognise, never the whole list.
+ *
+ * A digest that printed sixteen class names would be the wall of text it
+ * replaced, on one line instead of sixteen. Three is enough to tell you what
+ * kind of thing this is; the page behind the link has the rest, sortable and
+ * current, which a notification body can never be.
+ */
+function summarise(names: string[], shown = 3): string {
+  if (names.length <= shown) {
+    if (names.length <= 1) return names[0] ?? ''
+    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+  }
+  return `${names.slice(0, shown).join(', ')} and ${names.length - shown} more`
+}
+
 /**
  * The audiences the rules below actually use.
  *
@@ -198,45 +220,52 @@ const RULES: Record<string, Rule> = {
   // ── Time-derived. Nobody did anything; a date passed. See `sweep.ts`. ──
 
   'fees.overdue': event => {
-    const daysLate = num(event.payload, 'daysLate')
+    const count = num(event.payload, 'count')
+    const worstDaysLate = num(event.payload, 'worstDaysLate')
+    const total = num(event.payload, 'totalAmount')
+    const names = list(event.payload, 'names')
+    const money = `₹${total.toLocaleString('en-IN')}`
+
     return {
       category: 'finance',
-      // A week late is a different conversation from a day late.
-      severity: daysLate >= 7 ? 'critical' : 'warning',
-      title: `Fee overdue — ${str(event.payload, 'studentName')}`,
-      body: `₹${num(event.payload, 'amount').toLocaleString('en-IN')} for ${str(
-        event.payload,
-        'feeCategory',
-        'fees',
-      )} is ${daysLate} ${daysLate === 1 ? 'day' : 'days'} past due (${str(
-        event.payload,
-        'className',
-      )}).`,
-      target: {
-        kind: 'fee-record',
-        id: str(event.payload, 'studentId'),
-        route: '/finance/fees-collection',
-      },
+      // A week late is a different conversation from a day late, and in a
+      // digest the worst one sets the tone.
+      severity: worstDaysLate >= 7 ? 'critical' : 'warning',
+      title:
+        count === 1
+          ? `Fee overdue — ${names[0] ?? 'a student'}`
+          : `${count} fees overdue · ${money}`,
+      body:
+        count === 1
+          ? `${money} for ${str(event.payload, 'feeCategory', 'fees')} is ${worstDaysLate} ${
+              worstDaysLate === 1 ? 'day' : 'days'
+            } past due (${str(event.payload, 'className')}).`
+          : `${summarise(names)}. The oldest is ${worstDaysLate} days past due.`,
+      target: { kind: 'fee-record', id: 'overdue', route: '/finance/fees-collection' },
       audience: SEES_FINANCE,
     }
   },
 
-  'attendance.missing': event => ({
-    category: 'attendance',
-    severity: 'warning',
-    title: `${str(event.payload, 'className')} register not submitted`,
-    body: `Nothing has been recorded for today, and it is past ${num(
-      event.payload,
-      'cutoffHour',
-      10,
-    )}:00.`,
-    target: {
-      kind: 'attendance-register',
-      id: str(event.payload, 'className'),
-      route: '/attendance/daily',
-    },
-    audience: SEES_ATTENDANCE,
-  }),
+  'attendance.missing': event => {
+    const count = num(event.payload, 'count')
+    const classNames = list(event.payload, 'classNames')
+    const cutoff = num(event.payload, 'cutoffHour', 10)
+
+    return {
+      category: 'attendance',
+      severity: 'warning',
+      title:
+        count === 1
+          ? `${classNames[0] ?? 'A class'} register not submitted`
+          : `${count} registers not submitted`,
+      body:
+        count === 1
+          ? `Nothing has been recorded for today, and it is past ${cutoff}:00.`
+          : `${summarise(classNames)} have nothing recorded for today, and it is past ${cutoff}:00.`,
+      target: { kind: 'attendance-register', id: 'missing', route: '/attendance/daily' },
+      audience: SEES_ATTENDANCE,
+    }
+  },
 
   'notice.published': event => ({
     category: 'notices',
