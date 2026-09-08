@@ -50,6 +50,7 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import type { SchoolUser } from '@/api/services/user-service'
+import type { AccountStatus, ProfileType } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'
 import { describeClassChange, stillHasAnAdmin } from './helpers'
@@ -66,6 +67,27 @@ function looksLikeEmail(value: string): boolean {
 }
 
 const ALL_ROLES = '__all__'
+const ALL_KINDS = '__all__'
+
+/**
+ * How the profile types group for someone reading a list of people.
+ *
+ * The schema has six; a person scanning this screen is looking for staff,
+ * students or families, so the picker offers three and each maps to the
+ * schema's values rather than replacing them.
+ */
+const KIND_GROUPS: { id: string; label: string; types: ProfileType[] }[] = [
+  { id: 'staff', label: 'Staff', types: ['admin', 'staff', 'teacher'] },
+  { id: 'student', label: 'Students', types: ['student'] },
+  { id: 'family', label: 'Parents & guardians', types: ['parent', 'guardian'] },
+]
+
+/** How an account's status should read, and how loudly. */
+const STATUS_LABEL: Record<AccountStatus, { text: string; tone: 'ok' | 'quiet' | 'warn' }> = {
+  active: { text: 'Active', tone: 'ok' },
+  invited: { text: 'Invited', tone: 'warn' },
+  disabled: { text: 'Not yet active', tone: 'quiet' },
+}
 
 interface PeopleTabProps {
   users: SchoolUser[] | null
@@ -109,6 +131,7 @@ export function PeopleTab({
   const currentUser = useCurrentUser()
   const { showSuccess, showError } = useAppToast()
   const [query, setQuery] = React.useState('')
+  const [kindFilter, setKindFilter] = React.useState(ALL_KINDS)
 
   const [addOpen, setAddOpen] = React.useState(false)
   const [draft, setDraft] = React.useState({ fullName: '', email: '', roleId: '' })
@@ -227,8 +250,10 @@ export function PeopleTab({
   }
 
   const needle = query.trim().toLowerCase()
+  const kindTypes = KIND_GROUPS.find(group => group.id === kindFilter)?.types
   const visible = users.filter(user => {
     if (roleFilter !== ALL_ROLES && user.roleId !== roleFilter) return false
+    if (kindTypes && !kindTypes.includes(user.profileType)) return false
     if (!needle) return true
     return user.fullName.toLowerCase().includes(needle) || user.email.toLowerCase().includes(needle)
   })
@@ -258,6 +283,25 @@ export function PeopleTab({
           placeholder="Search name or email…"
           label="Search people"
         />
+        <div className="w-[170px] max-md:w-full">
+          <Label htmlFor="people-kind-filter" className="sr-only">
+            Filter by kind
+          </Label>
+          <Select value={kindFilter} onValueChange={setKindFilter}>
+            <SelectTrigger id="people-kind-filter" className="h-control w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_KINDS}>Everyone</SelectItem>
+              {KIND_GROUPS.map(group => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="w-[170px] max-md:w-full">
           <Label htmlFor="people-role-filter" className="sr-only">
             Filter by role
@@ -316,6 +360,26 @@ export function PeopleTab({
                     {isSelf && (
                       <Badge variant="secondary" className="ml-2 text-[10px]">
                         You
+                      </Badge>
+                    )}
+                    {/* Only when it is not the ordinary case — a list where
+                        every row says "Active" says nothing. */}
+                    {user.status !== 'active' && (
+                      <Badge
+                        variant="outline"
+                        className="ml-2 text-[10px]"
+                        style={
+                          STATUS_LABEL[user.status].tone === 'warn'
+                            ? { color: 'var(--heading)' }
+                            : undefined
+                        }
+                        title={
+                          user.status === 'disabled'
+                            ? 'Provisioned, but cannot sign in yet.'
+                            : 'Invited and awaiting activation.'
+                        }
+                      >
+                        {STATUS_LABEL[user.status].text}
                       </Badge>
                     )}
                   </p>

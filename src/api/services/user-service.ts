@@ -11,6 +11,7 @@ import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/users'
 import type { SchoolUser } from '@/mocks/users'
+import type { AccountStatus, ProfileType } from '@/features/auth/types'
 
 export type { SchoolUser }
 
@@ -43,6 +44,11 @@ export async function createUser(input: {
   fullName: string
   email: string
   roleId: string
+  profileType?: ProfileType
+  status?: AccountStatus
+  studentId?: string
+  parentId?: string
+  assignedClasses?: string[]
 }): Promise<SchoolUser | null> {
   return mockOrHttp(
     async () => {
@@ -63,7 +69,7 @@ export async function createUser(input: {
  */
 export async function updateUserAccess(
   id: string,
-  patch: { roleId?: string; assignedClasses?: string[] },
+  patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus },
 ): Promise<SchoolUser | null> {
   return mockOrHttp(
     async () => {

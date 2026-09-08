@@ -21,6 +21,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
+import type { AccountStatus, ProfileType } from '@/features/auth/types'
 import { teachersData } from '@/mocks/teachers/teachers'
 
 export interface SchoolUser {
@@ -29,9 +30,31 @@ export interface SchoolUser {
   email: string
   /** Role id from the roles table. */
   roleId: string
+  /**
+   * Structural kind of account.
+   *
+   * Distinct from the role, and not editable in the role editor: a school
+   * decides what a Parent may see, not that a parent is staff. It also decides
+   * which record the account points at — `teacherId`, `studentId` or
+   * `parentId` below — and therefore which axis narrows it.
+   */
+  profileType: ProfileType
+  /**
+   * Whether it can be signed into.
+   *
+   * Accounts are provisioned `disabled` on purpose. The services do not filter
+   * rows by the caller's scope yet, so a family account that could sign in
+   * would receive every child's records and merely not draw them. The door
+   * stays shut until that lands; see the Accounts plan's phase 3.
+   */
+  status: AccountStatus
   /** Staff record this login belongs to, when it is a member of staff. */
   teacherId?: string
-  /** Class sections they may write to, when their role is scoped. */
+  /** Student record this login *is*, for a student account. */
+  studentId?: string
+  /** Parent record this login belongs to, for a parent or guardian account. */
+  parentId?: string
+  /** Class sections they may write to, when their role narrows by class. */
   assignedClasses?: string[]
 }
 
@@ -51,17 +74,19 @@ function classesFor(teacherId: string): string[] {
 function seed(): Database {
   return {
     rows: [
-      { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', roleId: 'admin' },
-      { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', roleId: 'principal' },
+      { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', roleId: 'admin', profileType: 'admin', status: 'active' },
+      { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', roleId: 'principal', profileType: 'staff', status: 'active' },
       {
         id: '3',
         fullName: 'Meera Iyengar',
         email: 'teacher@sanketa.edu',
         roleId: 'teacher',
+        profileType: 'teacher',
+        status: 'active',
         teacherId: 'T-1006',
         assignedClasses: classesFor('T-1006'),
       },
-      { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', roleId: 'accountant' },
+      { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', roleId: 'accountant', profileType: 'staff', status: 'active' },
     ],
   }
 }
@@ -73,7 +98,16 @@ function load(): Database {
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       if (Array.isArray(parsed.rows) && parsed.rows.length > 0) {
-        db = parsed
+        // Rows written before these columns existed are staff who can sign in
+        // — which is what every account was at the time.
+        const migrated = parsed.rows.map(row => ({
+          ...row,
+          profileType: row.profileType ?? ('staff' as ProfileType),
+          status: row.status ?? ('active' as AccountStatus),
+        }))
+        const changed = parsed.rows.some(row => !row.profileType || !row.status)
+        db = { rows: migrated }
+        if (changed) persist()
         return db
       }
     }
@@ -109,6 +143,16 @@ export function findByEmail(email: string): SchoolUser | undefined {
 }
 
 /**
+ * Kinds that belong to a family rather than to the school.
+ *
+ * They narrow by student rather than by class, and they are the ones that must
+ * not be signable-into before the services filter.
+ */
+function isFamily(profileType: ProfileType): boolean {
+  return profileType === 'student' || profileType === 'parent' || profileType === 'guardian'
+}
+
+/**
  * Add an account.
  *
  * Name and email only, plus the role they start in. No password: the mock
@@ -123,16 +167,37 @@ export function createUser(input: {
   fullName: string
   email: string
   roleId: string
+  profileType?: ProfileType
+  status?: AccountStatus
+  studentId?: string
+  parentId?: string
+  assignedClasses?: string[]
 }): SchoolUser | null {
   const database = load()
   const email = input.email.trim().toLowerCase()
   if (database.rows.some(user => user.email.toLowerCase() === email)) return null
 
+  const profileType = input.profileType ?? 'staff'
   const user: SchoolUser = {
     id: newId('U'),
     fullName: input.fullName.trim(),
     email,
     roleId: input.roleId,
+    profileType,
+    // Derived from the kind, not defaulted to 'active' and left to callers.
+    //
+    // A member of staff typed in on the People screen is someone an admin is
+    // adding now, and starts active. A student or family account is
+    // *provisioned* — created ahead of being usable — and must start disabled,
+    // because the services do not filter rows by the caller's scope yet.
+    //
+    // Making that depend on each call site passing `status` was the first
+    // version, and it created a live parent account the first time a caller
+    // forgot. The safe state is the one you get by saying nothing.
+    status: input.status ?? (isFamily(profileType) ? 'disabled' : 'active'),
+    studentId: input.studentId,
+    parentId: input.parentId,
+    assignedClasses: input.assignedClasses,
   }
   database.rows.push(user)
   persist()
@@ -148,7 +213,7 @@ export function createUser(input: {
  */
 export function updateUser(
   id: string,
-  patch: { roleId?: string; assignedClasses?: string[] },
+  patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus },
 ): SchoolUser | null {
   const database = load()
   const user = database.rows.find(candidate => candidate.id === id)
@@ -156,6 +221,7 @@ export function updateUser(
 
   if (patch.roleId !== undefined) user.roleId = patch.roleId
   if (patch.assignedClasses !== undefined) user.assignedClasses = [...patch.assignedClasses]
+  if (patch.status !== undefined) user.status = patch.status
 
   persist()
   return clone(user)

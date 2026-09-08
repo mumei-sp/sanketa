@@ -168,17 +168,17 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
    * What this account is narrowed to, on both axes.
    *
    * Assembled here because this is the only place that knows both the session
-   * and the running preview. `studentIds` is empty for every real session
-   * today: no account is linked to a student record yet, which is the accounts
-   * project's job. The axis works regardless, and the preview proves it.
+   * and the running preview. Both halves now come off the session, resolved at
+   * sign-in the way a token would carry them — `assignedClasses` for staff,
+   * `studentIds` for a student's own record or a parent's children.
    */
   const scope = React.useMemo<AbilityScope>(() => {
     if (preview) return preview.scope
     return {
       classSections: currentUser?.assignedClasses ?? [],
-      studentIds: [],
+      studentIds: currentUser?.studentIds ?? [],
     }
-  }, [preview, currentUser?.assignedClasses])
+  }, [preview, currentUser?.assignedClasses, currentUser?.studentIds])
 
   const ability = React.useMemo(() => defineAbilityFor(role, scope), [role, scope])
 

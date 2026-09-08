@@ -1,0 +1,292 @@
+/**
+ * The mock parent directory, and who each parent belongs to.
+ *
+ * Two tables, named after the backend's: `parents` extends a profile, and
+ * `student_parents` links it to students with a relationship and a primary
+ * flag. Both already exist in `develop/user-management`; this catches the mock
+ * up rather than inventing a shape the backend will have to reconcile.
+ *
+ * ── Why a table at all ──────────────────────────────────────────────────
+ * A guardian was three optional strings embedded on a student record —
+ * `{ name, phone, relation }` under `father`, `mother` or
+ * `alternativeGuardian`. That is fine for "who do we ring", and useless for
+ * "who can sign in": no id, so nothing can point at them; and no link, so the
+ * same person on two children's records is two unrelated strings. A parent
+ * with two children must be one account that sees both.
+ *
+ * The embedded fields stay where they are. They are the contact details on the
+ * student record, which is what the student form edits and what a class
+ * teacher wants. This table is about people.
+ *
+ * ── Seeding, and what it cannot do ─────────────────────────────────────
+ * First run reads the embedded guardians and matches them across students on
+ * name and phone, so siblings share one parent row. What it cannot invent is
+ * an email: the contact details carry a phone and nothing else, and an account
+ * needs an address to sign in with. So a seeded parent has `email: null` and
+ * is not provisionable until a human supplies one — which is a real state the
+ * People screen has to show, not an error to hide.
+ */
+
+import { newId } from '@/mocks/_shared'
+import { studentsData } from '@/mocks/students/students'
+
+export interface Parent {
+  /** Profile id — the schema's `parents.profile_id`. */
+  profileId: string
+  fullName: string
+  /**
+   * Null until someone supplies one.
+   *
+   * Sign-in resolves an account by email, so a parent without one cannot have
+   * an account. Null rather than an empty string so "never had one" is
+   * distinguishable from "cleared it".
+   */
+  email: string | null
+  phone?: string
+  occupation?: string
+  workplace?: string
+}
+
+/** One parent's link to one student. The schema's `student_parents`. */
+export interface StudentParent {
+  id: string
+  studentProfileId: string
+  parentProfileId: string
+  /** 'Father', 'Mother', 'Guardian' — free text, as in the schema. */
+  relationship: string
+  /** The one the school rings first. At most one per student. */
+  isPrimary: boolean
+}
+
+const DB_KEY = 'sanketa:mock-db:parents'
+
+interface Database {
+  parents: Parent[]
+  links: StudentParent[]
+}
+
+let db: Database | null = null
+
+/** Same person? Name and phone together, both loosely compared. */
+function sameHuman(a: { fullName: string; phone?: string }, b: { fullName: string; phone?: string }) {
+  const name = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ')
+  const digits = (value?: string) => (value ?? '').replace(/\D/g, '').slice(-10)
+  if (name(a.fullName) !== name(b.fullName)) return false
+  // A shared name with no phone on either side is a guess, not a match — two
+  // families can hold the same name. A shared name and a shared number is not.
+  if (!digits(a.phone) || !digits(b.phone)) return false
+  return digits(a.phone) === digits(b.phone)
+}
+
+function seed(): Database {
+  const parents: Parent[] = []
+  const links: StudentParent[] = []
+  let sequence = 0
+
+  studentsData.forEach(student => {
+    const guardians = student.guardians
+    if (!guardians) return
+
+    const entries: { relationship: string; name?: string; phone?: string }[] = [
+      { relationship: 'Father', name: guardians.father?.name, phone: guardians.father?.phone },
+      { relationship: 'Mother', name: guardians.mother?.name, phone: guardians.mother?.phone },
+      {
+        relationship: guardians.alternativeGuardian?.relation || 'Guardian',
+        name: guardians.alternativeGuardian?.name,
+        phone: guardians.alternativeGuardian?.phone,
+      },
+    ]
+
+    let primaryTaken = false
+    entries.forEach(entry => {
+      if (!entry.name?.trim()) return
+      const candidate = { fullName: entry.name.trim(), phone: entry.phone }
+
+      let parent = parents.find(existing => sameHuman(existing, candidate))
+      if (!parent) {
+        sequence += 1
+        parent = {
+          profileId: `P-${String(2000 + sequence)}`,
+          fullName: candidate.fullName,
+          email: null,
+          phone: candidate.phone,
+        }
+        parents.push(parent)
+      }
+
+      links.push({
+        id: `SP-${links.length + 1}`,
+        studentProfileId: String(student.id),
+        parentProfileId: parent.profileId,
+        relationship: entry.relationship,
+        isPrimary: !primaryTaken,
+      })
+      primaryTaken = true
+    })
+  })
+
+  return { parents, links }
+}
+
+function load(): Database {
+  if (db) return db
+  try {
+    const raw = localStorage.getItem(DB_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Database
+      if (Array.isArray(parsed.parents) && Array.isArray(parsed.links)) {
+        db = parsed
+        return db
+      }
+    }
+  } catch {
+    // Unparseable or unavailable (private mode, cleared site data) — reseed.
+  }
+  db = seed()
+  persist()
+  return db
+}
+
+function persist(): void {
+  if (!db) return
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(db))
+  } catch {
+    // Quota or private mode; the in-memory copy still serves this session.
+  }
+}
+
+const cloneParent = (parent: Parent): Parent => ({ ...parent })
+const cloneLink = (link: StudentParent): StudentParent => ({ ...link })
+
+// ── Reads ─────────────────────────────────────────────────────────────
+
+export function listParents(): Parent[] {
+  return load().parents.map(cloneParent)
+}
+
+export function listLinks(): StudentParent[] {
+  return load().links.map(cloneLink)
+}
+
+/** The parents of one student, with the relationship each holds. */
+export function parentsOfStudent(studentProfileId: string): (Parent & { relationship: string; isPrimary: boolean })[] {
+  const database = load()
+  return database.links
+    .filter(link => link.studentProfileId === studentProfileId)
+    .flatMap(link => {
+      const parent = database.parents.find(row => row.profileId === link.parentProfileId)
+      return parent
+        ? [{ ...parent, relationship: link.relationship, isPrimary: link.isPrimary }]
+        : []
+    })
+}
+
+/**
+ * The students one parent covers.
+ *
+ * This is the list a parent account's scope is built from — the reason the
+ * link table exists rather than a field on the student.
+ */
+export function studentsOfParent(parentProfileId: string): string[] {
+  return load()
+    .links.filter(link => link.parentProfileId === parentProfileId)
+    .map(link => link.studentProfileId)
+}
+
+// ── Writes ────────────────────────────────────────────────────────────
+
+export function createParent(input: {
+  fullName: string
+  email?: string | null
+  phone?: string
+}): Parent {
+  const database = load()
+  const parent: Parent = {
+    profileId: newId('P'),
+    fullName: input.fullName.trim(),
+    email: input.email?.trim() || null,
+    phone: input.phone?.trim() || undefined,
+  }
+  database.parents.push(parent)
+  persist()
+  return cloneParent(parent)
+}
+
+export function updateParent(
+  profileId: string,
+  patch: { fullName?: string; email?: string | null; phone?: string },
+): Parent | null {
+  const database = load()
+  const parent = database.parents.find(row => row.profileId === profileId)
+  if (!parent) return null
+
+  if (patch.fullName !== undefined) parent.fullName = patch.fullName.trim()
+  if (patch.email !== undefined) parent.email = patch.email?.trim() || null
+  if (patch.phone !== undefined) parent.phone = patch.phone.trim() || undefined
+
+  persist()
+  return cloneParent(parent)
+}
+
+/**
+ * Link a parent to a student.
+ *
+ * Idempotent on the pair, because the schema has `UNIQUE(student, parent)` and
+ * a screen that links twice should be a no-op rather than a duplicate row.
+ */
+export function linkParent(input: {
+  studentProfileId: string
+  parentProfileId: string
+  relationship: string
+  isPrimary?: boolean
+}): StudentParent | null {
+  const database = load()
+  if (!database.parents.some(row => row.profileId === input.parentProfileId)) return null
+
+  const existing = database.links.find(
+    link =>
+      link.studentProfileId === input.studentProfileId &&
+      link.parentProfileId === input.parentProfileId,
+  )
+  const link = existing ?? {
+    id: newId('SP'),
+    studentProfileId: input.studentProfileId,
+    parentProfileId: input.parentProfileId,
+    relationship: input.relationship,
+    isPrimary: false,
+  }
+  link.relationship = input.relationship
+
+  if (input.isPrimary) {
+    // At most one primary per student, so promoting one demotes the rest.
+    database.links
+      .filter(other => other.studentProfileId === input.studentProfileId)
+      .forEach(other => {
+        other.isPrimary = false
+      })
+    link.isPrimary = true
+  }
+
+  if (!existing) database.links.push(link)
+  persist()
+  return cloneLink(link)
+}
+
+export function unlinkParent(studentProfileId: string, parentProfileId: string): boolean {
+  const database = load()
+  const index = database.links.findIndex(
+    link =>
+      link.studentProfileId === studentProfileId && link.parentProfileId === parentProfileId,
+  )
+  if (index === -1) return false
+  database.links.splice(index, 1)
+  persist()
+  return true
+}
+
+/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
+export function resetParents(): void {
+  db = seed()
+  persist()
+}
