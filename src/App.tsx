@@ -14,6 +14,11 @@ import { RequirePermission } from './features/auth/components/RequirePermission'
  * so deferring it would only add a round trip before the first paint. The
  * screens behind it are all split (see `config/routes.tsx` for the rest).
  */
+const NotificationsPage = lazy(() =>
+  import('./features/notifications/pages/NotificationsPage').then(m => ({
+    default: m.NotificationsPage,
+  })),
+)
 const AddStudent = lazy(() => import('./features/students/pages/AddStudent'))
 const EditStudent = lazy(() => import('./features/students/pages/EditStudent'))
 const StudentDetails = lazy(() => import('./features/students/pages/StudentDetails'))
@@ -57,6 +62,10 @@ const router = createBrowserRouter([
           // need their gates stated here. Reading a profile and editing one are
           // different permissions: a teacher can look up a student without
           // being able to change the record.
+          // Everyone who can sign in has a notification feed, so this one
+          // carries no permission of its own — the feed is already filtered to
+          // what its reader is allowed to know about.
+          { path: 'notifications', element: <NotificationsPage /> },
           {
             element: <RequirePermission permission="students.view" />,
             children: [{ path: 'students/details/:id', element: <StudentDetails /> }],

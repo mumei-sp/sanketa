@@ -1,5 +1,7 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAppToast } from '@/hooks/use-app-toast'
+import { useCurrentUser } from '@/hooks/use-current-user'
 import PageHeader from '@/components/layout/PageHeader'
 import { TileWrapper, Tile } from '@/components/tile'
 import {
@@ -12,6 +14,7 @@ import {
   fetchExpenseTrend,
   fetchExpenseBreakdown,
   fetchReimbursements,
+  decideReimbursement,
   fetchExpenses,
 } from '@/api/services/expenses-service'
 import type {
@@ -28,6 +31,35 @@ export default function Expenses() {
   const [breakdownData, setBreakdownData] = React.useState<ExpenseBreakdownData[]>([])
   const [breakdownTotal, setBreakdownTotal] = React.useState(0)
   const [reimbursements, setReimbursements] = React.useState<Reimbursement[]>([])
+  const { showSuccess, showError } = useAppToast()
+  const currentUser = useCurrentUser()
+
+  /**
+   * Record an approval or a decline.
+   *
+   * Refetches rather than patching the row in place: the decision can lose a
+   * race with someone else's, and the list the server hands back is the one
+   * that is true. Cheap here, and it keeps a stale optimistic row off screen.
+   */
+  const handleDecide = React.useCallback(
+    async (requestId: string, decision: 'Approved' | 'Declined') => {
+      const result = await decideReimbursement(
+        requestId,
+        decision,
+        currentUser?.fullName ?? 'Someone',
+      )
+      if (!result.ok) {
+        showError('Could not record that', { description: result.reason })
+        setReimbursements(await fetchReimbursements())
+        return
+      }
+      setReimbursements(await fetchReimbursements())
+      showSuccess(`${requestId} ${decision.toLowerCase()}`, {
+        description: `${result.row.staffName} · ₹${result.row.amount.toLocaleString('en-IN')}`,
+      })
+    },
+    [currentUser?.fullName, showSuccess, showError],
+  )
   const [expenses, setExpenses] = React.useState<Expense[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
 
@@ -103,7 +135,11 @@ export default function Expenses() {
           rowStart={{ lg: 1 }}
           rowEnd={{ lg: 3 }}
         >
-          <ReimbursementsTracking data={reimbursements} isLoading={isLoading} />
+          <ReimbursementsTracking
+            data={reimbursements}
+            isLoading={isLoading}
+            onDecide={handleDecide}
+          />
         </Tile>
       </TileWrapper>
 

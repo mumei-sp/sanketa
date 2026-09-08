@@ -166,3 +166,25 @@ export function subscribeToMockServer(
 ): () => void {
   return mockServer.subscribe(listener)
 }
+
+/**
+ * Ask the server to re-evaluate its time-derived rules.
+ *
+ * Only the mock does anything: on a real deployment this is a scheduled job
+ * and the client has no business poking it, so the HTTP path is a no-op rather
+ * than an endpoint. Keeping the call in the client's vocabulary anyway means
+ * the day the job moves server-side, one function body empties and nothing
+ * that calls it has to change.
+ *
+ * @apiRoute (none — server-side schedule)
+ */
+export function runNotificationSweep(): void {
+  if (!getEnvConfig().useMockApi) return
+  // Imported on demand rather than at the top of the file. The sweep reads the
+  // fee and attendance datasets, and a static import pulled both into the entry
+  // chunk — 26kB of mock data on every first paint, for a job that runs once a
+  // few seconds after load and never blocks anything.
+  void import('@/mocks/notifications/sweep')
+    .then(({ sweep }) => sweep())
+    .catch(error => console.error('Notification sweep failed', error))
+}

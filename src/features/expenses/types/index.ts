@@ -32,6 +32,10 @@ export interface Reimbursement {
   dateSubmitted: string
   proofUrl: string
   status: ReimbursementStatus
+  /** Who approved or declined it. Absent while still Pending. */
+  decidedBy?: string
+  /** ISO 8601 timestamp of that decision. */
+  decidedAt?: string
 }
 
 export interface ExpenseSummary {

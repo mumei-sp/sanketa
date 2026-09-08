@@ -24,9 +24,19 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   dismissNotification,
+  runNotificationSweep,
 } from '@/api/services/notification-service'
+import { toast } from 'sonner'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { createNotificationTransport } from './transport'
+
+/**
+ * How often to re-evaluate the time-derived rules.
+ *
+ * Five minutes. Nothing these rules watch changes faster than a school day,
+ * and each pass walks every fee record and every class.
+ */
+const SWEEP_INTERVAL_MS = 5 * 60 * 1000
 import type { Notification, NotificationBatch } from './types'
 
 interface NotificationContextValue {
@@ -90,9 +100,36 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // together, and two in-flight fetches would race to set the cursor.
   const inFlightRef = React.useRef(false)
 
+  /**
+   * True until the first batch has been folded in.
+   *
+   * The toast bridge below reads it: a session that opens to a backlog of
+   * three overdue fees must not fire three toasts at once. Toasts are for
+   * things that happened *while you were looking*; the backlog is what the
+   * bell's count is for.
+   */
+  const isFirstBatchRef = React.useRef(true)
+
   const applyIncoming = React.useCallback((batch: NotificationBatch) => {
     cursorRef.current = batch.cursor
     setNotifications(current => applyBatch(current, batch.items))
+
+    // ── Toast bridge ──
+    //
+    // Only `critical`, and only after the first load. A notification loud
+    // enough to interrupt is rare by construction: the feed carries everything,
+    // and the toast is reserved for what cannot wait for someone to open the
+    // bell. Widening this to `warning` would make the app shout during a
+    // routine morning and teach people to dismiss without reading.
+    if (isFirstBatchRef.current) {
+      isFirstBatchRef.current = false
+      return
+    }
+    batch.items
+      .filter(item => item.severity === 'critical' && item.readAt === null)
+      .forEach(item => {
+        toast.error(item.title, { description: item.body })
+      })
   }, [])
 
   const reconcile = React.useCallback(async () => {
@@ -127,6 +164,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     })
     return () => transport.stop()
   }, [applyIncoming, reconcile])
+
+  /**
+   * Ask the mock server to re-evaluate its time-derived rules.
+   *
+   * On mount and then on a slow timer. Slow because nothing here is urgent to
+   * the minute — a fee that fell overdue at midnight is equally overdue at
+   * 09:05 — and because each sweep walks every fee record and every class.
+   *
+   * This call disappears when the rules move to a real scheduled job; see
+   * `runNotificationSweep`.
+   */
+  React.useEffect(() => {
+    runNotificationSweep()
+    const timer = window.setInterval(runNotificationSweep, SWEEP_INTERVAL_MS)
+    return () => window.clearInterval(timer)
+  }, [])
 
   // ── Catch up when the tab comes back ──
   React.useEffect(() => {

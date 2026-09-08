@@ -10,6 +10,7 @@
  */
 
 import * as React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BellOff, CheckCheck, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -52,6 +53,7 @@ function PanelSkeleton() {
 }
 
 export function NotificationPanel({ onNavigate, onClose, className }: NotificationPanelProps) {
+  const navigate = useNavigate()
   const { notifications, unreadCount, isLoading, error, markRead, markAllRead, dismiss } =
     useNotifications()
 
@@ -144,6 +146,25 @@ export function NotificationPanel({ onNavigate, onClose, className }: Notificati
           ))
         )}
       </div>
+
+      {/* The panel is a peek; the page is the archive. Only offered once there
+          is something to look back at. */}
+      {notifications.length > 0 && (
+        <>
+          <Separator />
+          <button
+            type="button"
+            onClick={() => {
+              onClose?.()
+              navigate('/notifications')
+            }}
+            className="w-full py-2.5 text-caption font-medium transition-colors hover:bg-muted"
+            style={{ color: 'var(--heading)' }}
+          >
+            See all notifications
+          </button>
+        </>
+      )}
     </div>
   )
 }

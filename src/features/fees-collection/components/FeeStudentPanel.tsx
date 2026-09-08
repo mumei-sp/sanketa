@@ -13,6 +13,13 @@ import { spacing } from '@/config/spacing'
 import { fetchPaymentHistory } from '@/api/services/fees-collection-service'
 import { PaymentFormSheet } from './PaymentFormSheet'
 import { usePermissions } from '@/features/auth/PermissionContext'
+import { useCurrentUser } from '@/hooks/use-current-user'
+import {
+  fetchPaymentReminders,
+  sendPaymentReminder,
+  type PaymentReminder,
+} from '@/api/services/fees-collection-service'
+import { formatRelativeTime } from '@/features/notifications/utils/notification-display'
 import { PAYMENT_METHOD_LABELS } from '../types'
 import { toast } from 'sonner'
 import type { FeeCollectionRecord, FeeStatus, PaymentTransaction } from '../types'
@@ -43,6 +50,11 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
   // other half. Not scoped — fees are the school's ledger, not a class's.
   const { can } = usePermissions()
   const canManage = can('finance.manage')
+  const currentUser = useCurrentUser()
+
+  /** Reminders already sent to this guardian — the evidence the button owes. */
+  const [reminders, setReminders] = React.useState<PaymentReminder[]>([])
+  const [isReminding, setIsReminding] = React.useState(false)
 
   const studentRecords = React.useMemo(
     () => allRecords.filter(r => r.studentId === studentId),
@@ -71,6 +83,48 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
   }, [studentId])
 
   React.useEffect(() => { loadHistory() }, [loadHistory])
+
+  React.useEffect(() => {
+    if (!studentId) {
+      setReminders([])
+      return
+    }
+    let cancelled = false
+    fetchPaymentReminders(studentId)
+      .then(rows => { if (!cancelled) setReminders(rows) })
+      .catch(error => console.error('Failed to load reminder history', error))
+    return () => { cancelled = true }
+  }, [studentId])
+
+  /**
+   * Remind the guardian, and keep the receipt.
+   *
+   * This used to be a toast claiming an SMS and an email had gone out, with
+   * nothing behind it. Nothing is actually sent now either — there is no
+   * gateway — but the intent is recorded and shown back, so the panel stops
+   * asserting something it cannot know.
+   */
+  const remind = async () => {
+    if (!student || !studentId) return
+    setIsReminding(true)
+    try {
+      await sendPaymentReminder({
+        studentId,
+        studentName: student.studentName,
+        amount: pendingAmount,
+        sentBy: currentUser?.fullName ?? 'Someone',
+      })
+      setReminders(await fetchPaymentReminders(studentId))
+      toast.success(`Reminder logged for ${student.studentName}'s guardian`, {
+        description: `₹${pendingAmount.toLocaleString('en-IN')} outstanding. Delivery is not wired up yet — the request is recorded.`,
+      })
+    } catch (error) {
+      console.error('Failed to record a reminder', error)
+      toast.error('Could not record that reminder')
+    } finally {
+      setIsReminding(false)
+    }
+  }
 
   // Computed
   const totalDue = studentRecords.reduce((sum, r) => sum + r.totalAmount, 0)
@@ -159,13 +213,24 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
         {canManage && pendingAmount > 0 && (
           <button
             type="button"
-            onClick={() => toast.success(`Reminder sent to ${student.studentName}'s guardian`, { description: `₹${pendingAmount.toLocaleString('en-IN')} pending via SMS & Email` })}
-            className="flex items-center gap-1.5 mt-4 text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-70"
+            disabled={isReminding}
+            onClick={() => void remind()}
+            className="flex items-center gap-1.5 mt-4 text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-70 disabled:opacity-50"
             style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity('var(--heading)', 0.3) }}
           >
             <Send className="w-3 h-3" />
-            Send Payment Reminder
+            {isReminding ? 'Recording…' : 'Send Payment Reminder'}
           </button>
+        )}
+
+        {/* The history the old button never left behind. Whoever opens this
+            panel next can see whether the guardian has been chased once or
+            five times, which is the whole point of recording it. */}
+        {reminders.length > 0 && (
+          <p style={{ fontSize: '10px', color: text.muted, marginTop: '6px' }}>
+            {reminders.length === 1 ? 'Reminded' : `${reminders.length} reminders, last`}{' '}
+            {formatRelativeTime(reminders[0].sentAt)} by {reminders[0].sentBy}
+          </p>
         )}
       </div>
 

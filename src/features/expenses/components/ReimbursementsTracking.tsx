@@ -17,6 +17,11 @@ import { usePermissions } from '@/features/auth/PermissionContext'
 interface ReimbursementsTrackingProps {
   data: Reimbursement[]
   isLoading?: boolean
+  /**
+   * Record a decision. The page owns the write so it can refetch the list
+   * afterwards; this component only knows which row was clicked.
+   */
+  onDecide?: (requestId: string, decision: 'Approved' | 'Declined') => Promise<void>
 }
 
 /**
@@ -42,6 +47,18 @@ const statusStyles: Record<
 const GRID_COLS =
   'grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] lg:grid-cols-[72px_1.2fr_1fr_120px_90px_110px]'
 
+/**
+ * Does this request actually have a receipt behind it?
+ *
+ * The seeded rows carry `proofUrl: '#'`, which is a link to nowhere. Treated
+ * as "no file" rather than rendered as a link that has to cancel its own
+ * click to avoid jumping to the top of the page.
+ */
+function hasProof(item: Reimbursement): boolean {
+  const url = item.proofUrl?.trim()
+  return Boolean(url) && url !== '#'
+}
+
 /** Sortable column keys */
 type SortKey = 'requestId' | 'staffName' | 'amount' | 'dateSubmitted'
 type SortDirection = 'asc' | 'desc'
@@ -49,11 +66,24 @@ type SortDirection = 'asc' | 'desc'
 export function ReimbursementsTracking({
   data,
   isLoading = false,
+  onDecide,
 }: ReimbursementsTrackingProps) {
   // Approving a reimbursement moves money. `finance.view` gets you the list.
   const { can } = usePermissions()
   const canManage = can('finance.manage')
   const [timeRange, setTimeRange] = React.useState('this-week')
+  /** The row a decision is in flight for, so its two buttons can go quiet. */
+  const [deciding, setDeciding] = React.useState<string | null>(null)
+
+  const decide = async (requestId: string, decision: 'Approved' | 'Declined') => {
+    if (!onDecide) return
+    setDeciding(requestId)
+    try {
+      await onDecide(requestId, decision)
+    } finally {
+      setDeciding(null)
+    }
+  }
   const [sortKey, setSortKey] = React.useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc')
 
@@ -280,18 +310,31 @@ export function ReimbursementsTracking({
                     </p>
                   )}
                   {/* View File — shown here only on tablet/mobile */}
-                  <a
-                    href={item.proofUrl}
-                    className="lg:hidden inline-flex items-center gap-1 text-[11px] mt-0.5"
-                    style={{ color: 'var(--heading)' }}
-                    onClick={e => e.preventDefault()}
-                  >
-                    <FileText
-                      className="h-3 w-3 flex-shrink-0"
+                  {/* A link to '#' that cancels its own click is a claim
+                      there is a file. Say what is true instead. */}
+                  {hasProof(item) ? (
+                    <a
+                      href={item.proofUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="lg:hidden inline-flex items-center gap-1 text-[11px] mt-0.5"
+                      style={{ color: 'var(--heading)' }}
+                    >
+                      <FileText
+                        className="h-3 w-3 flex-shrink-0"
+                        style={{ color: colors.text.muted }}
+                      />
+                      View File
+                    </a>
+                  ) : (
+                    <span
+                      className="lg:hidden inline-flex items-center gap-1 text-[11px] mt-0.5"
                       style={{ color: colors.text.muted }}
-                    />
-                    View File
-                  </a>
+                    >
+                      <FileText className="h-3 w-3 flex-shrink-0" />
+                      No file attached
+                    </span>
+                  )}
                 </div>
 
                 {/* ── Date Submitted — desktop only (folded into the ID block below lg) ── */}
@@ -300,36 +343,51 @@ export function ReimbursementsTracking({
                 </span>
 
                 {/* ── Proof — desktop only chip with icon ── */}
-                <a
-                  href={item.proofUrl}
-                  className="hidden lg:inline-flex items-center gap-1.5 text-xs rounded-md px-2 py-1 whitespace-nowrap w-fit"
-                  style={{
-                    color: 'var(--heading)',
-                    backgroundColor: colors.border.subtle,
-                  }}
-                  onClick={e => e.preventDefault()}
-                >
-                  <FileText
-                    className="h-3.5 w-3.5 flex-shrink-0"
-                    style={{ color: colors.text.muted }}
-                  />
-                  View File
-                </a>
+                {hasProof(item) ? (
+                  <a
+                    href={item.proofUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hidden lg:inline-flex items-center gap-1.5 text-xs rounded-md px-2 py-1 whitespace-nowrap w-fit"
+                    style={{
+                      color: 'var(--heading)',
+                      backgroundColor: colors.border.subtle,
+                    }}
+                  >
+                    <FileText
+                      className="h-3.5 w-3.5 flex-shrink-0"
+                      style={{ color: colors.text.muted }}
+                    />
+                    View File
+                  </a>
+                ) : (
+                  <span
+                    className="hidden lg:inline-flex items-center gap-1.5 text-xs rounded-md px-2 py-1 whitespace-nowrap w-fit"
+                    style={{ color: colors.text.muted, backgroundColor: colors.border.subtle }}
+                  >
+                    <FileText className="h-3.5 w-3.5 flex-shrink-0" />
+                    No file
+                  </span>
+                )}
 
                 {/* ── Status ── */}
-                {item.status === 'Pending' && canManage ? (
+                {item.status === 'Pending' && canManage && onDecide ? (
                   <span className="flex items-center gap-2 whitespace-nowrap">
                     <button
-                      className="text-xs font-medium"
+                      type="button"
+                      disabled={deciding === item.requestId}
+                      className="text-xs font-medium disabled:opacity-50"
                       style={{ color: colors.status.success.text }}
-                      onClick={e => e.preventDefault()}
+                      onClick={() => void decide(item.requestId, 'Approved')}
                     >
                       Approve
                     </button>
                     <button
-                      className="text-xs font-medium"
+                      type="button"
+                      disabled={deciding === item.requestId}
+                      className="text-xs font-medium disabled:opacity-50"
                       style={{ color: colors.status.danger.text }}
-                      onClick={e => e.preventDefault()}
+                      onClick={() => void decide(item.requestId, 'Declined')}
                     >
                       Decline
                     </button>
@@ -341,6 +399,20 @@ export function ReimbursementsTracking({
                       color: statusStyles[item.status].color,
                       backgroundColor: statusStyles[item.status].bg,
                     }}
+                    // Who and when, on hover. A decision with neither is only
+                    // half an answer, and the row has no space for both.
+                    title={
+                      item.decidedBy
+                        ? `${item.status} by ${item.decidedBy}${
+                            item.decidedAt
+                              ? ` on ${new Date(item.decidedAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}`
+                              : ''
+                          }`
+                        : undefined
+                    }
                   >
                     {item.status}
                   </span>

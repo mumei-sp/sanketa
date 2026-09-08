@@ -39,6 +39,18 @@ interface Database {
   rows: StoredNotification[]
   /** Highest `seq` handed out so far. */
   lastSeq: number
+  /**
+   * Keys of notifications the sweep has already raised.
+   *
+   * Time-derived notifications have a problem event-driven ones do not: the
+   * condition that produced them is still true on the next sweep. An overdue
+   * fee stays overdue, so sweeping every few minutes would raise it every few
+   * minutes forever. The key carries the day, so a condition fires once per
+   * day per subject and stops when it is resolved.
+   *
+   * On a server this would be a unique index rather than a list.
+   */
+  derivedKeys?: string[]
 }
 
 type Listener = (batch: NotificationBatch) => void
@@ -220,6 +232,25 @@ export function subscribe(listener: Listener): () => void {
   return () => {
     listeners.delete(listener)
   }
+}
+
+/**
+ * Publish a time-derived notification, at most once per key.
+ *
+ * Returns null when the key has been seen, which is the common case and not an
+ * error — most sweeps find nothing new.
+ */
+export function publishDerived(key: string, event: DomainEvent): Notification | null {
+  const database = load()
+  const seen = database.derivedKeys ?? []
+  if (seen.includes(key)) return null
+
+  const published = publish(event)
+  // Remembered even when the rule declined to notify, so a rule that returns
+  // null is not re-evaluated on every sweep for the rest of the day.
+  database.derivedKeys = [...seen, key].slice(-500)
+  persist()
+  return published
 }
 
 /**

@@ -129,6 +129,91 @@ const RULES: Record<string, Rule> = {
   }),
 
   // ── Notices ─────────────────────────────────────────────────────────
+  'reimbursement.decided': event => {
+    const decision = str(event.payload, 'decision')
+    const approved = decision === 'Approved'
+    return {
+      category: 'finance',
+      // A decline is not a failure of the system, but it is the one the
+      // claimant needs to notice — money they expected is not coming.
+      severity: approved ? 'success' : 'warning',
+      title: `Reimbursement ${decision.toLowerCase()}`,
+      body: `${str(event.payload, 'staffName')}'s claim for ₹${num(
+        event.payload,
+        'amount',
+      ).toLocaleString('en-IN')} was ${decision.toLowerCase()} by ${str(
+        event.payload,
+        'decidedBy',
+        'an administrator',
+      )}.`,
+      target: {
+        kind: 'reimbursement',
+        id: str(event.payload, 'requestId'),
+        route: '/finance/expenses',
+      },
+      audience: ADMINS,
+    }
+  },
+
+  'fees.reminder_sent': event => ({
+    category: 'finance',
+    severity: 'info',
+    title: 'Payment reminder sent',
+    body: `${str(event.payload, 'studentName')}'s guardian was reminded of ₹${num(
+      event.payload,
+      'amount',
+    ).toLocaleString('en-IN')} outstanding.`,
+    target: {
+      kind: 'fee-reminder',
+      id: str(event.payload, 'studentId'),
+      route: '/finance/fees-collection',
+    },
+    audience: ADMINS,
+  }),
+
+  // ── Time-derived. Nobody did anything; a date passed. See `sweep.ts`. ──
+
+  'fees.overdue': event => {
+    const daysLate = num(event.payload, 'daysLate')
+    return {
+      category: 'finance',
+      // A week late is a different conversation from a day late.
+      severity: daysLate >= 7 ? 'critical' : 'warning',
+      title: `Fee overdue — ${str(event.payload, 'studentName')}`,
+      body: `₹${num(event.payload, 'amount').toLocaleString('en-IN')} for ${str(
+        event.payload,
+        'feeCategory',
+        'fees',
+      )} is ${daysLate} ${daysLate === 1 ? 'day' : 'days'} past due (${str(
+        event.payload,
+        'className',
+      )}).`,
+      target: {
+        kind: 'fee-record',
+        id: str(event.payload, 'studentId'),
+        route: '/finance/fees-collection',
+      },
+      audience: ADMINS,
+    }
+  },
+
+  'attendance.missing': event => ({
+    category: 'attendance',
+    severity: 'warning',
+    title: `${str(event.payload, 'className')} register not submitted`,
+    body: `Nothing has been recorded for today, and it is past ${num(
+      event.payload,
+      'cutoffHour',
+      10,
+    )}:00.`,
+    target: {
+      kind: 'attendance-register',
+      id: str(event.payload, 'className'),
+      route: '/attendance/daily',
+    },
+    audience: EVERYONE,
+  }),
+
   'notice.published': event => ({
     category: 'notices',
     severity: str(event.payload, 'category') === 'Finance' ? 'warning' : 'info',

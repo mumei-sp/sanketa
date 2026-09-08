@@ -19,6 +19,8 @@ import type {
   Receipt,
   FeeCategory,
 } from '@/features/fees-collection/types'
+import * as reminderServer from '@/mocks/reminders'
+import type { PaymentReminder } from '@/mocks/reminders'
 import {
   feeTrendData,
   feeProgressData,
@@ -241,6 +243,69 @@ export async function generateReceipt(
         if (err?.status === 404) return null
         throw err
       }
+    },
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Payment reminders
+// ---------------------------------------------------------------------------
+
+export type { PaymentReminder }
+
+/**
+ * Reminders already sent to a guardian, newest first.
+ *
+ * @apiRoute GET /api/v1/finance/reminders?studentId={id}
+ */
+export async function fetchPaymentReminders(studentId?: string): Promise<PaymentReminder[]> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 60, max: 160 })
+      return reminderServer.listReminders(studentId)
+    },
+    async () => {
+      const { data } = await apiClient.get<PaymentReminder[]>('/finance/reminders', {
+        params: { studentId },
+      })
+      return data
+    },
+  )
+}
+
+/**
+ * Remind a guardian about an outstanding balance.
+ *
+ * The mock records the intent rather than sending anything — there is no
+ * gateway behind it, and the honest version of this endpoint in a real system
+ * would queue a message and record exactly this row either way. What matters
+ * is that the claim on screen now refers to something that exists.
+ *
+ * @apiRoute POST /api/v1/finance/reminders
+ */
+export async function sendPaymentReminder(input: {
+  studentId: string
+  studentName: string
+  amount: number
+  sentBy: string
+}): Promise<PaymentReminder> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      const reminder = reminderServer.recordReminder(input)
+      emitDomainEvent({
+        type: 'fees.reminder_sent',
+        payload: {
+          studentId: input.studentId,
+          studentName: input.studentName,
+          amount: input.amount,
+        },
+      })
+      return reminder
+    },
+    async () => {
+      const { data } = await apiClient.post<PaymentReminder>('/finance/reminders', input)
+      return data
     },
   )
 }
