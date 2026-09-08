@@ -100,19 +100,26 @@ export async function refreshSession(): Promise<AuthResponse> {
  */
 export async function logout(): Promise<void> {
   const refreshToken = authUtils.getRefreshToken()
+
+  // Cleared before the first `await`, which means synchronously from the
+  // caller's point of view. Callers sign out and navigate in the same tick,
+  // and `GuestGuard` reads the token during that render — clearing it in a
+  // `finally` let the guard still see a session and bounce the person back to
+  // the dashboard they had just asked to leave.
+  authUtils.removeToken()
+
   try {
     await mockOrHttp(
       async () => {
-        mockLogout()
+        mockLogout(refreshToken)
       },
       async () => {
         await apiClient.post('/auth/logout', { refreshToken })
       },
     )
   } catch (error) {
-    // A failed revoke must not strand someone on a page they meant to leave.
+    // The session is already over locally; a failed revoke is worth knowing
+    // about but must not strand someone on a page they meant to leave.
     console.error('Failed to revoke the session server-side', error)
-  } finally {
-    authUtils.removeToken()
   }
 }

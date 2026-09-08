@@ -172,9 +172,23 @@ export function WorkloadDistributionChart({
   const availableSubjects = React.useMemo(() => {
     const dataKeys = new Set(Object.keys(teacherWorkloadData))
     return config.subjects.filter(s => dataKeys.has(s.name)).map(s => s.name)
-  }, [config.subjects])
+    // `teacherWorkloadData` is state now, not a module constant. Leaving it out
+    // meant this ran once against the initial `{}` and never again, so the
+    // subject list stayed empty and the chart stayed blank for the whole
+    // session.
+  }, [config.subjects, teacherWorkloadData])
 
-  const [subject, setSubject] = React.useState(() => availableSubjects[0] ?? 'Science')
+  // Empty until the data says otherwise. A hardcoded fallback here would be a
+  // guess at a key that may not exist, and the lazy initialiser ran before the
+  // fetch resolved anyway — so the subject never followed the data.
+  const [subject, setSubject] = React.useState('')
+
+  React.useEffect(() => {
+    if (availableSubjects.length === 0) return
+    // Also covers a subject being renamed or removed in Settings while it is
+    // the one selected.
+    if (!availableSubjects.includes(subject)) setSubject(availableSubjects[0])
+  }, [availableSubjects, subject])
   const [timePeriod, setTimePeriod] = React.useState('Weekly')
 
   // Get filtered data based on subject and time period
@@ -182,7 +196,7 @@ export function WorkloadDistributionChart({
     const subjectData = teacherWorkloadData[subject]
     if (!subjectData) return []
     return subjectData[timePeriod] || []
-  }, [subject, timePeriod])
+  }, [subject, timePeriod, teacherWorkloadData])
 
   // Calculate the rounded max value for Y-axis domain
   const yAxisMax = React.useMemo(() => {

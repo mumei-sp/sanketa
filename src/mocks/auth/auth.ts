@@ -194,8 +194,13 @@ export async function mockRefresh(refreshToken: string): Promise<AuthResponse> {
   return response
 }
 
-/** Sign out on the server too, so the refresh token stops being redeemable. */
-export function mockLogout(): void {
-  const refreshToken = authUtils.getRefreshToken()
+/**
+ * Sign out on the server too, so the refresh token stops being redeemable.
+ *
+ * Takes the token rather than reading it back from storage: the caller clears
+ * local state first so navigation is safe, which means by the time this runs
+ * there is nothing left to read.
+ */
+export function mockLogout(refreshToken: string | null): void {
   if (refreshToken) revokeSession(refreshToken)
 }

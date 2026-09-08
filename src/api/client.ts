@@ -53,13 +53,23 @@ const retryCounts = new Map<string, number>()
 let refreshInFlight: Promise<void> | null = null
 
 /**
- * Requests that have already been replayed once.
+ * Marks a request config as already replayed once.
  *
  * A retry that 401s again means the new token is no good either, and trying
  * once more would loop. Tracked on the request config rather than by URL,
  * because the same endpoint can legitimately be in flight twice.
+ *
+ * A string key, not a symbol, and that is the whole point: replaying goes
+ * through `apiClient(originalRequest)`, and axios `mergeConfig` builds a fresh
+ * config by walking `Object.keys` — which carries unknown string properties
+ * across and silently drops symbols. A symbol here meant the guard was never
+ * seen on the retry, so a persistently-401ing endpoint refreshed and replayed
+ * forever. This is why the `_retry` idiom is a plain property everywhere else.
  */
-const RETRIED = Symbol('auth-retried')
+const RETRIED_KEY = '__authRetried'
+
+/** A request config, plus the replay marker axios will carry for us. */
+type RetryableConfig = InternalAxiosRequestConfig & { [RETRIED_KEY]?: boolean }
 
 /** Opt-out header for the refresh call itself — see `refreshSession`. */
 const SKIP_REFRESH_HEADER = 'X-Skip-Auth-Refresh'
@@ -184,8 +194,8 @@ apiClient.interceptors.response.use(
       // session is still good, the short-lived half of it simply ran out. Only
       // when the refresh itself is refused does this become a sign-out.
       if (error.response.status === 401 && originalRequest) {
-        const retryFlags = originalRequest as unknown as Record<symbol, unknown>
-        const alreadyRetried = Boolean(retryFlags[RETRIED])
+        const retryable = originalRequest as RetryableConfig
+        const alreadyRetried = retryable[RETRIED_KEY] === true
         const skipRefresh =
           originalRequest.headers?.[SKIP_REFRESH_HEADER] !== undefined
 
@@ -201,7 +211,7 @@ apiClient.interceptors.response.use(
             })
             await refreshInFlight
 
-            retryFlags[RETRIED] = true
+            retryable[RETRIED_KEY] = true
             const token = authUtils.getToken()
             if (token) {
               originalRequest.headers.set?.('Authorization', `Bearer ${token}`)
