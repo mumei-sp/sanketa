@@ -13,13 +13,22 @@
  * fallback instead of rotting.
  */
 
-import type { NotificationBatch } from '../types'
+import type { NotificationBatch, NotificationViewer } from '../types'
 
 /**
  * What the store lends the transport. All three are read fresh on every call,
  * so a transport never holds a stale cursor or a stale closure over state.
  */
 export interface TransportContext {
+  /**
+   * Who this connection belongs to.
+   *
+   * Only the mock stream uses it — a real `EventSource` carries the session
+   * cookie and the server decides. Undefined means unrestricted, which is what
+   * a caller that has not resolved its permissions yet should get rather than
+   * an empty feed.
+   */
+  viewer?: NotificationViewer
   /** Newest cursor the store has applied. `undefined` before the first batch. */
   getCursor: () => string | undefined
   /** A batch arrived over the live channel. Push transports only. */

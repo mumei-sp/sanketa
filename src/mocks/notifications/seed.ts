@@ -12,7 +12,20 @@
  * entries are the ones a user would most plausibly act on.
  */
 
+import type { Permission } from '@/config/permissions'
 import type { Notification } from '@/features/notifications/types'
+
+/**
+ * A seeded row plus the audience its rule would have declared.
+ *
+ * The column arrived after these rows were written, and the store treats a row
+ * with no audience as visible to everyone — the right default for real history
+ * that predates the feature, but it made the seed misleading: every demo
+ * account saw every seeded notification regardless of what it could reach.
+ * Stating the audience here makes the starting feed behave like the ones the
+ * rules produce.
+ */
+type SeededNotification = Notification & { audience: Permission[] }
 
 const MINUTE = 60 * 1000
 const HOUR = 60 * MINUTE
@@ -28,7 +41,7 @@ function readAfter(createdAgo: number, delay: number): string {
   return new Date(Date.now() - createdAgo + delay).toISOString()
 }
 
-export const SEED_NOTIFICATIONS: Notification[] = [
+export const SEED_NOTIFICATIONS: SeededNotification[] = [
   {
     id: 'ntf-seed-01',
     category: 'system',
@@ -39,6 +52,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: null,
     createdAt: ago(4 * DAY),
     readAt: readAfter(4 * DAY, 2 * HOUR),
+    audience: ['settings.manage'],
   },
   {
     id: 'ntf-seed-02',
@@ -50,6 +64,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'student', id: 'S-2102', route: '/students/details/S-2102' },
     createdAt: ago(3 * DAY),
     readAt: readAfter(3 * DAY, 40 * MINUTE),
+    audience: ['students.view'],
   },
   {
     id: 'ntf-seed-03',
@@ -61,6 +76,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'fee-payment', id: 'PAY-3301', route: '/finance/fees-collection' },
     createdAt: ago(2 * DAY + 5 * HOUR),
     readAt: readAfter(2 * DAY + 5 * HOUR, 3 * HOUR),
+    audience: ['finance.view'],
   },
   {
     id: 'ntf-seed-04',
@@ -72,6 +88,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'timetable', id: 'TTX-118', route: '/timetable' },
     createdAt: ago(2 * DAY),
     readAt: null,
+    audience: ['timetable.view'],
   },
   {
     id: 'ntf-seed-05',
@@ -83,6 +100,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'notice', id: 'nb-2', route: '/notice-board' },
     createdAt: ago(1 * DAY + 6 * HOUR),
     readAt: readAfter(1 * DAY + 6 * HOUR, 25 * MINUTE),
+    audience: ['notices.view'],
   },
   {
     id: 'ntf-seed-06',
@@ -94,6 +112,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'grade-submission', id: 'GS-441', route: '/grades/sheet?class=8B&exam=ut1' },
     createdAt: ago(1 * DAY + 2 * HOUR),
     readAt: null,
+    audience: ['grades.view'],
   },
   {
     id: 'ntf-seed-07',
@@ -109,6 +128,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     },
     createdAt: ago(22 * HOUR),
     readAt: null,
+    audience: ['attendance.view'],
   },
   {
     id: 'ntf-seed-08',
@@ -120,6 +140,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'notice', id: 'nb-6', route: '/notice-board' },
     createdAt: ago(5 * HOUR),
     readAt: null,
+    audience: ['notices.view'],
   },
   {
     id: 'ntf-seed-09',
@@ -131,6 +152,7 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'promotion', id: 'PR-2026', route: '/students/promotion' },
     createdAt: ago(3 * HOUR),
     readAt: null,
+    audience: ['students.view'],
   },
   {
     id: 'ntf-seed-10',
@@ -142,5 +164,6 @@ export const SEED_NOTIFICATIONS: Notification[] = [
     target: { kind: 'calendar-event', id: 'EV-77', route: '/calendar' },
     createdAt: ago(40 * MINUTE),
     readAt: null,
+    audience: ['calendar.view'],
   },
 ]

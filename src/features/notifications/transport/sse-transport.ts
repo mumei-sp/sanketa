@@ -39,7 +39,7 @@ function createMockStreamTransport(): NotificationTransport {
       context.onReconcile()
       unsubscribe = subscribeToMockServer((batch: NotificationBatch) => {
         context.onBatch(batch)
-      })
+      }, context.viewer)
     },
 
     stop() {

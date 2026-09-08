@@ -18,6 +18,7 @@
  * events are not.
  */
 
+import type { Permission } from '@/config/permissions'
 import type {
   DomainEvent,
   NotificationCategory,
@@ -33,14 +34,19 @@ interface NotificationDraft {
   body?: string
   target?: NotificationTarget | null
   /**
-   * Roles that should receive this, as the real backend would compute.
+   * Who should receive this, as permissions rather than role names.
    *
-   * With one mocked user the audience is effectively always "you", so this
-   * field changes nothing you can see today. It is computed anyway so the
-   * shape is honest and the backend team inherits real intent rather than
-   * having to invent it.
+   * Permissions because roles are the school's data: this used to be
+   * `['Admin', 'Principal']`, which was written before a school could invent
+   * "Vice Principal" — and a fan-out on display names delivers nothing to a
+   * role that did not exist when the rule was written. A permission asks what
+   * the notification is *about*, which survives any role the school creates.
+   *
+   * An empty list means everyone. A rule that forgets to say who should hear
+   * about something must over-deliver rather than silently reach nobody —
+   * a notification nobody receives looks identical to a rule that never fired.
    */
-  audience: string[]
+  audience: Permission[]
 }
 
 type Rule = (event: DomainEvent) => NotificationDraft | null
@@ -56,8 +62,26 @@ function num(payload: Record<string, unknown>, key: string, fallback = 0): numbe
   return typeof value === 'number' ? value : fallback
 }
 
-const EVERYONE = ['Admin', 'Principal', 'Teacher', 'Staff']
-const ADMINS = ['Admin', 'Principal']
+/**
+ * The audiences the rules below actually use.
+ *
+ * Each names the permission that makes the notification worth reading: you
+ * hear about a fee because you can see finance, not because of your job title.
+ *
+ * Every rule below names one. A rule may pass `[]` for "everyone" — the store
+ * treats that as unrestricted — but none needs to yet, and spelling out the
+ * permission is what makes the fan-out reviewable.
+ */
+const SEES_FINANCE: Permission[] = ['finance.view']
+const SEES_ATTENDANCE: Permission[] = ['attendance.view']
+const SEES_GRADES: Permission[] = ['grades.view']
+const SEES_STUDENTS: Permission[] = ['students.view']
+const SEES_TEACHERS: Permission[] = ['teachers.view']
+const SEES_NOTICES: Permission[] = ['notices.view']
+const SEES_CALENDAR: Permission[] = ['calendar.view']
+const SEES_TIMETABLE: Permission[] = ['timetable.view']
+const MANAGES_NOTICES: Permission[] = ['notices.manage']
+const MANAGES_SETTINGS: Permission[] = ['settings.manage']
 
 const RULES: Record<string, Rule> = {
   // ── Attendance ──────────────────────────────────────────────────────
@@ -71,7 +95,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'submissionId'),
       route: `/attendance/daily?class=${str(event.payload, 'className')}&date=${str(event.payload, 'date')}`,
     },
-    audience: ADMINS,
+    audience: SEES_ATTENDANCE,
   }),
 
   // ── Grades ──────────────────────────────────────────────────────────
@@ -85,7 +109,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'submissionId'),
       route: `/grades/entry?class=${str(event.payload, 'className')}&exam=${str(event.payload, 'examId')}&subject=${str(event.payload, 'subjectId')}`,
     },
-    audience: ADMINS,
+    audience: SEES_GRADES,
   }),
 
   'grades.submitted': event => ({
@@ -98,7 +122,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'submissionId'),
       route: `/grades/sheet?class=${str(event.payload, 'className')}&exam=${str(event.payload, 'examId')}`,
     },
-    audience: ADMINS,
+    audience: SEES_GRADES,
   }),
 
   // ── Finance ─────────────────────────────────────────────────────────
@@ -112,7 +136,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'paymentId'),
       route: '/finance/fees-collection',
     },
-    audience: ADMINS,
+    audience: SEES_FINANCE,
   }),
 
   'expense.recorded': event => ({
@@ -125,7 +149,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'expenseId'),
       route: '/finance/expenses',
     },
-    audience: ADMINS,
+    audience: SEES_FINANCE,
   }),
 
   // ── Notices ─────────────────────────────────────────────────────────
@@ -151,7 +175,7 @@ const RULES: Record<string, Rule> = {
         id: str(event.payload, 'requestId'),
         route: '/finance/expenses',
       },
-      audience: ADMINS,
+      audience: SEES_FINANCE,
     }
   },
 
@@ -168,7 +192,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'studentId'),
       route: '/finance/fees-collection',
     },
-    audience: ADMINS,
+    audience: SEES_FINANCE,
   }),
 
   // ── Time-derived. Nobody did anything; a date passed. See `sweep.ts`. ──
@@ -193,7 +217,7 @@ const RULES: Record<string, Rule> = {
         id: str(event.payload, 'studentId'),
         route: '/finance/fees-collection',
       },
-      audience: ADMINS,
+      audience: SEES_FINANCE,
     }
   },
 
@@ -211,7 +235,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'className'),
       route: '/attendance/daily',
     },
-    audience: EVERYONE,
+    audience: SEES_ATTENDANCE,
   }),
 
   'notice.published': event => ({
@@ -224,7 +248,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'noticeId'),
       route: '/notice-board',
     },
-    audience: EVERYONE,
+    audience: SEES_NOTICES,
   }),
 
   'notice.pinned': event => ({
@@ -233,7 +257,7 @@ const RULES: Record<string, Rule> = {
     title: `Pinned — ${str(event.payload, 'title')}`,
     body: 'Moved to the top of the notice board',
     target: { kind: 'notice', id: str(event.payload, 'noticeId'), route: '/notice-board' },
-    audience: EVERYONE,
+    audience: SEES_NOTICES,
   }),
 
   // Deleting a notice is worth recording, but it has nowhere to link to.
@@ -242,7 +266,7 @@ const RULES: Record<string, Rule> = {
     severity: 'info',
     title: `Notice removed — ${str(event.payload, 'title')}`,
     target: null,
-    audience: ADMINS,
+    audience: MANAGES_NOTICES,
   }),
 
   // ── Calendar ────────────────────────────────────────────────────────
@@ -256,7 +280,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'eventId'),
       route: '/calendar',
     },
-    audience: EVERYONE,
+    audience: SEES_CALENDAR,
   }),
 
   'calendar.event_cancelled': event => ({
@@ -265,7 +289,7 @@ const RULES: Record<string, Rule> = {
     title: `Cancelled — ${str(event.payload, 'title')}`,
     body: str(event.payload, 'date'),
     target: null,
-    audience: EVERYONE,
+    audience: SEES_CALENDAR,
   }),
 
   // ── Timetable ───────────────────────────────────────────────────────
@@ -279,7 +303,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'classSectionId'),
       route: '/timetable',
     },
-    audience: EVERYONE,
+    audience: SEES_TIMETABLE,
   }),
 
   'timetable.exception_added': event => ({
@@ -288,7 +312,7 @@ const RULES: Record<string, Rule> = {
     title: `Substitution — ${str(event.payload, 'className')}`,
     body: `${str(event.payload, 'subject')} on ${str(event.payload, 'date')}`,
     target: { kind: 'timetable', id: str(event.payload, 'exceptionId'), route: '/timetable' },
-    audience: EVERYONE,
+    audience: SEES_TIMETABLE,
   }),
 
   // ── People ──────────────────────────────────────────────────────────
@@ -302,7 +326,7 @@ const RULES: Record<string, Rule> = {
       id: str(event.payload, 'studentId'),
       route: `/students/details/${str(event.payload, 'studentId')}`,
     },
-    audience: ADMINS,
+    audience: SEES_STUDENTS,
   }),
 
   'students.promoted': event => ({
@@ -311,7 +335,7 @@ const RULES: Record<string, Rule> = {
     title: 'Promotion run completed',
     body: `${num(event.payload, 'promotedCount')} students promoted · ${num(event.payload, 'retainedCount')} retained`,
     target: { kind: 'promotion', id: str(event.payload, 'runId'), route: '/students/promotion' },
-    audience: ADMINS,
+    audience: SEES_STUDENTS,
   }),
 
   'teacher.added': event => ({
@@ -320,7 +344,7 @@ const RULES: Record<string, Rule> = {
     title: `${str(event.payload, 'teacherName')} joined`,
     body: str(event.payload, 'department'),
     target: { kind: 'teacher', id: str(event.payload, 'teacherId'), route: '/teachers' },
-    audience: ADMINS,
+    audience: SEES_TEACHERS,
   }),
 
   // ── System ──────────────────────────────────────────────────────────
@@ -330,7 +354,7 @@ const RULES: Record<string, Rule> = {
     title: 'School settings updated',
     body: str(event.payload, 'section'),
     target: null,
-    audience: ADMINS,
+    audience: MANAGES_SETTINGS,
   }),
 }
 

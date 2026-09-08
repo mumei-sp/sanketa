@@ -28,6 +28,7 @@ import {
 } from '@/api/services/notification-service'
 import { toast } from 'sonner'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { createNotificationTransport } from './transport'
 
 /**
@@ -37,7 +38,7 @@ import { createNotificationTransport } from './transport'
  * and each pass walks every fee record and every class.
  */
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000
-import type { Notification, NotificationBatch } from './types'
+import type { Notification, NotificationBatch, NotificationViewer } from './types'
 
 interface NotificationContextValue {
   /** Muted categories already removed — see the filter in the provider. */
@@ -88,6 +89,36 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
    * no-op the day the server takes over.
    */
   const mutedCategories = config.notifications.categories
+
+  /**
+   * The permissions this feed is being read with.
+   *
+   * Two filters run on this feed and they are different in kind. *Audience* is
+   * authorization: the server decides what reaches you, and it is enforced on
+   * delivery below. *Muted categories* is a preference: it hides what did
+   * reach you, on read, so unmuting brings history back rather than a hole.
+   *
+   * Held in a ref as well as a memo because `reconcile` must read the current
+   * viewer without being rebuilt — a new identity there would restart the
+   * transport on every render.
+   */
+  const { role, isReady: permissionsReady } = usePermissions()
+  const viewer = React.useMemo<NotificationViewer>(
+    () => ({ permissions: role?.permissions ?? [] }),
+    [role],
+  )
+  const viewerRef = React.useRef(viewer)
+  viewerRef.current = viewer
+
+  /**
+   * Changes whenever the answer to "what may this reader see" changes —
+   * including while previewing another role, which narrows the feed the same
+   * way it narrows the sidebar.
+   */
+  const viewerKey = React.useMemo(
+    () => [...viewer.permissions].sort().join('|'),
+    [viewer],
+  )
   const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -120,12 +151,26 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
    * two) is quietly folded into the feed instead of toasted, which is the
    * right way to be wrong here.
    */
-  const catchUpRef = React.useRef({ fetched: false, swept: false, done: false })
+  const catchUpRef = React.useRef({ fetched: false, swept: false })
+
+  /**
+   * Both halves in, so anything arriving now is genuinely new.
+   *
+   * Derived rather than stored, and the two halves have different lifetimes,
+   * which is the part that bit: `swept` is about the *server* — the day's
+   * derived alerts have been raised — and stays true for the session. `fetched`
+   * is about *this reader*, and resets when the viewer changes. Storing a
+   * combined `done` flag meant a viewer change reset `swept` too, and since the
+   * sweep only runs on mount and on a timer, the gate stayed shut and no toast
+   * ever fired again.
+   */
+  const isCaughtUp = React.useCallback(
+    () => catchUpRef.current.fetched && catchUpRef.current.swept,
+    [],
+  )
 
   const noteCaughtUp = React.useCallback((half: 'fetched' | 'swept') => {
-    const state = catchUpRef.current
-    state[half] = true
-    if (state.fetched && state.swept) state.done = true
+    catchUpRef.current[half] = true
   }, [])
 
   const applyIncoming = React.useCallback((batch: NotificationBatch) => {
@@ -139,13 +184,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     // everything, and the toast is reserved for what cannot wait for someone to
     // open the bell. Widening this to `warning` would make the app shout during
     // a routine morning and teach people to dismiss without reading.
-    if (!catchUpRef.current.done) return
+    if (!isCaughtUp()) return
     batch.items
       .filter(item => item.severity === 'critical' && item.readAt === null)
       .forEach(item => {
         toast.error(item.title, { description: item.body })
       })
-  }, [])
+  }, [isCaughtUp])
 
   const reconcile = React.useCallback(async () => {
     if (inFlightRef.current) return
@@ -154,8 +199,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // No cursor yet means this is the first load, which wants the whole
       // first page rather than "everything since the beginning of time".
       const batch = cursorRef.current
-        ? await fetchNotificationsSince(cursorRef.current)
-        : await fetchNotifications()
+        ? await fetchNotificationsSince(cursorRef.current, undefined, viewerRef.current)
+        : await fetchNotifications(undefined, viewerRef.current)
       applyIncoming(batch)
       setError(null)
     } catch (cause) {
@@ -172,8 +217,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // ── Live channel ──
   React.useEffect(() => {
+    // Nothing until the roles table has landed. Connecting first would fetch
+    // with no permissions, and an empty feed is indistinguishable from a quiet
+    // one — the reader would have no way to tell they were seeing nothing.
+    if (!permissionsReady) return
+
+    // A different viewer is a different feed, so start it over rather than
+    // appending: the cursor belongs to the old audience, and rows already on
+    // screen may not be this reader's to see.
+    cursorRef.current = undefined
+    setNotifications([])
+    // Only this reader's half. `swept` belongs to the session, not the viewer.
+    catchUpRef.current.fetched = false
+
     const transport = createNotificationTransport()
     transport.start({
+      viewer: viewerRef.current,
       getCursor: () => cursorRef.current,
       onBatch: applyIncoming,
       onReconcile: () => {
@@ -181,7 +240,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       },
     })
     return () => transport.stop()
-  }, [applyIncoming, reconcile])
+  }, [permissionsReady, viewerKey, applyIncoming, reconcile])
 
   /**
    * Ask the mock server to re-evaluate its time-derived rules.
@@ -248,7 +307,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setNotifications(current =>
       current.map(item => (clearing.has(item.id) ? { ...item, readAt } : item)),
     )
-    void markAllNotificationsRead().catch(cause => {
+    void markAllNotificationsRead(viewerRef.current).catch(cause => {
       console.error('Failed to mark all notifications read', cause)
       const unreadAgain = new Set(previouslyUnread)
       setNotifications(current =>

@@ -67,6 +67,19 @@ export interface Notification {
 }
 
 /**
+ * Who is asking.
+ *
+ * A real server reads this off the request's token and the client never sends
+ * it — a client that could name its own permissions could name any. The mock
+ * has no token, so callers pass it, the same compromise the access log makes
+ * with its actor. When these calls become HTTP the argument disappears.
+ */
+export interface NotificationViewer {
+  /** Permission ids the viewer holds. */
+  permissions: string[]
+}
+
+/**
  * One delivery from the server — a page of notifications plus the cursor to
  * ask from next time.
  *

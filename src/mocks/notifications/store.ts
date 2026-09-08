@@ -24,6 +24,7 @@ import type {
   DomainEvent,
   Notification,
   NotificationBatch,
+  NotificationViewer,
 } from '@/features/notifications/types'
 import { deriveNotification } from './rules'
 import { SEED_NOTIFICATIONS } from './seed'
@@ -33,6 +34,14 @@ const DB_KEY = 'sanketa:mock-db:notifications'
 /** A row as the server holds it — the public `Notification` plus its sequence. */
 interface StoredNotification extends Notification {
   seq: number
+  /**
+   * Permissions that make this row worth delivering. Empty means everyone.
+   *
+   * Server-only, and stripped before anything leaves: a client has no use for
+   * the reason it was sent something, and shipping the rule would tell every
+   * reader what other readers can see.
+   */
+  audience?: string[]
 }
 
 interface Database {
@@ -55,14 +64,46 @@ interface Database {
 
 type Listener = (batch: NotificationBatch) => void
 
-const listeners = new Set<Listener>()
+/**
+ * An open connection, and who is on the other end of it.
+ *
+ * A real SSE stream is per-user, so the fan-out decision belongs here rather
+ * than in the client: pushing every row to every listener and filtering on
+ * arrival would mean the wrong person's browser had already received it.
+ */
+interface Subscription {
+  listener: Listener
+  viewer?: NotificationViewer
+}
+
+const subscriptions = new Set<Subscription>()
 
 let db: Database | null = null
 
 /** Strip server-only columns before anything leaves the database. */
 function toPublic(row: StoredNotification): Notification {
-  const { seq: _seq, ...rest } = row
+  const { seq: _seq, audience: _audience, ...rest } = row
   return rest
+}
+
+/**
+ * Should this row reach this viewer?
+ *
+ * Open by default, twice over: a row with no audience reaches everyone, and so
+ * does every row when no viewer is supplied. Both defaults point the same way
+ * on purpose — a rule that forgets to declare an audience, or a caller that
+ * forgets to say who it is, should over-deliver rather than silently deliver
+ * to nobody. A notification that reaches no one is indistinguishable from a
+ * rule that never fired, which is the failure you cannot debug.
+ *
+ * Rows written before this column existed have no audience and so stay
+ * visible, which is the same rule and needs no migration.
+ */
+function reaches(row: StoredNotification, viewer?: NotificationViewer): boolean {
+  if (!viewer) return true
+  const audience = row.audience ?? []
+  if (audience.length === 0) return true
+  return audience.some(permission => viewer.permissions.includes(permission))
 }
 
 function seedDatabase(): Database {
@@ -118,11 +159,15 @@ function byNewest(a: StoredNotification, b: StoredNotification): number {
  * Called with no cursor this returns the full history, which is what a client
  * does on its first connect.
  */
-export function getSince(cursor?: string, limit = 50): NotificationBatch {
+export function getSince(
+  cursor?: string,
+  limit = 50,
+  viewer?: NotificationViewer,
+): NotificationBatch {
   const database = load()
   const since = cursor ? Number(cursor) : 0
   const fresh = database.rows
-    .filter(row => row.seq > since)
+    .filter(row => row.seq > since && reaches(row, viewer))
     .sort((a, b) => a.seq - b.seq)
     .slice(0, limit)
 
@@ -135,14 +180,17 @@ export function getSince(cursor?: string, limit = 50): NotificationBatch {
 }
 
 /** The whole feed, newest first. The first page a panel renders. */
-export function getAll(limit = 50): NotificationBatch {
+export function getAll(limit = 50, viewer?: NotificationViewer): NotificationBatch {
   const database = load()
-  const rows = [...database.rows].sort(byNewest).slice(0, limit)
+  const rows = database.rows
+    .filter(row => reaches(row, viewer))
+    .sort(byNewest)
+    .slice(0, limit)
   return { items: rows.map(toPublic), cursor: String(database.lastSeq) }
 }
 
-export function getUnreadCount(): number {
-  return load().rows.filter(row => row.readAt === null).length
+export function getUnreadCount(viewer?: NotificationViewer): number {
+  return load().rows.filter(row => row.readAt === null && reaches(row, viewer)).length
 }
 
 // ── Writes ────────────────────────────────────────────────────────────
@@ -170,14 +218,20 @@ export function publish(event: DomainEvent): Notification | null {
     target: draft.target ?? null,
     createdAt: event.occurredAt ?? new Date().toISOString(),
     readAt: null,
+    audience: draft.audience,
   }
 
   database.rows.push(row)
   persist()
 
   const published = toPublic(row)
-  const batch: NotificationBatch = { items: [published], cursor: String(row.seq) }
-  listeners.forEach(listener => listener(batch))
+  subscriptions.forEach(subscription => {
+    // Silence, not an empty batch: a client that received `items: []` would
+    // advance its cursor past a row it was never allowed to see, and then
+    // never fetch it if its permissions later changed.
+    if (!reaches(row, subscription.viewer)) return
+    subscription.listener({ items: [published], cursor: String(row.seq) })
+  })
 
   return published
 }
@@ -194,12 +248,19 @@ export function markRead(id: string): Notification | null {
 }
 
 /** Returns how many were actually flipped, which is what the caller reports. */
-export function markAllRead(): number {
+/**
+ * Scoped to what the viewer can see.
+ *
+ * "Mark all read" means the list in front of you, not the table behind it —
+ * without the filter a teacher clearing their feed would silently mark the
+ * finance office's unread rows as read too.
+ */
+export function markAllRead(viewer?: NotificationViewer): number {
   const database = load()
   const now = new Date().toISOString()
   let changed = 0
   database.rows.forEach(row => {
-    if (row.readAt === null) {
+    if (row.readAt === null && reaches(row, viewer)) {
       row.readAt = now
       changed += 1
     }
@@ -227,10 +288,11 @@ export function dismiss(id: string): boolean {
  * disconnected) recovers by calling `getSince` with its last cursor, which is
  * exactly the reconciliation a real client performs on reconnect.
  */
-export function subscribe(listener: Listener): () => void {
-  listeners.add(listener)
+export function subscribe(listener: Listener, viewer?: NotificationViewer): () => void {
+  const subscription: Subscription = { listener, viewer }
+  subscriptions.add(subscription)
   return () => {
-    listeners.delete(listener)
+    subscriptions.delete(subscription)
   }
 }
 

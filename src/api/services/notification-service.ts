@@ -3,6 +3,12 @@
  *
  * Mock path (the in-browser notification server under `src/mocks/notifications`)
  * + HTTP path (apiClient). The mock server owns the store, the read state and
+ * Every read takes an optional `viewer`. Only the mock uses it: a real server
+ * reads the caller off the request's token, because a client that could name
+ * its own permissions could name anyone's. The argument exists so the mock can
+ * enforce the same fan-out the backend will, and it disappears on the HTTP
+ * path rather than being sent and ignored.
+ *
  * the cursor exactly as a backend would, so flipping `VITE_USE_MOCK_API`
  * changes which implementation runs and nothing else.
  *
@@ -19,6 +25,7 @@ import { getEnvConfig } from '@/api/utils/env'
 import * as mockServer from '@/mocks/notifications'
 import { authUtils } from '@/api/utils/auth'
 import type {
+  NotificationViewer,
   DomainEvent,
   Notification,
   NotificationActor,
@@ -42,11 +49,14 @@ function currentActor(): NotificationActor | null {
  *
  * @apiRoute GET /api/v1/notifications
  */
-export async function fetchNotifications(limit = 50): Promise<NotificationBatch> {
+export async function fetchNotifications(
+  limit = 50,
+  viewer?: NotificationViewer,
+): Promise<NotificationBatch> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 400 })
-      return mockServer.getAll(limit)
+      return mockServer.getAll(limit, viewer)
     },
     async () => {
       const { data } = await apiClient.get<NotificationBatch>('/notifications', {
@@ -69,13 +79,14 @@ export async function fetchNotifications(limit = 50): Promise<NotificationBatch>
 export async function fetchNotificationsSince(
   cursor: string | undefined,
   limit = 50,
+  viewer?: NotificationViewer,
 ): Promise<NotificationBatch> {
   return mockOrHttp(
     async () => {
       // Lower latency than a page fetch: this runs on a timer in polling mode,
       // and a slow reconcile would make the badge feel laggy.
       await withLatency({ min: 80, max: 220 })
-      return mockServer.getSince(cursor, limit)
+      return mockServer.getSince(cursor, limit, viewer)
     },
     async () => {
       const { data } = await apiClient.get<NotificationBatch>('/notifications', {
@@ -107,11 +118,11 @@ export async function markNotificationRead(id: string): Promise<Notification | n
  *
  * @apiRoute POST /api/v1/notifications/read-all
  */
-export async function markAllNotificationsRead(): Promise<number> {
+export async function markAllNotificationsRead(viewer?: NotificationViewer): Promise<number> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 80, max: 200 })
-      return mockServer.markAllRead()
+      return mockServer.markAllRead(viewer)
     },
     async () => {
       const { data } = await apiClient.post<{ updated: number }>('/notifications/read-all')
@@ -163,8 +174,9 @@ export function emitDomainEvent(event: DomainEvent): void {
  */
 export function subscribeToMockServer(
   listener: (batch: NotificationBatch) => void,
+  viewer?: NotificationViewer,
 ): () => void {
-  return mockServer.subscribe(listener)
+  return mockServer.subscribe(listener, viewer)
 }
 
 /**
