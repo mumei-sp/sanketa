@@ -86,7 +86,7 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="lg:hidden" />
 
-        {canAny(['settings.manage', 'roles.manage']) && (
+        {canAny(['settings.manage', 'roles.manage', 'users.manage']) && (
           <>
             <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
               <Settings />

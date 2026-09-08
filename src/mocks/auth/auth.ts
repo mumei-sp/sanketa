@@ -1,5 +1,6 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/features/auth/types'
 import { authUtils } from '@/api/utils/auth'
+import { findByEmail, listUsers } from '@/mocks/users'
 
 const MOCK_DELAY = 1200
 
@@ -8,61 +9,30 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * One account per built-in role, all with the password `admin`.
+ * Sign-in reads the user directory.
  *
- * A single admin login left every role unreachable without editing code, which
- * meant permission rules could only be reasoned about rather than used. Signing
- * in as the person is also how a real deployment is exercised, so nothing here
- * is scaffolding that has to come out later.
+ * The four accounts used to be hard-coded here, which meant a role assigned in
+ * the People screen could never reach a session — the login would keep handing
+ * back whatever was baked into this file. Reading the directory makes the two
+ * agree, and is what a real backend does anyway.
  *
- * `role` holds a role *id* from the roles table, not a display name — the name
- * is the school's to change.
+ * Every account uses the password `admin`.
  */
 const MOCK_PASSWORD = 'admin'
 
-const MOCK_ACCOUNTS: AuthResponse[] = [
-  {
-    token: 'mock-jwt-token-sanketa-2026',
-    refreshToken: 'mock-refresh-token-sanketa-2026',
-    user: { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', role: 'admin' },
-  },
-  {
-    token: 'mock-jwt-token-sanketa-principal',
-    refreshToken: 'mock-refresh-token-sanketa-principal',
-    user: { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', role: 'principal' },
-  },
-  {
-    token: 'mock-jwt-token-sanketa-teacher',
-    refreshToken: 'mock-refresh-token-sanketa-teacher',
-    // Matches teacher T-1006 in the roster. A backend would read the teacher
-    // record and stamp these into the token; the mock does the same by hand.
-    user: {
-      id: '3',
-      fullName: 'Meera Iyengar',
-      email: 'teacher@sanketa.edu',
-      role: 'teacher',
-      assignedClasses: ['8A', '8B'],
-    },
-  },
-  {
-    token: 'mock-jwt-token-sanketa-accountant',
-    refreshToken: 'mock-refresh-token-sanketa-accountant',
-    user: { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', role: 'accountant' },
-  },
-]
-
-/** The accounts, for the sign-in screen's hint. */
-export const MOCK_ACCOUNT_HINTS = MOCK_ACCOUNTS.map(account => ({
-  email: account.user.email,
-  name: account.user.fullName,
-  role: account.user.role,
-}))
+/** Listed on the sign-in screen so each role can be tried. */
+export function mockAccountHints() {
+  return listUsers().map(user => ({
+    email: user.email,
+    name: user.fullName,
+    role: user.roleId,
+  }))
+}
 
 export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   await delay(MOCK_DELAY)
 
-  const identifier = data.identifier.trim().toLowerCase()
-  const account = MOCK_ACCOUNTS.find(candidate => candidate.user.email.toLowerCase() === identifier)
+  const account = findByEmail(data.identifier)
 
   if (!account || data.password !== MOCK_PASSWORD) {
     throw {
@@ -72,9 +42,24 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
     }
   }
 
-  authUtils.setToken(account.token)
-  authUtils.setUser(account.user)
-  return account
+  const response: AuthResponse = {
+    token: `mock-jwt-token-${account.id}`,
+    refreshToken: `mock-refresh-token-${account.id}`,
+    // The session carries the role and the class assignment, the way a token
+    // would — so a change made in the People screen takes effect at next
+    // sign-in rather than needing the client to look the user up.
+    user: {
+      id: account.id,
+      fullName: account.fullName,
+      email: account.email,
+      role: account.roleId,
+      assignedClasses: account.assignedClasses,
+    },
+  }
+
+  authUtils.setToken(response.token)
+  authUtils.setUser(response.user)
+  return response
 }
 
 export async function mockRegister(data: RegisterRequest): Promise<AuthResponse> {

@@ -1,0 +1,136 @@
+/**
+ * The mock user directory.
+ *
+ * The app had no such thing: four accounts hard-coded in the auth mock, and a
+ * role that only a login could set. So a school could define "Librarian" in
+ * the role editor and have no way to make anyone one — the mechanism existed
+ * and the administration did not.
+ *
+ * Same shape as the roles and notification tables: rows with ids, reads and
+ * writes through functions, `localStorage` as the disk, and only a service
+ * allowed to import it.
+ *
+ * Where a user's access lives
+ * ---------------------------
+ * `roleId` and `assignedClasses` both sit on the user row, because both are
+ * facts about *the account*, and both have to be stamped into the session at
+ * sign-in. `Teacher.assignedClasses` on the staff record seeds this and stays
+ * as the domain view of the same fact; a backend would resolve one from the
+ * other at login rather than keeping two writable copies, and this store is
+ * the one auth reads.
+ */
+
+import { teachersData } from '@/mocks/teachers/teachers'
+
+export interface SchoolUser {
+  id: string
+  fullName: string
+  email: string
+  /** Role id from the roles table. */
+  roleId: string
+  /** Staff record this login belongs to, when it is a member of staff. */
+  teacherId?: string
+  /** Class sections they may write to, when their role is scoped. */
+  assignedClasses?: string[]
+}
+
+const DB_KEY = 'sanketa:mock-db:users'
+
+interface Database {
+  rows: SchoolUser[]
+}
+
+let db: Database | null = null
+
+/** The teacher record a seeded account belongs to, for its class assignment. */
+function classesFor(teacherId: string): string[] {
+  return teachersData.find(teacher => teacher.teacherId === teacherId)?.assignedClasses ?? []
+}
+
+function seed(): Database {
+  return {
+    rows: [
+      { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', roleId: 'admin' },
+      { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', roleId: 'principal' },
+      {
+        id: '3',
+        fullName: 'Meera Iyengar',
+        email: 'teacher@sanketa.edu',
+        roleId: 'teacher',
+        teacherId: 'T-1006',
+        assignedClasses: classesFor('T-1006'),
+      },
+      { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', roleId: 'accountant' },
+    ],
+  }
+}
+
+function load(): Database {
+  if (db) return db
+  try {
+    const raw = localStorage.getItem(DB_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Database
+      if (Array.isArray(parsed.rows) && parsed.rows.length > 0) {
+        db = parsed
+        return db
+      }
+    }
+  } catch {
+    // Unparseable or unavailable (private mode, cleared site data) — reseed.
+  }
+  db = seed()
+  persist()
+  return db
+}
+
+function persist(): void {
+  if (!db) return
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(db))
+  } catch {
+    // Quota or private mode; the in-memory copy still serves this session.
+  }
+}
+
+function clone(user: SchoolUser): SchoolUser {
+  return { ...user, assignedClasses: user.assignedClasses ? [...user.assignedClasses] : undefined }
+}
+
+export function listUsers(): SchoolUser[] {
+  return load().rows.map(clone)
+}
+
+export function findByEmail(email: string): SchoolUser | undefined {
+  const wanted = email.trim().toLowerCase()
+  const found = load().rows.find(user => user.email.toLowerCase() === wanted)
+  return found ? clone(found) : undefined
+}
+
+/**
+ * Patch a user's access.
+ *
+ * Name and email are not patchable here: this is the access screen, and
+ * letting it rewrite identity would make "who is this" and "what may they do"
+ * the same edit.
+ */
+export function updateUser(
+  id: string,
+  patch: { roleId?: string; assignedClasses?: string[] },
+): SchoolUser | null {
+  const database = load()
+  const user = database.rows.find(candidate => candidate.id === id)
+  if (!user) return null
+
+  if (patch.roleId !== undefined) user.roleId = patch.roleId
+  if (patch.assignedClasses !== undefined) user.assignedClasses = [...patch.assignedClasses]
+
+  persist()
+  return clone(user)
+}
+
+/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
+export function resetUsers(): void {
+  db = seed()
+  persist()
+}

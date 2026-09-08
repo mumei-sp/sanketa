@@ -20,12 +20,25 @@ const DB_KEY = 'sanketa:mock-db:roles'
 
 interface Database {
   rows: Role[]
+  /**
+   * Every permission id this database has already been told about.
+   *
+   * Without it there is no way to tell "the admin removed this" from "this
+   * did not exist when the row was written", and the two need opposite
+   * treatment: the first must be respected, the second must be granted or a
+   * permission added by a release is unreachable forever. `users.manage`
+   * shipped and no existing install could see the screen behind it.
+   */
+  knownPermissions?: string[]
 }
 
 let db: Database | null = null
 
 function seed(): Database {
-  return { rows: BUILTIN_ROLES.map(role => ({ ...role, permissions: [...role.permissions] })) }
+  return {
+    rows: BUILTIN_ROLES.map(role => ({ ...role, permissions: [...role.permissions] })),
+    knownPermissions: [...ALL_PERMISSIONS],
+  }
 }
 
 /**
@@ -44,15 +57,26 @@ function seed(): Database {
  *   which is exactly what happened the first time. Once a school has set the
  *   field either way, their choice is theirs and survives every upgrade.
  */
-function reconcile(role: Role): Role {
+function reconcile(role: Role, newPermissions: Set<string>): Role {
   const known = new Set<string>(ALL_PERMISSIONS)
   const permissions = role.permissions.filter(permission => known.has(permission))
   const builtin = BUILTIN_ROLES.find(candidate => candidate.id === role.id)
 
   const next: Role = { ...role, permissions }
-  if (builtin && next.scopedToAssignedClasses === undefined) {
-    next.scopedToAssignedClasses = builtin.scopedToAssignedClasses
+
+  if (builtin) {
+    if (next.scopedToAssignedClasses === undefined) {
+      next.scopedToAssignedClasses = builtin.scopedToAssignedClasses
+    }
+    // Permissions the build has never offered before are granted per the
+    // built-in definition. Ones it has offered are left alone, so a removal
+    // the school made survives.
+    const additions = builtin.permissions.filter(
+      permission => newPermissions.has(permission) && !next.permissions.includes(permission),
+    )
+    if (additions.length > 0) next.permissions = [...next.permissions, ...additions]
   }
+
   return next
 }
 
@@ -72,7 +96,20 @@ function load(): Database {
           ...role,
           permissions: [...role.permissions],
         }))
-        db = { rows: [...parsed.rows.map(reconcile), ...missing] }
+
+        // A database written before `knownPermissions` existed predates every
+        // permission it does not already grant, so treat what it has as what
+        // it knew.
+        const known = new Set(
+          parsed.knownPermissions ?? parsed.rows.flatMap(role => role.permissions),
+        )
+        const brandNew = new Set(ALL_PERMISSIONS.filter(permission => !known.has(permission)))
+
+        db = {
+          rows: [...parsed.rows.map(role => reconcile(role, brandNew)), ...missing],
+          knownPermissions: [...ALL_PERMISSIONS],
+        }
+        if (brandNew.size > 0) persist()
         return db
       }
     }

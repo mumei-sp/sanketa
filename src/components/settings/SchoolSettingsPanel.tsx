@@ -63,7 +63,9 @@ import { fontSizes } from '@/config/typography'
 import { TimetableSettingsSection } from './TimetableSettingsSection'
 import { GradingSettingsSection } from './GradingSettingsSection'
 import { NotificationSettingsSection } from './NotificationSettingsSection'
-import { SecuritySettingsSection } from './SecuritySettingsSection'
+import { AccessSettingsSection } from './access/AccessSettingsSection'
+import { usePermissions } from '@/features/auth/PermissionContext'
+import type { Permission } from '@/config/permissions'
 import { AppearanceSettingsSection } from './AppearanceSettingsSection'
 import type { Subject } from '@/config/school-config'
 import type { ClassSection } from '@/config/school-config'
@@ -78,6 +80,15 @@ interface SettingsSection {
   description: string
   icon: LucideIcon
   enabled: boolean
+  /**
+   * What a user must hold to open this section — any one of them is enough.
+   *
+   * Sections without any are school configuration, covered by
+   * `settings.manage`. Access carries its own two: a school may well want
+   * someone who can put people into roles without also being able to rewrite
+   * the grading scale, and either half of that screen is reason to open it.
+   */
+  permissions?: Permission[]
 }
 
 const SETTINGS_SECTIONS: SettingsSection[] = [
@@ -87,7 +98,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: 'grades', label: 'Grades', description: 'Grade scale & report cards', icon: GraduationCap, enabled: true },
   { id: 'notifications', label: 'Notifications', description: 'Alerts & reminders', icon: Bell, enabled: true },
   { id: 'appearance', label: 'Appearance', description: 'Theme & layout', icon: Palette, enabled: true },
-  { id: 'security', label: 'Security', description: 'Access & permissions', icon: Shield, enabled: true },
+  { id: 'access', label: 'Access', description: 'Roles, permissions & people', icon: Shield, enabled: true, permissions: ['roles.manage', 'users.manage'] },
 ]
 
 // ============================================================================
@@ -723,6 +734,24 @@ function ComingSoonSection({ section }: { section: SettingsSection }) {
 
 export function SchoolSettingsPanel() {
   const { config, updateConfig, resetConfig, isSettingsOpen, setSettingsOpen } = useSchoolConfig()
+  const { can, canAny } = usePermissions()
+
+  /**
+   * The sections this user may open.
+   *
+   * Everything unmarked is school configuration and needs `settings.manage`;
+   * Access carries its own pair. Someone with only `users.manage` sees one
+   * section rather than a panel of controls that would refuse them.
+   */
+  const sections = React.useMemo(
+    () =>
+      SETTINGS_SECTIONS.filter(
+        section =>
+          section.enabled &&
+          (section.permissions ? canAny(section.permissions) : can('settings.manage')),
+      ),
+    [can, canAny],
+  )
   const { showSuccess, showInfo } = useAppToast()
 
   const [activeSection, setActiveSection] = React.useState('general')
@@ -768,12 +797,12 @@ export function SchoolSettingsPanel() {
       case 'timetable': return <TimetableSettingsSection draft={draft} setDraft={setDraft} />
       case 'grades': return <GradingSettingsSection draft={draft} setDraft={setDraft} />
       case 'notifications': return <NotificationSettingsSection draft={draft} setDraft={setDraft} />
-      // Roles live in their own table behind a service, so this section saves
-      // as you go rather than joining the panel's draft.
-      case 'security': return <SecuritySettingsSection />
+      // Roles and users live in their own tables behind services, so this
+      // section saves as you go rather than joining the panel's draft.
+      case 'access': return <AccessSettingsSection />
       case 'appearance': return <AppearanceSettingsSection draft={draft} setDraft={setDraft} />
       default: {
-        const s = SETTINGS_SECTIONS.find(x => x.id === activeSection)
+        const s = sections.find(x => x.id === activeSection)
         return s ? <ComingSoonSection section={s} /> : null
       }
     }
@@ -784,8 +813,10 @@ export function SchoolSettingsPanel() {
       <SheetContent
         side="right"
         size="full"
-        className="flex flex-col p-0 gap-0"
-        style={{ width: 'calc(100vw - 16rem)', maxWidth: '900px' }}
+        // Full-bleed below `lg`, where 16rem of sidebar does not exist to sit
+        // beside: the inline width this replaced left a 119px column on a
+        // phone, which no amount of responsive markup inside could rescue.
+        className="flex flex-col p-0 gap-0 w-full lg:w-[calc(100vw-16rem)] lg:max-w-[900px]"
         onInteractOutside={e => {
           const target = e.target as HTMLElement
           if (target?.closest('[data-radix-popper-content-wrapper]') || target?.closest('[role="listbox"]')) {
@@ -796,7 +827,9 @@ export function SchoolSettingsPanel() {
         <SheetTitle className="sr-only">School Settings</SheetTitle>
 
         {/* ═══ Body: Sidebar + Content ═══ */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Stacked below `md`, where the sidebar gives way to the tab strip —
+            a horizontal strip is a row of the page, not a column beside it. */}
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
 
           {/* ── Left sidebar nav ── */}
           <nav
@@ -842,7 +875,7 @@ export function SchoolSettingsPanel() {
               </div>
 
               {/* Nav items */}
-              {SETTINGS_SECTIONS.map(section => {
+              {sections.map(section => {
                 const isActive = section.id === activeSection
                 const Icon = section.icon
                 return (
@@ -922,7 +955,7 @@ export function SchoolSettingsPanel() {
               gap: spacing['1.5'],
             }}
           >
-            {SETTINGS_SECTIONS.filter(s => s.enabled).map(section => {
+            {sections.map(section => {
               const isActive = section.id === activeSection
               const Icon = section.icon
               return (
@@ -952,9 +985,8 @@ export function SchoolSettingsPanel() {
           >
             {/* Content */}
             <div
-              className="flex-1"
+              className="flex-1 px-5 py-6 md:px-10 md:py-8"
               style={{
-                padding: `${spacing['8']} ${spacing['10']}`,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: spacing['5'],
@@ -966,11 +998,8 @@ export function SchoolSettingsPanel() {
 
             {/* ── Footer — bottom of content area ── */}
             <div
-              className="shrink-0 flex items-center justify-between"
-              style={{
-                padding: `${spacing['4']} ${spacing['10']}`,
-                borderTop: `1px solid ${border.default}`,
-              }}
+              className="shrink-0 flex items-center justify-between px-5 py-4 md:px-10"
+              style={{ borderTop: `1px solid ${border.default}` }}
             >
               {/* Unsaved changes indicator */}
               <div>

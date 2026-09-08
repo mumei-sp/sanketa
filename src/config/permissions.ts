@@ -48,6 +48,7 @@ export type Subject =
   | 'Transport'
   | 'Settings'
   | 'Role'
+  | 'User'
 
 /**
  * What may be done to a subject.
@@ -122,6 +123,7 @@ export const PERMISSION_DEFINITIONS = [
 
   { id: 'settings.manage', action: 'manage', subject: 'Settings', group: 'Administration', label: 'Manage school settings', description: 'Change school, academic, timetable and appearance settings.' },
   { id: 'roles.manage', action: 'manage', subject: 'Role', group: 'Administration', label: 'Manage roles', description: 'Create roles and change what each one can do.' },
+  { id: 'users.manage', action: 'manage', subject: 'User', group: 'Administration', label: 'Manage people', description: 'Change which role each person holds and which classes they cover.' },
 ] as const satisfies readonly PermissionDefinition[]
 
 export type Permission = (typeof PERMISSION_DEFINITIONS)[number]['id']
