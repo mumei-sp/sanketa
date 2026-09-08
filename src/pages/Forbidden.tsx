@@ -23,8 +23,8 @@ export default function Forbidden() {
       title="You don't have access to this page"
       description={
         role
-          ? `Your role, ${role.name}, doesn't include this area. An administrator can change that in Settings → Security.`
-          : 'Your account has no role assigned. An administrator can assign one in Settings → Security.'
+          ? `Your role, ${role.name}, doesn't include this area. An administrator can change that in Settings → Access.`
+          : 'Your account has no role assigned. An administrator can assign one in Settings → Access.'
       }
       action={
         <div className="flex flex-wrap items-center justify-center gap-2">

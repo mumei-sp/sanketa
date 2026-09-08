@@ -21,7 +21,7 @@
  */
 
 import * as React from 'react'
-import { Info, AlertTriangle, Layers, UserPlus } from 'lucide-react'
+import { Info, AlertTriangle, Layers, UserPlus, Eye } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils'
 import { getInitials } from '@/utils/format'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import type { SchoolUser } from '@/api/services/user-service'
 import type { Role } from '@/config/permissions'
 import type { RecordAccessEvent } from './AccessSettingsSection'
@@ -121,7 +122,8 @@ export function PeopleTab({
   onRoleFilterChange,
   record,
 }: PeopleTabProps) {
-  const { roles } = usePermissions()
+  const { roles, startPreview } = usePermissions()
+  const { setSettingsOpen } = useSchoolConfig()
   const currentUser = useCurrentUser()
   const { showSuccess, showError } = useAppToast()
   const [query, setQuery] = React.useState('')
@@ -322,6 +324,28 @@ export function PeopleTab({
                   </p>
                   <p className="text-caption text-muted-foreground">{user.email}</p>
                 </div>
+
+                {/* The faithful preview: this person's role *and* their
+                    classes, so a scoped holder is seen exactly as they see
+                    themselves. Not offered for yourself — that is just the app. */}
+                {role && !isSelf && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 gap-1"
+                    onClick={() => {
+                      startPreview({
+                        roleId: user.roleId,
+                        assignedClasses: user.assignedClasses ?? [],
+                        personName: user.fullName,
+                      })
+                      setSettingsOpen(false)
+                    }}
+                  >
+                    <Eye className="size-3.5" />
+                    View as
+                  </Button>
+                )}
 
                 <div className="w-[190px] max-md:w-full">
                   <Label htmlFor={`role-${user.id}`} className="sr-only">

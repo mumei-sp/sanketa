@@ -18,6 +18,7 @@ import { UserMenu } from './UserMenu'
 import { useGlobalSearchShortcut } from '@/features/search/use-search-shortcut'
 import { NotificationProvider } from '@/features/notifications/NotificationContext'
 import { PermissionProvider, usePermissions } from '@/features/auth/PermissionContext'
+import { PreviewBanner } from '@/features/auth/PreviewBanner'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 
 /**
@@ -266,6 +267,9 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
           <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
         </Suspense>
       )}
+
+      {/* Outside every gate on purpose — see the component. */}
+      <PreviewBanner />
     </>
   )
 }

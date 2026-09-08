@@ -33,6 +33,7 @@ import {
   Compass,
   SlidersHorizontal,
   Copy,
+  Eye,
   LayoutGrid,
   Columns3,
 } from 'lucide-react'
@@ -56,6 +57,7 @@ import { useAppToast } from '@/hooks/use-app-toast'
 import { border, text } from '@/theme/colors'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/features/auth/PermissionContext'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { defineAbilityFor, permissionDefinition, subjectFor } from '@/config/ability'
 import { navigationItems, visibleNavigationItems } from '@/config/navigation'
 import {
@@ -295,7 +297,8 @@ export function RolesTab({
   canManagePeople,
   record,
 }: RolesTabProps) {
-  const { roles, role: myRole, refresh } = usePermissions()
+  const { roles, realRole: myRole, refresh, startPreview } = usePermissions()
+  const { setSettingsOpen } = useSchoolConfig()
   const { showSuccess, showError } = useAppToast()
   const groups = React.useMemo(() => permissionsByGroup(), [])
 
@@ -781,6 +784,23 @@ export function RolesTab({
                   </Button>
                 )}
               </div>
+
+              {/* Look at the app the way this role does.
+                  Every class rather than none, because a scoped role with
+                  nothing assigned can write nothing, and previewing that would
+                  hide the behaviour being previewed. The panel closes because
+                  the point is to see the app, not this screen. */}
+              <Button
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => {
+                  startPreview({ roleId: selected.id, assignedClasses: classLabels })
+                  setSettingsOpen(false)
+                }}
+              >
+                <Eye className="size-4" />
+                View the app as {selected.name}
+              </Button>
 
               {/* Class scoping. Its own control rather than a permission,
                   because it does not grant anything — it narrows what the

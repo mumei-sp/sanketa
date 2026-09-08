@@ -38,6 +38,36 @@ export interface PermissionScope {
   classSection?: string
 }
 
+/** What the caller asks for when starting a preview. */
+export interface PreviewRequest {
+  roleId: string
+  /**
+   * Classes the previewed holder covers.
+   *
+   * Previewing a *person* passes theirs, which is the faithful view. Previewing
+   * a *role* has no person to ask, so the Roles tab passes every class — a
+   * scoped role with no classes can write nothing, and a preview that showed
+   * that would hide the very behaviour being previewed.
+   */
+  assignedClasses: string[]
+  /** Set when previewing a particular person rather than a bare role. */
+  personName?: string
+}
+
+/** An active preview, resolved against the roles table. */
+export interface ActivePreview {
+  role: Role
+  personName?: string
+  assignedClasses: string[]
+  /**
+   * What the previewed role holds and the real user does not.
+   *
+   * Empty for an admin. Non-empty means the view on screen is *less* than the
+   * role really gets, which the banner has to say rather than quietly imply.
+   */
+  withheld: Permission[]
+}
+
 interface PermissionContextValue {
   /**
    * The raw ability, for checks that want CASL's own vocabulary — including
@@ -45,8 +75,17 @@ interface PermissionContextValue {
    * record rather than a class name.
    */
   ability: AppAbility
-  /** The current user's role, or null when signed out or unassigned. */
+  /**
+   * The role every check on this page is answered against — the previewed one
+   * while a preview is running, otherwise the user's own.
+   */
   role: Role | null
+  /** The user's own role, regardless of any preview. */
+  realRole: Role | null
+  /** The running preview, or null. */
+  preview: ActivePreview | null
+  startPreview: (request: PreviewRequest) => void
+  stopPreview: () => void
   /** Every role the school has. Only the role editor needs this. */
   roles: Role[]
   /** False until the roles table has arrived — see the note above. */
@@ -88,16 +127,47 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     void load()
   }, [load])
 
-  const role = React.useMemo(
+  const realRole = React.useMemo(
     () => findRole(roles, currentUser?.role) ?? null,
     [roles, currentUser?.role],
   )
 
+  const [request, setRequest] = React.useState<PreviewRequest | null>(null)
+
+  /**
+   * The preview, resolved every render rather than captured on start.
+   *
+   * So editing a role while previewing it shows the edit, and deleting it ends
+   * the preview instead of leaving a view of a role that no longer exists.
+   */
+  const preview = React.useMemo<ActivePreview | null>(() => {
+    if (!request || !realRole) return null
+    const previewed = roles.find(candidate => candidate.id === request.roleId)
+    if (!previewed) return null
+
+    return {
+      role: {
+        ...previewed,
+        // The narrowing described at the top of this file.
+        permissions: previewed.permissions.filter(permission =>
+          realRole.permissions.includes(permission),
+        ),
+      },
+      personName: request.personName,
+      assignedClasses: request.assignedClasses,
+      withheld: previewed.permissions.filter(
+        permission => !realRole.permissions.includes(permission),
+      ),
+    }
+  }, [request, roles, realRole])
+
+  const role = preview?.role ?? realRole
+
   const isClassScoped = role?.scopedToAssignedClasses === true
-  const assignedClasses = React.useMemo(
-    () => (isClassScoped ? (currentUser?.assignedClasses ?? []) : []),
-    [isClassScoped, currentUser?.assignedClasses],
-  )
+  const assignedClasses = React.useMemo(() => {
+    if (!isClassScoped) return []
+    return preview ? preview.assignedClasses : (currentUser?.assignedClasses ?? [])
+  }, [isClassScoped, preview, currentUser?.assignedClasses])
 
   const ability = React.useMemo(
     () => defineAbilityFor(role, assignedClasses),
@@ -124,13 +194,17 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     return {
       ability,
       role,
+      realRole,
+      preview,
+      startPreview: setRequest,
+      stopPreview: () => setRequest(null),
       roles,
       isReady,
       can,
       canAny: permissions => permissions.some(permission => can(permission)),
       refresh: load,
     }
-  }, [ability, role, roles, isReady, load, isClassScoped, assignedClasses])
+  }, [ability, role, realRole, preview, roles, isReady, load])
 
   return <PermissionContext.Provider value={value}>{children}</PermissionContext.Provider>
 }
