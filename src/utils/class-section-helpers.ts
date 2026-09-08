@@ -68,14 +68,47 @@ export function getGroupedByGrade(sections: ClassSection[]): [string, ClassSecti
  * here rather than adding a third stored copy keeps one source of truth: the
  * two fields the record already has.
  *
- * Undefined when either half is missing, which a permission check must read as
- * "no class" — and therefore as denied for a scoped holder — rather than
- * guessing.
+ * Undefined only when the record names no class at all. Callers deciding
+ * whether a *particular* student may be edited must treat that as denied
+ * rather than passing it to `can()`: an undefined field asks "may I do this
+ * anywhere?", which a scoped holder answers yes to. See `canWriteStudent`.
  */
 export function classSectionOf(student: {
   gradeLevel?: string
   section?: string
+  class?: string
 }): string | undefined {
-  if (!student.gradeLevel || !student.section) return undefined
-  return `${student.gradeLevel}${student.section}`
+  if (student.gradeLevel && student.section) return `${student.gradeLevel}${student.section}`
+  // The other spelling. Student records carry the class two ways — six of the
+  // forty as `gradeLevel` + `section`, the rest as a combined `class` — and
+  // reading only the first meant this returned undefined for thirty-four of
+  // them. A permission check reads undefined as "no class in hand", which is
+  // the *unscoped* question, so a class-scoped teacher was allowed to edit
+  // every student whose record used the second spelling.
+  return student.class?.trim() || undefined
+}
+
+/**
+ * May this holder write to this student's record?
+ *
+ * The reason this exists rather than each call site composing it: passing an
+ * undefined `classSection` to `can()` does not ask "may I edit this student",
+ * it asks "may I edit a student somewhere", and a scoped teacher answers yes.
+ * So a record whose class cannot be determined has to fail closed here, where
+ * it is one decision, rather than at four call sites where it was silently
+ * failing open.
+ */
+export function canWriteStudent(
+  student: { gradeLevel?: string; section?: string; class?: string } | null | undefined,
+  can: (scope: { classSection: string }) => boolean,
+  isScoped: boolean,
+): boolean {
+  if (!student) return true
+  const classSection = classSectionOf(student)
+  if (classSection === undefined) {
+    // Unscoped holders are unaffected by a missing class; scoped ones cannot
+    // be given the benefit of the doubt about which class they are touching.
+    return !isScoped
+  }
+  return can({ classSection })
 }

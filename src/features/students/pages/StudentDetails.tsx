@@ -42,7 +42,7 @@ import {
 } from '@/api/services/parent-service'
 import { fetchUsers, type SchoolUser } from '@/api/services/user-service'
 import { usePermissions } from '@/features/auth/PermissionContext'
-import { classSectionOf } from '@/utils/class-section-helpers'
+import { canWriteStudent } from '@/utils/class-section-helpers'
 
 // Services
 import * as detailService from '@/api/services/student-detail-service'
@@ -75,7 +75,7 @@ interface DeleteTarget {
 export default function StudentDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { can } = usePermissions()
+  const { can, role } = usePermissions()
   const { student, isLoading, error } = useStudentById(id)
   const { detailData } = useStudentDetailData(id)
 
@@ -201,7 +201,7 @@ export default function StudentDetails() {
    * on click.
    */
   const canEditThisStudent =
-    !student || can('students.update', { classSection: classSectionOf(student) })
+    canWriteStudent(student, scope => can('students.update', scope), role?.scopeBy === 'classes')
   const writable = <T,>(handler: T): T | undefined =>
     canEditThisStudent ? handler : undefined
 

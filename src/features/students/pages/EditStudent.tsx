@@ -14,7 +14,7 @@ import { formToStudent } from '../utils/transform'
 import { STUDENT_MESSAGES, STUDENT_LABELS } from '../constants'
 import { useAppToast } from '@/hooks/use-app-toast'
 import { usePermissions } from '@/features/auth/PermissionContext'
-import { classSectionOf } from '@/utils/class-section-helpers'
+import { canWriteStudent, classSectionOf } from '@/utils/class-section-helpers'
 
 export default function EditStudent() {
   const { id } = useParams<{ id: string }>()
@@ -22,7 +22,7 @@ export default function EditStudent() {
   const { student, isLoading, error } = useStudentById(id)
   const { handleHandlersReady, handleSaveClick } = useStudentFormHandlers()
   const { showSuccess, showError } = useAppToast()
-  const { can } = usePermissions()
+  const { can, role } = usePermissions()
 
   /**
    * Whether this particular student may be edited.
@@ -34,7 +34,7 @@ export default function EditStudent() {
    * one into a class that is not yours either.
    */
   const canEditThisStudent =
-    !student || can('students.update', { classSection: classSectionOf(student) })
+    canWriteStudent(student, scope => can('students.update', scope), role?.scopeBy === 'classes')
 
   const onSubmit = React.useCallback(
     async (data: StudentFormValues) => {
