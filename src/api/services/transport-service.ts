@@ -16,6 +16,7 @@ import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/transport/store'
 import type {
   StudentTransportAssignment,
+  TransportAlert,
   TransportDriver,
   TransportFeeStructure,
   TransportRoute,
@@ -294,6 +295,30 @@ export async function deleteAssignment(id: string): Promise<boolean> {
     async () => {
       await apiClient.delete(`/transport/assignments/${id}`)
       return true
+    },
+  )
+}
+
+// ── Alerts ────────────────────────────────────────────────────────────
+
+/**
+ * Certificates lapsing, maintenance due, routes at capacity.
+ *
+ * Computed from the current fleet rather than stored, so an alert cannot
+ * outlive the vehicle it is about. A real backend answers this with a query
+ * for the same reason.
+ *
+ * @apiRoute GET /api/v1/transport/alerts
+ */
+export async function fetchTransportAlerts(): Promise<TransportAlert[]> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return mockServer.listAlerts()
+    },
+    async () => {
+      const { data } = await apiClient.get<TransportAlert[]>('/transport/alerts')
+      return data
     },
   )
 }

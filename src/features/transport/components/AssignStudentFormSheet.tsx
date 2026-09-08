@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,8 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { mockRoutes } from '@/mocks/transport'
-import type { StudentTransportAssignment, TransportType, FeeStatus } from '../types'
+import type { StudentTransportAssignment, TransportType, FeeStatus, TransportRoute } from '../types'
+import {
+  fetchRoutes,
+} from '@/api/services/transport-service'
 
 const assignmentSchema = z.object({
   studentName: z.string().min(1, 'Student name is required'),
@@ -36,6 +38,22 @@ interface AssignStudentFormSheetProps {
 }
 
 export function AssignStudentFormSheet({ open, onOpenChange, assignment, onSave }: AssignStudentFormSheetProps) {
+  const [routes, setRoutes] = useState<TransportRoute[]>([])
+
+  // Routes come from the store so a student can be assigned to one added today.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    Promise.all([fetchRoutes()])
+      .then(([routes]) => {
+        if (cancelled) return
+        setRoutes(routes)
+      })
+      .catch(error => console.error('Failed to load transport options', error))
+    return () => {
+      cancelled = true
+    }
+  }, [open])
   const isEdit = !!assignment
 
   const form = useForm<AssignmentFormValues>({
@@ -47,7 +65,7 @@ export function AssignStudentFormSheet({ open, onOpenChange, assignment, onSave 
   })
 
   const selectedRouteId = form.watch('routeId')
-  const selectedRoute = useMemo(() => mockRoutes.find(r => r.id === selectedRouteId), [selectedRouteId])
+  const selectedRoute = useMemo(() => routes.find(r => r.id === selectedRouteId), [selectedRouteId])
 
   useEffect(() => {
     if (assignment) {
@@ -66,7 +84,7 @@ export function AssignStudentFormSheet({ open, onOpenChange, assignment, onSave 
   }, [assignment, form])
 
   const onSubmit = (data: AssignmentFormValues) => {
-    const route = mockRoutes.find(r => r.id === data.routeId)
+    const route = routes.find(r => r.id === data.routeId)
     const stop = route?.stops.find(s => s.id === data.stopId)
     onSave({
       ...data,
@@ -124,7 +142,7 @@ export function AssignStudentFormSheet({ open, onOpenChange, assignment, onSave 
               >
                 <SelectTrigger><SelectValue placeholder="Select route" /></SelectTrigger>
                 <SelectContent>
-                  {mockRoutes.filter(r => r.status === 'Active').map(r => (
+                  {routes.filter(r => r.status === 'Active').map(r => (
                     <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                   ))}
                 </SelectContent>

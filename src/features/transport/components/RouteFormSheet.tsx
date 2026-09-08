@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -16,8 +16,11 @@ import {
 import { FormSection } from '@/components/form/FormSection'
 import { Plus, Trash2 } from 'lucide-react'
 import { ROUTE_STATUS_OPTIONS, ROUTE_TYPE_OPTIONS } from '../constants'
-import { mockVehicles, mockDrivers } from '@/mocks/transport'
-import type { TransportRoute } from '../types'
+import type { TransportRoute, TransportDriver, Vehicle } from '../types'
+import {
+  fetchVehicles,
+  fetchDrivers,
+} from '@/api/services/transport-service'
 
 const stopSchema = z.object({
   name: z.string().min(1, 'Stop name is required'),
@@ -56,6 +59,24 @@ interface RouteFormSheetProps {
 }
 
 export function RouteFormSheet({ open, onOpenChange, route, onSave }: RouteFormSheetProps) {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [drivers, setDrivers] = useState<TransportDriver[]>([])
+
+  // Options come from the store, not the seed: a driver deleted on the Drivers tab must stop being offered here, and one added there has to appear.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    Promise.all([fetchVehicles(), fetchDrivers()])
+      .then(([vehicles, drivers]) => {
+        if (cancelled) return
+        setVehicles(vehicles)
+        setDrivers(drivers)
+      })
+      .catch(error => console.error('Failed to load transport options', error))
+    return () => {
+      cancelled = true
+    }
+  }, [open])
   const isEdit = !!route
 
   const form = useForm<RouteFormInput, unknown, RouteFormValues>({
@@ -87,8 +108,8 @@ export function RouteFormSheet({ open, onOpenChange, route, onSave }: RouteFormS
   }, [route, form])
 
   const onSubmit = (data: RouteFormValues) => {
-    const vehicle = mockVehicles.find(v => v.id === data.vehicleId)
-    const driver = mockDrivers.find(d => d.id === data.driverId)
+    const vehicle = vehicles.find(v => v.id === data.vehicleId)
+    const driver = drivers.find(d => d.id === data.driverId)
     onSave({
       ...data,
       id: route?.id || `RT-${Date.now()}`,
@@ -183,7 +204,7 @@ export function RouteFormSheet({ open, onOpenChange, route, onSave }: RouteFormS
                   <Select value={form.watch('vehicleId')} onValueChange={v => form.setValue('vehicleId', v)}>
                     <SelectTrigger><SelectValue placeholder="Select vehicle" /></SelectTrigger>
                     <SelectContent>
-                      {mockVehicles.filter(v => v.status === 'Active').map(v => (
+                      {vehicles.filter(v => v.status === 'Active').map(v => (
                         <SelectItem key={v.id} value={v.id}>{v.registrationNumber}</SelectItem>
                       ))}
                     </SelectContent>
@@ -194,7 +215,7 @@ export function RouteFormSheet({ open, onOpenChange, route, onSave }: RouteFormS
                   <Select value={form.watch('driverId')} onValueChange={v => form.setValue('driverId', v)}>
                     <SelectTrigger><SelectValue placeholder="Select driver" /></SelectTrigger>
                     <SelectContent>
-                      {mockDrivers.filter(d => d.status === 'Active').map(d => (
+                      {drivers.filter(d => d.status === 'Active').map(d => (
                         <SelectItem key={d.id} value={d.id}>{d.firstName} {d.lastName}</SelectItem>
                       ))}
                     </SelectContent>

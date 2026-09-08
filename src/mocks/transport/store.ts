@@ -22,6 +22,7 @@
 import { newId } from '@/mocks/_shared'
 import type {
   StudentTransportAssignment,
+  TransportAlert,
   TransportDriver,
   TransportFeeStructure,
   TransportRoute,
@@ -262,6 +263,112 @@ export function saveAssignments(
   inputs: Partial<StudentTransportAssignment>[],
 ): StudentTransportAssignment[] {
   return inputs.map(input => saveAssignment(input))
+}
+
+// ── Alerts ────────────────────────────────────────────────────────────
+
+/**
+ * Alerts, derived rather than stored.
+ *
+ * The seeded list was six hand-written sentences naming specific vehicles and
+ * drivers — "Vehicle KA-01-GH-3456 insurance expires on 25 Apr" — which is
+ * fine until someone deletes that vehicle and the warning outlives it. An
+ * alert is a *question about the current data*, not a record, so it is
+ * computed on read and cannot go stale.
+ *
+ * A backend would answer this the same way: a query, not a table.
+ */
+const EXPIRY_WARNING_DAYS = 30
+
+/** Whole days from now until `date`. Negative once it has passed. */
+function daysUntil(date: string, now: Date): number | null {
+  const target = new Date(date)
+  if (Number.isNaN(target.getTime())) return null
+  return Math.ceil((target.getTime() - now.getTime()) / 86_400_000)
+}
+
+function formatDay(date: string): string {
+  return new Date(date).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+export function listAlerts(now: Date = new Date()): TransportAlert[] {
+  const database = load()
+  const alerts: TransportAlert[] = []
+  const today = now.toISOString().slice(0, 10)
+
+  const expiry = (
+    id: string,
+    label: string,
+    subject: string,
+    date: string,
+    noun: string,
+  ): void => {
+    const days = daysUntil(date, now)
+    if (days === null || days > EXPIRY_WARNING_DAYS) return
+    alerts.push({
+      id,
+      title: days < 0 ? `${label} Expired` : `${label} Expiring Soon`,
+      description:
+        days < 0
+          ? `${subject} ${noun} expired on ${formatDay(date)}`
+          : `${subject} ${noun} expires on ${formatDay(date)}`,
+      // Already lapsed is a different problem from lapsing soon: one is a
+      // vehicle that should not be on the road today.
+      severity: days < 0 ? 'danger' : 'warning',
+      date: today,
+    })
+  }
+
+  database.vehicles.forEach(vehicle => {
+    const name = `Vehicle ${vehicle.registrationNumber}`
+    expiry(`ALT-INS-${vehicle.id}`, 'Insurance', name, vehicle.insuranceExpiry, 'insurance')
+    expiry(`ALT-PUC-${vehicle.id}`, 'PUC', name, vehicle.pucExpiry, 'PUC certificate')
+    expiry(`ALT-FIT-${vehicle.id}`, 'Fitness', name, vehicle.fitnessExpiry, 'fitness certificate')
+
+    const dueIn = daysUntil(vehicle.nextMaintenanceDate, now)
+    if (dueIn !== null && dueIn <= EXPIRY_WARNING_DAYS) {
+      alerts.push({
+        id: `ALT-MNT-${vehicle.id}`,
+        title: 'Maintenance Due',
+        description: `${name} next maintenance due on ${formatDay(vehicle.nextMaintenanceDate)}`,
+        severity: dueIn < 0 ? 'danger' : 'warning',
+        date: today,
+      })
+    }
+  })
+
+  database.drivers.forEach(driver => {
+    expiry(
+      `ALT-LIC-${driver.id}`,
+      'License',
+      `Driver ${driver.firstName} ${driver.lastName}`,
+      driver.licenseExpiry,
+      'license',
+    )
+  })
+
+  database.routes.forEach(route => {
+    if (route.capacity <= 0) return
+    const usage = route.studentsAssigned / route.capacity
+    if (usage < 0.9) return
+    alerts.push({
+      id: `ALT-CAP-${route.id}`,
+      title: usage >= 1 ? 'Route At Capacity' : 'Route Over-Capacity',
+      description: `${route.name} is at ${Math.round(usage * 100)}% capacity (${
+        route.studentsAssigned
+      }/${route.capacity})`,
+      severity: usage >= 1 ? 'danger' : 'warning',
+      date: today,
+    })
+  })
+
+  // Worst first — an expired certificate should not sit below a reminder.
+  const rank: Record<TransportAlert['severity'], number> = { danger: 0, warning: 1, info: 2 }
+  return alerts.sort((a, b) => rank[a.severity] - rank[b.severity])
 }
 
 /** Wipe and reseed — the equivalent of re-running the backend's seed script. */

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Bus, Route, Users, UserCog, AlertTriangle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { TileWrapper, Tile } from '@/components/tile'
@@ -6,21 +6,82 @@ import { DashboardStatCard } from '@/features/dashboard/components/DashboardStat
 import { StatusPill } from '@/components/ui/status-pill'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
 import { text, status, border } from '@/theme/colors'
-import { mockVehicles, mockRoutes, mockDrivers, mockStudentAssignments, mockAlerts } from '@/mocks/transport'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  fetchVehicles,
+  fetchRoutes,
+  fetchDrivers,
+  fetchAssignments,
+  fetchTransportAlerts,
+} from '@/api/services/transport-service'
 import { VEHICLE_STATUS_CHART_COLORS, ALERT_SEVERITY_COLORS } from '../constants'
 import { formatDate } from '../utils/transport-utils'
-import type { TransportStat } from '../types'
+import type {
+  StudentTransportAssignment,
+  TransportAlert,
+  TransportDriver,
+  TransportRoute,
+  TransportStat,
+  Vehicle,
+} from '../types'
 
 /** Paid / Pending / Overdue — the app's core brand triad, as used by every
  *  other donut. The semantic palette stays on the status pills. */
 const FEE_COLLECTION_COLORS = ['var(--heading)', 'var(--primary)', 'var(--accent)']
 
+/**
+ * How many alerts the panel shows.
+ *
+ * The seeded list was six hand-written rows; deriving them from the real fleet
+ * found twenty-seven, because most of the seeded certificates have lapsed
+ * relative to today. All twenty-seven are true, and printing them all turns a
+ * summary tile into a wall nobody reads — the same failure the notification
+ * digest fixed. They are sorted worst-first, so the ones shown are the ones
+ * that matter, and the count says what is behind them.
+ */
+const ALERTS_SHOWN = 6
+
 export function TransportOverview() {
+  // Every number on this tab used to be computed from the mock arrays, so it
+  // described the seed rather than the fleet: delete a driver on the Drivers
+  // tab and "Total Drivers" here did not move.
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [routes, setRoutes] = useState<TransportRoute[]>([])
+  const [drivers, setDrivers] = useState<TransportDriver[]>([])
+  const [assignments, setAssignments] = useState<StudentTransportAssignment[]>([])
+  const [alerts, setAlerts] = useState<TransportAlert[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const load = useCallback(async () => {
+    try {
+      const [v, r, d, a, al] = await Promise.all([
+        fetchVehicles(),
+        fetchRoutes(),
+        fetchDrivers(),
+        fetchAssignments(),
+        fetchTransportAlerts(),
+      ])
+      setVehicles(v)
+      setRoutes(r)
+      setDrivers(d)
+      setAssignments(a)
+      setAlerts(al)
+    } catch (error) {
+      console.error('Failed to load the transport overview', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
   const stats: TransportStat[] = useMemo(() => [
     {
       id: 'total-vehicles',
       label: 'Total Vehicles',
-      value: mockVehicles.length,
+      value: vehicles.length,
       icon: Bus,
       iconBg: 'var(--primary)',
       iconColor: 'var(--primary-foreground)',
@@ -28,7 +89,7 @@ export function TransportOverview() {
     {
       id: 'active-routes',
       label: 'Active Routes',
-      value: mockRoutes.filter(r => r.status === 'Active').length,
+      value: routes.filter(r => r.status === 'Active').length,
       icon: Route,
       iconBg: 'var(--heading)',
       iconColor: 'var(--card)',
@@ -36,7 +97,7 @@ export function TransportOverview() {
     {
       id: 'students-transported',
       label: 'Students Transported',
-      value: mockStudentAssignments.length,
+      value: assignments.length,
       icon: Users,
       iconBg: 'var(--primary)',
       iconColor: 'var(--primary-foreground)',
@@ -44,42 +105,61 @@ export function TransportOverview() {
     {
       id: 'total-drivers',
       label: 'Total Drivers',
-      value: mockDrivers.filter(d => d.status === 'Active').length,
+      value: drivers.filter(d => d.status === 'Active').length,
       icon: UserCog,
       iconBg: 'var(--heading)',
       iconColor: 'var(--card)',
     },
-  ], [])
+  ], [vehicles, routes, drivers, assignments])
 
   const vehicleStatusData = useMemo(() => {
     const counts: Record<string, number> = {}
-    mockVehicles.forEach(v => { counts[v.status] = (counts[v.status] || 0) + 1 })
+    vehicles.forEach(v => { counts[v.status] = (counts[v.status] || 0) + 1 })
     return Object.entries(counts).map(([name, value]) => ({ name, value }))
-  }, [])
+  }, [vehicles])
 
   const routeUtilData = useMemo(() => {
-    return mockRoutes.map(r => ({
+    return routes.map(r => ({
       name: r.code,
       students: r.studentsAssigned,
       capacity: r.capacity,
     }))
-  }, [])
+  }, [routes])
 
   const feeCollectionData = useMemo(() => {
-    const paid = mockStudentAssignments.filter(a => a.feeStatus === 'Paid').length
-    const pending = mockStudentAssignments.filter(a => a.feeStatus === 'Pending').length
-    const overdue = mockStudentAssignments.filter(a => a.feeStatus === 'Overdue').length
+    const paid = assignments.filter(a => a.feeStatus === 'Paid').length
+    const pending = assignments.filter(a => a.feeStatus === 'Pending').length
+    const overdue = assignments.filter(a => a.feeStatus === 'Overdue').length
     return [
       { name: 'Paid', value: paid },
       { name: 'Pending', value: pending },
       { name: 'Overdue', value: overdue },
     ]
-  }, [])
+  }, [assignments])
 
   const collectionRate = useMemo(() => {
-    const paid = mockStudentAssignments.filter(a => a.feeStatus === 'Paid').length
-    return Math.round((paid / mockStudentAssignments.length) * 100)
-  }, [])
+    // Guarded: a school with no assignments divides by zero and renders NaN%,
+    // which the seeded array could never produce and an empty table always can.
+    if (assignments.length === 0) return 0
+    const paid = assignments.filter(a => a.feeStatus === 'Paid').length
+    return Math.round((paid / assignments.length) * 100)
+  }, [assignments])
+
+  if (isLoading) {
+    // Stat cards reading zero while the fetch is in flight would say the
+    // school has no fleet, which is a very different claim from "loading".
+    return (
+      <div className="space-y-4">
+        <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
+          {[0, 1, 2, 3].map(card => (
+            <Skeleton key={card} className="h-24 w-full rounded-xl" />
+          ))}
+        </TileWrapper>
+        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -182,7 +262,7 @@ export function TransportOverview() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-lg font-bold" style={{ color: text.heading }}>{mockVehicles.length}</span>
+                    <span className="text-lg font-bold" style={{ color: text.heading }}>{vehicles.length}</span>
                     <span className="text-[8px] text-muted-foreground">Total</span>
                   </div>
                 </div>
@@ -257,9 +337,14 @@ export function TransportOverview() {
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="size-4" style={{ color: status.warning.text }} />
           <h3 className="text-section-title" style={{ color: text.heading }}>Recent Alerts</h3>
+          {alerts.length > ALERTS_SHOWN && (
+            <span className="text-xs text-muted-foreground">
+              worst {ALERTS_SHOWN} of {alerts.length}
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-2">
-          {mockAlerts.map(alert => {
+          {alerts.slice(0, ALERTS_SHOWN).map(alert => {
             const severityLabel = alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)
             return (
               <div key={alert.id} className="flex items-start justify-between gap-3 py-2 border-b border-border/50 last:border-0">

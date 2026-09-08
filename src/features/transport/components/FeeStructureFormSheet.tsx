@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,8 +14,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FEE_TERMS } from '../constants'
-import { mockRoutes } from '@/mocks/transport'
-import type { TransportFeeStructure } from '../types'
+import type { TransportFeeStructure, TransportRoute } from '../types'
+import {
+  fetchRoutes,
+} from '@/api/services/transport-service'
 
 const feeSchema = z.object({
   routeId: z.string().min(1, 'Route is required'),
@@ -42,6 +44,22 @@ interface FeeStructureFormSheetProps {
 }
 
 export function FeeStructureFormSheet({ open, onOpenChange, feeStructure, onSave }: FeeStructureFormSheetProps) {
+  const [routes, setRoutes] = useState<TransportRoute[]>([])
+
+  // Routes come from the store so a newly added route can be priced.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    Promise.all([fetchRoutes()])
+      .then(([routes]) => {
+        if (cancelled) return
+        setRoutes(routes)
+      })
+      .catch(error => console.error('Failed to load transport options', error))
+    return () => {
+      cancelled = true
+    }
+  }, [open])
   const isEdit = !!feeStructure
 
   const form = useForm<FeeFormInput, unknown, FeeFormValues>({
@@ -66,7 +84,7 @@ export function FeeStructureFormSheet({ open, onOpenChange, feeStructure, onSave
   }, [feeStructure, form])
 
   const onSubmit = (data: FeeFormValues) => {
-    const route = mockRoutes.find(r => r.id === data.routeId)
+    const route = routes.find(r => r.id === data.routeId)
     onSave({
       ...data,
       id: feeStructure?.id || `FEE-${Date.now()}`,
@@ -89,7 +107,7 @@ export function FeeStructureFormSheet({ open, onOpenChange, feeStructure, onSave
             <Select value={form.watch('routeId')} onValueChange={v => form.setValue('routeId', v)}>
               <SelectTrigger><SelectValue placeholder="Select route" /></SelectTrigger>
               <SelectContent>
-                {mockRoutes.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                {routes.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
