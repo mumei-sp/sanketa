@@ -12,57 +12,17 @@ import type {
   MarkableAttendanceStatus,
 } from '@/features/attendance/types'
 import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { studentsData } from '@/mocks/students/students'
+import { classSectionOf } from '@/utils/class-section-helpers'
+import { getDisplayName } from '@/features/students/utils/formatting'
 import { fullName } from '@/mocks/_shared/fake'
 
 // ============================================================================
 // Class Rosters
 // ============================================================================
 
-const class9ARoster: ClassRosterStudent[] = [
-  { id: 'stu-9a-01', name: 'Michael Chen', rollNumber: '01', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael' },
-  { id: 'stu-9a-02', name: 'Sarah Kim', rollNumber: '02', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah' },
-  { id: 'stu-9a-03', name: 'David Roy', rollNumber: '03', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David' },
-  { id: 'stu-9a-04', name: 'Emma Thomas', rollNumber: '04', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma' },
-  { id: 'stu-9a-05', name: 'James Wilson', rollNumber: '05', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James' },
-  { id: 'stu-9a-06', name: 'Priya Patel', rollNumber: '06', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya' },
-  { id: 'stu-9a-07', name: 'Alex Johnson', rollNumber: '07', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' },
-  { id: 'stu-9a-08', name: 'Maria Garcia', rollNumber: '08', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria' },
-  { id: 'stu-9a-09', name: 'Ryan Lee', rollNumber: '09', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ryan' },
-  { id: 'stu-9a-10', name: 'Sophie Anderson', rollNumber: '10', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie' },
-  { id: 'stu-9a-11', name: 'Daniel Brown', rollNumber: '11', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Daniel' },
-  { id: 'stu-9a-12', name: 'Aisha Mohammed', rollNumber: '12', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aisha' },
-  { id: 'stu-9a-13', name: 'Lucas Martinez', rollNumber: '13', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas' },
-  { id: 'stu-9a-14', name: 'Olivia Taylor', rollNumber: '14', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Olivia' },
-  { id: 'stu-9a-15', name: 'Ethan Davis', rollNumber: '15', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ethan' },
-]
 
-const class8BRoster: ClassRosterStudent[] = [
-  { id: 'stu-8b-01', name: 'Ava Clark', rollNumber: '01', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ava' },
-  { id: 'stu-8b-02', name: 'Noah White', rollNumber: '02', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Noah' },
-  { id: 'stu-8b-03', name: 'Isabella Hall', rollNumber: '03', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Isabella' },
-  { id: 'stu-8b-04', name: 'Liam Young', rollNumber: '04', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liam' },
-  { id: 'stu-8b-05', name: 'Mia Allen', rollNumber: '05', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mia' },
-  { id: 'stu-8b-06', name: 'Benjamin Scott', rollNumber: '06', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Benjamin' },
-  { id: 'stu-8b-07', name: 'Charlotte King', rollNumber: '07', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlotte' },
-  { id: 'stu-8b-08', name: 'Henry Wright', rollNumber: '08', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Henry' },
-  { id: 'stu-8b-09', name: 'Amelia Lopez', rollNumber: '09', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amelia' },
-  { id: 'stu-8b-10', name: 'Jack Hill', rollNumber: '10', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack' },
-]
 
-const class7ARoster: ClassRosterStudent[] = [
-  { id: 'stu-7a-01', name: 'Harper Green', rollNumber: '01', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Harper' },
-  { id: 'stu-7a-02', name: 'Elijah Adams', rollNumber: '02', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elijah' },
-  { id: 'stu-7a-03', name: 'Abigail Baker', rollNumber: '03', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Abigail' },
-  { id: 'stu-7a-04', name: 'William Nelson', rollNumber: '04', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=William' },
-  { id: 'stu-7a-05', name: 'Emily Carter', rollNumber: '05', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily' },
-  { id: 'stu-7a-06', name: 'Mason Mitchell', rollNumber: '06', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mason' },
-  { id: 'stu-7a-07', name: 'Ella Perez', rollNumber: '07', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ella' },
-  { id: 'stu-7a-08', name: 'Logan Roberts', rollNumber: '08', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Logan' },
-  { id: 'stu-7a-09', name: 'Avery Turner', rollNumber: '09', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Avery' },
-  { id: 'stu-7a-10', name: 'Jackson Phillips', rollNumber: '10', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jackson' },
-  { id: 'stu-7a-11', name: 'Scarlett Campbell', rollNumber: '11', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Scarlett' },
-  { id: 'stu-7a-12', name: 'Sebastian Parker', rollNumber: '12', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sebastian' },
-]
 
 /**
  * Build a deterministic roster for a class that has no hand-authored one.
@@ -90,19 +50,52 @@ function generateClassRoster(classLabel: string): ClassRosterStudent[] {
 }
 
 /**
- * All class rosters keyed by class ID.
+ * All class rosters keyed by class label.
  *
- * The three hand-authored rosters win; every other section in the school
- * config gets a generated one so no class in the picker is ever missing.
+ * Built from the student directory, not invented alongside it. Three rosters
+ * used to be written out by hand and the rest generated, which meant the
+ * attendance and grade screens described a school of 196 people, none of whom
+ * appeared on the students page — the two screens were about different
+ * populations, and every row carried an id (`stu-9a-01`) that pointed at
+ * nothing.
+ *
+ * That was survivable while the rosters were only ever read by a teacher
+ * looking at a class. It stops being survivable the moment a rule is written
+ * about a *particular student*: a parent narrowed to their own child matches
+ * no roster row at all, so their register comes back empty and the filter
+ * looks like it worked.
+ *
+ * So a roster row is now a student record, carrying `Student.id` — the same
+ * key `student_parents` links on and the same one a family's scope holds.
+ *
+ * Classes with nobody enrolled still get a generated roster, because the
+ * picker offers every section the school defines and an empty register is a
+ * worse answer than a filler one. Generated rows keep their `stu-<class>-NN`
+ * ids, which deliberately cannot match a student id: nobody's child is in a
+ * filler class, and a scope should never match one.
  */
-export const classRosters: Record<string, ClassRosterStudent[]> = {
-  ...Object.fromEntries(
-    DEFAULT_CLASS_SECTIONS.map(section => [section.label, generateClassRoster(section.label)]),
-  ),
-  '9A': class9ARoster,
-  '8B': class8BRoster,
-  '7A': class7ARoster,
+function rosterFromDirectory(classLabel: string): ClassRosterStudent[] {
+  return studentsData
+    .filter(student => classSectionOf(student) === classLabel)
+    .map((student, index) => {
+      const name = getDisplayName(student)
+      return {
+        id: String(student.id),
+        name,
+        rollNumber: student.rollNumber ?? String(index + 1).padStart(2, '0'),
+        avatarUrl:
+          student.profilePictureUrl ??
+          `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
+      }
+    })
 }
+
+export const classRosters: Record<string, ClassRosterStudent[]> = Object.fromEntries(
+  DEFAULT_CLASS_SECTIONS.map(section => {
+    const enrolled = rosterFromDirectory(section.label)
+    return [section.label, enrolled.length > 0 ? enrolled : generateClassRoster(section.label)]
+  }),
+)
 
 /** Available class IDs */
 export const availableClasses = Object.keys(classRosters)
@@ -183,9 +176,11 @@ function generateClassSubmissions(classId: string, roster: ClassRosterStudent[])
 
 /** All pre-filled attendance submissions */
 export const attendanceSubmissions: AttendanceSubmission[] = [
-  ...generateClassSubmissions('9A', class9ARoster),
-  ...generateClassSubmissions('8B', class8BRoster),
-  ...generateClassSubmissions('7A', class7ARoster),
+  // The same three classes as before, now filled from whoever is actually
+  // enrolled in them rather than from a parallel cast.
+  ...generateClassSubmissions('9A', classRosters['9A'] ?? []),
+  ...generateClassSubmissions('8B', classRosters['8B'] ?? []),
+  ...generateClassSubmissions('7A', classRosters['7A'] ?? []),
 ]
 
 // ============================================================================

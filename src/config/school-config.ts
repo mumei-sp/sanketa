@@ -228,8 +228,14 @@ export const DEFAULT_CLASS_SECTIONS: ClassSection[] = [
   { id: 'cls-5b', grade: '5', section: 'B', label: '5B' },
   { id: 'cls-6a', grade: '6', section: 'A', label: '6A' },
   { id: 'cls-7a', grade: '7', section: 'A', label: '7A' },
+  // 7B, 7C and 8C were missing while fifteen students were enrolled in them.
+  // Nothing complained: the roster, the timetable and the class picker are all
+  // built from this list, so those students simply had no class to appear in.
+  { id: 'cls-7b', grade: '7', section: 'B', label: '7B' },
+  { id: 'cls-7c', grade: '7', section: 'C', label: '7C' },
   { id: 'cls-8a', grade: '8', section: 'A', label: '8A' },
   { id: 'cls-8b', grade: '8', section: 'B', label: '8B' },
+  { id: 'cls-8c', grade: '8', section: 'C', label: '8C' },
   { id: 'cls-9a', grade: '9', section: 'A', label: '9A' },
   { id: 'cls-9b', grade: '9', section: 'B', label: '9B' },
   { id: 'cls-10a', grade: '10', section: 'A', label: '10A' },
