@@ -25,12 +25,14 @@ import {
 import { authUtils } from '@/api/utils/auth'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { getInitials } from '@/utils/format'
 
 export function UserMenu() {
   const currentUser = useCurrentUser()
   const navigate = useNavigate()
   const { setSettingsOpen } = useSchoolConfig()
+  const { canAny } = usePermissions()
 
   if (!currentUser) return null
 
@@ -84,11 +86,15 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="lg:hidden" />
 
-        <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
-          <Settings />
-          School settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        {canAny(['settings.manage', 'roles.manage']) && (
+          <>
+            <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+              <Settings />
+              School settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>
           <LogOut />
           Sign out

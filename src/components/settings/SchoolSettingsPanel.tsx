@@ -63,6 +63,7 @@ import { fontSizes } from '@/config/typography'
 import { TimetableSettingsSection } from './TimetableSettingsSection'
 import { GradingSettingsSection } from './GradingSettingsSection'
 import { NotificationSettingsSection } from './NotificationSettingsSection'
+import { SecuritySettingsSection } from './SecuritySettingsSection'
 import { AppearanceSettingsSection } from './AppearanceSettingsSection'
 import type { Subject } from '@/config/school-config'
 import type { ClassSection } from '@/config/school-config'
@@ -86,7 +87,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: 'grades', label: 'Grades', description: 'Grade scale & report cards', icon: GraduationCap, enabled: true },
   { id: 'notifications', label: 'Notifications', description: 'Alerts & reminders', icon: Bell, enabled: true },
   { id: 'appearance', label: 'Appearance', description: 'Theme & layout', icon: Palette, enabled: true },
-  { id: 'security', label: 'Security', description: 'Access & permissions', icon: Shield, enabled: false },
+  { id: 'security', label: 'Security', description: 'Access & permissions', icon: Shield, enabled: true },
 ]
 
 // ============================================================================
@@ -767,6 +768,9 @@ export function SchoolSettingsPanel() {
       case 'timetable': return <TimetableSettingsSection draft={draft} setDraft={setDraft} />
       case 'grades': return <GradingSettingsSection draft={draft} setDraft={setDraft} />
       case 'notifications': return <NotificationSettingsSection draft={draft} setDraft={setDraft} />
+      // Roles live in their own table behind a service, so this section saves
+      // as you go rather than joining the panel's draft.
+      case 'security': return <SecuritySettingsSection />
       case 'appearance': return <AppearanceSettingsSection draft={draft} setDraft={setDraft} />
       default: {
         const s = SETTINGS_SECTIONS.find(x => x.id === activeSection)

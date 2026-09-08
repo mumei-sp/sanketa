@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { useState, useEffect } from 'react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { LogOut, X } from 'lucide-react'
@@ -21,7 +22,8 @@ import { Button } from '@/components/ui/button'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { getInitials } from '@/utils/format'
 import { Logo } from './Logo'
-import { navigationItems, ChevronDownIcon } from '@/config/navigation'
+import { navigationItems, visibleNavigationItems, ChevronDownIcon } from '@/config/navigation'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { cn } from '@/lib/utils'
 
 interface AppSidebarProps {
@@ -33,6 +35,11 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
   const navigate = useNavigate()
   const { isMobile, setOpenMobile } = useSidebar()
   const currentUser = useCurrentUser()
+  const { can } = usePermissions()
+
+  // What this role can actually open. Everything below iterates this rather
+  // than the full config, so a hidden page has no entry to click.
+  const visibleItems = React.useMemo(() => visibleNavigationItems(navigationItems, can), [can])
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
 
   const isActive = (path: string) => {
@@ -87,7 +94,7 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
   useEffect(() => {
     setExpandedItems(prev => {
       const next = new Set(prev)
-      navigationItems.forEach(item => {
+      visibleItems.forEach(item => {
         if (item.children) {
           const hasActiveChild = item.children.some(child => {
             if (child.path === '/') {
@@ -106,7 +113,7 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
       })
       return next
     })
-  }, [location.pathname])
+  }, [location.pathname, visibleItems])
 
   return (
     <Sidebar collapsible="icon">
@@ -130,7 +137,7 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map(item => {
+              {visibleItems.map(item => {
                 const hasChildren = item.children && item.children.length > 0
                 // For parent items, check if any child is active
                 const active = hasChildren ? hasActiveChild(item) : isActive(item.path)

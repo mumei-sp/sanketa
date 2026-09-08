@@ -27,6 +27,7 @@ import { useAppToast } from '@/hooks/use-app-toast'
 import { EmptyState } from '@/components/ui/empty-state'
 import { NoticeCard, NoticeDetailBoard, CreateNoticeForm } from '@/features/notice-board/components'
 import { useCsvExport } from '@/lib/use-csv-export'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import type { NoticeBoardEntry, NoticeCategory } from '@/features/notice-board/types'
@@ -71,6 +72,11 @@ function entryToFormValues(entry: NoticeBoardEntry): NoticeFormValues & { id: st
 export default function NoticeBoard() {
   const isDesktop = useIsDesktop()
   const { showSuccess } = useAppToast()
+  // Everyone reads the notice board; publishing to the whole school is another
+  // matter, so the create button and the per-notice controls come and go
+  // together rather than leaving edit reachable on a card you cannot delete.
+  const { can } = usePermissions()
+  const canManage = can('notices.manage')
 
   const [notices, setNotices] = React.useState<NoticeBoardEntry[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -448,7 +454,7 @@ export default function NoticeBoard() {
                 secondaryActions={[
                   { id: 'export', label: 'Export', icon: <Download className="size-4" />, onSelect: exportCsv },
                 ]}
-                primaryAction={
+                primaryAction={!canManage ? undefined : (
                   <Button
                     size="sm"
                     // No search field on this list, so on a phone the action is
@@ -463,7 +469,7 @@ export default function NoticeBoard() {
                     <Plus className="size-4" />
                     Create
                   </Button>
-                }
+                )}
               />
             </Tile>
 
@@ -502,7 +508,7 @@ export default function NoticeBoard() {
                   notice={notice}
                   isSelected={selectedNotice?.id === notice.id}
                   onClick={handleNoticeClick}
-                  onTogglePin={handleTogglePin}
+                  onTogglePin={canManage ? handleTogglePin : undefined}
                 />
               ))
             )}
@@ -526,9 +532,9 @@ export default function NoticeBoard() {
               <NoticeDetailBoard
                 notice={selectedNotice}
                 onClose={handleCloseDetail}
-                onDelete={handleDeleteNotice}
-                onEdit={handleEditNotice}
-                onTogglePin={handleTogglePin}
+                onDelete={canManage ? handleDeleteNotice : undefined}
+                onEdit={canManage ? handleEditNotice : undefined}
+                onTogglePin={canManage ? handleTogglePin : undefined}
                 showClose={false}
               />
             </div>
@@ -547,9 +553,9 @@ export default function NoticeBoard() {
               <NoticeDetailBoard
                 notice={selectedNotice}
                 onClose={handleCloseDetail}
-                onDelete={handleDeleteNotice}
-                onEdit={handleEditNotice}
-                onTogglePin={handleTogglePin}
+                onDelete={canManage ? handleDeleteNotice : undefined}
+                onEdit={canManage ? handleEditNotice : undefined}
+                onTogglePin={canManage ? handleTogglePin : undefined}
               />
             )}
           </SheetContent>

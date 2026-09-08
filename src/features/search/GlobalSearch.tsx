@@ -45,7 +45,9 @@ import { withOpacity } from '@/theme/colors'
 import { fetchStudents } from '@/api/services/student-service'
 import { fetchTeachers } from '@/api/services/teacher-service'
 import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
-import { navigationItems } from '@/config/navigation'
+import { navigationItems, visibleNavigationItems } from '@/config/navigation'
+import { usePermissions } from '@/features/auth/PermissionContext'
+import type { Permission } from '@/config/permissions'
 import {
   rankItems,
   highlightParts,
@@ -65,27 +67,36 @@ import {
  * never has to reach across the app to trigger a sheet on a page that is not
  * mounted yet.
  */
-const ACTIONS: SearchItem[] = [
-  { id: 'act:add-student', label: 'Add student', detail: 'Enrol a new student', route: '/students/add', group: 'Actions', icon: UserPlus, weight: 40 },
-  { id: 'act:add-teacher', label: 'Add teacher', detail: 'Add a staff member', route: '/teachers/add', group: 'Actions', icon: UserPlus, weight: 40 },
-  { id: 'act:mark-attendance', label: 'Mark attendance', detail: "Today's register", route: '/attendance/daily', group: 'Actions', icon: CheckSquare, weight: 40 },
-  { id: 'act:enter-grades', label: 'Enter grades', detail: 'Record exam marks', route: '/grades/entry', group: 'Actions', icon: FilePlus2, weight: 40 },
-  { id: 'act:new-notice', label: 'Create notice', detail: 'Post to the notice board', route: '/notice-board', group: 'Actions', icon: Megaphone, weight: 40 },
-  { id: 'act:new-event', label: 'Add calendar event', detail: 'Schedule something', route: '/calendar', group: 'Actions', icon: CalendarPlus, weight: 40 },
+const ACTIONS: (SearchItem & { permission: Permission })[] = [
+  { id: 'act:add-student', label: 'Add student', detail: 'Enrol a new student', route: '/students/add', group: 'Actions', icon: UserPlus, weight: 40, permission: 'students.manage' },
+  { id: 'act:add-teacher', label: 'Add teacher', detail: 'Add a staff member', route: '/teachers/add', group: 'Actions', icon: UserPlus, weight: 40, permission: 'teachers.manage' },
+  { id: 'act:mark-attendance', label: 'Mark attendance', detail: "Today's register", route: '/attendance/daily', group: 'Actions', icon: CheckSquare, weight: 40, permission: 'attendance.mark' },
+  { id: 'act:enter-grades', label: 'Enter grades', detail: 'Record exam marks', route: '/grades/entry', group: 'Actions', icon: FilePlus2, weight: 40, permission: 'grades.enter' },
+  { id: 'act:new-notice', label: 'Create notice', detail: 'Post to the notice board', route: '/notice-board', group: 'Actions', icon: Megaphone, weight: 40, permission: 'notices.manage' },
+  { id: 'act:new-event', label: 'Add calendar event', detail: 'Schedule something', route: '/calendar', group: 'Actions', icon: CalendarPlus, weight: 40, permission: 'calendar.manage' },
 ]
 
-/** Every destination in the sidebar, parents flattened to their children. */
-const DESTINATIONS: SearchItem[] = navigationItems.flatMap(item =>
-  item.children?.length
-    ? item.children.map(child => ({
-        id: `nav:${child.path}`,
-        label: child.title,
-        detail: item.title,
-        route: child.path,
-        group: 'Go to' as const,
-      }))
-    : [{ id: `nav:${item.path}`, label: item.title, route: item.path, group: 'Go to' as const }],
-)
+/**
+ * Destinations the signed-in role can actually open.
+ *
+ * Derived from the same filter the sidebar uses, because a palette that
+ * indexes the raw config would happily walk someone into a page the navigation
+ * hides — the leak nobody notices until an accountant types "expen" and lands
+ * on a page they were never meant to see.
+ */
+function destinationsFor(can: (permission: Permission) => boolean): SearchItem[] {
+  return visibleNavigationItems(navigationItems, can).flatMap(item =>
+    item.children?.length
+      ? item.children.map(child => ({
+          id: `nav:${child.path}`,
+          label: child.title,
+          detail: item.title,
+          route: child.path,
+          group: 'Go to' as const,
+        }))
+      : [{ id: `nav:${item.path}`, label: item.title, route: item.path, group: 'Go to' as const }],
+  )
+}
 
 const GROUP_ICONS: Record<ResultGroup, LucideIcon> = {
   Actions: Sparkles,
@@ -105,6 +116,19 @@ const GROUP_COLORS: Record<ResultGroup, string> = {
 }
 
 const GROUP_ORDER: ResultGroup[] = ['Actions', 'Go to', 'Students', 'Teachers', 'Notices']
+
+/**
+ * What a role must hold for a group's results to be shown.
+ *
+ * Recents are stored, so they outlive a permission change: someone moved off
+ * finance would otherwise still see the fee record they opened last week
+ * sitting at the top of an empty palette.
+ */
+const GROUP_PERMISSION: Partial<Record<ResultGroup, Permission>> = {
+  Students: 'students.view',
+  Teachers: 'teachers.view',
+  Notices: 'notices.view',
+}
 const RESULT_LIMIT = 12
 
 /** A person's display name — students carry `name`, teachers `fullName`. */
@@ -118,15 +142,26 @@ function personName(person: { name?: string; fullName?: string; displayName?: st
  * Deferred until the palette is actually opened, so a roster never sits on the
  * critical path of a page that may never be searched.
  */
-function useSearchIndex(enabled: boolean) {
+function useSearchIndex(enabled: boolean, can: (permission: Permission) => boolean) {
   const [records, setRecords] = React.useState<SearchItem[] | null>(null)
   const startedRef = React.useRef(false)
+
+  const canStudents = can('students.view')
+  const canTeachers = can('teachers.view')
+  const canNotices = can('notices.view')
 
   React.useEffect(() => {
     if (!enabled || startedRef.current) return
     startedRef.current = true
 
-    Promise.all([fetchStudents(), fetchTeachers(), fetchNoticeBoardEntries()])
+    // Only fetch what this role may see. Filtering after the fetch would still
+    // put the roster in the browser, which is the part that matters once there
+    // is a backend enforcing the same rule.
+    Promise.all([
+      canStudents ? fetchStudents() : Promise.resolve([]),
+      canTeachers ? fetchTeachers() : Promise.resolve([]),
+      canNotices ? fetchNoticeBoardEntries() : Promise.resolve([]),
+    ])
       .then(([students, teachers, notices]) => {
         setRecords([
           ...students.map(student => ({
@@ -156,7 +191,7 @@ function useSearchIndex(enabled: boolean) {
         console.error('Failed to build the search index', error)
         setRecords([])
       })
-  }, [enabled])
+  }, [enabled, canStudents, canTeachers, canNotices])
 
   return records
 }
@@ -267,7 +302,13 @@ export function GlobalSearch({
   const [activeIndex, setActiveIndex] = React.useState(0)
   const [recents, setRecents] = React.useState<SearchItem[]>([])
   const navigate = useNavigate()
-  const records = useSearchIndex(open)
+  const { can } = usePermissions()
+  const records = useSearchIndex(open, can)
+  const destinations = React.useMemo(() => destinationsFor(can), [can])
+  const actions = React.useMemo(
+    () => ACTIONS.filter(action => can(action.permission)),
+    [can],
+  )
   const modifier = useModifierSymbol()
   const listRef = React.useRef<HTMLDivElement>(null)
 
@@ -279,6 +320,15 @@ export function GlobalSearch({
     setRecents(readRecents())
   }, [open])
 
+  const allowedRecents = React.useMemo(
+    () =>
+      recents.filter(item => {
+        const needed = GROUP_PERMISSION[item.group]
+        return !needed || can(needed)
+      }),
+    [recents, can],
+  )
+
   const results = React.useMemo<ScoredItem[]>(() => {
     const term = query.trim()
 
@@ -286,14 +336,14 @@ export function GlobalSearch({
     // Not the roster — a list of every student is not a useful thing to open onto.
     if (!term) {
       const seed = [
-        ...recents.map(item => ({ ...item, score: 0, matches: [] as number[] })),
-        ...ACTIONS.map(item => ({ ...item, score: 0, matches: [] as number[] })),
+        ...allowedRecents.map(item => ({ ...item, score: 0, matches: [] as number[] })),
+        ...actions.map(item => ({ ...item, score: 0, matches: [] as number[] })),
       ]
       return seed.slice(0, RESULT_LIMIT)
     }
 
-    return rankItems([...ACTIONS, ...DESTINATIONS, ...(records ?? [])], term, RESULT_LIMIT)
-  }, [query, records, recents])
+    return rankItems([...actions, ...destinations, ...(records ?? [])], term, RESULT_LIMIT)
+  }, [query, records, allowedRecents, actions, destinations])
 
   // Group headings are emitted as the group changes, so keyboard indexing stays
   // one flat sequence rather than a nested one.
@@ -305,10 +355,10 @@ export function GlobalSearch({
         index,
         heading:
           index === 0
-            ? recents.length > 0
+            ? allowedRecents.length > 0
               ? 'Recent'
               : 'Quick actions'
-            : index === recents.length && recents.length > 0
+            : index === allowedRecents.length && allowedRecents.length > 0
               ? 'Quick actions'
               : null,
       }))
@@ -320,7 +370,7 @@ export function GlobalSearch({
       seen.add(item.group)
       return { item, index, heading }
     })
-  }, [results, query, recents])
+  }, [results, query, allowedRecents])
 
   React.useEffect(() => {
     setActiveIndex(0)

@@ -26,6 +26,7 @@ import { GridPagination } from '@/components/pagination/GridPagination'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
 import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
 import { mockStudentAssignments, mockRoutes, mockVehicles } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
@@ -48,6 +49,10 @@ const EXPORT_COLUMNS = [
 ]
 
 export function StudentAssignmentTab() {
+  // Viewing routes and rewriting them are different jobs: a principal reads
+  // this page, the transport office edits it.
+  const { can } = usePermissions()
+  const canManage = can('transport.manage')
   const [assignments, setAssignments] = useState<StudentTransportAssignment[]>(mockStudentAssignments)
   const [searchQuery, setSearchQuery] = useState('')
   const [routeFilter, setRouteFilter] = useState<string>('all')
@@ -297,7 +302,7 @@ export function StudentAssignmentTab() {
           { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
           { id: 'import', label: 'Import', icon: <Upload className="size-3.5" />, onSelect: () => setImportOpen(true) },
         ]}
-        primaryAction={
+        primaryAction={!canManage ? undefined : (
           <Button
             onClick={() => { setEditingAssignment(null); setFormOpen(true) }}
             className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
@@ -305,7 +310,7 @@ export function StudentAssignmentTab() {
             <Plus className="size-4" />
             Assign Student
           </Button>
-        }
+        )}
       />
     </Tile>
   )

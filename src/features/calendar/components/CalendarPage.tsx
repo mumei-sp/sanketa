@@ -2,6 +2,7 @@ import * as React from 'react'
 import PageHeader from '@/components/layout/PageHeader'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { TileWrapper, Tile } from '@/components/tile'
 import { useIsDesktop } from '@/hooks/use-mobile'
 import {
@@ -20,6 +21,8 @@ import type { EventFormValues } from '../schemas/event-schema'
 
 export function CalendarPage() {
   const isDesktop = useIsDesktop()
+  const { can } = usePermissions()
+  const canManage = can('calendar.manage')
 
   const [events, setEvents] = React.useState<CalendarEvent[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -183,7 +186,7 @@ export function CalendarPage() {
               events={filteredEvents}
               onEventClick={handleEventClick}
               onDateClick={handleDateClick}
-              onAddAgenda={handleAddAgenda}
+              onAddAgenda={canManage ? handleAddAgenda : undefined}
             />
           </Tile>
 
@@ -193,8 +196,8 @@ export function CalendarPage() {
                 events={detailEvents}
                 selectedDate={selectedDate}
                 onClose={handleCloseDetails}
-                onEdit={handleEditEvent}
-                onDelete={handleDeleteEvent}
+                onEdit={canManage ? handleEditEvent : undefined}
+                onDelete={canManage ? handleDeleteEvent : undefined}
                 inline
               />
             </Tile>
@@ -206,7 +209,7 @@ export function CalendarPage() {
             events={filteredEvents}
             onEventClick={handleEventClick}
             onDateClick={handleDateClick}
-            onAddAgenda={handleAddAgenda}
+            onAddAgenda={canManage ? handleAddAgenda : undefined}
           />
 
           {showDetails && (
@@ -214,8 +217,8 @@ export function CalendarPage() {
               events={detailEvents}
               selectedDate={selectedDate}
               onClose={handleCloseDetails}
-              onEdit={handleEditEvent}
-              onDelete={handleDeleteEvent}
+              onEdit={canManage ? handleEditEvent : undefined}
+              onDelete={canManage ? handleDeleteEvent : undefined}
             />
           )}
         </div>

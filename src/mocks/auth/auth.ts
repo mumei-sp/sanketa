@@ -7,25 +7,56 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-/** Default mock credentials: admin@sanketa.edu / admin */
-const MOCK_IDENTIFIER = 'admin@sanketa.edu'
+/**
+ * One account per built-in role, all with the password `admin`.
+ *
+ * A single admin login left every role unreachable without editing code, which
+ * meant permission rules could only be reasoned about rather than used. Signing
+ * in as the person is also how a real deployment is exercised, so nothing here
+ * is scaffolding that has to come out later.
+ *
+ * `role` holds a role *id* from the roles table, not a display name — the name
+ * is the school's to change.
+ */
 const MOCK_PASSWORD = 'admin'
 
-const mockUser: AuthResponse = {
-  token: 'mock-jwt-token-sanketa-2026',
-  refreshToken: 'mock-refresh-token-sanketa-2026',
-  user: {
-    id: '1',
-    fullName: 'Surya Admin',
-    email: 'admin@sanketa.edu',
-    role: 'Admin',
+const MOCK_ACCOUNTS: AuthResponse[] = [
+  {
+    token: 'mock-jwt-token-sanketa-2026',
+    refreshToken: 'mock-refresh-token-sanketa-2026',
+    user: { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', role: 'admin' },
   },
-}
+  {
+    token: 'mock-jwt-token-sanketa-principal',
+    refreshToken: 'mock-refresh-token-sanketa-principal',
+    user: { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', role: 'principal' },
+  },
+  {
+    token: 'mock-jwt-token-sanketa-teacher',
+    refreshToken: 'mock-refresh-token-sanketa-teacher',
+    user: { id: '3', fullName: 'Meera Iyengar', email: 'teacher@sanketa.edu', role: 'teacher' },
+  },
+  {
+    token: 'mock-jwt-token-sanketa-accountant',
+    refreshToken: 'mock-refresh-token-sanketa-accountant',
+    user: { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', role: 'accountant' },
+  },
+]
+
+/** The accounts, for the sign-in screen's hint. */
+export const MOCK_ACCOUNT_HINTS = MOCK_ACCOUNTS.map(account => ({
+  email: account.user.email,
+  name: account.user.fullName,
+  role: account.user.role,
+}))
 
 export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   await delay(MOCK_DELAY)
 
-  if (data.identifier !== MOCK_IDENTIFIER || data.password !== MOCK_PASSWORD) {
+  const identifier = data.identifier.trim().toLowerCase()
+  const account = MOCK_ACCOUNTS.find(candidate => candidate.user.email.toLowerCase() === identifier)
+
+  if (!account || data.password !== MOCK_PASSWORD) {
     throw {
       code: 'INVALID_CREDENTIALS',
       message: 'Invalid credentials. Please try again.',
@@ -33,9 +64,9 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
     }
   }
 
-  authUtils.setToken(mockUser.token)
-  authUtils.setUser(mockUser.user)
-  return mockUser
+  authUtils.setToken(account.token)
+  authUtils.setUser(account.user)
+  return account
 }
 
 export async function mockRegister(data: RegisterRequest): Promise<AuthResponse> {
@@ -50,13 +81,17 @@ export async function mockRegister(data: RegisterRequest): Promise<AuthResponse>
     }
   }
 
+  // Self-registration lands on the least-privileged built-in role. Handing a
+  // new sign-up the admin account's permissions, as this used to by cloning
+  // it, is the kind of default that only shows up once it matters.
   const response: AuthResponse = {
-    ...mockUser,
+    token: `mock-jwt-token-${crypto.randomUUID()}`,
+    refreshToken: `mock-refresh-token-${crypto.randomUUID()}`,
     user: {
-      ...mockUser.user,
       id: crypto.randomUUID(),
       fullName: data.fullName,
       email: data.email,
+      role: 'teacher',
     },
   }
 

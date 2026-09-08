@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import { Navigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import { navigationItems, type NavItem, type LeafPaths } from './navigation'
+import { RequirePermission } from '@/features/auth/components/RequirePermission'
 
 /**
  * Every page is loaded on demand.
@@ -92,10 +93,15 @@ function navItemToRoute(navItem: NavItem): RouteObject | null {
 
       // Calculate relative path from parent
       const relativePath = child.path.replace(navItem.path, '').replace(/^\//, '')
-      children.push({
-        path: relativePath,
-        element: <Component />,
-      })
+      children.push(
+        child.permission
+          ? {
+              path: relativePath,
+              element: <RequirePermission permission={child.permission} />,
+              children: [{ index: true, element: <Component /> }],
+            }
+          : { path: relativePath, element: <Component /> },
+      )
     })
 
     return {
@@ -112,17 +118,29 @@ function navItemToRoute(navItem: NavItem): RouteObject | null {
   }
 
   // Handle index route (dashboard)
+  // The dashboard is an index route, which cannot carry children, so its gate
+  // wraps the element directly rather than becoming a layout route.
   if (navItem.path === '/') {
     return {
       index: true,
-      element: <Component />,
+      element: navItem.permission ? (
+        <RequirePermission permission={navItem.permission}>
+          <Component />
+        </RequirePermission>
+      ) : (
+        <Component />
+      ),
     }
   }
 
-  return {
-    path: navItem.path.replace(/^\//, ''), // Remove leading slash for relative path
-    element: <Component />,
-  }
+  const path = navItem.path.replace(/^\//, '') // Remove leading slash for relative path
+  return navItem.permission
+    ? {
+        path,
+        element: <RequirePermission permission={navItem.permission} />,
+        children: [{ index: true, element: <Component /> }],
+      }
+    : { path, element: <Component /> }
 }
 
 /**

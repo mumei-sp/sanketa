@@ -24,6 +24,7 @@ import { GridPagination } from '@/components/pagination/GridPagination'
 import { DashboardStatCard } from '@/features/dashboard/components/DashboardStatCard'
 import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
 import { mockFeeStructures, mockStudentAssignments } from '@/mocks/transport'
 import { FEE_STATUS_COLORS } from '../constants'
@@ -51,6 +52,10 @@ const EXPORT_COLUMNS = [
 ]
 
 export function TransportFeesTab() {
+  // Viewing routes and rewriting them are different jobs: a principal reads
+  // this page, the transport office edits it.
+  const { can } = usePermissions()
+  const canManage = can('transport.manage')
   const [feeStructures, setFeeStructures] = useState<TransportFeeStructure[]>(mockFeeStructures)
   const [formOpen, setFormOpen] = useState(false)
   const [editingFee, setEditingFee] = useState<TransportFeeStructure | null>(null)
@@ -268,14 +273,16 @@ export function TransportFeesTab() {
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-section-title" style={{ color: text.heading }}>Fee Structure</h3>
-          <Button
-            onClick={() => { setEditingFee(null); setFormOpen(true) }}
-            className="h-8 bg-primary hover:bg-primary/90 text-foreground"
-            size="sm"
-          >
-            <Plus className="size-3.5" />
-            Add Fee
-          </Button>
+          {canManage && (
+            <Button
+              onClick={() => { setEditingFee(null); setFormOpen(true) }}
+              className="h-8 bg-primary hover:bg-primary/90 text-foreground"
+              size="sm"
+            >
+              <Plus className="size-3.5" />
+              Add Fee
+            </Button>
+          )}
         </div>
         <DataTable
           columns={feeColumns}
@@ -289,8 +296,15 @@ export function TransportFeesTab() {
             renderRow: (row) => (
               <tr
                 key={row.id}
-                onClick={() => { setEditingFee(row.original); setFormOpen(true) }}
-                className="group/row cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={
+                  canManage
+                    ? () => { setEditingFee(row.original); setFormOpen(true) }
+                    : undefined
+                }
+                className={cn(
+                  'group/row transition-colors',
+                  canManage && 'cursor-pointer hover:bg-muted/50',
+                )}
               >
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="px-3 py-2.5 text-sm">

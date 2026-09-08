@@ -20,6 +20,7 @@ import { TileWrapper, Tile } from '@/components/tile'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
 import { mockDrivers } from '@/mocks/transport'
 import { DRIVER_STATUS_OPTIONS } from '../constants'
@@ -39,6 +40,10 @@ const EXPORT_COLUMNS = [
 ]
 
 export function DriversTab() {
+  // Viewing routes and rewriting them are different jobs: a principal reads
+  // this page, the transport office edits it.
+  const { can } = usePermissions()
+  const canManage = can('transport.manage')
   const [drivers, setDrivers] = useState<TransportDriver[]>(mockDrivers)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -142,7 +147,7 @@ export function DriversTab() {
           secondaryActions={[
             { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
           ]}
-          primaryAction={
+          primaryAction={!canManage ? undefined : (
             <Button
               onClick={() => { setEditingDriver(null); setFormOpen(true) }}
               className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
@@ -150,7 +155,7 @@ export function DriversTab() {
               <Plus className="size-4" />
               Add Driver
             </Button>
-          }
+          )}
         />
       </Tile>
 

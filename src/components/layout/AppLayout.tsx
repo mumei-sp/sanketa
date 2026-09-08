@@ -17,6 +17,7 @@ import { RouteFallback } from './RouteFallback'
 import { UserMenu } from './UserMenu'
 import { useGlobalSearchShortcut } from '@/features/search/use-search-shortcut'
 import { NotificationProvider } from '@/features/notifications/NotificationContext'
+import { PermissionProvider, usePermissions } from '@/features/auth/PermissionContext'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 
 /**
@@ -51,6 +52,10 @@ export function useTopActions() {
  */
 function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' }) {
   const { setSettingsOpen } = useSchoolConfig()
+  const { canAny } = usePermissions()
+  // The panel holds school configuration and the role editor; someone who can
+  // do neither has nothing to open.
+  const canOpenSettings = canAny(['settings.manage', 'roles.manage'])
   const shape =
     variant === 'pill'
       ? 'size-10 rounded-full bg-card border border-border shadow-sm'
@@ -58,15 +63,17 @@ function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' })
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={shape}
-        onClick={() => setSettingsOpen(true)}
-        aria-label="School settings"
-      >
-        <Settings className="h-[18px] w-[18px] text-foreground" />
-      </Button>
+      {canOpenSettings && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={shape}
+          onClick={() => setSettingsOpen(true)}
+          aria-label="School settings"
+        >
+          <Settings className="h-[18px] w-[18px] text-foreground" />
+        </Button>
+      )}
       <NotificationBell variant={variant} />
     </>
   )
@@ -222,10 +229,14 @@ export function AppLayout({ logoPath }: AppLayoutProps) {
   return (
     // Inside the router (the bell navigates on select) and outside the sidebar
     // so the feed keeps streaming while the mobile drawer is open.
-    <NotificationProvider>
-      <SidebarProvider>
-        <LayoutContent logoPath={logoPath} />
-      </SidebarProvider>
-    </NotificationProvider>
+    // Permissions outermost: the sidebar, the routes and the search palette all
+    // gate on them, and every one of those sits inside this.
+    <PermissionProvider>
+      <NotificationProvider>
+        <SidebarProvider>
+          <LayoutContent logoPath={logoPath} />
+        </SidebarProvider>
+      </NotificationProvider>
+    </PermissionProvider>
   )
 }

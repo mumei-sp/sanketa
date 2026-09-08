@@ -24,6 +24,7 @@ import { DataTableColumnHeader } from '@/components/table/header/DataTableColumn
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { text, accent, border } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
 import { mockRoutes } from '@/mocks/transport'
 import { ROUTE_STATUS_OPTIONS, ROUTE_STATUS_COLORS } from '../constants'
@@ -47,6 +48,10 @@ const EXPORT_COLUMNS = [
 ]
 
 export function RoutesTab() {
+  // Viewing routes and rewriting them are different jobs: a principal reads
+  // this page, the transport office edits it.
+  const { can } = usePermissions()
+  const canManage = can('transport.manage')
   const [routes, setRoutes] = useState<TransportRoute[]>(mockRoutes)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -223,7 +228,7 @@ export function RoutesTab() {
         secondaryActions={[
           { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
         ]}
-        primaryAction={
+        primaryAction={!canManage ? undefined : (
           <Button
             onClick={() => { setEditingRoute(null); setFormOpen(true) }}
             className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
@@ -231,7 +236,7 @@ export function RoutesTab() {
             <Plus className="size-4" />
             Add Route
           </Button>
-        }
+        )}
       />
     </Tile>
   ), [searchQuery, statusFilter, handleExport])

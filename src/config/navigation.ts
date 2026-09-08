@@ -20,11 +20,20 @@ import {
   Bus,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import type { Permission } from "./permissions"
 
 export interface NavItem {
   title: string
   icon: LucideIcon
   path: string
+  /**
+   * What a user must hold to see and open this item.
+   *
+   * Parents carry none of their own: a group is worth showing exactly when one
+   * of its children is, so `visibleNavigationItems` derives that rather than
+   * making every parent restate the union of its children.
+   */
+  permission?: Permission
   children?: NavItem[]
 }
 
@@ -53,16 +62,19 @@ export const navigationItems: NavItem[] = [
     title: "Dashboard",
     icon: LayoutDashboard,
     path: "/",
+    permission: "dashboard.view",
   },
   {
     title: "Calendar",
     icon: Calendar,
     path: "/calendar",
+    permission: "calendar.view",
   },
   {
     title: "Teachers",
     icon: BookOpen,
     path: "/teachers",
+    permission: "teachers.view",
   },
   {
     title: "Students",
@@ -73,11 +85,13 @@ export const navigationItems: NavItem[] = [
         title: "All Students",
         icon: Users,
         path: "/students/all",
+        permission: "students.view",
       },
       {
         title: "Promotion",
         icon: ArrowUpCircle,
         path: "/students/promotion",
+        permission: "students.promote",
       },
     ],
   },
@@ -90,11 +104,13 @@ export const navigationItems: NavItem[] = [
         title: "Overview",
         icon: BarChart3,
         path: "/attendance/overview",
+        permission: "attendance.view",
       },
       {
         title: "Daily",
         icon: CalendarCheck,
         path: "/attendance/daily",
+        permission: "attendance.mark",
       },
     ],
   },
@@ -102,6 +118,7 @@ export const navigationItems: NavItem[] = [
     title: "Timetable",
     icon: Clock,
     path: "/timetable",
+    permission: "timetable.view",
   },
   {
     title: "Grades",
@@ -112,11 +129,13 @@ export const navigationItems: NavItem[] = [
         title: "Grade Entry",
         icon: PenLine,
         path: "/grades/entry",
+        permission: "grades.enter",
       },
       {
         title: "Grade Sheet",
         icon: FileSpreadsheet,
         path: "/grades/sheet",
+        permission: "grades.view",
       },
     ],
   },
@@ -124,11 +143,13 @@ export const navigationItems: NavItem[] = [
     title: "Assignments",
     icon: ClipboardList,
     path: "/assignments",
+    permission: "assignments.view",
   },
   {
     title: "Transport",
     icon: Bus,
     path: "/transport",
+    permission: "transport.view",
   },
   {
     title: "Finance",
@@ -139,11 +160,13 @@ export const navigationItems: NavItem[] = [
         title: "Fees Collection",
         icon: Receipt,
         path: "/finance/fees-collection",
+        permission: "finance.view",
       },
       {
         title: "Expenses",
         icon: TrendingUp,
         path: "/finance/expenses",
+        permission: "finance.view",
       },
     ],
   },
@@ -151,7 +174,30 @@ export const navigationItems: NavItem[] = [
     title: "Notice Board",
     icon: FileText,
     path: "/notice-board",
+    permission: "notices.view",
   },
 ]
 
 export const ChevronDownIcon = ChevronDown
+
+/**
+ * The navigation a given user should see.
+ *
+ * A parent survives when any of its children do, and is dropped entirely when
+ * none survive — a "Finance" group that opens onto nothing is worse than no
+ * group at all.
+ */
+export function visibleNavigationItems(
+  items: NavItem[],
+  can: (permission: Permission) => boolean,
+): NavItem[] {
+  return items.reduce<NavItem[]>((visible, item) => {
+    if (item.children?.length) {
+      const children = item.children.filter(child => !child.permission || can(child.permission))
+      if (children.length > 0) visible.push({ ...item, children })
+      return visible
+    }
+    if (!item.permission || can(item.permission)) visible.push(item)
+    return visible
+  }, [])
+}

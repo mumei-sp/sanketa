@@ -62,9 +62,10 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
           Detail Board
         </h3>
         <div className="flex items-center gap-1">
+          {onTogglePin && (
           <button
             type="button"
-            onClick={() => onTogglePin?.(notice.id)}
+            onClick={() => onTogglePin(notice.id)}
             className="size-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors cursor-pointer"
             aria-label={notice.pinned ? 'Unpin notice' : 'Pin notice'}
           >
@@ -76,6 +77,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
               style={{ color: 'var(--heading)' }}
             />
           </button>
+          )}
           {showClose && (
             <button
               type="button"
@@ -202,12 +204,20 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
         )}
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons.
+
+          Each renders only when its handler was given. They used to render
+          unconditionally and call `onEdit?.()`, so a caller withholding the
+          handler got a button that looked live and quietly did nothing —
+          which is exactly what permission-gating needs them not to do. */}
       <div className="flex items-center gap-2 px-5 py-4 border-t">
-        <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => onEdit?.(notice)}>
+        {onEdit && (
+        <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => onEdit(notice)}>
           <Pencil className="size-3.5" />
           Edit
         </Button>
+        )}
+        {onDelete && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-text-heading border-border-default hover:bg-accent-soft">
@@ -231,7 +241,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
                   e.preventDefault()
                   setIsDeleting(true)
                   try {
-                    await onDelete?.(notice.id)
+                    await onDelete(notice.id)
                   } finally {
                     setIsDeleting(false)
                   }
@@ -242,6 +252,7 @@ export function NoticeDetailBoard({ notice, onClose, onDelete, onEdit, onToggleP
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        )}
         <Button variant="outline" size="sm" className="flex-1 gap-1.5">
           <Share2 className="size-3.5" />
           Share

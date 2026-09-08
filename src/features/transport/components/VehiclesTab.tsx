@@ -20,6 +20,7 @@ import { TileWrapper, Tile } from '@/components/tile'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
 import { mockVehicles } from '@/mocks/transport'
 import { VEHICLE_STATUS_OPTIONS } from '../constants'
@@ -40,6 +41,10 @@ const EXPORT_COLUMNS = [
 ]
 
 export function VehiclesTab() {
+  // Viewing routes and rewriting them are different jobs: a principal reads
+  // this page, the transport office edits it.
+  const { can } = usePermissions()
+  const canManage = can('transport.manage')
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -144,7 +149,7 @@ export function VehiclesTab() {
           secondaryActions={[
             { id: 'export', label: 'Export', icon: <Download className="size-3.5" />, onSelect: handleExport },
           ]}
-          primaryAction={
+          primaryAction={!canManage ? undefined : (
             <Button
               onClick={() => { setEditingVehicle(null); setFormOpen(true) }}
               className={cn(TOOLBAR_PRIMARY_ACTION, 'bg-primary hover:bg-primary/90 text-foreground')}
@@ -152,7 +157,7 @@ export function VehiclesTab() {
               <Plus className="size-4" />
               Add Vehicle
             </Button>
-          }
+          )}
         />
       </Tile>
 

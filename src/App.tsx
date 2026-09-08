@@ -7,6 +7,7 @@ import { AppLayout } from './components/layout'
 import { AuthRouteFallback } from './components/layout/RouteFallback'
 import { generateRoutesFromNavigation } from './config/routes'
 import { AuthGuard, GuestGuard } from './features/auth/components/RouteGuards'
+import { RequirePermission } from './features/auth/components/RequirePermission'
 
 /**
  * The shell — guards, layout, router — stays eager: it renders on every route,
@@ -52,29 +53,31 @@ const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           ...generateRoutesFromNavigation(),
+          // Detail and form routes are not in the navigation config, so they
+          // need their gates stated here. Reading a profile and editing one are
+          // different permissions: a teacher can look up a student without
+          // being able to change the record.
           {
-            path: 'students/add',
-            element: <AddStudent />,
+            element: <RequirePermission permission="students.view" />,
+            children: [{ path: 'students/details/:id', element: <StudentDetails /> }],
           },
           {
-            path: 'students/edit/:id',
-            element: <EditStudent />,
+            element: <RequirePermission permission="students.manage" />,
+            children: [
+              { path: 'students/add', element: <AddStudent /> },
+              { path: 'students/edit/:id', element: <EditStudent /> },
+            ],
           },
           {
-            path: 'students/details/:id',
-            element: <StudentDetails />,
+            element: <RequirePermission permission="teachers.view" />,
+            children: [{ path: 'teachers/details/:id', element: <TeacherDetails /> }],
           },
           {
-            path: 'teachers/add',
-            element: <AddTeacher />,
-          },
-          {
-            path: 'teachers/edit/:id',
-            element: <EditTeacher />,
-          },
-          {
-            path: 'teachers/details/:id',
-            element: <TeacherDetails />,
+            element: <RequirePermission permission="teachers.manage" />,
+            children: [
+              { path: 'teachers/add', element: <AddTeacher /> },
+              { path: 'teachers/edit/:id', element: <EditTeacher /> },
+            ],
           },
         ],
       },
