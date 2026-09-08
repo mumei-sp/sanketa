@@ -15,6 +15,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
+import { visibleToCaller } from '@/mocks/_shared/caller'
 import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
 import { attendanceOverviewMonthlyData } from '@/mocks/attendance/overview'
 import {
@@ -70,7 +71,15 @@ export async function fetchClassRoster(classId: string): Promise<ClassRosterStud
       await withLatency({ min: 200, max: 400 })
       const roster = classRosters[classId]
       if (!roster) throw new Error(`Class "${classId}" not found`)
-      return [...roster]
+      // Roster rows carry `Student.id` since the rosters were reconciled, so a
+      // family narrowed to their own child receives that child's row and no
+      // one else's. Filler rows in classes with no enrolment carry an id no
+      // scope can match, so a narrowed caller sees none of them — which is
+      // correct: nobody's child is in a filler class.
+      return visibleToCaller([...roster], 'read', 'Student', student => ({
+        studentId: student.id,
+        classSection: classId,
+      }))
     },
     async () => {
       const { data } = await apiClient.get<ClassRosterStudent[]>(`/classes/${classId}/roster`)

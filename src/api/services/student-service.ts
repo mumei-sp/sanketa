@@ -10,6 +10,8 @@ import type { EnrollmentData, AttendanceData } from '@/data/dashboard'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
+import { visibleToCaller } from '@/mocks/_shared/caller'
+import { classSectionOf } from '@/utils/class-section-helpers'
 import { studentsData } from '@/mocks/students/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
 import { studentDetailData } from '@/mocks/students/details'
@@ -34,7 +36,11 @@ export async function fetchStudents(options?: { limit?: number }): Promise<Stude
   return mockOrHttp(
     async () => {
       await withLatency()
-      return limit === undefined ? [...studentsData] : studentsData.slice(0, limit)
+      const rows = limit === undefined ? [...studentsData] : studentsData.slice(0, limit)
+      return visibleToCaller(rows, 'read', 'Student', student => ({
+        studentId: String(student.id),
+        classSection: classSectionOf(student),
+      }))
     },
     async () => {
       // Sent as a query rather than sliced after the fact: a caller that wants

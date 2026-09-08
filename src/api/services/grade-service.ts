@@ -8,6 +8,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
+import { visibleToCaller } from '@/mocks/_shared/caller'
 import { classRosters } from '@/mocks/attendance/daily'
 import { gradeSubmissions, findSubmission, upsertSubmission } from '@/mocks/grades/grades'
 import { EXAMS, GRADEABLE_SUBJECT_IDS } from '@/features/grades/constants'
@@ -74,13 +75,20 @@ export async function fetchClassRosterEntries(classId: string, maxMarks: number)
       await withLatency({ min: 150, max: 350 })
       const roster = classRosters[classId]
       if (!roster) return []
-      return roster.map(s => ({
+      const entries = roster.map(s => ({
         studentId: s.id,
         studentName: s.name,
         rollNumber: s.rollNumber,
         marksObtained: null,
         maxMarks,
         remarks: '',
+      }))
+      // `studentId` here is `Student.id` — the same key a family's scope holds
+      // — so a parent asking for a class register receives only their own
+      // child's line.
+      return visibleToCaller(entries, 'read', 'Grade', entry => ({
+        studentId: entry.studentId,
+        classSection: classId,
       }))
     },
     async () => {

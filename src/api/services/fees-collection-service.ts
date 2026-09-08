@@ -9,6 +9,8 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, txnId, newId, CURRENCY } from '@/mocks/_shared'
+import { visibleToCaller } from '@/mocks/_shared/caller'
+import { studentsData } from '@/mocks/students/students'
 import type {
   FeeStat,
   FeeTrendData,
@@ -106,7 +108,15 @@ export async function fetchFeeCollection(): Promise<FeeCollectionRecord[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
-      return feeCollectionData.map(r => ({ ...r }))
+      const rows = feeCollectionData.map(r => ({ ...r }))
+      // Fee rows key on the human code (`S-2101`), while a scope holds profile
+      // ids — the two identifiers a student record carries. Translating here,
+      // next to the data that uses the odd one, rather than teaching the scope
+      // about a second key.
+      return visibleToCaller(rows, 'read', 'Finance', row => {
+        const student = studentsData.find(candidate => candidate.studentId === row.studentId)
+        return student ? { studentId: String(student.id) } : undefined
+      })
     },
     async () => {
       const { data } = await apiClient.get<FeeCollectionRecord[]>('/finance/fees')
