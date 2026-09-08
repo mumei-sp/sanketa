@@ -47,10 +47,6 @@ interface PermissionContextValue {
   ability: AppAbility
   /** The current user's role, or null when signed out or unassigned. */
   role: Role | null
-  /** Classes this user may write to. Empty when their role is not scoped. */
-  assignedClasses: string[]
-  /** True when this role's write permissions are limited to those classes. */
-  isClassScoped: boolean
   /** Every role the school has. Only the role editor needs this. */
   roles: Role[]
   /** False until the roles table has arrived — see the note above. */
@@ -129,8 +125,6 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       ability,
       role,
       roles,
-      assignedClasses,
-      isClassScoped,
       isReady,
       can,
       canAny: permissions => permissions.some(permission => can(permission)),
@@ -147,30 +141,4 @@ export function usePermissions(): PermissionContextValue {
     throw new Error('usePermissions must be used inside a PermissionProvider')
   }
   return context
-}
-
-/**
- * Renders its children only when the permission is held.
- *
- * For inline controls — a Delete button inside a row — where a hook plus a
- * ternary would be more ceremony than the thing it guards.
- *
- * ```tsx
- * <Can permission="notices.manage">
- *   <Button onClick={remove}>Delete</Button>
- * </Can>
- * ```
- */
-export function Can({
-  permission,
-  children,
-  fallback = null,
-}: {
-  permission: Permission
-  children: React.ReactNode
-  fallback?: React.ReactNode
-}) {
-  const { can, isReady } = usePermissions()
-  if (!isReady) return null
-  return can(permission) ? <>{children}</> : <>{fallback}</>
 }

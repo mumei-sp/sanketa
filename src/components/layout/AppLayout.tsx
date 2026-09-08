@@ -13,6 +13,7 @@ import { Search, Settings, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { RouteFallback } from './RouteFallback'
+import { Skeleton } from '@/components/ui/skeleton'
 import { UserMenu } from './UserMenu'
 import { useGlobalSearchShortcut } from '@/features/search/use-search-shortcut'
 import { NotificationProvider } from '@/features/notifications/NotificationContext'
@@ -136,6 +137,7 @@ function TopActions({ onOpenSearch }: { onOpenSearch: () => void }) {
  * Mobile (< 768 px) is handled automatically by the Sheet-based sidebar.
  */
 function LayoutContent({ logoPath }: AppLayoutProps) {
+  const { isReady } = usePermissions()
   const isDesktop = useIsDesktop()
   const { setOpen, isMobile, toggleSidebar } = useSidebar()
   const { config, isSettingsOpen } = useSchoolConfig()
@@ -164,6 +166,27 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
       setOpen(isDesktop)
     }
   }, [isDesktop, isMobile, setOpen])
+
+  // Nothing gated renders until the roles table has landed.
+  //
+  // `can()` denies while the fetch is in flight, which is the safe answer but
+  // the wrong thing to *draw*: every consumer would paint its denied state and
+  // then swap — measured as the sidebar going from 1 item to 12 and the
+  // settings gear appearing, about 100ms in, on every load. Holding the shell
+  // once is cheaper than teaching ten call sites to check `isReady`, and the
+  // roles are fetched once per session rather than per navigation.
+  if (!isReady) {
+    return (
+      <SidebarInset className="overflow-hidden">
+        <div className="flex flex-1 flex-col gap-4 p-4" aria-busy="true">
+          <span className="sr-only">Loading</span>
+          <Skeleton className="h-7 w-48 rounded-md" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
+      </SidebarInset>
+    )
+  }
 
   return (
     <>

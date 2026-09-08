@@ -45,6 +45,7 @@ import {
   deleteRole as deleteRoleRequest,
 } from '@/api/services/role-service'
 import {
+  impliedBy,
   permissionsByGroup,
   wouldOrphanSettings,
   type Permission,
@@ -57,10 +58,33 @@ export function SecuritySettingsSection() {
   const groups = React.useMemo(() => permissionsByGroup(), [])
 
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  /**
+   * The name field's own copy, committed on blur.
+   *
+   * It used to patch on every keystroke: two requests per character, and
+   * because the input read its value back from the refetched roles, a slow
+   * earlier response landing after a later one reset the field to a prefix of
+   * what had been typed. Editing locally and saving once removes both.
+   */
+  const [nameDraft, setNameDraft] = React.useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = React.useState<Role | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
 
   const selected = roles.find(role => role.id === selectedId) ?? roles[0] ?? null
+
+  // Abandon a half-typed name when the selection moves elsewhere.
+  React.useEffect(() => {
+    setNameDraft(null)
+  }, [selected?.id])
+
+  const commitName = () => {
+    if (!selected || nameDraft === null) return
+    const name = nameDraft.trim()
+    setNameDraft(null)
+    // An empty name would leave a role nobody can identify in the picker.
+    if (!name || name === selected.name) return
+    void patch(selected.id, { name })
+  }
 
   const patch = React.useCallback(
     async (id: string, changes: Parameters<typeof updateRoleRequest>[1]) => {
@@ -121,6 +145,17 @@ export function SecuritySettingsSection() {
   }
 
   const handleDelete = async (role: Role) => {
+    // The same check the permission toggle makes. Without it the guard is
+    // trivially walked around: grant `settings.manage` to a new role, take it
+    // off Admin (allowed, the new role holds it), then delete the new role.
+    if (wouldOrphanSettings(roles.filter(candidate => candidate.id !== role.id))) {
+      setPendingDelete(null)
+      showError(`${role.name} is the only role that can manage settings`, {
+        description: 'Give another role that permission first, then delete this one.',
+      })
+      return
+    }
+
     setPendingDelete(null)
     try {
       await deleteRoleRequest(role.id)
@@ -192,9 +227,14 @@ export function SecuritySettingsSection() {
               <Label htmlFor="role-name">Role name</Label>
               <Input
                 id="role-name"
-                value={selected.name}
+                value={nameDraft ?? selected.name}
                 disabled={selected.builtin}
-                onChange={event => void patch(selected.id, { name: event.target.value })}
+                onChange={event => setNameDraft(event.target.value)}
+                onBlur={commitName}
+                onKeyDown={event => {
+                  if (event.key === 'Enter') event.currentTarget.blur()
+                  if (event.key === 'Escape') setNameDraft(null)
+                }}
                 className="mt-1.5"
               />
             </div>
@@ -255,6 +295,9 @@ export function SecuritySettingsSection() {
               <div className="flex flex-col rounded-lg border" style={{ borderColor: border.default }}>
                 {permissions.map((definition, index) => {
                   const held = selected.permissions.includes(definition.id as Permission)
+                  // Reading is included in managing, so show it on and locked
+                  // rather than offering a switch that cannot take effect.
+                  const covered = impliedBy(definition.id as Permission, selected.permissions)
                   const switchId = `perm-${selected.id}-${definition.id}`
                   return (
                     <div
@@ -267,13 +310,15 @@ export function SecuritySettingsSection() {
                           {definition.label}
                         </Label>
                         <p className="text-caption text-muted-foreground">
-                          {definition.description}
+                          {covered
+                            ? `Included by "${covered.label}".`
+                            : definition.description}
                         </p>
                       </div>
                       <Switch
                         id={switchId}
-                        checked={held}
-                        disabled={isSaving}
+                        checked={held || Boolean(covered)}
+                        disabled={isSaving || Boolean(covered)}
                         onCheckedChange={value =>
                           togglePermission(definition.id as Permission, value)
                         }

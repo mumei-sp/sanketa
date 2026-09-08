@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import { navigationItems, type NavItem, type LeafPaths } from './navigation'
 import { RequirePermission } from '@/features/auth/components/RequirePermission'
+import { usePermissions } from '@/features/auth/PermissionContext'
 
 /**
  * Every page is loaded on demand.
@@ -67,6 +68,23 @@ function getComponent(path: string): RouteComponent | undefined {
 }
 
 /**
+ * Redirects a parent path onto the first child the signed-in role may open.
+ *
+ * A component rather than a static `<Navigate>` because the answer depends on
+ * permissions, which are not known when the route table is built.
+ */
+function FirstAllowedChild({ siblings }: { siblings: NavItem[] }) {
+  const { can, isReady } = usePermissions()
+  if (!isReady) return null
+
+  const target = siblings.find(child => !child.permission || can(child.permission))
+  // Nothing here is open to them. Send them to the first child anyway so its
+  // own guard renders the Forbidden page, rather than inventing a second
+  // explanation for the same refusal.
+  return <Navigate to={(target ?? siblings[0]).path} replace />
+}
+
+/**
  * Converts a navigation item to a route object
  */
 function navItemToRoute(navItem: NavItem): RouteObject | null {
@@ -74,14 +92,14 @@ function navItemToRoute(navItem: NavItem): RouteObject | null {
   if (navItem.children && navItem.children.length > 0) {
     const children: RouteObject[] = []
 
-    // Add index route that redirects to first child
-    const firstChild = navItem.children[0]
-    if (firstChild) {
-      children.push({
-        index: true,
-        element: <Navigate to={firstChild.path} replace />,
-      })
-    }
+    // Land on the first child this user can actually open, not simply the
+    // first one listed: a role with `students.promote` but not `students.view`
+    // was redirected from /students to /students/all and shown Forbidden,
+    // while /students/promotion sat available to it.
+    children.push({
+      index: true,
+      element: <FirstAllowedChild siblings={navItem.children} />,
+    })
 
     // Add child routes
     navItem.children.forEach(child => {

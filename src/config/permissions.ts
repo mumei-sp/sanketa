@@ -240,6 +240,30 @@ export function wouldOrphanSettings(roles: Role[]): boolean {
   return !roles.some(role => role.permissions.includes('settings.manage'))
 }
 
+/**
+ * The permission that already grants `id` by implication, if the role holds it.
+ *
+ * `manage` is a wildcard action: holding "Manage teachers" grants every action
+ * on Teacher, reading included. That is the right domain rule — whoever may
+ * edit a record may obviously see it — but it makes "View teachers" and
+ * "Manage teachers" look like independent switches in the editor when they are
+ * not. Toggling view off while manage stays on changed nothing, which is worse
+ * than a disabled control: it looks like it worked.
+ */
+export function impliedBy(id: Permission, held: Permission[]): PermissionDefinition | undefined {
+  const definition = (PERMISSION_DEFINITIONS as readonly PermissionDefinition[]).find(
+    candidate => candidate.id === id,
+  )
+  if (!definition || definition.action !== 'read') return undefined
+
+  return (PERMISSION_DEFINITIONS as readonly PermissionDefinition[]).find(
+    candidate =>
+      candidate.action === 'manage' &&
+      candidate.subject === definition.subject &&
+      held.includes(candidate.id as Permission),
+  )
+}
+
 export function findRole(roles: Role[], id: string | undefined): Role | undefined {
   if (!id) return undefined
   // Case-insensitive because `AuthUser.role` used to hold a display name
@@ -248,13 +272,3 @@ export function findRole(roles: Role[], id: string | undefined): Role | undefine
   const wanted = id.toLowerCase()
   return roles.find(role => role.id.toLowerCase() === wanted || role.name.toLowerCase() === wanted)
 }
-
-/** Permissions that can be narrowed to a set of classes. */
-export const SCOPED_PERMISSIONS = new Set<Permission>(
-  // The `as const` catalogue narrows each entry to its own literal shape, so
-  // `.scoped` is absent from the union rather than optional. Widening once
-  // here keeps the declarations terse.
-  (PERMISSION_DEFINITIONS as readonly PermissionDefinition[])
-    .filter(definition => definition.scoped)
-    .map(definition => definition.id as Permission),
-)

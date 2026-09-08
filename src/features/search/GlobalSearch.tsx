@@ -144,15 +144,26 @@ function personName(person: { name?: string; fullName?: string; displayName?: st
  */
 function useSearchIndex(enabled: boolean, can: (permission: Permission) => boolean) {
   const [records, setRecords] = React.useState<SearchItem[] | null>(null)
-  const startedRef = React.useRef(false)
 
   const canStudents = can('students.view')
   const canTeachers = can('teachers.view')
   const canNotices = can('notices.view')
 
+  /**
+   * What the last successful build was allowed to see.
+   *
+   * A plain "have we started" latch is wrong here: it can never re-run, so an
+   * index built before the roles table landed — or before an admin granted the
+   * current user `teachers.view` — stayed empty for the rest of the session
+   * while every other surface updated. Keying on the permissions means the
+   * index is fetched once per distinct set and rebuilt only when that changes.
+   */
+  const signature = `${canStudents}|${canTeachers}|${canNotices}`
+  const builtRef = React.useRef<string | null>(null)
+
   React.useEffect(() => {
-    if (!enabled || startedRef.current) return
-    startedRef.current = true
+    if (!enabled || builtRef.current === signature) return
+    builtRef.current = signature
 
     // Only fetch what this role may see. Filtering after the fetch would still
     // put the roster in the browser, which is the part that matters once there
@@ -190,8 +201,10 @@ function useSearchIndex(enabled: boolean, can: (permission: Permission) => boole
       .catch(error => {
         console.error('Failed to build the search index', error)
         setRecords([])
+        // Let the next open try again rather than caching the failure.
+        builtRef.current = null
       })
-  }, [enabled, canStudents, canTeachers, canNotices])
+  }, [enabled, signature, canStudents, canTeachers, canNotices])
 
   return records
 }
