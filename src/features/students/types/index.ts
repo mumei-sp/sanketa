@@ -157,15 +157,3 @@ export interface AcademicPerformanceEntry {
   month: string
   [gradeKey: `grade${string}`]: number | string
 }
-
-/** A student on a scholarship or enrichment programme. */
-export interface SpecialProgramEntry {
-  id: string
-  name: string
-  studentId: string
-  classLabel: string
-  /** Displayed as a badge — comma-separated if multiple */
-  categories: string[]
-  program: string
-  avatarColor: string
-}

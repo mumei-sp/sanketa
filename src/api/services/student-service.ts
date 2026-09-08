@@ -19,7 +19,6 @@ import { classSectionOf } from '@/utils/class-section-helpers'
 import { studentsData } from '@/mocks/students/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
 import { studentDetailData } from '@/mocks/students/details'
-import { specialProgramsData } from '@/mocks/students/programs'
 import {
   academicPerformanceLastSemester,
   academicPerformanceThisSemester,
@@ -357,24 +356,6 @@ export async function executePromotion(
         candidates,
         targetSection,
       })
-    },
-  )
-}
-
-/**
- * Scholarship and enrichment programmes, for the dashboard tile.
- *
- * @apiRoute GET /api/v1/students/programs
- */
-export async function fetchSpecialPrograms(): Promise<typeof specialProgramsData> {
-  return mockOrHttp(
-    async () => {
-      await withLatency()
-      return [...specialProgramsData]
-    },
-    async () => {
-      const { data } = await apiClient.get<typeof specialProgramsData>('/students/programs')
-      return data
     },
   )
 }
