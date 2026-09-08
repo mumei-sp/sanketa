@@ -178,13 +178,20 @@ export function subscribeToMockServer(
  *
  * @apiRoute (none — server-side schedule)
  */
-export function runNotificationSweep(): void {
+export async function runNotificationSweep(): Promise<void> {
   if (!getEnvConfig().useMockApi) return
   // Imported on demand rather than at the top of the file. The sweep reads the
   // fee and attendance datasets, and a static import pulled both into the entry
   // chunk — 26kB of mock data on every first paint, for a job that runs once a
   // few seconds after load and never blocks anything.
-  void import('@/mocks/notifications/sweep')
-    .then(({ sweep }) => sweep())
-    .catch(error => console.error('Notification sweep failed', error))
+  //
+  // Resolves when the pass is complete, which the caller needs: the mock store
+  // delivers each publish synchronously, so a settled promise means every
+  // notification this pass produced has already reached the client.
+  try {
+    const { sweep } = await import('@/mocks/notifications/sweep')
+    sweep()
+  } catch (error) {
+    console.error('Notification sweep failed', error)
+  }
 }

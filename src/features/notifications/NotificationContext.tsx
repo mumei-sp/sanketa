@@ -101,14 +101,32 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const inFlightRef = React.useRef(false)
 
   /**
-   * True until the first batch has been folded in.
+   * Whether the session has finished catching up.
    *
-   * The toast bridge below reads it: a session that opens to a backlog of
-   * three overdue fees must not fire three toasts at once. Toasts are for
-   * things that happened *while you were looking*; the backlog is what the
-   * bell's count is for.
+   * The toast bridge below reads it: a session opening onto three overdue fees
+   * must not fire three toasts at once. Toasts are for what happens *while you
+   * are looking*; a backlog is what the bell's count is for.
+   *
+   * Two things have to land before anything counts as live, and the first
+   * version of this only waited for one of them. The initial fetch is the
+   * obvious half. The other is the first sweep: it runs after that fetch
+   * resolves and publishes the whole day's derived alerts at once, so its
+   * output arrived as "live" activity and shouted the backlog on the first
+   * load of every day. A fee ten days overdue was already true when you
+   * arrived — it is being discovered now, not happening now.
+   *
+   * The order the two settle in does not matter; whichever is second opens the
+   * gate. Anything genuinely new that lands inside that window (a second or
+   * two) is quietly folded into the feed instead of toasted, which is the
+   * right way to be wrong here.
    */
-  const isFirstBatchRef = React.useRef(true)
+  const catchUpRef = React.useRef({ fetched: false, swept: false, done: false })
+
+  const noteCaughtUp = React.useCallback((half: 'fetched' | 'swept') => {
+    const state = catchUpRef.current
+    state[half] = true
+    if (state.fetched && state.swept) state.done = true
+  }, [])
 
   const applyIncoming = React.useCallback((batch: NotificationBatch) => {
     cursorRef.current = batch.cursor
@@ -116,15 +134,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     // ── Toast bridge ──
     //
-    // Only `critical`, and only after the first load. A notification loud
-    // enough to interrupt is rare by construction: the feed carries everything,
-    // and the toast is reserved for what cannot wait for someone to open the
-    // bell. Widening this to `warning` would make the app shout during a
-    // routine morning and teach people to dismiss without reading.
-    if (isFirstBatchRef.current) {
-      isFirstBatchRef.current = false
-      return
-    }
+    // Only `critical`, and only once the session has caught up. A notification
+    // loud enough to interrupt is rare by construction: the feed carries
+    // everything, and the toast is reserved for what cannot wait for someone to
+    // open the bell. Widening this to `warning` would make the app shout during
+    // a routine morning and teach people to dismiss without reading.
+    if (!catchUpRef.current.done) return
     batch.items
       .filter(item => item.severity === 'critical' && item.readAt === null)
       .forEach(item => {
@@ -149,8 +164,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } finally {
       inFlightRef.current = false
       setIsLoading(false)
+      // Marked after `applyIncoming`, so the batch this call just delivered is
+      // itself still treated as catch-up rather than as live activity.
+      noteCaughtUp('fetched')
     }
-  }, [applyIncoming])
+  }, [applyIncoming, noteCaughtUp])
 
   // ── Live channel ──
   React.useEffect(() => {
@@ -176,10 +194,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
    * `runNotificationSweep`.
    */
   React.useEffect(() => {
-    runNotificationSweep()
-    const timer = window.setInterval(runNotificationSweep, SWEEP_INTERVAL_MS)
+    // Awaited rather than fired and forgotten: the first pass is catch-up, and
+    // the toast gate stays shut until it has finished publishing.
+    void runNotificationSweep().finally(() => noteCaughtUp('swept'))
+    const timer = window.setInterval(() => {
+      void runNotificationSweep()
+    }, SWEEP_INTERVAL_MS)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [noteCaughtUp])
 
   // ── Catch up when the tab comes back ──
   React.useEffect(() => {
