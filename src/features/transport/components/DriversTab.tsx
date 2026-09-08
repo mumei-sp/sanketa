@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Plus, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,7 +22,12 @@ import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
-import { mockDrivers } from '@/mocks/transport'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  fetchDrivers,
+  saveDriver as saveDriverRequest,
+  deleteDriver as deleteDriverRequest,
+} from '@/api/services/transport-service'
 import { DRIVER_STATUS_OPTIONS } from '../constants'
 import { DriverCard } from './DriverCard'
 import { DriverFormSheet } from './DriverFormSheet'
@@ -44,7 +49,26 @@ export function DriversTab() {
   // this page, the transport office edits it.
   const { can } = usePermissions()
   const canManage = can('transport.manage')
-  const [drivers, setDrivers] = useState<TransportDriver[]>(mockDrivers)
+  const [drivers, setDrivers] = useState<TransportDriver[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Read through the service like every other feature. This tab used to seed
+  // itself from the mock array and mutate that copy, so "Driver removed" was a
+  // sentence about nothing — the row came back on refresh.
+  const reload = useCallback(async () => {
+    try {
+      setDrivers(await fetchDrivers())
+    } catch (error) {
+      console.error('Failed to load drivers', error)
+      toast.error('Could not load drivers')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -78,22 +102,35 @@ export function DriversTab() {
     setFormOpen(true)
   }, [])
 
-  const handleDelete = useCallback((id: string) => {
-    setDrivers(prev => prev.filter(d => d.id !== id))
-    toast.success('Driver removed')
-  }, [])
-
-  const handleSave = useCallback((data: Partial<TransportDriver>) => {
-    setDrivers(prev => {
-      const exists = prev.find(d => d.id === data.id)
-      if (exists) {
-        return prev.map(d => d.id === data.id ? { ...d, ...data } as TransportDriver : d)
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteDriverRequest(id)
+        await reload()
+        toast.success('Driver removed')
+      } catch (error) {
+        console.error('Failed to remove driver', error)
+        toast.error('Could not remove that driver')
       }
-      return [...prev, { ...mockDrivers[0], ...data } as TransportDriver]
-    })
-    toast.success(editingDriver ? 'Driver updated' : 'Driver added')
-    setEditingDriver(null)
-  }, [editingDriver])
+    },
+    [reload],
+  )
+
+  const handleSave = useCallback(
+    async (data: Partial<TransportDriver>) => {
+      const isEdit = Boolean(editingDriver)
+      try {
+        await saveDriverRequest(data)
+        await reload()
+        toast.success(isEdit ? 'Driver updated' : 'Driver added')
+        setEditingDriver(null)
+      } catch (error) {
+        console.error('Failed to save driver', error)
+        toast.error('Could not save that driver')
+      }
+    },
+    [editingDriver, reload],
+  )
 
   const handleExport = useCsvExport({
     rows: drivers,
@@ -160,7 +197,15 @@ export function DriversTab() {
       </Tile>
 
       {/* Driver Cards Grid */}
-      {paginated.length === 0 ? (
+      {/* "No drivers available" while the fetch is still in flight would be a
+          claim about the data rather than about the request. */}
+      {isLoading ? (
+        <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
+          {[0, 1, 2, 3].map(card => (
+            <Skeleton key={card} className="h-44 w-full rounded-xl" />
+          ))}
+        </TileWrapper>
+      ) : paginated.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-muted-foreground">
             {searchQuery || statusFilter !== 'all' ? 'No drivers found matching your filters.' : 'No drivers available.'}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Plus, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,7 +22,12 @@ import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
-import { mockVehicles } from '@/mocks/transport'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  fetchVehicles,
+  saveVehicle as saveVehicleRequest,
+  deleteVehicle as deleteVehicleRequest,
+} from '@/api/services/transport-service'
 import { VEHICLE_STATUS_OPTIONS } from '../constants'
 import { VehicleCard } from './VehicleCard'
 import { VehicleFormSheet } from './VehicleFormSheet'
@@ -45,7 +50,26 @@ export function VehiclesTab() {
   // this page, the transport office edits it.
   const { can } = usePermissions()
   const canManage = can('transport.manage')
-  const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles)
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Read through the service like every other feature. This tab used to seed
+  // itself from the mock array and mutate that copy, so every "saved" toast
+  // was about nothing — the change was gone on refresh.
+  const reload = useCallback(async () => {
+    try {
+      setVehicles(await fetchVehicles())
+    } catch (error) {
+      console.error('Failed to load vehicles', error)
+      toast.error('Could not load vehicles')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -80,22 +104,35 @@ export function VehiclesTab() {
     setFormOpen(true)
   }, [])
 
-  const handleDelete = useCallback((id: string) => {
-    setVehicles(prev => prev.filter(v => v.id !== id))
-    toast.success('Vehicle removed')
-  }, [])
-
-  const handleSave = useCallback((data: Partial<Vehicle>) => {
-    setVehicles(prev => {
-      const exists = prev.find(v => v.id === data.id)
-      if (exists) {
-        return prev.map(v => v.id === data.id ? { ...v, ...data } as Vehicle : v)
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteVehicleRequest(id)
+        await reload()
+        toast.success('Vehicle removed')
+      } catch (error) {
+        console.error('Failed to remove vehicle', error)
+        toast.error('Could not remove that vehicle')
       }
-      return [...prev, { ...mockVehicles[0], ...data } as Vehicle]
-    })
-    toast.success(editingVehicle ? 'Vehicle updated' : 'Vehicle added')
-    setEditingVehicle(null)
-  }, [editingVehicle])
+    },
+    [reload],
+  )
+
+  const handleSave = useCallback(
+    async (data: Partial<Vehicle>) => {
+      const isEdit = Boolean(editingVehicle)
+      try {
+        await saveVehicleRequest(data)
+        await reload()
+        toast.success(isEdit ? 'Vehicle updated' : 'Vehicle added')
+        setEditingVehicle(null)
+      } catch (error) {
+        console.error('Failed to save vehicle', error)
+        toast.error('Could not save that vehicle')
+      }
+    },
+    [editingVehicle, reload],
+  )
 
   const handleExport = useCsvExport({
     rows: vehicles,
@@ -162,7 +199,15 @@ export function VehiclesTab() {
       </Tile>
 
       {/* Vehicle Cards Grid */}
-      {paginated.length === 0 ? (
+      {/* "No vehicles available" while the fetch is in flight would be a claim
+          about the data rather than about the request. */}
+      {isLoading ? (
+        <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
+          {[0, 1, 2, 3].map(card => (
+            <Skeleton key={card} className="h-44 w-full rounded-xl" />
+          ))}
+        </TileWrapper>
+      ) : paginated.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-muted-foreground">
             {searchQuery || statusFilter !== 'all' ? 'No vehicles found matching your filters.' : 'No vehicles available.'}

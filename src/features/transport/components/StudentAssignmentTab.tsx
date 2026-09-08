@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { Plus, Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,10 +28,17 @@ import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
-import { mockStudentAssignments, mockRoutes, mockVehicles } from '@/mocks/transport'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  fetchAssignments,
+  fetchRoutes,
+  fetchVehicles,
+  saveAssignment as saveAssignmentRequest,
+  saveAssignments as saveAssignmentsRequest,
+} from '@/api/services/transport-service'
 import { FEE_STATUS_COLORS } from '../constants'
 import { AssignStudentFormSheet } from './AssignStudentFormSheet'
-import type { StudentTransportAssignment } from '../types'
+import type { StudentTransportAssignment, TransportRoute, Vehicle } from '../types'
 
 type GroupBy = 'none' | 'route' | 'vehicle' | 'pickup-stop' | 'drop-stop'
 
@@ -53,7 +60,35 @@ export function StudentAssignmentTab() {
   // this page, the transport office edits it.
   const { can } = usePermissions()
   const canManage = can('transport.manage')
-  const [assignments, setAssignments] = useState<StudentTransportAssignment[]>(mockStudentAssignments)
+  const [assignments, setAssignments] = useState<StudentTransportAssignment[]>([])
+  // Routes and vehicles are read-only here; grouping by vehicle has to walk
+  // assignment → route → vehicle, and reading those from the mock arrays while
+  // the rows came from the store is how the two drift apart.
+  const [routes, setRoutes] = useState<TransportRoute[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const reload = useCallback(async () => {
+    try {
+      const [rows, routeRows, vehicleRows] = await Promise.all([
+        fetchAssignments(),
+        fetchRoutes(),
+        fetchVehicles(),
+      ])
+      setAssignments(rows)
+      setRoutes(routeRows)
+      setVehicles(vehicleRows)
+    } catch (error) {
+      console.error('Failed to load transport assignments', error)
+      toast.error('Could not load transport assignments')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
   const [searchQuery, setSearchQuery] = useState('')
   const [routeFilter, setRouteFilter] = useState<string>('all')
   const [groupBy, setGroupBy] = useState<GroupBy>('none')
@@ -90,8 +125,8 @@ export function StudentAssignmentTab() {
           key = a.routeName || 'Unassigned'
           break
         case 'vehicle': {
-          const route = mockRoutes.find(r => r.id === a.routeId)
-          const vehicle = route ? mockVehicles.find(v => v.id === route.vehicleId) : null
+          const route = routes.find(r => r.id === a.routeId)
+          const vehicle = route ? vehicles.find(v => v.id === route.vehicleId) : null
           key = vehicle ? `${vehicle.registrationNumber} (${vehicle.type})` : 'Unassigned'
           break
         }
@@ -109,19 +144,23 @@ export function StudentAssignmentTab() {
     })
 
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
-  }, [filtered, groupBy])
+  }, [filtered, groupBy, routes, vehicles])
 
-  const handleSave = useCallback((data: Partial<StudentTransportAssignment>) => {
-    setAssignments(prev => {
-      const exists = prev.find(a => a.id === data.id)
-      if (exists) {
-        return prev.map(a => a.id === data.id ? { ...a, ...data } as StudentTransportAssignment : a)
+  const handleSave = useCallback(
+    async (data: Partial<StudentTransportAssignment>) => {
+      const isEdit = Boolean(editingAssignment)
+      try {
+        await saveAssignmentRequest(data)
+        await reload()
+        toast.success(isEdit ? 'Assignment updated' : 'Student assigned')
+        setEditingAssignment(null)
+      } catch (error) {
+        console.error('Failed to save assignment', error)
+        toast.error('Could not save that assignment')
       }
-      return [...prev, data as StudentTransportAssignment]
-    })
-    toast.success(editingAssignment ? 'Assignment updated' : 'Student assigned')
-    setEditingAssignment(null)
-  }, [editingAssignment])
+    },
+    [editingAssignment, reload],
+  )
 
   const handleExport = useCsvExport({
     rows: assignments,
@@ -140,25 +179,33 @@ export function StudentAssignmentTab() {
     { csvHeader: 'Type', fieldKey: 'type', label: 'Type', type: 'enum', enumValues: ['one-way', 'two-way'] },
   ], [])
 
-  const handleImport = useCallback(async (rows: Record<string, string>[]) => {
-    const newAssignments = rows.map((row, i) => ({
-      id: `STA-IMP-${Date.now()}-${i}`,
-      studentId: row['Student ID'] || `S-IMP-${i}`,
-      studentName: row['Student Name'] || '',
-      class: row['Class'] || '',
-      section: row['Section'] || '',
-      routeId: '',
-      routeName: row['Route'] || '',
-      stopId: '',
-      stopName: row['Stop'] || '',
-      pickupTime: '',
-      dropTime: '',
-      type: (row['Type'] || 'two-way') as 'one-way' | 'two-way',
-      feeStatus: 'Pending' as const,
-    }))
-    setAssignments(prev => [...prev, ...newAssignments])
-    toast.success(`${rows.length} students imported`)
-  }, [])
+  const handleImport = useCallback(
+    async (rows: Record<string, string>[]) => {
+      // The server assigns the ids. This used to mint `STA-IMP-${Date.now()}-i`
+      // on the client, which collides across two tabs importing in the same
+      // millisecond and means nothing to a backend that has its own sequence.
+      const drafts: Partial<StudentTransportAssignment>[] = rows.map((row, index) => ({
+        studentId: row['Student ID'] || `S-IMP-${index}`,
+        studentName: row['Student Name'] || '',
+        class: row['Class'] || '',
+        section: row['Section'] || '',
+        routeName: row['Route'] || '',
+        stopName: row['Stop'] || '',
+        type: (row['Type'] || 'two-way') as 'one-way' | 'two-way',
+        feeStatus: 'Pending' as const,
+      }))
+
+      try {
+        await saveAssignmentsRequest(drafts)
+        await reload()
+        toast.success(`${rows.length} students imported`)
+      } catch (error) {
+        console.error('Failed to import assignments', error)
+        toast.error('Could not import those students')
+      }
+    },
+    [reload],
+  )
 
   // DataTable columns (flat view)
   const dtColumns: ColumnDef<StudentTransportAssignment>[] = useMemo(() => [
@@ -269,7 +316,7 @@ export function StudentAssignmentTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Routes</SelectItem>
-                  {mockRoutes.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                  {routes.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             ),
@@ -314,6 +361,19 @@ export function StudentAssignmentTab() {
       />
     </Tile>
   )
+
+  if (isLoading) {
+    // An empty roster while the fetch is running reads as "nobody takes the
+    // bus", which is a very different claim from "not loaded yet".
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full rounded-lg" />
+        {[0, 1, 2, 3, 4].map(row => (
+          <Skeleton key={row} className="h-12 w-full rounded-lg" />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

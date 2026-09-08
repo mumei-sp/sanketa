@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Plus, IndianRupee, CheckCircle, Clock, AlertCircle, Download, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,13 @@ import { text, accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
-import { mockFeeStructures, mockStudentAssignments } from '@/mocks/transport'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  fetchFeeStructures,
+  fetchAssignments,
+  saveFeeStructure as saveFeeStructureRequest,
+  deleteFeeStructure as deleteFeeStructureRequest,
+} from '@/api/services/transport-service'
 import { FEE_STATUS_COLORS } from '../constants'
 import { formatCurrency } from '../utils/transport-utils'
 import { FeeStructureFormSheet } from './FeeStructureFormSheet'
@@ -56,7 +62,29 @@ export function TransportFeesTab() {
   // this page, the transport office edits it.
   const { can } = usePermissions()
   const canManage = can('transport.manage')
-  const [feeStructures, setFeeStructures] = useState<TransportFeeStructure[]>(mockFeeStructures)
+  const [feeStructures, setFeeStructures] = useState<TransportFeeStructure[]>([])
+  // The assignments are read-only here — this tab charges them, the
+  // assignments tab owns them — but they have to come from the same place, or
+  // a student assigned on one tab would be missing from the other's totals.
+  const [assignments, setAssignments] = useState<StudentTransportAssignment[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const reload = useCallback(async () => {
+    try {
+      const [fees, rows] = await Promise.all([fetchFeeStructures(), fetchAssignments()])
+      setFeeStructures(fees)
+      setAssignments(rows)
+    } catch (error) {
+      console.error('Failed to load transport fees', error)
+      toast.error('Could not load transport fees')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
   const [formOpen, setFormOpen] = useState(false)
   const [editingFee, setEditingFee] = useState<TransportFeeStructure | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -71,7 +99,7 @@ export function TransportFeesTab() {
     let pending = 0
     let overdue = 0
 
-    mockStudentAssignments.forEach(a => {
+    assignments.forEach(a => {
       const fee = getStudentFee(a, feeStructures)
       totalExpected += fee
       if (a.feeStatus === 'Paid') { totalCollected += fee; paid++ }
@@ -80,7 +108,7 @@ export function TransportFeesTab() {
     })
 
     return { paid, pending, overdue, totalExpected, totalCollected, totalPending }
-  }, [feeStructures])
+  }, [feeStructures, assignments])
 
   const feeStats: TransportStat[] = useMemo(() => [
     {
@@ -118,7 +146,7 @@ export function TransportFeesTab() {
   ], [feeSummary])
 
   const filteredStudents = useMemo(() => {
-    let result = [...mockStudentAssignments]
+    let result = [...assignments]
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       result = result.filter(a =>
@@ -131,25 +159,38 @@ export function TransportFeesTab() {
       result = result.filter(a => a.feeStatus === statusFilter)
     }
     return result
-  }, [searchQuery, statusFilter])
+  }, [assignments, searchQuery, statusFilter])
 
-  const handleSave = useCallback((data: Partial<TransportFeeStructure>) => {
-    setFeeStructures(prev => {
-      const exists = prev.find(f => f.id === data.id)
-      if (exists) {
-        return prev.map(f => f.id === data.id ? { ...f, ...data } as TransportFeeStructure : f)
+  const handleSave = useCallback(
+    async (data: Partial<TransportFeeStructure>) => {
+      const isEdit = Boolean(editingFee)
+      try {
+        await saveFeeStructureRequest(data)
+        await reload()
+        toast.success(isEdit ? 'Fee structure updated' : 'Fee structure added')
+        setEditingFee(null)
+      } catch (error) {
+        console.error('Failed to save fee structure', error)
+        toast.error('Could not save that fee structure')
       }
-      return [...prev, data as TransportFeeStructure]
-    })
-    toast.success(editingFee ? 'Fee structure updated' : 'Fee structure added')
-    setEditingFee(null)
-  }, [editingFee])
+    },
+    [editingFee, reload],
+  )
 
-  const handleDeleteFee = useCallback((id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setFeeStructures(prev => prev.filter(f => f.id !== id))
-    toast.success('Fee structure removed')
-  }, [])
+  const handleDeleteFee = useCallback(
+    async (id: string, e: React.MouseEvent) => {
+      e.stopPropagation()
+      try {
+        await deleteFeeStructureRequest(id)
+        await reload()
+        toast.success('Fee structure removed')
+      } catch (error) {
+        console.error('Failed to remove fee structure', error)
+        toast.error('Could not remove that fee structure')
+      }
+    },
+    [reload],
+  )
 
   // Export respects current filters
   const handleExport = useCsvExport({
@@ -252,6 +293,18 @@ export function TransportFeesTab() {
     },
   ], [feeStructures])
 
+  if (isLoading) {
+    // Totals of zero while the fetch is running would read as "nobody owes
+    // anything", which is a very different statement from "not loaded yet".
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-24 w-full rounded-lg" />
+        {[0, 1, 2, 3, 4].map(row => (
+          <Skeleton key={row} className="h-12 w-full rounded-lg" />
+        ))}
+      </div>
+    )
+  }
   return (
     <div className="space-y-4">
       {/* Stats */}

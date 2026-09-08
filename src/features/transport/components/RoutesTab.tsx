@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { Plus, Download, ChevronDown, ChevronRight, MapPin, Bus as BusIcon, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,11 @@ import { text, accent, border } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
-import { mockRoutes } from '@/mocks/transport'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  fetchRoutes,
+  saveRoute as saveRouteRequest,
+} from '@/api/services/transport-service'
 import { ROUTE_STATUS_OPTIONS, ROUTE_STATUS_COLORS } from '../constants'
 import { getOccupancyColor, getOccupancyPercent } from '../utils/transport-utils'
 import { RouteFormSheet } from './RouteFormSheet'
@@ -52,7 +56,26 @@ export function RoutesTab() {
   // this page, the transport office edits it.
   const { can } = usePermissions()
   const canManage = can('transport.manage')
-  const [routes, setRoutes] = useState<TransportRoute[]>(mockRoutes)
+  const [routes, setRoutes] = useState<TransportRoute[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Read through the service like every other feature. This tab used to seed
+  // itself from the mock array and mutate that copy, so every "saved" toast
+  // was about nothing — the change was gone on refresh.
+  const reload = useCallback(async () => {
+    try {
+      setRoutes(await fetchRoutes())
+    } catch (error) {
+      console.error('Failed to load routes', error)
+      toast.error('Could not load routes')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null)
@@ -76,17 +99,21 @@ export function RoutesTab() {
     return result
   }, [routes, searchQuery, statusFilter])
 
-  const handleSave = useCallback((data: Partial<TransportRoute>) => {
-    setRoutes(prev => {
-      const exists = prev.find(r => r.id === data.id)
-      if (exists) {
-        return prev.map(r => r.id === data.id ? { ...r, ...data } as TransportRoute : r)
+  const handleSave = useCallback(
+    async (data: Partial<TransportRoute>) => {
+      const isEdit = Boolean(editingRoute)
+      try {
+        await saveRouteRequest(data)
+        await reload()
+        toast.success(isEdit ? 'Route updated' : 'Route added')
+        setEditingRoute(null)
+      } catch (error) {
+        console.error('Failed to save route', error)
+        toast.error('Could not save that route')
       }
-      return [...prev, data as TransportRoute]
-    })
-    toast.success(editingRoute ? 'Route updated' : 'Route added')
-    setEditingRoute(null)
-  }, [editingRoute])
+    },
+    [editingRoute, reload],
+  )
 
   const handleExport = useCsvExport({
     rows: routes,
@@ -245,6 +272,19 @@ export function RoutesTab() {
     setEditingRoute(row.original)
     setFormOpen(true)
   }, [])
+
+  if (isLoading) {
+    // A table of "no routes" while the fetch is still running is a claim about
+    // the data rather than about the request.
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full rounded-lg" />
+        {[0, 1, 2, 3, 4].map(row => (
+          <Skeleton key={row} className="h-12 w-full rounded-lg" />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
