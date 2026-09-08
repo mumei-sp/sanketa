@@ -4,13 +4,17 @@
  * Roles and people used to be two settings sections, and the split made both
  * of them worse. Editing a role never told you how many people it landed on;
  * assigning one never told you what it actually granted. They are two halves
- * of a single question — *who may do what* — so they are two tabs of a single
+ * of a single question — *who may do what* — so they are tabs of a single
  * screen, over one shared read of the directory.
  *
  * The directory is fetched once here rather than in each tab: the Roles tab
- * needs it for member counts and the People tab needs it for the list, and
- * two components fetching the same table would let them disagree after a
- * write.
+ * needs it for member counts and the People tab needs it for the list, and two
+ * components fetching the same table would let them disagree after a write.
+ *
+ * The third tab is the audit log, and it is the reason the writes are routed
+ * through this component rather than made inside the tabs. Every change to who
+ * may do what appends a line, and having one place that both writes and
+ * refreshes the log means a new control cannot quietly skip it.
  *
  * Each tab is gated on its own permission. A school may well want an office
  * administrator who can put people into roles without also being able to
@@ -19,22 +23,46 @@
  */
 
 import * as React from 'react'
-import { ShieldCheck, Users, Layers, KeyRound } from 'lucide-react'
+import { ShieldCheck, Users, Layers, KeyRound, History } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppToast } from '@/hooks/use-app-toast'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
 import { usePermissions } from '@/features/auth/PermissionContext'
-import { fetchUsers, updateUserAccess, type SchoolUser } from '@/api/services/user-service'
+import { useCurrentUser } from '@/hooks/use-current-user'
+import {
+  fetchUsers,
+  createUser as createUserRequest,
+  updateUserAccess,
+  type SchoolUser,
+} from '@/api/services/user-service'
+import {
+  fetchAccessEvents,
+  recordAccessEvent,
+  type AccessEvent,
+  type AccessEventKind,
+} from '@/api/services/access-log-service'
 import { ALL_PERMISSIONS } from '@/config/permissions'
 import { StatTile } from './parts'
 import { RolesTab } from './RolesTab'
 import { PeopleTab, ALL_ROLES } from './PeopleTab'
+import { ActivityTab } from './ActivityTab'
+
+/** What a tab hands the recorder. The actor is filled in here. */
+export interface AccessEventDraft {
+  kind: AccessEventKind
+  target: string
+  summary: string
+  detail?: string
+}
+
+export type RecordAccessEvent = (draft: AccessEventDraft) => void
 
 export function AccessSettingsSection() {
   const { can, roles } = usePermissions()
   const { config } = useSchoolConfig()
   const { showError } = useAppToast()
+  const currentUser = useCurrentUser()
 
   const canManageRoles = can('roles.manage')
   const canManagePeople = can('users.manage')
@@ -45,6 +73,7 @@ export function AccessSettingsSection() {
   )
 
   const [users, setUsers] = React.useState<SchoolUser[] | null>(null)
+  const [events, setEvents] = React.useState<AccessEvent[] | null>(null)
   const [savingId, setSavingId] = React.useState<string | null>(null)
   const [tab, setTab] = React.useState(canManageRoles ? 'roles' : 'people')
   const [roleFilter, setRoleFilter] = React.useState<string>(ALL_ROLES)
@@ -56,14 +85,38 @@ export function AccessSettingsSection() {
         console.error('Failed to load people', error)
         setUsers([])
       })
+    fetchAccessEvents()
+      .then(setEvents)
+      .catch(error => {
+        console.error('Failed to load the access log', error)
+        setEvents([])
+      })
   }, [])
+
+  /**
+   * Append to the log, then re-read it.
+   *
+   * Deliberately fire-and-forget: a change that saved has happened whether or
+   * not its log line lands, and blocking the toast on a second request would
+   * make every switch feel twice as slow. A failure is reported to the console
+   * rather than the user, who cannot do anything about it.
+   */
+  const record = React.useCallback<RecordAccessEvent>(
+    draft => {
+      void recordAccessEvent({ ...draft, actorName: currentUser?.fullName ?? 'Someone' })
+        .then(() => fetchAccessEvents())
+        .then(setEvents)
+        .catch(error => console.error('Failed to record an access change', error))
+    },
+    [currentUser?.fullName],
+  )
 
   /**
    * Write one person's access.
    *
-   * Returns whether it landed, so a caller can decide what to say — the
-   * toast for a role change names the new role, and there is no point
-   * announcing one that failed to save.
+   * Returns whether it landed, so a caller can decide what to say — the toast
+   * for a role change names the new role, and there is no point announcing one
+   * that failed to save.
    */
   const patchUser = React.useCallback(
     async (id: string, patch: { roleId?: string; assignedClasses?: string[] }) => {
@@ -83,6 +136,16 @@ export function AccessSettingsSection() {
       }
     },
     [showError],
+  )
+
+  /** Add an account. Null back means the email was taken. */
+  const addUser = React.useCallback(
+    async (input: { fullName: string; email: string; roleId: string }) => {
+      const created = await createUserRequest(input)
+      if (created) setUsers(current => (current ? [...current, created] : [created]))
+      return created
+    },
+    [],
   )
 
   const openPeopleFor = (roleId: string) => {
@@ -118,43 +181,60 @@ export function AccessSettingsSection() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="gap-4">
-        {/* One permission, one tab — no picker for a choice of one. */}
-        {canManageRoles && canManagePeople && (
-          <TabsList className="w-full">
+        <TabsList className="w-full">
+          {canManageRoles && (
             <TabsTrigger value="roles" className="gap-1.5">
               <ShieldCheck className="size-4" />
-              Roles &amp; permissions
+              <span className="truncate">Roles</span>
             </TabsTrigger>
+          )}
+          {canManagePeople && (
             <TabsTrigger value="people" className="gap-1.5">
               <Users className="size-4" />
-              People
+              <span className="truncate">People</span>
             </TabsTrigger>
-          </TabsList>
-        )}
+          )}
+          <TabsTrigger value="activity" className="gap-1.5">
+            <History className="size-4" />
+            <span className="truncate">Activity</span>
+          </TabsTrigger>
+        </TabsList>
 
+        {/* `forceMount` on all three: Radix unmounts a hidden tab, and this
+            screen's tabs hold work in progress — the role you were editing,
+            a half-typed search, the filter the Roles tab just set on People.
+            Switching to the log to check what you did and coming back should
+            not put you on a different role. */}
         {canManageRoles && (
-          <TabsContent value="roles">
+          <TabsContent value="roles" forceMount hidden={tab !== 'roles'}>
             <RolesTab
               users={users}
               classLabels={classLabels}
               onManagePeople={openPeopleFor}
               canManagePeople={canManagePeople}
+              record={record}
             />
           </TabsContent>
         )}
 
         {canManagePeople && (
-          <TabsContent value="people">
+          <TabsContent value="people" forceMount hidden={tab !== 'people'}>
             <PeopleTab
               users={users}
               classLabels={classLabels}
               savingId={savingId}
               onPatch={patchUser}
+              onAdd={addUser}
               roleFilter={roleFilter}
               onRoleFilterChange={setRoleFilter}
+              record={record}
             />
           </TabsContent>
         )}
+
+        <TabsContent value="activity" forceMount hidden={tab !== 'activity'}>
+          <ActivityTab events={events} />
+        </TabsContent>
       </Tabs>
     </div>
   )

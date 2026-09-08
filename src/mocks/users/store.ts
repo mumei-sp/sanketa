@@ -20,6 +20,7 @@
  * the one auth reads.
  */
 
+import { newId } from '@/mocks/_shared'
 import { teachersData } from '@/mocks/teachers/teachers'
 
 export interface SchoolUser {
@@ -105,6 +106,37 @@ export function findByEmail(email: string): SchoolUser | undefined {
   const wanted = email.trim().toLowerCase()
   const found = load().rows.find(user => user.email.toLowerCase() === wanted)
   return found ? clone(found) : undefined
+}
+
+/**
+ * Add an account.
+ *
+ * Name and email only, plus the role they start in. No password: the mock
+ * auth accepts one shared one, and inventing a per-user credential here would
+ * be pretending to a security this app does not have. A backend would send an
+ * invitation and let the person set their own.
+ *
+ * Returns null when the email is taken — the one uniqueness a directory has to
+ * enforce, because sign-in resolves an account by it.
+ */
+export function createUser(input: {
+  fullName: string
+  email: string
+  roleId: string
+}): SchoolUser | null {
+  const database = load()
+  const email = input.email.trim().toLowerCase()
+  if (database.rows.some(user => user.email.toLowerCase() === email)) return null
+
+  const user: SchoolUser = {
+    id: newId('U'),
+    fullName: input.fullName.trim(),
+    email,
+    roleId: input.roleId,
+  }
+  database.rows.push(user)
+  persist()
+  return clone(user)
 }
 
 /**

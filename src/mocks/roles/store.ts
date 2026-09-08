@@ -166,6 +166,8 @@ export function createRole(input: {
   name: string
   description?: string
   permissions: Permission[]
+  /** Carried on create so duplicating a scoped role produces a scoped one. */
+  scopedToAssignedClasses?: boolean
 }): Role {
   const database = load()
   const role: Role = {
@@ -173,6 +175,7 @@ export function createRole(input: {
     name: input.name.trim(),
     description: input.description?.trim() || undefined,
     permissions: [...input.permissions],
+    scopedToAssignedClasses: input.scopedToAssignedClasses,
   }
   database.rows.push(role)
   persist()

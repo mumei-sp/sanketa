@@ -5,5 +5,5 @@
  * this — it stands in for a backend table.
  */
 
-export { listUsers, findByEmail, updateUser, resetUsers } from './store'
+export { listUsers, findByEmail, createUser, updateUser, resetUsers } from './store'
 export type { SchoolUser } from './store'

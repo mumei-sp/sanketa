@@ -38,6 +38,7 @@ export async function createRole(input: {
   name: string
   description?: string
   permissions: Permission[]
+  scopedToAssignedClasses?: boolean
 }): Promise<Role> {
   return mockOrHttp(
     async () => {

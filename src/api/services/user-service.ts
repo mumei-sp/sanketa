@@ -33,6 +33,30 @@ export async function fetchUsers(): Promise<SchoolUser[]> {
 }
 
 /**
+ * Add an account.
+ *
+ * Resolves to null when the email is already taken.
+ *
+ * @apiRoute POST /api/v1/users
+ */
+export async function createUser(input: {
+  fullName: string
+  email: string
+  roleId: string
+}): Promise<SchoolUser | null> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return mockServer.createUser(input)
+    },
+    async () => {
+      const { data } = await apiClient.post<SchoolUser>('/users', input)
+      return data
+    },
+  )
+}
+
+/**
  * Change what an account may do — its role, and the classes it may write to.
  *
  * @apiRoute PATCH /api/v1/users/{id}

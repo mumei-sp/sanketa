@@ -10,23 +10,35 @@
  * through the panel's draft-and-Save. Roles live in their own table behind a
  * service, not in SchoolConfig, and pretending otherwise would mean holding a
  * copy of a shared resource in a draft that could silently overwrite another
- * admin's edit on save.
+ * admin's edit on save. Every write is logged; see `record`.
  *
  * Two things it refuses to do, both unrecoverable from inside the app:
  *  - delete a built-in role, which would strand every user assigned to it
  *  - remove `settings.manage` from the last role that has it, which would lock
  *    everyone out of the panel that could put it back
  *
- * What the old version could not show, and this one can: how many people hold
- * the role you are about to change, and what the change does to what they see.
- * Both come from sitting next to the people directory rather than in a
- * separate settings section.
+ * Two views of the same table. **Edit** answers "what can this role do?", one
+ * role at a time. **Compare** answers "who can do this?", which is the question
+ * an admin actually arrives with and which the one-role-at-a-time view made
+ * you click four times to answer.
  */
 
 import * as React from 'react'
-import { Plus, Trash2, ShieldCheck, Lock, ArrowRight, Compass, SlidersHorizontal } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  ShieldCheck,
+  Lock,
+  ArrowRight,
+  Compass,
+  SlidersHorizontal,
+  Copy,
+  LayoutGrid,
+  Columns3,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
@@ -61,6 +73,7 @@ import {
   type Role,
 } from '@/config/permissions'
 import type { SchoolUser } from '@/api/services/user-service'
+import type { RecordAccessEvent } from './AccessSettingsSection'
 import { AvatarStack, CoverageBar, SearchField } from './parts'
 
 /**
@@ -98,7 +111,7 @@ function useEffectiveAccess(role: Role | null, classLabels: string[]): string[] 
   }, [role, classLabels])
 }
 
-/** Does this text match what someone typed into the permission search? */
+/** Does this permission match what someone typed into the search box? */
 function matches(definition: PermissionDefinition, query: string): boolean {
   if (!query) return true
   const needle = query.toLowerCase()
@@ -110,6 +123,161 @@ function matches(definition: PermissionDefinition, query: string): boolean {
   )
 }
 
+/** Human names for a set of permission ids, for the log. */
+function labelsFor(ids: Permission[]): string[] {
+  return ids.map(id => permissionDefinition(id)?.label ?? id)
+}
+
+/**
+ * "+ Manage finance, − View transport" — what changed, in words.
+ *
+ * Capped, because granting a whole group at once produces a line nobody reads;
+ * past a handful the count is the useful fact.
+ */
+function describeChange(before: Permission[], after: Permission[]): string | undefined {
+  const added = after.filter(permission => !before.includes(permission))
+  const removed = before.filter(permission => !after.includes(permission))
+  if (added.length === 0 && removed.length === 0) return undefined
+
+  const parts: string[] = []
+  const push = (ids: Permission[], sign: string) => {
+    if (ids.length === 0) return
+    if (ids.length > 4) {
+      parts.push(`${sign} ${ids.length} permissions`)
+      return
+    }
+    labelsFor(ids).forEach(label => parts.push(`${sign} ${label}`))
+  }
+  push(added, '+')
+  push(removed, '−')
+  return parts.join(', ')
+}
+
+// ── Compare view ──────────────────────────────────────────────────────
+
+/**
+ * Every role against every permission.
+ *
+ * Read-only. A grid of 24 × N one-click toggles is a very efficient way to
+ * make a change you did not mean to make and cannot see afterwards; the header
+ * takes you to the role's own editor instead, where the change has a name next
+ * to it.
+ */
+function CompareGrid({
+  roles,
+  onPick,
+}: {
+  roles: Role[]
+  onPick: (roleId: string) => void
+}) {
+  const groups = React.useMemo(() => permissionsByGroup(), [])
+
+  return (
+    // The card background belongs on the whole grid, not just the sticky
+    // column: the rows are transparent, so without it the frozen first column
+    // reads as a white strip laid over the page.
+    <div
+      className="overflow-x-auto rounded-xl border"
+      style={{ borderColor: border.default, backgroundColor: 'var(--card)' }}
+    >
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr>
+            <th
+              scope="col"
+              className="sticky left-0 z-10 min-w-[180px] px-3 py-2.5 text-caption font-semibold"
+              style={{ backgroundColor: 'var(--card)', color: 'var(--heading)' }}
+            >
+              Permission
+            </th>
+            {roles.map(role => (
+              <th key={role.id} scope="col" className="px-2 py-2.5 text-center">
+                <button
+                  type="button"
+                  onClick={() => onPick(role.id)}
+                  className="mx-auto block max-w-[110px] truncate rounded-md px-1.5 py-0.5 text-caption font-semibold hover:bg-muted"
+                  style={{ color: 'var(--heading)' }}
+                  title={`Edit ${role.name}`}
+                >
+                  {role.name}
+                </button>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {groups.map(({ group, permissions }) => (
+            <React.Fragment key={group}>
+              <tr>
+                <th
+                  scope="colgroup"
+                  colSpan={roles.length + 1}
+                  className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  style={{ backgroundColor: 'var(--muted)' }}
+                >
+                  {group}
+                </th>
+              </tr>
+              {permissions.map(definition => (
+                <tr key={definition.id} style={{ borderTop: `1px solid ${border.default}` }}>
+                  <th
+                    scope="row"
+                    className="sticky left-0 z-10 px-3 py-2 text-caption font-normal"
+                    style={{ backgroundColor: 'var(--card)', color: 'var(--heading)' }}
+                  >
+                    {definition.label}
+                  </th>
+                  {roles.map(role => {
+                    const held = role.permissions.includes(definition.id as Permission)
+                    const covered = impliedBy(definition.id as Permission, role.permissions)
+                    const on = held || Boolean(covered)
+                    return (
+                      <td key={role.id} className="px-2 py-2 text-center">
+                        <span
+                          className="inline-block rounded-full"
+                          title={
+                            covered
+                              ? `Included by "${covered.label}"`
+                              : held
+                                ? 'Granted'
+                                : 'Not granted'
+                          }
+                          style={
+                            on
+                              ? {
+                                  width: '9px',
+                                  height: '9px',
+                                  backgroundColor: 'var(--heading)',
+                                  // Implied rather than chosen: same dot,
+                                  // lighter, so a column reads as coverage
+                                  // without hiding how it was granted.
+                                  opacity: covered ? 0.4 : 1,
+                                }
+                              : {
+                                  width: '9px',
+                                  height: '9px',
+                                  border: `1px solid ${border.default}`,
+                                }
+                          }
+                        />
+                        <span className="sr-only">
+                          {on ? 'granted' : 'not granted'} for {role.name}
+                        </span>
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ── The tab ───────────────────────────────────────────────────────────
+
 interface RolesTabProps {
   /** The directory, for member counts. Null while it is still loading. */
   users: SchoolUser[] | null
@@ -117,36 +285,47 @@ interface RolesTabProps {
   /** Open the People tab filtered to one role. */
   onManagePeople: (roleId: string) => void
   canManagePeople: boolean
+  record: RecordAccessEvent
 }
 
-export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }: RolesTabProps) {
+export function RolesTab({
+  users,
+  classLabels,
+  onManagePeople,
+  canManagePeople,
+  record,
+}: RolesTabProps) {
   const { roles, role: myRole, refresh } = usePermissions()
   const { showSuccess, showError } = useAppToast()
   const groups = React.useMemo(() => permissionsByGroup(), [])
 
+  const [view, setView] = React.useState<'edit' | 'compare'>('edit')
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   /**
-   * The name field's own copy, committed on blur.
+   * The text fields' own copies, committed on blur.
    *
-   * It used to patch on every keystroke: two requests per character, and
+   * The name used to patch on every keystroke: two requests per character, and
    * because the input read its value back from the refetched roles, a slow
    * earlier response landing after a later one reset the field to a prefix of
    * what had been typed. Editing locally and saving once removes both.
    */
   const [nameDraft, setNameDraft] = React.useState<string | null>(null)
+  const [descriptionDraft, setDescriptionDraft] = React.useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = React.useState<Role | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
   const [query, setQuery] = React.useState('')
 
   const selected = roles.find(role => role.id === selectedId) ?? roles[0] ?? null
 
-  // Abandon a half-typed name when the selection moves elsewhere.
+  // Abandon half-typed text when the selection moves elsewhere.
   React.useEffect(() => {
     setNameDraft(null)
+    setDescriptionDraft(null)
   }, [selected?.id])
 
   const membersOf = React.useCallback(
-    (roleId: string) => (users ?? []).filter(user => user.roleId === roleId).map(user => user.fullName),
+    (roleId: string) =>
+      (users ?? []).filter(user => user.roleId === roleId).map(user => user.fullName),
     [users],
   )
   const members = selected ? membersOf(selected.id) : []
@@ -158,9 +337,11 @@ export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }
       try {
         await updateRoleRequest(id, changes)
         await refresh()
+        return true
       } catch (error) {
         console.error('Failed to update role', error)
         showError('Could not save the role')
+        return false
       } finally {
         setIsSaving(false)
       }
@@ -174,15 +355,33 @@ export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }
     setNameDraft(null)
     // An empty name would leave a role nobody can identify in the picker.
     if (!name || name === selected.name) return
-    void patch(selected.id, { name })
+    const was = selected.name
+    void patch(selected.id, { name }).then(ok => {
+      if (ok) {
+        record({
+          kind: 'role.update',
+          target: name,
+          summary: `Renamed the role ${was} to ${name}`,
+        })
+      }
+    })
+  }
+
+  const commitDescription = () => {
+    if (!selected || descriptionDraft === null) return
+    const description = descriptionDraft.trim()
+    setDescriptionDraft(null)
+    if (description === (selected.description ?? '')) return
+    void patch(selected.id, { description })
   }
 
   /**
    * Every permission change goes through here, single or bulk.
    *
    * The lockout check has to sit at the one place that writes, not on the
-   * individual switch: "clear this group" can take the last
-   * `settings.manage` away just as easily as flipping it off can.
+   * individual switch: "clear this group" can take the last `settings.manage`
+   * away just as easily as flipping it off can. So does the log line — a bulk
+   * control that forgot to write one would be invisible in the audit trail.
    */
   const setPermissions = (next: Permission[]) => {
     if (!selected) return
@@ -199,7 +398,18 @@ export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }
       }
     }
 
-    void patch(selected.id, { permissions: next })
+    const detail = describeChange(selected.permissions, next)
+    const name = selected.name
+    void patch(selected.id, { permissions: next }).then(ok => {
+      if (ok && detail) {
+        record({
+          kind: 'role.update',
+          target: name,
+          summary: `Changed what ${name} can do`,
+          detail,
+        })
+      }
+    })
   }
 
   const togglePermission = (permission: Permission, enabled: boolean) => {
@@ -222,6 +432,22 @@ export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }
     )
   }
 
+  const setScoped = (value: boolean) => {
+    if (!selected) return
+    const name = selected.name
+    void patch(selected.id, { scopedToAssignedClasses: value }).then(ok => {
+      if (ok) {
+        record({
+          kind: 'role.update',
+          target: name,
+          summary: value
+            ? `Limited ${name} to its holders' assigned classes`
+            : `Removed the class limit from ${name}`,
+        })
+      }
+    })
+  }
+
   const handleCreate = async () => {
     setIsSaving(true)
     try {
@@ -233,10 +459,46 @@ export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }
       })
       await refresh()
       setSelectedId(created.id)
+      setView('edit')
+      record({ kind: 'role.create', target: created.name, summary: `Created the role ${created.name}` })
       showSuccess('Role created', { description: 'Give it a name and choose what it can do.' })
     } catch (error) {
       console.error('Failed to create role', error)
       showError('Could not create the role')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  /**
+   * Copy a role, permissions and scope included.
+   *
+   * The way every new role actually gets made. "Vice Principal" is Principal
+   * minus two things, and building it from the two-permission blank meant
+   * flipping seventeen switches to get back to where a copy starts.
+   */
+  const handleDuplicate = async (source: Role) => {
+    setIsSaving(true)
+    try {
+      const created = await createRoleRequest({
+        name: `${source.name} copy`,
+        description: source.description,
+        permissions: [...source.permissions],
+        scopedToAssignedClasses: source.scopedToAssignedClasses,
+      })
+      await refresh()
+      setSelectedId(created.id)
+      setView('edit')
+      record({
+        kind: 'role.create',
+        target: created.name,
+        summary: `Created ${created.name} from ${source.name}`,
+        detail: `${source.permissions.length} permissions copied`,
+      })
+      showSuccess(`Copied ${source.name}`, { description: 'Rename it and adjust what it can do.' })
+    } catch (error) {
+      console.error('Failed to duplicate role', error)
+      showError('Could not copy the role')
     } finally {
       setIsSaving(false)
     }
@@ -254,11 +516,18 @@ export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }
       return
     }
 
+    const holders = membersOf(role.id).length
     setPendingDelete(null)
     try {
       await deleteRoleRequest(role.id)
       await refresh()
       setSelectedId(null)
+      record({
+        kind: 'role.delete',
+        target: role.name,
+        summary: `Deleted the role ${role.name}`,
+        detail: holders > 0 ? `${holders} left without a role` : undefined,
+      })
       showSuccess(`Deleted ${role.name}`)
     } catch (error) {
       console.error('Failed to delete role', error)
@@ -275,311 +544,409 @@ export function RolesTab({ users, classLabels, onManagePeople, canManagePeople }
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-body-muted text-muted-foreground">
-          Pick a role, then choose what it can see and do. Changes save as you make them.
-        </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Two questions, two views — see the file header. */}
+        <div
+          className="flex rounded-lg border p-0.5"
+          style={{ borderColor: border.default }}
+          role="group"
+          aria-label="Role view"
+        >
+          {(
+            [
+              { id: 'edit', label: 'Edit', icon: LayoutGrid },
+              { id: 'compare', label: 'Compare', icon: Columns3 },
+            ] as const
+          ).map(option => {
+            const Icon = option.icon
+            const active = view === option.id
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setView(option.id)}
+                aria-pressed={active}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-caption font-medium transition-colors',
+                  active ? 'bg-muted' : 'hover:bg-muted/50',
+                )}
+                style={{ color: active ? 'var(--heading)' : text.muted }}
+              >
+                <Icon className="size-3.5" aria-hidden />
+                {option.label}
+              </button>
+            )
+          })}
+        </div>
+
+        <span className="flex-1" />
+
+        {selected && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0 gap-1.5"
+            onClick={() => handleDuplicate(selected)}
+            disabled={isSaving}
+          >
+            <Copy className="size-4" />
+            Duplicate
+          </Button>
+        )}
         <Button size="sm" className="shrink-0 gap-1.5" onClick={handleCreate} disabled={isSaving}>
           <Plus className="size-4" />
           New role
         </Button>
       </div>
 
-      {/* The roster of roles. A card each rather than a chip, because the two
-          things worth knowing before you edit one — how many permissions it
-          carries and how many people hold it — do not fit on a chip. */}
-      <div className="grid gap-2 sm:grid-cols-2">
-        {roles.map(role => {
-          const isSelected = selected?.id === role.id
-          const holders = membersOf(role.id)
-          return (
-            <button
-              key={role.id}
-              type="button"
-              onClick={() => setSelectedId(role.id)}
-              aria-pressed={isSelected}
-              className={cn(
-                'group flex flex-col gap-2 rounded-xl border p-3 text-left transition-all',
-                isSelected ? 'shadow-sm' : 'hover:bg-muted/40',
-              )}
-              style={{
-                borderColor: isSelected ? 'var(--heading)' : border.default,
-                boxShadow: isSelected ? '0 0 0 1px var(--heading)' : undefined,
-                backgroundColor: 'var(--card)',
-              }}
-            >
-              <span className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+      {view === 'compare' ? (
+        <>
+          <p className="text-body-muted text-muted-foreground">
+            Every role against every permission. A faint dot is granted by implication — "view" is
+            included in "manage". Pick a role's name to edit it.
+          </p>
+          <CompareGrid
+            roles={roles}
+            onPick={roleId => {
+              setSelectedId(roleId)
+              setView('edit')
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <p className="text-body-muted text-muted-foreground">
+            Pick a role, then choose what it can see and do. Changes save as you make them.
+          </p>
+
+          {/* The roster of roles. A card each rather than a chip, because the
+              two things worth knowing before you edit one — how many
+              permissions it carries and how many people hold it — do not fit
+              on a chip. */}
+          <div className="grid gap-2 sm:grid-cols-2">
+            {roles.map(role => {
+              const isSelected = selected?.id === role.id
+              const holders = membersOf(role.id)
+              return (
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => setSelectedId(role.id)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    'group flex flex-col gap-2 rounded-xl border p-3 text-left transition-all',
+                    isSelected ? 'shadow-sm' : 'hover:bg-muted/40',
+                  )}
                   style={{
-                    backgroundColor: isSelected ? 'var(--heading)' : 'var(--muted)',
+                    borderColor: isSelected ? 'var(--heading)' : border.default,
+                    boxShadow: isSelected ? '0 0 0 1px var(--heading)' : undefined,
+                    backgroundColor: 'var(--card)',
                   }}
                 >
-                  <ShieldCheck
-                    className="size-4"
-                    style={{ color: isSelected ? 'var(--card)' : 'var(--heading)' }}
-                  />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span
-                    className="block truncate text-body font-semibold"
-                    style={{ color: 'var(--heading)' }}
-                  >
-                    {role.name}
-                  </span>
-                  <span className="block text-caption tabular-nums" style={{ color: text.muted }}>
-                    {role.permissions.length} of {ALL_PERMISSIONS.length} permissions
-                  </span>
-                </span>
-              </span>
-
-              <CoverageBar value={role.permissions.length} total={ALL_PERMISSIONS.length} />
-
-              <span className="flex flex-wrap items-center gap-1.5">
-                <AvatarStack names={holders} max={3} />
-                <span className="flex-1" />
-                {role.scopedToAssignedClasses && (
-                  <Badge variant="outline" className="text-[10px]">
-                    Class-scoped
-                  </Badge>
-                )}
-                {role.builtin && (
-                  <Badge variant="outline" className="gap-1 text-[10px]">
-                    <Lock className="size-2.5" />
-                    Built-in
-                  </Badge>
-                )}
-                {myRole?.id === role.id && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    You
-                  </Badge>
-                )}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-
-      {selected && (
-        <div
-          className="flex flex-col gap-4 rounded-xl border p-4"
-          style={{ borderColor: border.default, backgroundColor: 'var(--card)' }}
-        >
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-0 flex-1">
-              <Label htmlFor="role-name">Role name</Label>
-              <Input
-                id="role-name"
-                value={nameDraft ?? selected.name}
-                disabled={selected.builtin}
-                onChange={event => setNameDraft(event.target.value)}
-                onBlur={commitName}
-                onKeyDown={event => {
-                  if (event.key === 'Enter') event.currentTarget.blur()
-                  if (event.key === 'Escape') setNameDraft(null)
-                }}
-                className="mt-1.5"
-              />
-            </div>
-            {!selected.builtin && (
-              <Button
-                variant="outline"
-                className="shrink-0 gap-1.5 text-destructive"
-                onClick={() => setPendingDelete(selected)}
-              >
-                <Trash2 className="size-4" />
-                Delete
-              </Button>
-            )}
-          </div>
-
-          {selected.description && (
-            <p className="text-caption text-muted-foreground">{selected.description}</p>
-          )}
-
-          {/* Who holds it. The bridge between the two tabs: a permission
-              change is abstract until you can see the four people it lands
-              on. */}
-          <div
-            className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5"
-            style={{ borderColor: border.default }}
-          >
-            <AvatarStack names={members} />
-            <span className="min-w-0 flex-1 text-caption" style={{ color: text.muted }}>
-              {users === null
-                ? 'Counting people…'
-                : members.length === 0
-                  ? 'No one holds this role yet.'
-                  : `${members.length} ${members.length === 1 ? 'person holds' : 'people hold'} this role.`}
-            </span>
-            {canManagePeople && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="shrink-0 gap-1"
-                onClick={() => onManagePeople(selected.id)}
-              >
-                Manage people
-                <ArrowRight className="size-3.5" />
-              </Button>
-            )}
-          </div>
-
-          {/* Class scoping. Its own control rather than a permission, because
-              it does not grant anything — it narrows what the permissions
-              below already grant to the holder's own classes. */}
-          <div
-            className="flex items-center gap-3 rounded-lg border px-3 py-2.5"
-            style={{ borderColor: border.default }}
-          >
-            <div className="min-w-0 flex-1">
-              <Label htmlFor="role-scoped" className="cursor-pointer text-body font-medium">
-                Limit to assigned classes
-              </Label>
-              <p className="text-caption text-muted-foreground">
-                Holders read every class but add and edit only the ones assigned to them.
-                Affects attendance, marks and student records.
-              </p>
-            </div>
-            <Switch
-              id="role-scoped"
-              checked={selected.scopedToAssignedClasses === true}
-              disabled={isSaving}
-              onCheckedChange={value => void patch(selected.id, { scopedToAssignedClasses: value })}
-              aria-label="Limit to assigned classes"
-            />
-          </div>
-
-          {/* What the switches below add up to. Derived from the same ability
-              the app itself runs, so it is a preview and not a promise. */}
-          <div className="rounded-lg border p-3" style={{ borderColor: border.default }}>
-            <div className="mb-2 flex items-center gap-1.5">
-              <Compass className="size-3.5" style={{ color: text.muted }} aria-hidden />
-              <span className="text-caption font-semibold" style={{ color: 'var(--heading)' }}>
-                Where this role can go
-              </span>
-            </div>
-            {destinations.length === 0 ? (
-              <p className="text-caption text-muted-foreground">
-                Nothing yet — a holder would sign in to an empty app.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {destinations.map(destination => (
-                  <span
-                    key={destination}
-                    className="rounded-full px-2 py-0.5 text-[11px] font-medium"
-                    style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
-                  >
-                    {destination}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {selected.id === myRole?.id && (
-            <p className="text-caption" style={{ color: 'var(--heading)' }}>
-              This is your own role — changes here take effect for you immediately.
-            </p>
-          )}
-
-          {/* Twenty-four switches is a scroll. Search first, then the list. */}
-          <div className="flex flex-wrap items-center gap-2">
-            <SearchField
-              value={query}
-              onChange={setQuery}
-              placeholder="Search permissions…"
-              label="Search permissions"
-            />
-            <span
-              className="shrink-0 rounded-full px-2.5 py-1 text-caption font-medium tabular-nums"
-              style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
-            >
-              {selected.permissions.length}/{ALL_PERMISSIONS.length} granted
-            </span>
-          </div>
-
-          {visibleGroups.length === 0 && (
-            <p className="text-caption text-muted-foreground">
-              No permission matches “{query}”.
-            </p>
-          )}
-
-          {visibleGroups.map(({ group, permissions }) => {
-            const granted = permissions.filter(definition =>
-              selected.permissions.includes(definition.id as Permission),
-            ).length
-            const all = granted === permissions.length
-
-            return (
-              <div key={group}>
-                <div className="mb-2 flex items-center gap-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {group}
-                  </p>
-                  <span className="text-[11px] tabular-nums" style={{ color: text.muted }}>
-                    {granted}/{permissions.length}
-                  </span>
-                  <span className="flex-1" />
-                  <button
-                    type="button"
-                    disabled={isSaving}
-                    onClick={() => setGroup(permissions, !all)}
-                    className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
-                    style={{ color: 'var(--heading)' }}
-                  >
-                    <SlidersHorizontal className="size-3" aria-hidden />
-                    {all ? 'Clear all' : 'Grant all'}
-                  </button>
-                </div>
-                <div
-                  className="flex flex-col rounded-lg border"
-                  style={{ borderColor: border.default }}
-                >
-                  {permissions.map((definition, index) => {
-                    const held = selected.permissions.includes(definition.id as Permission)
-                    // Reading is included in managing, so show it on and locked
-                    // rather than offering a switch that cannot take effect.
-                    const covered = impliedBy(definition.id as Permission, selected.permissions)
-                    const switchId = `perm-${selected.id}-${definition.id}`
-                    return (
-                      <div
-                        key={definition.id}
-                        className="flex items-center gap-3 px-3 py-2.5"
-                        style={index > 0 ? { borderTop: `1px solid ${border.default}` } : undefined}
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: isSelected ? 'var(--heading)' : 'var(--muted)' }}
+                    >
+                      <ShieldCheck
+                        className="size-4"
+                        style={{ color: isSelected ? 'var(--card)' : 'var(--heading)' }}
+                      />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className="block truncate text-body font-semibold"
+                        style={{ color: 'var(--heading)' }}
                       >
-                        <div className="min-w-0 flex-1">
-                          <Label htmlFor={switchId} className="cursor-pointer text-body font-medium">
-                            {definition.label}
-                            {definition.scoped && (
-                              <Badge variant="outline" className="ml-2 text-[10px] font-normal">
-                                Scopable
-                              </Badge>
-                            )}
-                          </Label>
-                          <p className="text-caption text-muted-foreground">
-                            {covered ? `Included by “${covered.label}”.` : definition.description}
-                          </p>
-                        </div>
-                        <Switch
-                          id={switchId}
-                          checked={held || Boolean(covered)}
-                          disabled={isSaving || Boolean(covered)}
-                          onCheckedChange={value =>
-                            togglePermission(definition.id as Permission, value)
-                          }
-                          aria-label={definition.label}
-                        />
-                      </div>
-                    )
-                  })}
+                        {role.name}
+                      </span>
+                      <span
+                        className="block text-caption tabular-nums"
+                        style={{ color: text.muted }}
+                      >
+                        {role.permissions.length} of {ALL_PERMISSIONS.length} permissions
+                      </span>
+                    </span>
+                  </span>
+
+                  <CoverageBar value={role.permissions.length} total={ALL_PERMISSIONS.length} />
+
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <AvatarStack names={holders} max={3} />
+                    <span className="flex-1" />
+                    {role.scopedToAssignedClasses && (
+                      <Badge variant="outline" className="text-[10px]">
+                        Class-scoped
+                      </Badge>
+                    )}
+                    {role.builtin && (
+                      <Badge variant="outline" className="gap-1 text-[10px]">
+                        <Lock className="size-2.5" />
+                        Built-in
+                      </Badge>
+                    )}
+                    {myRole?.id === role.id && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        You
+                      </Badge>
+                    )}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          {selected && (
+            <div
+              className="flex flex-col gap-4 rounded-xl border p-4"
+              style={{ borderColor: border.default, backgroundColor: 'var(--card)' }}
+            >
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <Label htmlFor="role-name">Role name</Label>
+                  <Input
+                    id="role-name"
+                    value={nameDraft ?? selected.name}
+                    disabled={selected.builtin}
+                    onChange={event => setNameDraft(event.target.value)}
+                    onBlur={commitName}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter') event.currentTarget.blur()
+                      if (event.key === 'Escape') setNameDraft(null)
+                    }}
+                    className="mt-1.5"
+                  />
                 </div>
+                {!selected.builtin && (
+                  <Button
+                    variant="outline"
+                    className="shrink-0 gap-1.5 text-destructive"
+                    onClick={() => setPendingDelete(selected)}
+                  >
+                    <Trash2 className="size-4" />
+                    Delete
+                  </Button>
+                )}
               </div>
-            )
-          })}
-        </div>
+
+              {/* A built-in role's description ships with the app; a custom
+                  one has nowhere else to say what it is for. */}
+              {selected.builtin ? (
+                selected.description && (
+                  <p className="text-caption text-muted-foreground">{selected.description}</p>
+                )
+              ) : (
+                <div>
+                  <Label htmlFor="role-description">What it is for</Label>
+                  <Textarea
+                    id="role-description"
+                    rows={2}
+                    placeholder="Who should hold this role, and why."
+                    value={descriptionDraft ?? selected.description ?? ''}
+                    onChange={event => setDescriptionDraft(event.target.value)}
+                    onBlur={commitDescription}
+                    onKeyDown={event => {
+                      if (event.key === 'Escape') setDescriptionDraft(null)
+                    }}
+                    className="mt-1.5"
+                  />
+                </div>
+              )}
+
+              {/* Who holds it. The bridge between the two tabs: a permission
+                  change is abstract until you can see the four people it lands
+                  on. */}
+              <div
+                className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5"
+                style={{ borderColor: border.default }}
+              >
+                <AvatarStack names={members} />
+                <span className="min-w-0 flex-1 text-caption" style={{ color: text.muted }}>
+                  {users === null
+                    ? 'Counting people…'
+                    : members.length === 0
+                      ? 'No one holds this role yet.'
+                      : `${members.length} ${members.length === 1 ? 'person holds' : 'people hold'} this role.`}
+                </span>
+                {canManagePeople && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 gap-1"
+                    onClick={() => onManagePeople(selected.id)}
+                  >
+                    Manage people
+                    <ArrowRight className="size-3.5" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Class scoping. Its own control rather than a permission,
+                  because it does not grant anything — it narrows what the
+                  permissions below already grant to the holder's own classes. */}
+              <div
+                className="flex items-center gap-3 rounded-lg border px-3 py-2.5"
+                style={{ borderColor: border.default }}
+              >
+                <div className="min-w-0 flex-1">
+                  <Label htmlFor="role-scoped" className="cursor-pointer text-body font-medium">
+                    Limit to assigned classes
+                  </Label>
+                  <p className="text-caption text-muted-foreground">
+                    Holders read every class but add and edit only the ones assigned to them.
+                    Affects attendance, marks and student records.
+                  </p>
+                </div>
+                <Switch
+                  id="role-scoped"
+                  checked={selected.scopedToAssignedClasses === true}
+                  disabled={isSaving}
+                  onCheckedChange={setScoped}
+                  aria-label="Limit to assigned classes"
+                />
+              </div>
+
+              {/* What the switches below add up to. Derived from the same
+                  ability the app itself runs, so it is a preview and not a
+                  promise. */}
+              <div className="rounded-lg border p-3" style={{ borderColor: border.default }}>
+                <div className="mb-2 flex items-center gap-1.5">
+                  <Compass className="size-3.5" style={{ color: text.muted }} aria-hidden />
+                  <span className="text-caption font-semibold" style={{ color: 'var(--heading)' }}>
+                    Where this role can go
+                  </span>
+                </div>
+                {destinations.length === 0 ? (
+                  <p className="text-caption text-muted-foreground">
+                    Nothing yet — a holder would sign in to an empty app.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {destinations.map(destination => (
+                      <span
+                        key={destination}
+                        className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                        style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
+                      >
+                        {destination}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {selected.id === myRole?.id && (
+                <p className="text-caption" style={{ color: 'var(--heading)' }}>
+                  This is your own role — changes here take effect for you immediately.
+                </p>
+              )}
+
+              {/* Twenty-four switches is a scroll. Search first, then the list. */}
+              <div className="flex flex-wrap items-center gap-2">
+                <SearchField
+                  value={query}
+                  onChange={setQuery}
+                  placeholder="Search permissions…"
+                  label="Search permissions"
+                />
+                <span
+                  className="shrink-0 rounded-full px-2.5 py-1 text-caption font-medium tabular-nums"
+                  style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
+                >
+                  {selected.permissions.length}/{ALL_PERMISSIONS.length} granted
+                </span>
+              </div>
+
+              {visibleGroups.length === 0 && (
+                <p className="text-caption text-muted-foreground">
+                  No permission matches “{query}”.
+                </p>
+              )}
+
+              {visibleGroups.map(({ group, permissions }) => {
+                const granted = permissions.filter(definition =>
+                  selected.permissions.includes(definition.id as Permission),
+                ).length
+                const all = granted === permissions.length
+
+                return (
+                  <div key={group}>
+                    <div className="mb-2 flex items-center gap-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {group}
+                      </p>
+                      <span className="text-[11px] tabular-nums" style={{ color: text.muted }}>
+                        {granted}/{permissions.length}
+                      </span>
+                      <span className="flex-1" />
+                      <button
+                        type="button"
+                        disabled={isSaving}
+                        onClick={() => setGroup(permissions, !all)}
+                        className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                        style={{ color: 'var(--heading)' }}
+                      >
+                        <SlidersHorizontal className="size-3" aria-hidden />
+                        {all ? 'Clear all' : 'Grant all'}
+                      </button>
+                    </div>
+                    <div
+                      className="flex flex-col rounded-lg border"
+                      style={{ borderColor: border.default }}
+                    >
+                      {permissions.map((definition, index) => {
+                        const held = selected.permissions.includes(definition.id as Permission)
+                        // Reading is included in managing, so show it on and
+                        // locked rather than offering a switch that cannot
+                        // take effect.
+                        const covered = impliedBy(definition.id as Permission, selected.permissions)
+                        const switchId = `perm-${selected.id}-${definition.id}`
+                        return (
+                          <div
+                            key={definition.id}
+                            className="flex items-center gap-3 px-3 py-2.5"
+                            style={
+                              index > 0 ? { borderTop: `1px solid ${border.default}` } : undefined
+                            }
+                          >
+                            <div className="min-w-0 flex-1">
+                              <Label
+                                htmlFor={switchId}
+                                className="cursor-pointer text-body font-medium"
+                              >
+                                {definition.label}
+                                {definition.scoped && (
+                                  <Badge variant="outline" className="ml-2 text-[10px] font-normal">
+                                    Scopable
+                                  </Badge>
+                                )}
+                              </Label>
+                              <p className="text-caption text-muted-foreground">
+                                {covered
+                                  ? `Included by “${covered.label}”.`
+                                  : definition.description}
+                              </p>
+                            </div>
+                            <Switch
+                              id={switchId}
+                              checked={held || Boolean(covered)}
+                              disabled={isSaving || Boolean(covered)}
+                              onCheckedChange={value =>
+                                togglePermission(definition.id as Permission, value)
+                              }
+                              aria-label={definition.label}
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
       )}
 
       <p className="text-caption text-muted-foreground">
