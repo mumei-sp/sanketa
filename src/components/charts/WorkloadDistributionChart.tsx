@@ -20,7 +20,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import { colors } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { teacherWorkloadData } from '@/mocks/teachers/workload'
+import { fetchTeacherWorkload } from '@/api/services/teacher-service'
+import type { TeacherWorkloadData } from '@/mocks/teachers/workload'
 
 interface WorkloadDistributionChartProps {
   isLoading?: boolean
@@ -155,6 +156,16 @@ const CustomBarTop = (props: any) => {
 export function WorkloadDistributionChart({
   isLoading = false,
 }: WorkloadDistributionChartProps) {
+  const [teacherWorkloadData, setTeacherWorkloadData] = React.useState<
+    Record<string, Record<string, TeacherWorkloadData[]>>
+  >({})
+
+  React.useEffect(() => {
+    fetchTeacherWorkload()
+      .then(setTeacherWorkloadData)
+      .catch(error => console.error('Failed to load teacher workload', error))
+  }, [])
+
   const { config } = useSchoolConfig()
 
   // Show config subjects that have workload data

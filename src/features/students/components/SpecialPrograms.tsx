@@ -1,6 +1,8 @@
 import { MoreHorizontal } from 'lucide-react'
 import { text, border, withOpacity } from '@/theme/colors'
-import { specialProgramsData } from '@/mocks/students/programs'
+import * as React from 'react'
+import { fetchSpecialPrograms } from '@/api/services/student-service'
+import type { SpecialProgramEntry } from '@/mocks/students/programs'
 
 const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
   'Enrichment': { bg: withOpacity('var(--accent)', 0.3), color: 'var(--accent)' },
@@ -17,6 +19,14 @@ function getInitials(name: string) {
 }
 
 export function SpecialPrograms() {
+  const [specialProgramsData, setSpecialProgramsData] = React.useState<SpecialProgramEntry[]>([])
+
+  React.useEffect(() => {
+    fetchSpecialPrograms()
+      .then(setSpecialProgramsData)
+      .catch(error => console.error('Failed to load special programs', error))
+  }, [])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}

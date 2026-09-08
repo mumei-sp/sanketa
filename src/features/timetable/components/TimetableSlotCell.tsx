@@ -1,7 +1,7 @@
 import { Pencil } from 'lucide-react'
 import { text, border, status, withOpacity } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
-import { getSubjectById } from '@/mocks/timetable/timetable'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import type { TimetableSlot, TimetableException } from '../types'
 
 interface TimetableSlotCellProps {
@@ -68,7 +68,17 @@ export function TimetableSlotCell({
   }
 
   // Subject color for card tint
-  const subjectColor = slot ? (getSubjectById(slot.subjectId)?.color ?? 'var(--accent)') : 'var(--accent)'
+  // The school's own subject list, not the timetable mock's copy of it.
+  // Both existed with the same ids, and only one of them was editable — so
+  // renaming or recolouring a subject in Settings never reached this grid.
+  const { config } = useSchoolConfig()
+  const subject = slot ? config.subjects.find(s => s.id === slot.subjectId) : undefined
+  const subjectColor = subject?.color ?? 'var(--accent)'
+  // The stored name is a copy taken when the slot was written, so a subject
+  // renamed in Settings kept its old name here while its colour changed —
+  // half-live, which is worse than either. The configured name wins; the copy
+  // is the fallback for a subject that has since been deleted.
+  const subjectLabel = subject?.name ?? slot?.subjectName ?? exception?.newSubject ?? ''
 
   // Opacity for cancelled
   const cardOpacity = isCancelled ? 0.35 : 1
@@ -109,7 +119,7 @@ export function TimetableSlotCell({
               textDecoration: isCancelled ? 'line-through' : undefined,
             }}
           >
-            {slot?.subjectName ?? exception?.newSubject ?? ''}
+            {subjectLabel}
           </div>
 
           {/* Teacher name */}

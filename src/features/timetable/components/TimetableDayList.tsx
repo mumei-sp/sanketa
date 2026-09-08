@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Pencil } from 'lucide-react'
 import { text, border, status, withOpacity, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
-import { getSubjectById } from '@/mocks/timetable/timetable'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { cn } from '@/lib/utils'
 import { DAY_LABELS, DAY_SHORT_LABELS } from '../types'
 import type { ResolvedSlot, TimetableSlot } from '../types'
@@ -142,7 +142,17 @@ function DayPeriodRow({
   }
 
   const isEmpty = !slot && !isExtraClass
-  const subjectColor = slot ? (getSubjectById(slot.subjectId)?.color ?? 'var(--accent)') : 'var(--accent)'
+  // The school's own subject list, not the timetable mock's copy of it.
+  // Both existed with the same ids, and only one of them was editable — so
+  // renaming or recolouring a subject in Settings never reached this grid.
+  const { config } = useSchoolConfig()
+  const subject = slot ? config.subjects.find(s => s.id === slot.subjectId) : undefined
+  const subjectColor = subject?.color ?? 'var(--accent)'
+  // The stored name is a copy taken when the slot was written, so a subject
+  // renamed in Settings kept its old name here while its colour changed —
+  // half-live, which is worse than either. The configured name wins; the copy
+  // is the fallback for a subject that has since been deleted.
+  const subjectLabel = subject?.name ?? slot?.subjectName ?? exception?.newSubject ?? ''
   const tintColor = isSubstitution || isExtraClass ? 'var(--heading)' : subjectColor
   const interactive = isEditMode
 
@@ -221,7 +231,7 @@ function DayPeriodRow({
                 textDecoration: isCancelled ? 'line-through' : undefined,
               }}
             >
-              {slot?.subjectName ?? exception?.newSubject ?? ''}
+              {subjectLabel}
             </span>
             <span className="text-caption leading-tight break-words" style={{ color: text.muted }}>
               P{periodNumber}

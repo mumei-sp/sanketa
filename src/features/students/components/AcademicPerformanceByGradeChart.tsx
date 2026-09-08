@@ -20,10 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { text, border, withOpacity } from '@/theme/colors'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { AcademicPerformanceEntry } from '@/mocks/students/academic-performance'
-import {
-  academicPerformanceLastSemester,
-  academicPerformanceThisSemester,
-} from '@/mocks/students/academic-performance'
+import { fetchAcademicPerformance } from '@/api/services/student-service'
 
 type Period = 'last' | 'this'
 
@@ -116,6 +113,25 @@ interface Props {
 const MIN_WIDTH_PER_ITEM = 80
 
 export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
+  // Both semesters used to be imported as constants, so the period toggle
+  // switched between two arrays baked into the bundle. It now asks the server,
+  // which is where a semester's marks actually live.
+  const [academicPerformanceThisSemester, setThisSemester] = React.useState<
+    AcademicPerformanceEntry[]
+  >([])
+  const [academicPerformanceLastSemester, setLastSemester] = React.useState<
+    AcademicPerformanceEntry[]
+  >([])
+
+  React.useEffect(() => {
+    Promise.all([fetchAcademicPerformance('this'), fetchAcademicPerformance('last')])
+      .then(([current, previous]) => {
+        setThisSemester(current)
+        setLastSemester(previous)
+      })
+      .catch(error => console.error('Failed to load academic performance', error))
+  }, [])
+
   const [period, setPeriod] = React.useState<Period>('last')
   const [selectedGrades, setSelectedGrades] = React.useState<string[]>([])
 

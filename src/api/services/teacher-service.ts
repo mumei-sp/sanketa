@@ -14,6 +14,7 @@ import {
   type TeacherStatistics,
   type DepartmentData,
 } from '@/mocks/teachers/statistics'
+import { teacherWorkloadData } from '@/mocks/teachers/workload'
 
 /**
  * Fetch all teachers.
@@ -152,6 +153,24 @@ export async function deleteTeacher(id: string): Promise<void> {
     },
     async () => {
       await apiClient.delete(`/teachers/${id}`)
+    },
+  )
+}
+
+/**
+ * Teaching hours per subject, keyed by subject name.
+ *
+ * @apiRoute GET /api/v1/teachers/workload
+ */
+export async function fetchTeacherWorkload(): Promise<typeof teacherWorkloadData> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return { ...teacherWorkloadData }
+    },
+    async () => {
+      const { data } = await apiClient.get<typeof teacherWorkloadData>('/teachers/workload')
+      return data
     },
   )
 }

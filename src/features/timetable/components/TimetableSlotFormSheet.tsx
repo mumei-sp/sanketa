@@ -3,8 +3,9 @@ import { FormSheet } from '@/components/form/FormSheet'
 import { Button } from '@/components/ui/button'
 import { text, border, background } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
-import { subjects } from '@/mocks/timetable/timetable'
-import { teachersData } from '@/mocks/teachers/teachers'
+import { useSchoolConfig } from '@/config/SchoolConfigContext'
+import { fetchTeachers } from '@/api/services/teacher-service'
+import type { Teacher } from '@/features/teachers/types'
 import type { TimetableSlot } from '../types'
 import { DAY_LABELS } from '../types'
 
@@ -41,6 +42,22 @@ export function TimetableSlotFormSheet({
   onSave,
   onClear,
 }: TimetableSlotFormSheetProps) {
+  // Subjects come from the school's own configuration — the list Settings
+  // edits — rather than the timetable mock's duplicate of it. Teachers come
+  // through the service, so a teacher added today can be timetabled today.
+  const { config } = useSchoolConfig()
+  const subjects = config.subjects
+  const [teachersData, setTeachersData] = React.useState<Teacher[]>([])
+
+  React.useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    fetchTeachers()
+      .then(rows => { if (!cancelled) setTeachersData(rows) })
+      .catch(error => console.error('Failed to load teachers', error))
+    return () => { cancelled = true }
+  }, [open])
+
   const [subjectId, setSubjectId] = React.useState('')
   const [teacherId, setTeacherId] = React.useState('')
   const [room, setRoom] = React.useState('')

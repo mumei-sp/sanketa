@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { RegisterSchema, type RegisterFormValues } from '../schemas/auth-schema'
-import { mockRegister } from '@/mocks/auth'
+import { register } from '@/api/services/auth-service'
 import { TextField } from '@/components/form/fields'
 import { PhoneNumberFieldWithCountryCode } from '@/components/form/fields'
 import { PasswordField } from './PasswordField'
@@ -40,7 +40,7 @@ export function RegisterForm() {
   async function onSubmit(data: RegisterFormValues) {
     setServerError(null)
     try {
-      await mockRegister({
+      await register({
         fullName: data.fullName,
         email: data.email,
         phoneCountryCode: data.phoneCountryCode || '+91',

@@ -4,6 +4,7 @@
  * Mock path + HTTP path per endpoint.
  */
 import type {
+  AttendanceOverviewData,
   AttendanceRecord,
   AttendanceEntry,
   AttendanceSubmission,
@@ -15,6 +16,7 @@ import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
 import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
+import { attendanceOverviewMonthlyData } from '@/mocks/attendance/overview'
 import {
   classRosters,
   availableClasses,
@@ -209,6 +211,26 @@ export async function fetchAttendanceHistory(
       const { data } = await apiClient.get<AttendanceHistoryRow[]>('/attendance/history', {
         params: { classId, year, month },
       })
+      return data
+    },
+  )
+}
+
+/**
+ * Monthly attendance percentages for the overview chart.
+ *
+ * @apiRoute GET /api/v1/attendance/overview/monthly
+ */
+export async function fetchAttendanceOverviewMonthly(): Promise<AttendanceOverviewData[]> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...attendanceOverviewMonthlyData]
+    },
+    async () => {
+      const { data } = await apiClient.get<AttendanceOverviewData[]>(
+        '/attendance/overview/monthly',
+      )
       return data
     },
   )

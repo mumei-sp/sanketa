@@ -2,10 +2,9 @@ import * as React from 'react'
 import { AttendanceTable } from '../components/AttendanceTable'
 import { AttendanceSummary } from '../components/AttendanceSummary'
 import { AttendanceOverviewAreaChart } from '@/components/charts/AttendanceOverviewAreaChart'
-import { fetchAttendanceRecords } from '@/api/services/attendance-service'
-import type { AttendanceRecord } from '../types'
+import { fetchAttendanceRecords, fetchAttendanceOverviewMonthly } from '@/api/services/attendance-service'
+import type { AttendanceRecord, AttendanceOverviewData } from '../types'
 import { TileWrapper, Tile } from '@/components/tile'
-import { attendanceOverviewMonthlyData } from '@/mocks/attendance/overview'
 import { AttendancePageLayout } from '../components/AttendancePageLayout'
 import { getAttendanceBreadcrumbs } from '../utils/breadcrumbs'
 import { ATTENDANCE_MESSAGES } from '../constants'
@@ -14,6 +13,16 @@ import { ATTENDANCE_MESSAGES } from '../constants'
  * AttendancePage component that fetches and displays attendance data
  */
 export function AttendancePage() {
+  const [overview, setOverview] = React.useState<AttendanceOverviewData[]>([])
+  const [isOverviewLoading, setIsOverviewLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    fetchAttendanceOverviewMonthly()
+      .then(setOverview)
+      .catch(error => console.error('Failed to load the attendance overview', error))
+      .finally(() => setIsOverviewLoading(false))
+  }, [])
+
   const [attendanceData, setAttendanceData] = React.useState<AttendanceRecord[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
 
@@ -62,7 +71,7 @@ export function AttendancePage() {
           shadowed={true}
           padding="pt-4 px-4 pb-2"
         >
-          <AttendanceOverviewAreaChart data={attendanceOverviewMonthlyData} isLoading={false} />
+          <AttendanceOverviewAreaChart data={overview} isLoading={isOverviewLoading} />
         </Tile>
       </TileWrapper>
 

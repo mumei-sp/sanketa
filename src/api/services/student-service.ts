@@ -13,6 +13,12 @@ import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
 import { studentsData } from '@/mocks/students/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
 import { studentDetailData } from '@/mocks/students/details'
+import { specialProgramsData } from '@/mocks/students/programs'
+import {
+  academicPerformanceLastSemester,
+  academicPerformanceThisSemester,
+} from '@/mocks/students/academic-performance'
+import type { AcademicPerformanceEntry } from '@/mocks/students/academic-performance'
 
 // ---------------------------------------------------------------------------
 // Reads
@@ -297,6 +303,49 @@ export async function executePromotion(
         candidates,
         targetSection,
       })
+    },
+  )
+}
+
+/**
+ * Scholarship and enrichment programmes, for the dashboard tile.
+ *
+ * @apiRoute GET /api/v1/students/programs
+ */
+export async function fetchSpecialPrograms(): Promise<typeof specialProgramsData> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return [...specialProgramsData]
+    },
+    async () => {
+      const { data } = await apiClient.get<typeof specialProgramsData>('/students/programs')
+      return data
+    },
+  )
+}
+
+/**
+ * Average performance per grade, for one semester.
+ *
+ * @apiRoute GET /api/v1/students/academic-performance?period={this|last}
+ */
+export async function fetchAcademicPerformance(
+  period: 'this' | 'last',
+): Promise<AcademicPerformanceEntry[]> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return period === 'this'
+        ? [...academicPerformanceThisSemester]
+        : [...academicPerformanceLastSemester]
+    },
+    async () => {
+      const { data } = await apiClient.get<AcademicPerformanceEntry[]>(
+        '/students/academic-performance',
+        { params: { period } },
+      )
+      return data
     },
   )
 }

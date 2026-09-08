@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { LoginSchema, type LoginFormValues } from '../schemas/auth-schema'
-import { mockLogin } from '@/mocks/auth'
+import { login } from '@/api/services/auth-service'
 import { TextField } from '@/components/form/fields'
 import { PasswordField } from './PasswordField'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -58,7 +58,7 @@ export function LoginForm() {
 
     setServerError(null)
     try {
-      await mockLogin({
+      await login({
         identifier: data.identifier.trim(),
         password: data.password,
         rememberMe: data.rememberMe,
