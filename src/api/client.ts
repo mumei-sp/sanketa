@@ -42,9 +42,27 @@ let clientConfig: Required<ApiClientConfig> = { ...defaultConfig }
 // Track retry attempts for each request
 const retryCounts = new Map<string, number>()
 
-// TODO: When token refresh is implemented in auth.ts, add:
-// - refreshTokenPromise tracking
-// - retryingRequests WeakSet for preventing duplicate refresh attempts
+/**
+ * The refresh in flight, if any.
+ *
+ * Single-flight on purpose. A page that fires six requests at once gets six
+ * 401s at once, and six refreshes would spend the token six times — with
+ * rotation, five of them fail and log the person out for being logged in. They
+ * all await this one promise instead.
+ */
+let refreshInFlight: Promise<void> | null = null
+
+/**
+ * Requests that have already been replayed once.
+ *
+ * A retry that 401s again means the new token is no good either, and trying
+ * once more would loop. Tracked on the request config rather than by URL,
+ * because the same endpoint can legitimately be in flight twice.
+ */
+const RETRIED = Symbol('auth-retried')
+
+/** Opt-out header for the refresh call itself — see `refreshSession`. */
+const SKIP_REFRESH_HEADER = 'X-Skip-Auth-Refresh'
 
 /**
  * Configure the API client
@@ -160,9 +178,41 @@ apiClient.interceptors.response.use(
         details: error.response.data?.details,
       }
 
-      // Handle 401 Unauthorized
-      // TODO: Implement token refresh mechanism in auth.ts
-      if (error.response.status === 401) {
+      // ── 401: try once to refresh, then replay ──
+      //
+      // An expired access token is the ordinary case, not a failure: the
+      // session is still good, the short-lived half of it simply ran out. Only
+      // when the refresh itself is refused does this become a sign-out.
+      if (error.response.status === 401 && originalRequest) {
+        const retryFlags = originalRequest as unknown as Record<symbol, unknown>
+        const alreadyRetried = Boolean(retryFlags[RETRIED])
+        const skipRefresh =
+          originalRequest.headers?.[SKIP_REFRESH_HEADER] !== undefined
+
+        if (!alreadyRetried && !skipRefresh && authUtils.getRefreshToken()) {
+          try {
+            // Everyone who arrives while a refresh is running waits for it
+            // rather than starting another; see `refreshInFlight`.
+            refreshInFlight ??= (async () => {
+              const { refreshSession } = await import('@/api/services/auth-service')
+              await refreshSession()
+            })().finally(() => {
+              refreshInFlight = null
+            })
+            await refreshInFlight
+
+            retryFlags[RETRIED] = true
+            const token = authUtils.getToken()
+            if (token) {
+              originalRequest.headers.set?.('Authorization', `Bearer ${token}`)
+            }
+            return apiClient(originalRequest)
+          } catch {
+            // Fall through to the sign-out below: the refresh was refused, so
+            // there is no session left to save.
+          }
+        }
+
         authUtils.removeToken()
         await clientConfig.onUnauthorized()
         return Promise.reject(apiError)

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useState, useEffect } from 'react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { LogOut, X } from 'lucide-react'
-import { authUtils } from '@/api/utils/auth'
+import { logout } from '@/api/services/auth-service'
 import {
   Sidebar,
   SidebarContent,
@@ -230,7 +230,8 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
               tooltip="Logout"
               size="lg"
               onClick={() => {
-                authUtils.removeToken()
+                // See UserMenu: revoke the session, do not merely forget it.
+                void logout()
                 navigate('/login', { replace: true })
               }}
             >

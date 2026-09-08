@@ -22,7 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { authUtils } from '@/api/utils/auth'
+import { logout } from '@/api/services/auth-service'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { usePermissions } from '@/features/auth/PermissionContext'
@@ -37,7 +37,12 @@ export function UserMenu() {
   if (!currentUser) return null
 
   const handleSignOut = () => {
-    authUtils.removeToken()
+    // Revoke, not just forget: clearing storage alone leaves a refresh token
+    // that still buys a new session, which matters on a shared machine.
+    // Navigation does not wait on it — `logout` clears local state in its own
+    // `finally`, so a failed revoke cannot strand someone on a page they meant
+    // to leave.
+    void logout()
     navigate('/login', { replace: true })
   }
 

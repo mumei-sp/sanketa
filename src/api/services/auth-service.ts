@@ -11,8 +11,9 @@
  */
 
 import apiClient from '@/api/client'
+import { authUtils } from '@/api/utils/auth'
 import { mockOrHttp } from './_adapter'
-import { mockLogin, mockRegister } from '@/mocks/auth'
+import { mockLogin, mockLogout, mockRefresh, mockRegister } from '@/mocks/auth'
 import type {
   AuthResponse,
   LoginRequest,
@@ -49,4 +50,69 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
       return response
     },
   )
+}
+
+/**
+ * Trade the stored refresh token for a new pair.
+ *
+ * Called by the client's 401 interceptor, not by a screen — which is why it
+ * reads the token from storage rather than taking it as an argument: there is
+ * exactly one session per tab, and letting a caller pass some other token in
+ * would invite refreshing a session you are not in.
+ *
+ * Rejects when there is nothing to redeem, so the interceptor can treat "no
+ * refresh token" and "refresh refused" the same way: sign in again.
+ *
+ * @apiRoute POST /api/v1/auth/refresh
+ */
+export async function refreshSession(): Promise<AuthResponse> {
+  const refreshToken = authUtils.getRefreshToken()
+  if (!refreshToken) {
+    throw { code: 'NO_REFRESH_TOKEN', message: 'No session to refresh.', status: 401 }
+  }
+
+  return mockOrHttp(
+    async () => mockRefresh(refreshToken),
+    async () => {
+      // `SKIP_AUTH_REFRESH` keeps the interceptor from trying to refresh the
+      // refresh call itself, which is how this becomes an infinite loop.
+      const { data } = await apiClient.post<AuthResponse>(
+        '/auth/refresh',
+        { refreshToken },
+        { headers: { 'X-Skip-Auth-Refresh': 'true' } },
+      )
+      authUtils.setToken(data.token)
+      authUtils.setRefreshToken(data.refreshToken)
+      authUtils.setUser(data.user)
+      return data
+    },
+  )
+}
+
+/**
+ * End the session on the server as well as locally.
+ *
+ * Clearing localStorage alone leaves a refresh token that still works — which
+ * matters on a shared machine, where "log out" has to mean the credential
+ * stops being redeemable rather than merely being forgotten.
+ *
+ * @apiRoute POST /api/v1/auth/logout
+ */
+export async function logout(): Promise<void> {
+  const refreshToken = authUtils.getRefreshToken()
+  try {
+    await mockOrHttp(
+      async () => {
+        mockLogout()
+      },
+      async () => {
+        await apiClient.post('/auth/logout', { refreshToken })
+      },
+    )
+  } catch (error) {
+    // A failed revoke must not strand someone on a page they meant to leave.
+    console.error('Failed to revoke the session server-side', error)
+  } finally {
+    authUtils.removeToken()
+  }
 }
