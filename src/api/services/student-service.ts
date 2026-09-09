@@ -19,6 +19,7 @@ import { classSectionOf } from '@/utils/class-section-helpers'
 import { joinPhone } from '@/utils/format'
 import { reconcileGuardians, type GuardianSlot } from '@/mocks/parents'
 import { studentsData } from '@/mocks/students/students'
+import { persistStudents } from '@/mocks/students/store'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
 import { studentDetailData } from '@/mocks/students/details'
 import {
@@ -224,6 +225,7 @@ export async function createStudent(data: Partial<Student>): Promise<Student> {
         status: data.status ?? 'Active',
       } as Student
       studentsData.unshift(newStudent)
+      persistStudents()
       reconcileGuardians(String(newStudent.id), guardianSlots(guardians))
       return newStudent
     },
@@ -252,6 +254,7 @@ export async function updateStudent(id: string, data: Partial<Student>): Promise
       // question two ways the moment a guardian is edited on the detail page.
       delete updated.guardians
       studentsData[index] = updated
+      persistStudents()
       reconcileGuardians(String(id), guardianSlots(guardians))
       return updated
     },
@@ -385,6 +388,10 @@ export async function executePromotion(
           student.status = 'On Leave'
         }
       })
+      // Once, after the whole batch: a promotion moves a class at a time, and
+      // writing the directory out per student would serialise forty rows forty
+      // times for one button.
+      persistStudents()
     },
     async () => {
       await apiClient.post('/students/promotion/execute', {

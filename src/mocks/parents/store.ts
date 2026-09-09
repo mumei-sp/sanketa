@@ -139,6 +139,18 @@ function load(): Database {
       const parsed = JSON.parse(raw) as Database
       if (Array.isArray(parsed.parents) && Array.isArray(parsed.links)) {
         db = parsed
+        // The cascade a real `student_parents` FK would do for free. The
+        // student directory reseeds itself whenever its fixtures are edited,
+        // and this table survives that, so links to students who went with the
+        // reseed have to go too. Left in place they are invisible — a parent's
+        // scope lists an id nothing resolves — right up until something counts
+        // children rather than resolving them.
+        const known = new Set(studentsData.map(student => String(student.id)))
+        const live = db.links.filter(link => known.has(String(link.studentProfileId)))
+        if (live.length !== db.links.length) {
+          db.links = live
+          persist()
+        }
         return db
       }
     }
