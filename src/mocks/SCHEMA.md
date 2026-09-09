@@ -59,13 +59,16 @@ a family mobile cannot both hold it, and the second needs an address.
 | `teachers` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) |
 | `parents` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) |
 | `student_parents` | Who a child's guardians are | exists (MySQL) |
+| `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends | this frontend |
 | `roles` | School-defined. `scope_axis` is new — see below | designed (Postgres) |
-| `permissions` | The catalogue. Ids are code constants | designed (Postgres) |
+| `permissions` | The catalogue. Codes are code constants | designed (Postgres) |
 | `role_permissions` | `role_id`, `permission_id`, `granted` | designed (Postgres) |
 | `profile_roles` | **The multi-role join.** Was `user_roles` | this frontend |
+| `profile_types` | School-extensible classifications, with built-ins | this frontend |
+| `profile_profile_types` | A person may be more than one kind | this frontend |
 | `teacher_classes` | `profile_id`, `class_section` | this frontend |
 
-### Capacities, and why `profile_type` should go
+### Capacities and profile types — two different things
 
 `students`, `teachers` and `parents` each take `profile_id` as their primary
 key, all three referencing the same `user_profiles(id)`. Nothing stops one
@@ -75,10 +78,27 @@ child attends the same school is already representable**.
 The only thing that disagrees is `user_profiles.profile_type`, a single
 `TINYINT` claiming the person is one thing. It is correct only for people who
 are exactly one thing, and wrong for every member of staff with a child at the
-school. It should be dropped, or demoted to a display hint:
+school. It goes, replaced by two ideas that were tangled inside it:
 
-> A profile is a person at a school. What they *are* there is which capacity
-> tables reference them.
+**A capacity is a record shape.** `students` has an admission number and a roll
+number; `teachers` has a qualification; `staff` has an employee id. The set is
+closed, and a new one is a developer adding a table — because "create a
+Librarian capacity" cannot be answered without somebody saying what fields a
+librarian record has. Capacities are plural per profile and **not stored**: what
+someone is here is which capacity tables reference them.
+
+**A profile type is a classification, and a school may invent them.** "Bus
+Driver", "Visiting Faculty", "Alumni", "Lab Assistant". Tenant-scoped, because
+one school's vocabulary is not another's. Each one declares which capacity it
+uses — so a custom type gets a sane record shape without inventing columns —
+and `none` covers a classification with no record of its own. Built-in types
+are seeded per tenant and flagged so a school cannot delete what the app relies
+on.
+
+Profile types are plural per profile, with `is_primary` for anywhere a UI needs
+one answer. Every single-valued field in this model has broken on the same
+person — the member of staff whose child attends the school — and a scalar
+profile type would break in exactly the way the scalar role did.
 
 ### `profile_roles` — the merge
 
@@ -140,12 +160,5 @@ mocks for those features predate the schema and do not match it yet.
 
 ## Backend work this implies
 
-1. `users`: email nullable, phone unique, at-least-one check.
-2. Drop `profile_type` from both `user_profiles` copies, or demote it.
-3. Create `roles`, `permissions`, `role_permissions`, `profile_roles`,
-   `teacher_classes` in the tenant schema.
-4. Add `scope_axis` to `roles`.
-5. Write paths for `users`, `user_profiles`, `user_tenant_mapping` — the
-   repositories are read-only today and nothing creates a person.
-6. A login endpoint. `TenantContextTokenService.generateToken` is written and
-   has no caller.
+See [SCHEMA-FIXES.md](./SCHEMA-FIXES.md) for the change list with DDL, in the
+order worth doing it.
