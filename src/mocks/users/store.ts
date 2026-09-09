@@ -42,10 +42,17 @@ export interface SchoolUser {
   /**
    * Whether it can be signed into.
    *
-   * Accounts are provisioned `disabled` on purpose. The services do not filter
-   * rows by the caller's scope yet, so a family account that could sign in
-   * would receive every child's records and merely not draw them. The door
-   * stays shut until that lands; see the Accounts plan's phase 3.
+   * Family accounts are provisioned `disabled` on purpose, and it is worth
+   * being clear that the reason has changed. It used to be technical: the
+   * services returned every row and filtered in the browser, so a family
+   * account that could sign in would have received other children's records
+   * and merely not drawn them. That is fixed — the services filter by the
+   * caller's scope now.
+   *
+   * What remains is the reason a school would want anyway: nothing has checked
+   * that the address or number on file belongs to that family. Until someone
+   * has, an active account is a stranger's login into a child's records. So
+   * activation is a person's decision, made per account on the People screen.
    */
   status: AccountStatus
   /** Staff record this login belongs to, when it is a member of staff. */
@@ -188,8 +195,8 @@ export function createUser(input: {
     //
     // A member of staff typed in on the People screen is someone an admin is
     // adding now, and starts active. A student or family account is
-    // *provisioned* — created ahead of being usable — and must start disabled,
-    // because the services do not filter rows by the caller's scope yet.
+    // *provisioned* — created ahead of being usable — and starts disabled
+    // until someone confirms the contact details belong to that family.
     //
     // Making that depend on each call site passing `status` was the first
     // version, and it created a live parent account the first time a caller

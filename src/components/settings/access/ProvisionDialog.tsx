@@ -14,10 +14,13 @@
  * the work is one address per person, and the honest surface is a list that
  * says who is missing one rather than a button that silently skips them.
  *
- * Everything created here starts disabled. The services still return every row
- * and filter in the browser, so a family account that could sign in would
- * receive other children's records and merely not draw them. The store enforces
- * that from the profile type; this dialog says so out loud.
+ * Everything created here starts disabled, and someone activates it on the
+ * People screen afterwards. Not because the app cannot yet be trusted with a
+ * live family account — the services filter by the caller's scope now — but
+ * because nothing has checked that the address typed in belongs to that
+ * family. Until somebody has, an active account is a stranger's login into a
+ * child's records. The store enforces the disabled start from the profile
+ * type; this dialog says so out loud.
  */
 
 import * as React from 'react'
@@ -133,7 +136,7 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
       setDone(current => new Set(current).add(candidate.parent.profileId))
       onCreated(created)
       showSuccess(`Account created for ${created.fullName}`, {
-        description: 'Disabled until family sign-in is switched on.',
+        description: 'Created disabled — activate it on the People screen to let them sign in.',
       })
     } catch (error) {
       console.error('Failed to create the account', error)
@@ -152,8 +155,9 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
         <DialogHeader>
           <DialogTitle>Give parents an account</DialogTitle>
           <DialogDescription>
-            Everyone on file who does not have one yet. Accounts are created disabled — families
-            cannot sign in until their records are filtered on the server.
+            Everyone on file who does not have one yet. Accounts are created disabled —
+            activate each one on the People screen once you know the address reaches the
+            family.
           </DialogDescription>
         </DialogHeader>
 
