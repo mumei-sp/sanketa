@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 import type { DashboardStat } from '../types'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
-import { studentsData } from '@/mocks/students/students'
+import { studentCount } from '@/mocks/students'
 import { teachersData } from '@/mocks/teachers/teachers'
 
 // Student / teacher counts derive from the canonical mocks. The mocks ship
@@ -47,7 +47,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'enrolled-students',
     label: 'Enrolled Students',
-    value: studentsData.length * ENROLLMENT_MULTIPLIER,
+    value: studentCount() * ENROLLMENT_MULTIPLIER,
     description: 'Total active students',
     icon: GraduationCap,
     iconBg: 'var(--primary)',

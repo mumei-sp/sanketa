@@ -10,7 +10,7 @@ import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, txnId, newId, CURRENCY } from '@/mocks/_shared'
 import { callerSeesEveryRow, visibleToCaller } from '@/mocks/_shared/caller'
-import { studentsData } from '@/mocks/students/students'
+import { findStudentByCode } from '@/mocks/students'
 import type {
   FeeStat,
   FeeTrendData,
@@ -119,7 +119,7 @@ export async function fetchFeeCollection(): Promise<FeeCollectionRecord[]> {
       // next to the data that uses the odd one, rather than teaching the scope
       // about a second key.
       return visibleToCaller(rows, 'read', 'Finance', row => {
-        const student = studentsData.find(candidate => candidate.studentId === row.studentId)
+        const student = findStudentByCode(row.studentId)
         return student ? { studentId: String(student.id) } : undefined
       })
     },
@@ -212,7 +212,7 @@ export async function fetchPaymentHistory(studentId?: string): Promise<PaymentTr
       // Same translation as the fee rows: payments key on the human code and a
       // scope holds profile ids.
       return visibleToCaller(filtered.map(t => ({ ...t })), 'read', 'Finance', txn => {
-        const student = studentsData.find(c => c.studentId === txn.studentId)
+        const student = findStudentByCode(txn.studentId)
         return student ? { studentId: String(student.id) } : undefined
       })
     },

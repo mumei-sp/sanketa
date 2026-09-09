@@ -2,7 +2,7 @@
  * Top-level barrel for the mock layer.
  *
  * Import specific feature mocks directly from their subfolder
- * (e.g. `import { studentsData } from '@/mocks/students'`) rather than the
+ * (e.g. `import { listStudents } from '@/mocks/students'`) rather than the
  * top-level barrel — that keeps chunk boundaries tight so importing one
  * feature's mocks doesn't pull in everything.
  *

@@ -16,16 +16,16 @@ import type {
   PaymentMethod,
 } from '@/features/fees-collection/types'
 import { yyyymm, displayDate, relativeDate } from '@/mocks/_shared/date-helpers'
-import { studentsData } from '@/mocks/students/students'
+import { findStudentByCode } from '@/mocks/students'
 
 /**
  * Look up a student by their `studentId` (e.g. "S-2101") and return the name
- * + class from the canonical studentsData array. Falls back to the caller-
+ * + class from the canonical student directory. Falls back to the caller-
  * supplied defaults if the id isn't found (keeps the mock resilient to
  * student-list edits that drop someone).
  */
 function resolveStudent(id: string, fallbackName: string, fallbackClass: string): { name: string; cls: string } {
-  const match = studentsData.find(s => s.studentId === id)
+  const match = findStudentByCode(id)
   if (!match) return { name: fallbackName, cls: fallbackClass }
   const name =
     match.fullName ||

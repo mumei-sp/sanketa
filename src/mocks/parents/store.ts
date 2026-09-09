@@ -31,7 +31,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
-import { studentsData } from '@/mocks/students/students'
+import { listStudents } from '@/mocks/students'
 
 export interface Parent {
   /** Profile id — the schema's `parents.profile_id`. */
@@ -86,7 +86,7 @@ function seed(): Database {
   const links: StudentParent[] = []
   let sequence = 0
 
-  studentsData.forEach(student => {
+  listStudents().forEach(student => {
     const guardians = student.guardians
     if (!guardians) return
 
@@ -145,7 +145,7 @@ function load(): Database {
         // reseed have to go too. Left in place they are invisible — a parent's
         // scope lists an id nothing resolves — right up until something counts
         // children rather than resolving them.
-        const known = new Set(studentsData.map(student => String(student.id)))
+        const known = new Set(listStudents().map(student => String(student.id)))
         const live = db.links.filter(link => known.has(String(link.studentProfileId)))
         if (live.length !== db.links.length) {
           db.links = live

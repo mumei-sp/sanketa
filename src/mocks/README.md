@@ -16,7 +16,7 @@ src/mocks/
 │   ├── simulate-latency.ts    withLatency() helper for mock adapters
 │   ├── pagination.ts          paginate() — wraps T[] in the project ApiListResponse envelope
 │   └── index.ts               barrel
-├── students/                  studentsData + dashboard + details + academic-performance + programs
+├── students/                  store (persisted) + fixtures + dashboard + details + academic-performance
 ├── teachers/                  teachersData + statistics + workload + details
 ├── attendance/                attendance + daily + overview
 ├── timetable/                 subjects / classSections / classTimetables / exceptions
@@ -30,7 +30,7 @@ src/mocks/
 └── dashboard/                 dashboardStats + chart datasets + todos + recent activity
 ```
 
-Every feature folder ships an `index.ts` barrel — consumers should `import { studentsData } from '@/mocks/students'` rather than reaching into individual files.
+Every feature folder ships an `index.ts` barrel — consumers should `import { listStudents } from '@/mocks/students'` rather than reaching into individual files.
 
 ---
 
@@ -58,7 +58,7 @@ export async function fetchStudents(): Promise<Student[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
-      return [...studentsData]
+      return listStudents()
     },
     async () => {
       const { data } = await apiClient.get<Student[]>('/students')
@@ -151,6 +151,6 @@ grep -rE "@apiRoute" src/api/services
 
 1. **Single source of truth**. Every mock file for a feature lives under `src/mocks/{feature}/` — never under `src/features/*/mocks/` or `src/data/mocks/`.
 2. **Deterministic seeds, dynamic timestamps**. Names and IDs are stable across runs; dates are computed relative to `Date.now()` so nothing looks stale.
-3. **Cross-feature references resolve at runtime**. Fees / expenses / dashboard stats look data up in `studentsData` / `teachersData` rather than hardcoding names, so a single edit ripples correctly.
+3. **Cross-feature references resolve at runtime**. Fees / expenses / dashboard stats look data up in the student and teacher mocks rather than hardcoding names, so a single edit ripples correctly. Tables that persist (students, users, roles, parents, transport, notifications) expose functions and keep their rows private; the ones that are still plain fixtures export the array.
 4. **Mock and HTTP paths live in the same service file**. Editing a mock lets you see the intended backend shape right next to it; swapping is an env flag, not a rewrite.
 5. **Regionally appropriate**. Sanketa is an Indian (Bangalore, Karnataka) school — names lean Indian, phones are `+91`, currency is `₹`, addresses use real Bangalore localities and 560xxx PINs.

@@ -12,7 +12,7 @@ import type {
   MarkableAttendanceStatus,
 } from '@/features/attendance/types'
 import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
-import { studentsData } from '@/mocks/students/students'
+import { listStudents } from '@/mocks/students'
 import { classSectionOf, rollNumberOf } from '@/utils/class-section-helpers'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { fullName } from '@/mocks/_shared/fake'
@@ -75,7 +75,7 @@ function generateClassRoster(classLabel: string): ClassRosterStudent[] {
  * filler class, and a scope should never match one.
  */
 function rosterFromDirectory(classLabel: string): ClassRosterStudent[] {
-  return studentsData
+  return listStudents()
     .filter(student => classSectionOf(student) === classLabel)
     .map((student, index) => {
       const name = getDisplayName(student)

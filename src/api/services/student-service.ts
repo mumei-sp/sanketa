@@ -1,7 +1,7 @@
 /**
  * Students API Service
  *
- * Each public function pairs a mock path (in-memory `studentsData`) with an
+ * Each public function pairs a mock path (the `students` store) with an
  * HTTP path (backend via apiClient). VITE_USE_MOCK_API picks which runs.
  */
 import type { Student, StudentDetailData } from '@/features/students/types'
@@ -18,8 +18,14 @@ import {
 import { classSectionOf } from '@/utils/class-section-helpers'
 import { joinPhone } from '@/utils/format'
 import { reconcileGuardians, type GuardianSlot } from '@/mocks/parents'
-import { studentsData } from '@/mocks/students/students'
-import { persistStudents } from '@/mocks/students/store'
+import {
+  findStudent,
+  insertStudent,
+  listStudents,
+  patchStudents,
+  replaceStudent,
+  studentCount,
+} from '@/mocks/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
 import { studentDetailData } from '@/mocks/students/details'
 import {
@@ -42,7 +48,7 @@ export async function fetchStudents(options?: { limit?: number }): Promise<Stude
   return mockOrHttp(
     async () => {
       await withLatency()
-      const rows = limit === undefined ? [...studentsData] : studentsData.slice(0, limit)
+      const rows = limit === undefined ? listStudents() : listStudents().slice(0, limit)
       return visibleToCaller(rows, 'read', 'Student', student => ({
         studentId: String(student.id),
         classSection: classSectionOf(student),
@@ -68,7 +74,7 @@ export async function fetchStudentById(id: string): Promise<Student | undefined>
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 400 })
-      const found = studentsData.find(s => s.id === id)
+      const found = findStudent(id)
       // By-id reads take the id from the caller, so filtering the list read did
       // nothing for them: a parent could name any student and receive them.
       return visibleRecordToCaller(found, 'read', 'Student', student => ({
@@ -152,7 +158,7 @@ export async function fetchStudentDetailData(_id: string): Promise<StudentDetail
       // the mock ships one shared detail blob, so there is nothing in the
       // returned value to attribute. The id is the only thing that says whose
       // page this is, which makes it the thing to check.
-      const subject = studentsData.find(student => String(student.id) === String(_id))
+      const subject = findStudent(_id)
       // An id matching no student used to skip the check entirely — `subject &&`
       // short-circuited — so asking for a student who does not exist returned
       // the shared record to anyone. The bypass was easier than guessing a real
@@ -215,17 +221,27 @@ export async function createStudent(data: Partial<Student>): Promise<Student> {
     async () => {
       await withLatency()
       const { guardians, ...rest } = data
+      // The directory table renders and searches `name`, the older of the two
+      // spellings a record carries, and the form only ever supplies the parts.
+      // Every fixture student has it and no created one did, so a student
+      // enrolled through the form joined the school as a blank row that no
+      // search could find.
+      const composed = [data.firstName, data.middleName, data.lastName]
+        .filter(Boolean)
+        .join(' ')
+        .trim()
       const newStudent: Student = {
         ...rest,
         id: newId('stu'),
-        studentId: data.studentId || makeId('S', ID_BASE.student + studentsData.length),
+        studentId: data.studentId || makeId('S', ID_BASE.student + studentCount()),
+        name: data.name || composed || undefined,
+        fullName: data.fullName || composed || undefined,
         gpa: data.gpa ?? 0,
         performance: data.performance ?? 'Good',
         percentage: data.percentage ?? 0,
         status: data.status ?? 'Active',
       } as Student
-      studentsData.unshift(newStudent)
-      persistStudents()
+      insertStudent(newStudent)
       reconcileGuardians(String(newStudent.id), guardianSlots(guardians))
       return newStudent
     },
@@ -245,16 +261,15 @@ export async function updateStudent(id: string, data: Partial<Student>): Promise
   return mockOrHttp(
     async () => {
       await withLatency()
-      const index = studentsData.findIndex(s => s.id === id)
-      if (index === -1) throw new Error('Student not found')
+      const existing = findStudent(id)
+      if (!existing) throw new Error('Student not found')
       const { guardians, ...rest } = data
-      const updated = { ...studentsData[index], ...rest }
+      const updated = { ...existing, ...rest }
       // Dropped rather than merged: the fixture students still carry the old
       // embedded shape, and a record that keeps both would answer the same
       // question two ways the moment a guardian is edited on the detail page.
       delete updated.guardians
-      studentsData[index] = updated
-      persistStudents()
+      replaceStudent(id, updated)
       reconcileGuardians(String(id), guardianSlots(guardians))
       return updated
     },
@@ -279,7 +294,7 @@ export async function fetchClassesForPromotion(): Promise<ClassPromotionSummary[
     async () => {
       await withLatency({ min: 200, max: 500 })
       const classMap = new Map<string, { count: number; totalPct: number }>()
-      studentsData.forEach(s => {
+      listStudents().forEach(s => {
         if (!s.class) return
         const existing = classMap.get(s.class) || { count: 0, totalPct: 0 }
         existing.count++
@@ -318,7 +333,7 @@ export async function fetchPromotionCandidates(
   return mockOrHttp(
     async () => {
       await withLatency({ min: 300, max: 700 })
-      const students = studentsData.filter(s => s.class === classLabel)
+      const students = listStudents().filter(s => s.class === classLabel)
       // Promotion rows name a student and their marks, so they narrow like any
       // other per-student read.
       const visible = visibleToCaller(students, 'read', 'Student', student => ({
@@ -377,21 +392,26 @@ export async function executePromotion(
       const sourceGrade = parseInt(sourceClass.replace(/[A-Z]/g, ''))
       const targetGrade = sourceGrade + 1
       const targetClass = `${targetGrade}${targetSection}`
+      // One batch, so the directory is written out once for the class rather
+      // than once per student. `patchStudents` skips ids it cannot find, which
+      // is the same thing the old `if (!student) return` did.
+      const moves: { id: string; patch: Partial<Student> }[] = []
       candidates.forEach(c => {
-        const student = studentsData.find(s => s.id === c.studentId)
-        if (!student) return
         if (c.decision === 'promote') {
-          student.gradeLevel = String(targetGrade)
-          student.section = targetSection
-          student.class = targetClass
+          moves.push({
+            id: c.studentId,
+            patch: {
+              gradeLevel: String(targetGrade),
+              section: targetSection,
+              class: targetClass,
+            },
+          })
         } else if (c.decision === 'transfer') {
-          student.status = 'On Leave'
+          moves.push({ id: c.studentId, patch: { status: 'On Leave' } })
         }
+        // 'retain', or anything added later: left where they are.
       })
-      // Once, after the whole batch: a promotion moves a class at a time, and
-      // writing the directory out per student would serialise forty rows forty
-      // times for one button.
-      persistStudents()
+      patchStudents(moves)
     },
     async () => {
       await apiClient.post('/students/promotion/execute', {

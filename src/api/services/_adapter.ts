@@ -11,7 +11,7 @@
  *     return mockOrHttp(
  *       async () => {
  *         await withLatency()
- *         return paginate(studentsData, params)
+ *         return paginate(listStudents(), params)
  *       },
  *       async () => {
  *         const { data } = await apiClient.get('/students', { params })

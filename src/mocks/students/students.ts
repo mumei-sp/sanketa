@@ -1,13 +1,14 @@
 import type { Student } from '@/features/students/types'
-import { hydrateStudents, resetStudents } from './store'
 
 /**
- * The seed rows. Read once, on a browser that has never run the app; after
- * that `studentsData` below comes off disk. Editing this list will not show
- * up until the stored copy is cleared — `resetStudentDirectory()`, or dropping
- * the `sanketa:mock-db:students` key.
+ * The seed rows for the student directory.
+ *
+ * Read on a browser that has never run the app, and again whenever this list
+ * is edited — `store.ts` fingerprints it, so a change here reseeds rather than
+ * being shadowed by the copy on disk. Everything else goes through the store;
+ * this file is the fixture and nothing more.
  */
-const studentFixtures: Student[] = [
+export const studentFixtures: Student[] = [
   // Students from reference image
   {
     id: '1',
@@ -779,17 +780,3 @@ const studentFixtures: Student[] = [
   },
 ]
 
-/**
- * The live student directory.
- *
- * Hydrated from `localStorage` at module load, which is early enough for the
- * handful of importers that read `.length` at module scope. Mutating it is how
- * the mock writes; call `persistStudents()` from the service afterwards so the
- * change survives a reload.
- */
-export const studentsData: Student[] = hydrateStudents(studentFixtures)
-
-/** Restore the seed rows, discarding anything the session added or edited. */
-export function resetStudentDirectory(): void {
-  resetStudents(studentFixtures)
-}

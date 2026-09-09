@@ -10,7 +10,7 @@ import type {
   TodoItem,
 } from '@/features/dashboard/types'
 import { relativeDate } from '@/mocks/_shared/date-helpers'
-import { studentsData } from '@/mocks/students/students'
+import { studentCount } from '@/mocks/students'
 import { teachersData } from '@/mocks/teachers/teachers'
 import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
 import { loadSchoolConfig } from '@/api/services/school-config-service'
@@ -22,7 +22,7 @@ import { getUniqueGrades } from '@/utils/class-section-helpers'
  * so the Grade-9 total can never exceed total enrolment, attendance can
  * never exceed total enrolment, etc.
  */
-const TOTAL_ENROLLMENT = studentsData.length * SCHOOL_SCALE.enrollmentMultiplier
+const TOTAL_ENROLLMENT = studentCount() * SCHOOL_SCALE.enrollmentMultiplier
 const AVG_PER_GRADE = Math.round(TOTAL_ENROLLMENT / SCHOOL_SCALE.gradeCount)
 const DAILY_PRESENT_AVG = Math.round(TOTAL_ENROLLMENT * SCHOOL_SCALE.attendanceRate)
 
