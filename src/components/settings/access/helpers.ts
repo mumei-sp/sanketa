@@ -9,29 +9,45 @@
 
 import type { Permission, Role } from '@/config/permissions'
 import { permissionDefinition } from '@/config/ability'
-import type { SchoolUser } from '@/api/services/user-service'
+
+/**
+ * Just enough of a person to answer the question below.
+ *
+ * Shaped like `Person` — identity nested, roles alongside — so the callers can
+ * pass what they already have rather than mapping a list on every check.
+ */
+export interface RoleHolder {
+  user: { id: string }
+  roleIds: readonly string[]
+}
 
 /**
  * Would anybody still be able to reach the settings panel after this change?
  *
  * The one mistake in a people directory that cannot be undone from inside the
- * app: a role can keep `settings.manage` while the last person holding that
+ * app: a role can keep `system.settings` while the last person holding that
  * role is moved off it, and then nobody can put anyone back.
  *
- * `changing` describes the row about to move. Pass `roleId: null` for a person
- * being removed entirely.
+ * Asked of *this school*, because that is where roles live now. Locking
+ * yourself out of one school is entirely possible while remaining an
+ * administrator at another, and it is no less locked out for that.
+ *
+ * `changing` is the roles the row would hold afterwards — an empty list for
+ * somebody being removed, or having their last role taken away.
  */
 export function stillHasAnAdmin(
-  users: SchoolUser[],
+  people: readonly RoleHolder[],
   roles: Role[],
-  changing: { id: string; roleId: string | null },
+  changing: { id: string; roleIds: readonly string[] },
 ): boolean {
   const canManage = (roleId: string) =>
     roles.find(role => role.id === roleId)?.permissions.includes('system.settings') === true
 
-  return users.some(user => {
-    if (user.id !== changing.id) return canManage(user.roleId)
-    return changing.roleId !== null && canManage(changing.roleId)
+  return people.some(person => {
+    // Several roles now, so the question is whether *any* of them reaches
+    // settings — a principal who is also a parent is still a principal.
+    const held = person.user.id === changing.id ? changing.roleIds : person.roleIds
+    return held.some(canManage)
   })
 }
 

@@ -40,6 +40,14 @@ export type ProfileType = ProfileTypeName
 /** Whether an account can be signed into. */
 export type AccountStatus = 'invited' | 'active' | 'disabled'
 
+/**
+ * The signed-in session.
+ *
+ * Identity, and which schools this login may reach. Deliberately nothing about
+ * what they may *do*: roles, class assignments and the student scope are all
+ * per school, and one session spans every school the person holds. They are
+ * resolved from the profile on each call — see `resolveTenantAccess`.
+ */
 export interface AuthUser {
   id: string
   fullName: string
@@ -47,19 +55,6 @@ export interface AuthUser {
   email: string | null
   /** The number this account signs in with, when it has one. */
   phone?: string
-  /** Structural kind of account — see `ProfileType`. */
-  profileType: ProfileType
-  /**
-   * The student records this session is narrowed to.
-   *
-   * Their own, for a student; their children's, for a parent or guardian.
-   * Empty for staff, who narrow by class instead. Carried on the session the
-   * way `assignedClasses` is, because a backend resolves it once at sign-in
-   * and stamps it into the token rather than making the client look it up.
-   */
-  studentIds?: string[]
-  /** Role id from the roles table, not a display name. */
-  role: string
   /**
    * Every school this login may reach.
    *
@@ -78,13 +73,4 @@ export interface AuthUser {
    */
   activeTenant?: string
   avatarUrl?: string
-  /**
-   * Class sections this user may write to, when their role is scoped.
-   *
-   * Carried on the session because that is where a backend would put it — the
-   * server reads the teacher record and stamps the list into the token, so the
-   * client never has to look up who it is before knowing what it may edit.
-   * Ignored entirely for roles that are not scoped.
-   */
-  assignedClasses?: string[]
 }

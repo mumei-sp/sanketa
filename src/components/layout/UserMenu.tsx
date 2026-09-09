@@ -12,6 +12,7 @@
  * on a wide screen, and hiding it behind a click would be a regression.
  */
 
+import * as React from 'react'
 import { LogOut, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -27,8 +28,34 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { getInitials } from '@/utils/format'
+import { resolveTenantAccess } from '@/mocks/profiles'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
+
+/**
+ * What to call somebody under their name.
+ *
+ * Their roles at the school in view, because that is what a role is now — and
+ * plural, because a person can hold several. Joined rather than reduced to one:
+ * "Teacher · Parent" is the true answer for the member of staff whose child
+ * attends, and picking one of the two would be a choice nobody asked for.
+ */
+function useRoleLabel(): string {
+  const currentUser = useCurrentUser()
+  const { roles } = usePermissions()
+  const school = activeTenant()
+  const { roleIds } = React.useMemo(
+    () => resolveTenantAccess(currentUser?.id),
+    // `school` is read inside the resolver, not passed — a real dependency the
+    // linter cannot see.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentUser?.id, school],
+  )
+  const named = roleIds.map(id => roles.find(role => role.id === id)?.name ?? id)
+  return named.length > 0 ? named.join(' · ') : 'No role here'
+}
 
 export function UserMenu() {
+  const roleLabel = useRoleLabel()
   const currentUser = useCurrentUser()
   const navigate = useNavigate()
   const { setSettingsOpen } = useSchoolConfig()
@@ -73,7 +100,7 @@ export function UserMenu() {
               {currentUser.fullName}
             </span>
             <span className="block text-xs leading-tight text-muted-foreground">
-              {currentUser.role}
+              {roleLabel}
             </span>
           </span>
         </button>

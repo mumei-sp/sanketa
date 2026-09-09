@@ -87,7 +87,7 @@ import {
   type Role,
   type ScopeAxis,
 } from '@/config/permissions'
-import type { SchoolUser } from '@/api/services/user-service'
+import type { Person } from '@/api/services/user-service'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { AvatarStack, CoverageBar, SearchField } from './parts'
 import { describePermissionChange } from './helpers'
@@ -267,7 +267,14 @@ function CompareGrid({
 
 interface RolesTabProps {
   /** The directory, for member counts. Null while it is still loading. */
-  users: SchoolUser[] | null
+  /**
+   * Everyone with an account, joined to what they are at this school.
+   *
+   * Holder counts come from here rather than from the directory, because a
+   * role is held at a school and the same login may hold a different set at
+   * the next one.
+   */
+  people: Person[] | null
   /** What a role's preview stands in for on each axis — see the section. */
   previewScope: AbilityScope
   /** False until the representative student ids have arrived. */
@@ -281,7 +288,7 @@ interface RolesTabProps {
 }
 
 export function RolesTab({
-  users,
+  people,
   previewScope,
   studentSampleReady,
   onNeedStudentSample,
@@ -320,8 +327,11 @@ export function RolesTab({
 
   const membersOf = React.useCallback(
     (roleId: string) =>
-      (users ?? []).filter(user => user.roleId === roleId).map(user => user.fullName),
-    [users],
+      // Any of their roles, so somebody holding two is counted under both.
+      (people ?? [])
+        .filter(person => person.roleIds.includes(roleId))
+        .map(person => person.user.fullName),
+    [people],
   )
   const members = selected ? membersOf(selected.id) : []
 
@@ -799,7 +809,7 @@ export function RolesTab({
               >
                 <AvatarStack names={members} />
                 <span className="min-w-0 flex-1 text-caption" style={{ color: text.muted }}>
-                  {users === null
+                  {people === null
                     ? 'Counting people…'
                     : members.length === 0
                       ? 'No one holds this role yet.'

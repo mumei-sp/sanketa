@@ -26,12 +26,39 @@ import { navigationItems, visibleNavigationItems, ChevronDownIcon } from '@/conf
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useFamilyScope } from '@/features/family/FamilyScopeContext'
 import { cn } from '@/lib/utils'
+import { resolveTenantAccess } from '@/mocks/profiles'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
 
 interface AppSidebarProps {
   logoPath?: string
 }
 
+/**
+ * What to call somebody under their name.
+ *
+ * Their roles at the school in view, because that is what a role is now — and
+ * plural, because a person can hold several. Joined rather than reduced to
+ * one: "Teacher · Parent" is the true answer for the member of staff whose
+ * child attends, and picking one of the two would be a choice nobody asked
+ * for.
+ */
+function useRoleLabel(): string {
+  const currentUser = useCurrentUser()
+  const { roles } = usePermissions()
+  const school = activeTenant()
+  const { roleIds } = React.useMemo(
+    () => resolveTenantAccess(currentUser?.id),
+    // `school` is read inside the resolver, not passed — a real dependency the
+    // linter cannot see.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentUser?.id, school],
+  )
+  const named = roleIds.map(id => roles.find(role => role.id === id)?.name ?? id)
+  return named.length > 0 ? named.join(' · ') : 'No role here'
+}
+
 export function AppSidebar({ logoPath }: AppSidebarProps) {
+  const roleLabel = useRoleLabel()
   const location = useLocation()
   const navigate = useNavigate()
   const { isMobile, setOpenMobile } = useSidebar()
@@ -224,7 +251,7 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
                 {currentUser.fullName}
               </p>
               <p className="truncate text-xs leading-tight text-muted-foreground">
-                {currentUser.role}
+                {roleLabel}
               </p>
             </div>
           </div>

@@ -50,6 +50,7 @@ import * as detailService from '@/api/services/student-detail-service'
 import type { StudentDetailData, StudentHealthRecord, StudentScholarship, StudentActivity, StudentBehaviorEntry } from '../types'
 import type { DocumentItem } from '@/components/ui/documents-list'
 import { attendanceMonthKey } from '@/utils/academic-date'
+import { profileOf } from '@/mocks/profiles'
 
 // ── Modal state discriminated union ──
 
@@ -130,7 +131,10 @@ export default function StudentDetails() {
   }, [loadGuardians])
 
   const guardianHasAccount = React.useCallback(
-    (parentProfileId: string) => accounts.some(user => user.parentId === parentProfileId),
+    // Per school: a guardian's `parents` row and the account attached to it
+    // are both this school's, so the join goes through the profile.
+    (parentProfileId: string) =>
+      accounts.some(user => profileOf(user.id)?.parentId === parentProfileId),
     [accounts],
   )
 

@@ -34,10 +34,12 @@ import type { AccountStatus } from '@/features/auth/types'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import {
-  fetchUsers,
+  fetchPeople,
+  setPersonRole,
+  setPersonClasses,
+  type Person,
   createUser as createUserRequest,
   updateUserAccess,
-  type SchoolUser,
 } from '@/api/services/user-service'
 import {
   fetchAccessEvents,
@@ -89,7 +91,14 @@ export function AccessSettingsSection() {
     [config.classSections],
   )
 
-  const [users, setUsers] = React.useState<SchoolUser[] | null>(null)
+  /**
+   * Everyone with an account, joined to what they are at *this* school.
+   *
+   * One list rather than a global directory plus a per-school lookup, because
+   * a row on the People screen is one thing to a reader: this person, and what
+   * they do here.
+   */
+  const [people, setPeople] = React.useState<Person[] | null>(null)
   /**
    * A couple of real student ids, for previewing a role narrowed to "their own
    * records".
@@ -139,11 +148,11 @@ export function AccessSettingsSection() {
   const [roleFilter, setRoleFilter] = React.useState<string>(ALL_ROLES)
 
   React.useEffect(() => {
-    fetchUsers()
-      .then(setUsers)
+    fetchPeople()
+      .then(setPeople)
       .catch(error => {
         console.error('Failed to load people', error)
-        setUsers([])
+        setPeople([])
       })
     fetchAccessEvents()
       .then(setEvents)
@@ -179,12 +188,17 @@ export function AccessSettingsSection() {
    * that failed to save.
    */
   const patchUser = React.useCallback(
-    async (id: string, patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus }) => {
+    async (id: string, patch: { status?: AccountStatus }) => {
       setSavingId(id)
       try {
         const updated = await updateUserAccess(id, patch)
         if (updated) {
-          setUsers(current => current?.map(user => (user.id === id ? updated : user)) ?? null)
+          setPeople(
+            current =>
+              current?.map(person =>
+                person.user.id === id ? { ...person, user: updated } : person,
+              ) ?? null,
+          )
         }
         return updated !== null
       } catch (error) {
@@ -198,11 +212,56 @@ export function AccessSettingsSection() {
     [showError],
   )
 
+  /**
+   * Give or take one role at this school.
+   *
+   * Re-reads the joined list afterwards rather than patching it in place: a
+   * role change can move somebody's class picker in or out of existence, and
+   * guessing at the new shape from the old one is how the two drift.
+   */
+  const setRole = React.useCallback(
+    async (profileId: string, roleId: string, held: boolean) => {
+      setSavingId(profileId)
+      try {
+        await setPersonRole(profileId, roleId, held)
+        setPeople(await fetchPeople())
+        return true
+      } catch (error) {
+        console.error('Failed to change the role', error)
+        showError('Could not save the change')
+        return false
+      } finally {
+        setSavingId(null)
+      }
+    },
+    [showError],
+  )
+
+  const setClasses = React.useCallback(
+    async (profileId: string, classSections: string[]) => {
+      setSavingId(profileId)
+      try {
+        await setPersonClasses(profileId, classSections)
+        setPeople(await fetchPeople())
+        return true
+      } catch (error) {
+        console.error('Failed to change the classes', error)
+        showError('Could not save the change')
+        return false
+      } finally {
+        setSavingId(null)
+      }
+    },
+    [showError],
+  )
+
   /** Add an account. Null back means the email was taken. */
   const addUser = React.useCallback(
     async (input: { fullName: string; email?: string | null; phone?: string; roleId: string }) => {
       const created = await createUserRequest(input)
-      if (created) setUsers(current => (current ? [...current, created] : [created]))
+      // Re-read rather than append: creating an account also creates their
+      // membership and profile here, so the row needs the joined shape.
+      if (created) setPeople(await fetchPeople())
       return created
     },
     [],
@@ -219,17 +278,17 @@ export function AccessSettingsSection() {
    */
   const handleUndo = React.useCallback(
     async (event: AccessEvent) => {
-      if (!users) return
+      if (!people) return
       setIsUndoing(true)
       try {
-        const outcome = await undoEvent(event, { roles, users, currentUserId: currentUser?.id })
+        const outcome = await undoEvent(event, { roles, people, currentUserId: currentUser?.id })
         if (!outcome.ok) {
           showError('Could not take that back', { description: outcome.reason })
           return
         }
 
         await refresh()
-        setUsers(await fetchUsers())
+        setPeople(await fetchPeople())
         // The reversal is a new entry pointing at the old one — never an edit
         // of it. `record` re-reads the log, so the row it came from picks up
         // its "taken back" mark on the same pass.
@@ -249,7 +308,7 @@ export function AccessSettingsSection() {
         setIsUndoing(false)
       }
     },
-    [users, roles, currentUser?.id, refresh, record, showError, showSuccess],
+    [people, roles, currentUser?.id, refresh, record, showError, showSuccess],
   )
 
   const openPeopleFor = (roleId: string) => {
@@ -276,7 +335,7 @@ export function AccessSettingsSection() {
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <StatTile icon={ShieldCheck} value={roles.length} label="Roles" />
         <StatTile icon={KeyRound} value={ALL_PERMISSIONS.length} label="Permissions" />
-        <StatTile icon={Users} value={users?.length ?? '—'} label="People" />
+        <StatTile icon={Users} value={people?.length ?? '—'} label="People" />
         <StatTile
           icon={Layers}
           value={scopedRoles > 0 ? scopedRoles : customRoles}
@@ -312,7 +371,7 @@ export function AccessSettingsSection() {
         {canManageRoles && (
           <TabsContent value="roles" forceMount hidden={tab !== 'roles'}>
             <RolesTab
-              users={users}
+              people={people}
               previewScope={previewScope}
               studentSampleReady={sampleStudentIds !== null}
               onNeedStudentSample={requestStudentSample}
@@ -326,12 +385,14 @@ export function AccessSettingsSection() {
         {canManagePeople && (
           <TabsContent value="people" forceMount hidden={tab !== 'people'}>
             <PeopleTab
-              users={users}
+              people={people}
               classLabels={classLabels}
               savingId={savingId}
               onPatch={patchUser}
+              onSetRole={setRole}
+              onSetClasses={setClasses}
               onAdd={addUser}
-              onProvisioned={user => setUsers(current => (current ? [...current, user] : [user]))}
+              onProvisioned={() => void fetchPeople().then(setPeople)}
               roleFilter={roleFilter}
               onRoleFilterChange={setRoleFilter}
               record={record}
@@ -342,7 +403,7 @@ export function AccessSettingsSection() {
         <TabsContent value="activity" forceMount hidden={tab !== 'activity'}>
           <ActivityTab
             events={events}
-            undoContext={users ? { roles, users, currentUserId: currentUser?.id } : null}
+            undoContext={people ? { roles, people, currentUserId: currentUser?.id } : null}
             onUndo={handleUndo}
             isUndoing={isUndoing}
           />

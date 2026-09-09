@@ -2,7 +2,6 @@ import type { AuthResponse, LoginRequest, RegisterRequest } from '@/features/aut
 import { authUtils } from '@/api/utils/auth'
 import { issueSession, revokeSession, rotateSession } from '@/mocks/global/sessions/store'
 import { findByIdentifier, listUsers } from '@/mocks/global/users'
-import { studentsOfParent } from '@/mocks/parents'
 import { resolveTenants } from '@/mocks/global'
 import { setActiveTenant, resetTenantContext } from '@/mocks/_shared/tenant-context'
 import {
@@ -45,29 +44,7 @@ export function mockAccountHints() {
       // the number the person would have typed anyway.
       email: user.email ?? user.phone ?? '',
       name: user.fullName,
-      role: user.roleId,
     }))
-}
-
-/**
- * The student records a session is narrowed to.
- *
- * Their own for a student; their children's for a parent or guardian, read
- * through the link table — which is the reason that table exists. Resolved
- * here, at sign-in, because that is where a backend resolves it: the client
- * receives the list already decided rather than looking it up and being
- * trusted to look it up honestly.
- */
-function studentScopeFor(account: {
-  profileType: string
-  studentId?: string
-  parentId?: string
-}): string[] {
-  if (account.profileType === 'student') return account.studentId ? [account.studentId] : []
-  if (account.profileType === 'parent' || account.profileType === 'guardian') {
-    return account.parentId ? studentsOfParent(account.parentId) : []
-  }
-  return []
 }
 
 export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
@@ -124,18 +101,18 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   const tokens = issueSession(account.id)
   const response: AuthResponse = {
     ...tokens,
-    // The session carries the role and both scopes, the way a token would —
-    // so a change made in the People screen takes effect at next sign-in
-    // rather than needing the client to look the user up.
+    // Identity and which schools, and nothing about what they may do.
+    //
+    // Roles and both scope axes used to be stamped here, on the reasoning that
+    // a token carries them. They cannot be: they are per school, and this
+    // session spans every school the person holds. They are resolved from the
+    // profile on each call instead — which also means a role granted a moment
+    // ago takes effect now rather than at the next sign-in.
     user: {
       id: account.id,
       fullName: account.fullName,
       email: account.email,
       phone: account.phone,
-      role: account.roleId,
-      profileType: account.profileType,
-      assignedClasses: account.assignedClasses,
-      studentIds: studentScopeFor(account),
       // Every school this login may reach, and the one it is looking at.
       // The pair a context token carries: `tenantIds` is the authority and
       // the active one is a per-request choice checked against it.
@@ -172,8 +149,6 @@ export async function mockRegister(data: RegisterRequest): Promise<AuthResponse>
       id,
       fullName: data.fullName,
       email: data.email,
-      role: 'teacher',
-      profileType: 'teacher',
     },
   }
 
@@ -227,10 +202,6 @@ export async function mockRefresh(refreshToken: string): Promise<AuthResponse> {
         fullName: account.fullName,
         email: account.email,
         phone: account.phone,
-        role: account.roleId,
-        profileType: account.profileType,
-        assignedClasses: account.assignedClasses,
-        studentIds: studentScopeFor(account),
         tenantCodes: tenants.map(tenant => tenant.code),
         // Keep looking at the same school across a refresh when it is still
         // one of theirs; otherwise fall back to the first they hold.

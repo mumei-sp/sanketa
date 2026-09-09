@@ -15,9 +15,10 @@
  * draft would risk overwriting another admin's edit on Save. Every write is
  * logged; see `record`.
  *
- * Changes take effect at the person's next sign-in. The session carries the
- * role and the class list the way a token would, so an admin editing someone
- * else does not reach into a session they do not own.
+ * Changes take effect immediately, not at the next sign-in. Roles and class
+ * lists live in the school's own tables and are resolved on every call, so
+ * there is no stamped copy in a session waiting to go stale — which is what
+ * used to make a role change wait for a sign-out.
  */
 
 import * as React from 'react'
@@ -49,8 +50,8 @@ import { getInitials } from '@/utils/format'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { identifierTaken, type SchoolUser } from '@/api/services/user-service'
-import type { AccountStatus, ProfileType } from '@/features/auth/types'
+import { identifierTaken, type Person, type SchoolUser } from '@/api/services/user-service'
+import type { AccountStatus } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'
 import { ProvisionDialog } from './ProvisionDialog'
@@ -82,10 +83,17 @@ const ALL_KINDS = '__all__'
  * students or families, so the picker offers three and each maps to the
  * schema's values rather than replacing them.
  */
-const KIND_GROUPS: { id: string; label: string; types: ProfileType[] }[] = [
-  { id: 'staff', label: 'Staff', types: ['admin', 'staff', 'teacher'] },
-  { id: 'student', label: 'Students', types: ['student'] },
-  { id: 'family', label: 'Parents & guardians', types: ['parent', 'guardian'] },
+/**
+ * Filtering by kind, over *capacities* rather than a single profile type.
+ *
+ * A person can be several kinds at once — the teacher whose child attends is
+ * staff and family — so the filter asks whether any of their records match,
+ * and she appears under both.
+ */
+const KIND_GROUPS: { id: string; label: string; capacities: string[] }[] = [
+  { id: 'staff', label: 'Staff', capacities: ['staff', 'teacher'] },
+  { id: 'student', label: 'Students', capacities: ['student'] },
+  { id: 'family', label: 'Parents & guardians', capacities: ['parent'] },
 ]
 
 /** How an account's status should read, and how loudly. */
@@ -96,10 +104,21 @@ const STATUS_LABEL: Record<AccountStatus, { text: string; tone: 'ok' | 'quiet' |
 }
 
 interface PeopleTabProps {
-  users: SchoolUser[] | null
+  /**
+   * Everyone with an account, joined to what they are at *this* school.
+   *
+   * Roles and classes come from the school's own tables now, so a row shows
+   * what somebody does *here* — and somebody with an account and no role here
+   * shows with none, which is who an administrator has come to give one to.
+   */
+  people: Person[] | null
   classLabels: string[]
   savingId: string | null
-  onPatch: (id: string, patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus }) => Promise<boolean>
+  /** Identity and whether they may sign in — global, so no profile needed. */
+  onPatch: (id: string, patch: { status?: AccountStatus }) => Promise<boolean>
+  /** One chip, one change. See `setPersonRole`. */
+  onSetRole: (profileId: string, roleId: string, held: boolean) => Promise<boolean>
+  onSetClasses: (profileId: string, classSections: string[]) => Promise<boolean>
   onAdd: (input: {
     fullName: string
     email?: string | null
@@ -126,10 +145,12 @@ function identifierOf(user: { email: string | null; phone?: string }): string {
 }
 
 export function PeopleTab({
-  users,
+  people,
   classLabels,
   savingId,
   onPatch,
+  onSetRole,
+  onSetClasses,
   onAdd,
   onProvisioned,
   roleFilter,
@@ -159,87 +180,95 @@ export function PeopleTab({
   const [draft, setDraft] = React.useState({ fullName: '', email: '', phone: '', roleId: '' })
   const [isAdding, setIsAdding] = React.useState(false)
 
-  const changeRole = async (user: SchoolUser, roleId: string) => {
-    if (!users) return
+  /**
+   * Give or take one role. Several may be held at once.
+   *
+   * The last role reaching settings cannot be taken from the last person
+   * holding it — checked against what they would hold *afterwards*, because
+   * removing one of somebody's three roles is not the same as removing them.
+   */
+  const toggleRole = async (person: Person, roleId: string) => {
+    if (person.profileId === null) return
+    const held = person.roleIds.includes(roleId)
+    const after = held
+      ? person.roleIds.filter(id => id !== roleId)
+      : [...person.roleIds, roleId]
 
-    // The same lockout the role editor guards against, one level up: a role
-    // can keep `settings.manage` while the last person holding that role is
-    // moved off it.
-    if (!stillHasAnAdmin(users, roles, { id: user.id, roleId })) {
-      showError('Someone must be able to manage settings', {
-        description: `Give another person a role with that permission before changing ${user.fullName}.`,
+    if (!stillHasAnAdmin(people ?? [], roles, { id: person.user.id, roleIds: after })) {
+      showError('Somebody has to be able to reach this screen', {
+        description: `Taking that role from ${person.user.fullName} would leave this school with no administrator.`,
       })
       return
     }
 
-    const was = roles.find(role => role.id === user.roleId)?.name
-    const now = roles.find(role => role.id === roleId)?.name ?? roleId
-
-    if (await onPatch(user.id, { roleId })) {
+    const name = roles.find(role => role.id === roleId)?.name ?? roleId
+    if (await onSetRole(person.profileId, roleId, !held)) {
       record({
         kind: 'user.role',
-        target: user.fullName,
-        summary: `Made ${user.fullName} ${now}`,
-        detail: was ? `was ${was}` : undefined,
+        target: person.user.fullName,
+        summary: held
+          ? `Removed ${name} from ${person.user.fullName}`
+          : `Made ${person.user.fullName} ${name}`,
+        detail: identifierOf(person.user),
         change: {
-          entity: 'user',
-          id: user.id,
-          before: { roleId: user.roleId },
-          after: { roleId },
+          entity: 'profile-role',
+          id: `${person.profileId}:${roleId}`,
+          before: held ? { held: true } : null,
+          after: held ? null : { held: true },
         },
       })
-      showSuccess(`${user.fullName} is now ${now}`, {
-        description: 'Takes effect at their next sign-in.',
-      })
+      showSuccess(
+        held ? `${person.user.fullName} is no longer ${name}` : `${person.user.fullName} is now ${name}`,
+      )
     }
   }
 
   /**
-   * Let a provisioned account sign in.
+   * Let somebody sign in.
    *
    * The only way an account moves off `disabled`, and deliberately a decision
    * someone makes per person rather than a side effect of provisioning: until
-   * a school has checked the address belongs to the family, an active account
-   * is a stranger's login.
+   * a school has checked the contact details belong to the family, an active
+   * account is a stranger's login.
    */
-  const activate = async (user: SchoolUser) => {
-    if (await onPatch(user.id, { status: 'active' })) {
+  const activate = async (person: Person) => {
+    if (await onPatch(person.user.id, { status: 'active' })) {
       record({
         kind: 'user.role',
-        target: user.fullName,
-        summary: `Activated ${user.fullName}'s account`,
-        detail: identifierOf(user),
+        target: person.user.fullName,
+        summary: `Activated ${person.user.fullName}'s account`,
+        detail: identifierOf(person.user),
       })
-      showSuccess(`${user.fullName} can sign in now`)
+      showSuccess(`${person.user.fullName} can sign in now`)
     }
   }
 
-  const setClasses = async (user: SchoolUser, next: string[]) => {
-    const before = user.assignedClasses ?? []
-    const detail = describeClassChange(before, next)
-    if (await onPatch(user.id, { assignedClasses: next })) {
+  const setClasses = async (person: Person, next: string[]) => {
+    if (person.profileId === null) return
+    const detail = describeClassChange(person.assignedClasses, next)
+    if (await onSetClasses(person.profileId, next)) {
       record({
         kind: 'user.classes',
-        target: user.fullName,
+        target: person.user.fullName,
         summary:
           next.length === 0
-            ? `Removed every class from ${user.fullName}`
-            : `Set ${user.fullName}'s classes to ${next.length} of ${classLabels.length}`,
+            ? `Removed every class from ${person.user.fullName}`
+            : `Set ${person.user.fullName}'s classes to ${next.length} of ${classLabels.length}`,
         detail,
         change: {
-          entity: 'user',
-          id: user.id,
-          before: { assignedClasses: before },
+          entity: 'profile-classes',
+          id: person.profileId,
+          before: { assignedClasses: person.assignedClasses },
           after: { assignedClasses: next },
         },
       })
     }
   }
 
-  const toggleClass = (user: SchoolUser, label: string) => {
-    const held = user.assignedClasses ?? []
+  const toggleClass = (person: Person, label: string) => {
+    const held = person.assignedClasses
     void setClasses(
-      user,
+      person,
       held.includes(label) ? held.filter(existing => existing !== label) : [...held, label],
     )
   }
@@ -278,7 +307,7 @@ export function PeopleTab({
         )
         return
       }
-      const roleName = roles.find(role => role.id === created.roleId)?.name ?? created.roleId
+      const roleName = roles.find(role => role.id === draft.roleId)?.name ?? draft.roleId
       record({
         kind: 'user.create',
         target: created.fullName,
@@ -298,7 +327,7 @@ export function PeopleTab({
     }
   }
 
-  if (users === null) {
+  if (people === null) {
     return (
       <div className="space-y-3">
         {[0, 1, 2, 3].map(row => (
@@ -309,14 +338,16 @@ export function PeopleTab({
   }
 
   const needle = query.trim().toLowerCase()
-  const kindTypes = KIND_GROUPS.find(group => group.id === kindFilter)?.types
-  const visible = users.filter(user => {
-    if (roleFilter !== ALL_ROLES && user.roleId !== roleFilter) return false
-    if (kindTypes && !kindTypes.includes(user.profileType)) return false
+  const kindCapacities = KIND_GROUPS.find(group => group.id === kindFilter)?.capacities
+  const visible = people.filter(person => {
+    // Any of their roles, not the one — filtering by Teacher should find the
+    // teacher who is also a parent.
+    if (roleFilter !== ALL_ROLES && !person.roleIds.includes(roleFilter)) return false
+    if (kindCapacities && !person.capacities.some(c => kindCapacities.includes(c))) return false
     if (!needle) return true
     return (
-      user.fullName.toLowerCase().includes(needle) ||
-      identifierOf(user).toLowerCase().includes(needle)
+      person.user.fullName.toLowerCase().includes(needle) ||
+      identifierOf(person.user).toLowerCase().includes(needle)
     )
   })
 
@@ -329,8 +360,8 @@ export function PeopleTab({
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <p className="text-body-muted text-muted-foreground">
-          Which role each person holds. Changes save as you make them and apply at their next
-          sign-in.
+          What each person does at this school. Changes save as you make them and take
+          effect straight away.
         </p>
         {canAddPeople && (
           <div className="flex shrink-0 flex-wrap gap-2">
@@ -408,10 +439,17 @@ export function PeopleTab({
       )}
 
       <div className="flex flex-col gap-3">
-        {visible.map(user => {
-          const role = roles.find(candidate => candidate.id === user.roleId)
-          const scoped = role?.scopeBy === 'classes'
-          const assigned = user.assignedClasses ?? []
+        {visible.map(person => {
+          const user = person.user
+          const held = person.roleIds.flatMap(id => {
+            const found = roles.find(candidate => candidate.id === id)
+            return found ? [found] : []
+          })
+          // Any role that narrows by class earns them a class picker. A person
+          // who teaches *and* parents narrows on both axes, and only one of
+          // them is about classes.
+          const scoped = held.some(role => role.scopeBy === 'classes')
+          const assigned = person.assignedClasses
           const isSelf = currentUser?.id === user.id
           const busy = savingId === user.id
 
@@ -447,7 +485,7 @@ export function PeopleTab({
                       <button
                         type="button"
                         disabled={busy}
-                        onClick={() => void activate(user)}
+                        onClick={() => void activate(person)}
                         className="ml-2 rounded-full border px-2 py-0.5 text-[10px] font-medium hover:bg-muted disabled:opacity-50"
                         style={{ borderColor: 'var(--heading)', color: 'var(--heading)' }}
                         title="Let this person sign in"
@@ -477,22 +515,21 @@ export function PeopleTab({
                   <p className="text-caption text-muted-foreground">{user.email}</p>
                 </div>
 
-                {/* The faithful preview: this person's role *and* their
+                {/* The faithful preview: this person's roles *and* their
                     classes, so a scoped holder is seen exactly as they see
-                    themselves. Not offered for yourself — that is just the app. */}
-                {role && !isSelf && (
+                    themselves. Not offered for yourself — that is just the app.
+                    Previews one role at a time: showing the union of several
+                    would be a view nobody actually has. */}
+                {held.length > 0 && !isSelf && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="shrink-0 gap-1"
                     onClick={() => {
                       startPreview({
-                        roleId: user.roleId,
-                        // A person's own scope, which is the faithful preview.
-                        // `studentIds` stays empty until accounts are linked
-                        // to student records; a staff account has none.
+                        roleId: held[0].id,
                         scope: {
-                          classSections: user.assignedClasses ?? [],
+                          classSections: person.assignedClasses,
                           studentIds: [],
                         },
                         personName: user.fullName,
@@ -504,41 +541,60 @@ export function PeopleTab({
                     View as
                   </Button>
                 )}
-
-                <div className="w-[190px] max-md:w-full">
-                  <Label htmlFor={`role-${user.id}`} className="sr-only">
-                    Role for {user.fullName}
-                  </Label>
-                  <Select
-                    value={role ? user.roleId : ''}
-                    disabled={busy || !canAssignRole}
-                    onValueChange={value => void changeRole(user, value)}
-                  >
-                    <SelectTrigger id={`role-${user.id}`} className="h-control w-full">
-                      <SelectValue placeholder="No role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map(candidate => (
-                        <SelectItem key={candidate.id} value={candidate.id}>
-                          {candidate.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
-              {/* A role that has since been deleted leaves the id behind. Say
-                  so rather than showing an empty picker and no reason. */}
-              {!role && (
-                <p
-                  className="flex items-start gap-1.5 text-caption"
-                  style={{ color: 'var(--destructive)' }}
-                >
-                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                  Their role “{user.roleId}” no longer exists — they can sign in but reach nothing.
-                </p>
-              )}
+              {/* ── Roles ──
+                  Chips rather than a dropdown, because a person can hold
+                  several and a `<select>` can say one. The same control the
+                  class row below uses, so the two read as one idea: what this
+                  person is here, and where they may act. */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-caption text-muted-foreground">
+                    {person.profileId === null
+                      ? 'No role at this school'
+                      : held.length === 0
+                        ? 'No role yet'
+                        : `${held.length === 1 ? 'Role' : 'Roles'}: ${held.map(role => role.name).join(', ')}`}
+                  </p>
+                </div>
+
+                {person.profileId === null ? (
+                  <p className="flex items-start gap-1.5 text-caption text-muted-foreground">
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                    They can sign in but have no profile at this school, so they reach
+                    nothing here. An administrator has to give them one.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {roles.map(candidate => {
+                      const on = person.roleIds.includes(candidate.id)
+                      return (
+                        <button
+                          key={candidate.id}
+                          type="button"
+                          disabled={busy || !canAssignRole}
+                          onClick={() => void toggleRole(person, candidate.id)}
+                          aria-pressed={on}
+                          className={cn(
+                            'tap-target rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                            on
+                              ? 'border-transparent'
+                              : 'hover:bg-muted disabled:opacity-50',
+                          )}
+                          style={
+                            on
+                              ? { backgroundColor: 'var(--heading)', color: 'var(--card)' }
+                              : { borderColor: border.default }
+                          }
+                        >
+                          {candidate.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
 
               {/* Only a scoped role has classes to hold, and only then is an
                   empty list a problem worth pointing at. */}
@@ -558,7 +614,7 @@ export function PeopleTab({
                       disabled={busy || !canEditAccess}
                       onClick={() =>
                         void setClasses(
-                          user,
+                          person,
                           assigned.length === classLabels.length ? [] : classLabels,
                         )
                       }
@@ -577,7 +633,7 @@ export function PeopleTab({
                           key={label}
                           type="button"
                           disabled={busy || !canEditAccess}
-                          onClick={() => toggleClass(user, label)}
+                          onClick={() => toggleClass(person, label)}
                           aria-pressed={on}
                           className={cn(
                             'tap-target rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
@@ -607,7 +663,7 @@ export function PeopleTab({
       <ProvisionDialog
         open={provisionOpen}
         onOpenChange={setProvisionOpen}
-        users={users}
+        users={people.map(person => person.user)}
         onCreated={onProvisioned}
       />
 

@@ -32,9 +32,11 @@ import {
   restoreRole,
 } from '@/api/services/role-service'
 import {
-  updateUserAccess,
   deleteUser,
   restoreUser,
+  setPersonClasses,
+  setPersonRole,
+  type Person,
   type SchoolUser,
 } from '@/api/services/user-service'
 import {
@@ -49,7 +51,8 @@ import { describeClassChange, describePermissionChange, stillHasAnAdmin } from '
 
 export interface UndoContext {
   roles: Role[]
-  users: SchoolUser[]
+  /** Everyone with an account, joined to what they are at this school. */
+  people: Person[]
   /** The signed-in user, who may not delete their own account. */
   currentUserId?: string
 }
@@ -69,7 +72,7 @@ export function undoBlocker(event: AccessEvent, context: UndoContext): string | 
   if (!event.change) return 'Entries from before this feature cannot be taken back.'
 
   const { entity, id, before, after } = event.change
-  const { roles, users, currentUserId } = context
+  const { roles, people, currentUserId } = context
 
   if (entity === 'role') {
     const role = roles.find(candidate => candidate.id === id)
@@ -83,7 +86,7 @@ export function undoBlocker(event: AccessEvent, context: UndoContext): string | 
     if (!before && after) {
       if (!role) return 'That role has already been removed.'
       if (role.builtin) return 'Built-in roles cannot be deleted.'
-      const holders = users.filter(user => user.roleId === id).length
+      const holders = people.filter(person => person.roleIds.includes(id)).length
       if (holders > 0) {
         return `${holders} ${holders === 1 ? 'person holds' : 'people hold'} this role now.`
       }
@@ -107,34 +110,54 @@ export function undoBlocker(event: AccessEvent, context: UndoContext): string | 
     return null
   }
 
-  const user = users.find(candidate => candidate.id === id)
+  // ── Per-school access ──
+  // A role granted or taken at one school. `id` is `<profileId>:<roleId>`,
+  // because the row it describes is that pair.
+  if (entity === 'profile-role') {
+    const [profileId, roleId] = id.split(':')
+    const person = people.find(candidate => candidate.profileId === profileId)
+    if (!person) return 'That person has no profile at this school any more.'
+    if (!roles.some(candidate => candidate.id === roleId)) {
+      return `The role “${roleId}” no longer exists.`
+    }
+
+    // Undoing a grant means taking the role away, so ask what they would hold
+    // afterwards — the same question the grant itself asked.
+    const wasGranted = before === null
+    const after_ = wasGranted
+      ? person.roleIds.filter((held: string) => held !== roleId)
+      : [...person.roleIds, roleId]
+    if (!stillHasAnAdmin(people, roles, { id: person.user.id, roleIds: after_ })) {
+      return 'Someone must be able to manage settings.'
+    }
+    return null
+  }
+
+  if (entity === 'profile-classes') {
+    return people.some(candidate => candidate.profileId === id)
+      ? null
+      : 'That person has no profile at this school any more.'
+  }
+
+  const person = people.find(candidate => candidate.user.id === id)
 
   // Undoing a removal: put the account back.
   if (before && !after) {
-    return user ? 'That account exists again.' : null
+    return person ? 'That account exists again.' : null
   }
 
   // Undoing a creation: remove the account.
   if (!before && after) {
-    if (!user) return 'That account has already been removed.'
-    if (user.id === currentUserId) return 'That is your own account.'
-    if (!stillHasAnAdmin(users, roles, { id, roleId: null })) {
+    if (!person) return 'That account has already been removed.'
+    if (person.user.id === currentUserId) return 'That is your own account.'
+    if (!stillHasAnAdmin(people, roles, { id, roleIds: [] })) {
       return 'Someone must be able to manage settings.'
     }
     return null
   }
 
   // Undoing an edit.
-  if (!user) return 'That account no longer exists.'
-  const roleId = before?.roleId as string | undefined
-  if (roleId !== undefined) {
-    if (!roles.some(candidate => candidate.id === roleId)) {
-      return `The role “${roleId}” no longer exists.`
-    }
-    if (!stillHasAnAdmin(users, roles, { id, roleId })) {
-      return 'Someone must be able to manage settings.'
-    }
-  }
+  if (!person) return 'That account no longer exists.'
   return null
 }
 
@@ -162,14 +185,7 @@ function rolePatch(fields: Record<string, unknown>) {
   return patch
 }
 
-function userPatch(fields: Record<string, unknown>) {
-  const patch: { roleId?: string; assignedClasses?: string[] } = {}
-  if ('roleId' in fields) patch.roleId = fields.roleId as string
-  if ('assignedClasses' in fields) {
-    patch.assignedClasses = (fields.assignedClasses as string[] | undefined) ?? []
-  }
-  return patch
-}
+
 
 const REVERTED = 'Reverted — '
 const REAPPLIED = 'Reapplied — '
@@ -218,6 +234,10 @@ export async function undoEvent(event: AccessEvent, context: UndoContext): Promi
 
   // `undoBlocker` returns early when there is no change, so this is safe.
   const { entity, id, before, after } = event.change as AccessChange
+
+  if (entity === 'profile-role' || entity === 'profile-classes') {
+    return undoTenantAccess(event, entity, id, before, after)
+  }
 
   if (entity === 'role') {
     if (before && !after) {
@@ -274,14 +294,48 @@ export async function undoEvent(event: AccessEvent, context: UndoContext): Promi
     }
   }
 
-  if (!before || !after) return { ok: false, reason: 'That entry has nothing to put back.' }
-  if (!(await updateUserAccess(id, userPatch(before)))) {
+  return { ok: false, reason: 'That entry has nothing to put back.' }
+}
+
+/**
+ * Put a per-school access change back.
+ *
+ * Separate from the account reversals above because it writes to a different
+ * table — the school's, not the directory's — and because `id` means something
+ * different: the pair a `profile_roles` row is, or the profile a class list
+ * belongs to.
+ */
+async function undoTenantAccess(
+  event: AccessEvent,
+  entity: 'profile-role' | 'profile-classes',
+  id: string,
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown> | null,
+): Promise<UndoOutcome> {
+  if (entity === 'profile-role') {
+    const [profileId, roleId] = id.split(':')
+    // `before: null` was a grant, so undoing it revokes, and the other way
+    // about. The stored shape carries no more than that, because there is no
+    // more to a row that either exists or does not.
+    const restoreHeld = before !== null
+    if (!(await setPersonRole(profileId, roleId, restoreHeld))) {
+      return { ok: false, reason: 'Could not save the reversal.' }
+    }
+    return {
+      ok: true,
+      summary: reversalSummary(event.summary),
+      change: { entity, id, before: after, after: before },
+    }
+  }
+
+  const classes = (before?.assignedClasses as string[] | undefined) ?? []
+  if (!(await setPersonClasses(id, classes))) {
     return { ok: false, reason: 'Could not save the reversal.' }
   }
   return {
     ok: true,
     summary: reversalSummary(event.summary),
-    detail: describeReversal(before, after),
+    detail: describeReversal(before ?? {}, after ?? {}),
     change: { entity, id, before: after, after: before },
   }
 }

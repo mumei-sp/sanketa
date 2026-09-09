@@ -10,19 +10,21 @@
  * writes through functions, `localStorage` as the disk, and only a service
  * allowed to import it.
  *
- * Where a user's access lives
- * ---------------------------
- * `roleId` and `assignedClasses` both sit on the user row, because both are
- * facts about *the account*, and both have to be stamped into the session at
- * sign-in. `Teacher.assignedClasses` on the staff record seeds this and stays
- * as the domain view of the same fact; a backend would resolve one from the
- * other at login rather than keeping two writable copies, and this store is
- * the one auth reads.
+ * Where a user's access lives — not here
+ * -------------------------------------
+ * This table owns *identity*: what somebody signs in with, and whether they
+ * may. It used to own `roleId`, `profileType` and `assignedClasses` too, on
+ * the reasoning that all three were facts about the account.
+ *
+ * They are not. They are facts about a person *at a school*, and this row has
+ * one of each — so a teacher at one school and a parent at another had one
+ * answer for two questions, and a teacher whose child attends the same school
+ * had one answer for two roles. They live in the school's `profile_roles` and
+ * `user_profiles` now; see `src/mocks/profiles`.
  */
 
 import { newId } from '@/mocks/_shared'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
-import { teachersData } from '@/mocks/teachers/teachers'
 import { globalKey } from '@/mocks/_shared/tenant-context'
 
 export interface SchoolUser {
@@ -47,17 +49,6 @@ export interface SchoolUser {
    * reports which one clashed so a screen can say so rather than failing.
    */
   phone?: string
-  /** Role id from the roles table. */
-  roleId: string
-  /**
-   * Structural kind of account.
-   *
-   * Distinct from the role, and not editable in the role editor: a school
-   * decides what a Parent may see, not that a parent is staff. It also decides
-   * which record the account points at — `teacherId`, `studentId` or
-   * `parentId` below — and therefore which axis narrows it.
-   */
-  profileType: ProfileType
   /**
    * Whether it can be signed into.
    *
@@ -74,14 +65,6 @@ export interface SchoolUser {
    * activation is a person's decision, made per account on the People screen.
    */
   status: AccountStatus
-  /** Staff record this login belongs to, when it is a member of staff. */
-  teacherId?: string
-  /** Student record this login *is*, for a student account. */
-  studentId?: string
-  /** Parent record this login belongs to, for a parent or guardian account. */
-  parentId?: string
-  /** Class sections they may write to, when their role narrows by class. */
-  assignedClasses?: string[]
 }
 
 const TABLE = 'users'
@@ -92,27 +75,16 @@ interface Database {
 
 let db: Database | null = null
 
-/** The teacher record a seeded account belongs to, for its class assignment. */
-function classesFor(teacherId: string): string[] {
-  return teachersData.find(teacher => teacher.teacherId === teacherId)?.assignedClasses ?? []
-}
-
 function seed(): Database {
   return {
     rows: [
-      { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', roleId: 'admin', profileType: 'admin', status: 'active' },
-      { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', roleId: 'principal', profileType: 'staff', status: 'active' },
-      {
-        id: '3',
-        fullName: 'Meera Iyengar',
-        email: 'teacher@sanketa.edu',
-        roleId: 'teacher',
-        profileType: 'teacher',
-        status: 'active',
-        teacherId: 'T-1006',
-        assignedClasses: classesFor('T-1006'),
-      },
-      { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', roleId: 'accountant', profileType: 'staff', status: 'active' },
+      // Identity only. What each of them *is* at a school lives in that
+      // school's folder — see `tenants/kendriya`, which gives ids 1 to 4
+      // their profiles, roles and classes.
+      { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', status: 'active' },
+      { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', status: 'active' },
+      { id: '3', fullName: 'Meera Iyengar', email: 'teacher@sanketa.edu', status: 'active' },
+      { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', status: 'active' },
     ],
   }
 }
@@ -124,14 +96,18 @@ function load(): Database {
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       if (Array.isArray(parsed.rows) && parsed.rows.length > 0) {
-        // Rows written before these columns existed are staff who can sign in
-        // — which is what every account was at the time.
+        // Rows written before `status` existed could sign in, which is what
+        // every account could at the time. The per-school columns that used to
+        // live here are dropped rather than migrated: their values described a
+        // school, and a global row cannot say which.
         const migrated = parsed.rows.map(row => ({
-          ...row,
-          profileType: row.profileType ?? ('staff' as ProfileType),
+          id: row.id,
+          fullName: row.fullName,
+          email: row.email ?? null,
+          phone: row.phone,
           status: row.status ?? ('active' as AccountStatus),
         }))
-        const changed = parsed.rows.some(row => !row.profileType || !row.status)
+        const changed = JSON.stringify(migrated) !== JSON.stringify(parsed.rows)
         db = { rows: migrated }
         if (changed) persist()
         return db
@@ -155,7 +131,7 @@ function persist(): void {
 }
 
 function clone(user: SchoolUser): SchoolUser {
-  return { ...user, assignedClasses: user.assignedClasses ? [...user.assignedClasses] : undefined }
+  return { ...user }
 }
 
 export function listUsers(): SchoolUser[] {
@@ -265,8 +241,6 @@ export function createUser(input: {
     fullName: input.fullName.trim(),
     email,
     phone,
-    roleId: input.roleId,
-    profileType,
     // Derived from the kind, not defaulted to 'active' and left to callers.
     //
     // A member of staff typed in on the People screen is someone an admin is
@@ -278,9 +252,6 @@ export function createUser(input: {
     // version, and it created a live parent account the first time a caller
     // forgot. The safe state is the one you get by saying nothing.
     status: input.status ?? (isFamily(profileType) ? 'disabled' : 'active'),
-    studentId: input.studentId,
-    parentId: input.parentId,
-    assignedClasses: input.assignedClasses,
   }
   database.rows.push(user)
   persist()
@@ -296,14 +267,12 @@ export function createUser(input: {
  */
 export function updateUser(
   id: string,
-  patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus },
+  patch: { status?: AccountStatus },
 ): SchoolUser | null {
   const database = load()
   const user = database.rows.find(candidate => candidate.id === id)
   if (!user) return null
 
-  if (patch.roleId !== undefined) user.roleId = patch.roleId
-  if (patch.assignedClasses !== undefined) user.assignedClasses = [...patch.assignedClasses]
   if (patch.status !== undefined) user.status = patch.status
 
   persist()

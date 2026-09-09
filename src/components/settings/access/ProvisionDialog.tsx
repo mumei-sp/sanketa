@@ -47,6 +47,7 @@ import { useAppToast } from '@/hooks/use-app-toast'
 import { fetchParents, fetchParentLinks, type Parent } from '@/api/services/parent-service'
 import { createUser, identifierTaken, type SchoolUser } from '@/api/services/user-service'
 import { usePermissions } from '@/features/auth/PermissionContext'
+import { profileOf } from '@/mocks/profiles'
 
 /** One row: somebody who could have an account and does not. */
 interface Candidate {
@@ -106,7 +107,15 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
     setDone(new Set())
     Promise.all([fetchParents(), fetchParentLinks()])
       .then(([parents, links]) => {
-        const taken = new Set(usersRef.current.map(user => user.parentId).filter(Boolean))
+        // Which parent records already have an account at this school. Read
+        // from the profiles, because the link between a login and a parent
+        // record is per school — the same person is a different `parents` row
+        // at each one.
+        const taken = new Set(
+          usersRef.current
+            .map(user => profileOf(user.id)?.parentId)
+            .filter((id): id is string => id !== undefined),
+        )
         setCandidates(
           parents
             .filter(parent => !taken.has(parent.profileId))

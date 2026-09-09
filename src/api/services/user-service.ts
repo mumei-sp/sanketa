@@ -1,9 +1,13 @@
 /**
  * Users API Service
  *
- * Mock path (the in-browser user directory under `src/mocks/users`) + HTTP
- * path (apiClient). The directory owns the role each account holds and the
- * classes a scoped account may write to, exactly as a backend table would.
+ * Mock path (the global user directory under `src/mocks/global/users`) + HTTP
+ * path (apiClient).
+ *
+ * The directory owns *identity* — what somebody signs in with, and whether
+ * they may. What they are allowed to do belongs to the school they are doing
+ * it at, so it lives in that school's `profile_roles`. `fetchPeople` joins
+ * the two, which is the read every administration screen actually wants.
  */
 
 import apiClient from '@/api/client'
@@ -11,7 +15,14 @@ import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/global/users'
 import { addMembership, activeTenantCode } from '@/mocks/global'
-import { assignProfileType, createProfile, grantRole } from '@/mocks/profiles'
+import {
+  assignProfileType,
+  createProfile,
+  grantRole,
+  resolveTenantAccess,
+  revokeRole,
+  updateProfile,
+} from '@/mocks/profiles'
 import type { SchoolUser } from '@/mocks/global/users'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 
@@ -31,6 +42,109 @@ export async function fetchUsers(): Promise<SchoolUser[]> {
     async () => {
       const { data } = await apiClient.get<SchoolUser[]>('/users')
       return data
+    },
+  )
+}
+
+/**
+ * Everyone with an account, joined to what they are at *this* school.
+ *
+ * The read the People screen wants, and the reason it is one call: a person's
+ * name and whether they can sign in are global, and their roles and classes
+ * belong to the school in front of you. Two reads would mean two loading
+ * states for one row.
+ *
+ * Somebody with a membership and no profile here appears with no roles. That
+ * is a real state — enrolled at a second school before anyone decided what
+ * they do there — and hiding them would hide the person an administrator has
+ * to give a role to.
+ *
+ * @apiRoute GET /api/v1/users?expand=profile
+ */
+export interface Person {
+  user: SchoolUser
+  /** Their profile id at this school, or null if they have none here. */
+  profileId: string | null
+  /** Every role held here. Plural: somebody can teach and be a parent. */
+  roleIds: string[]
+  /** Class sections they may write to here. */
+  assignedClasses: string[]
+  /** Which records they have here — teacher, parent, staff, student. */
+  capacities: string[]
+}
+
+export async function fetchPeople(): Promise<Person[]> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 120, max: 280 })
+      return mockServer.listUsers().map(user => {
+        const access = resolveTenantAccess(user.id)
+        return {
+          user,
+          profileId: access.profileId,
+          roleIds: access.roleIds,
+          assignedClasses: access.assignedClasses,
+          capacities: access.capacities,
+        }
+      })
+    },
+    async () => {
+      const { data } = await apiClient.get<Person[]>('/users', { params: { expand: 'profile' } })
+      return data
+    },
+  )
+}
+
+/**
+ * Give somebody a role at this school, or take it away.
+ *
+ * Two calls rather than "set their roles to this list", because that is what
+ * the table is — a row per (profile, role) — and because an administrator
+ * toggling one chip should send one change, not a whole list that could
+ * silently drop a role somebody else granted a moment ago.
+ *
+ * @apiRoute PUT / DELETE /api/v1/profiles/{profileId}/roles/{roleId}
+ */
+export async function setPersonRole(
+  profileId: string,
+  roleId: string,
+  held: boolean,
+): Promise<boolean> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      if (held) grantRole(profileId, roleId)
+      else revokeRole(profileId, roleId)
+      return true
+    },
+    async () => {
+      if (held) await apiClient.put(`/profiles/${profileId}/roles/${roleId}`)
+      else await apiClient.delete(`/profiles/${profileId}/roles/${roleId}`)
+      return true
+    },
+  )
+}
+
+/**
+ * The class sections somebody may write to at this school.
+ *
+ * `teacher_classes`, and per school for the reason that table is: `8A` at one
+ * school is a different eight children from `8A` at another.
+ *
+ * @apiRoute PUT /api/v1/profiles/{profileId}/classes
+ */
+export async function setPersonClasses(
+  profileId: string,
+  classSections: string[],
+): Promise<boolean> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return updateProfile(profileId, { assignedClasses: [...classSections] }) !== null
+    },
+    async () => {
+      await apiClient.put(`/profiles/${profileId}/classes`, { classSections })
+      return true
     },
   )
 }
