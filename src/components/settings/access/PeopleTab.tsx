@@ -49,7 +49,7 @@ import { getInitials } from '@/utils/format'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import type { SchoolUser } from '@/api/services/user-service'
+import { identifierTaken, type SchoolUser } from '@/api/services/user-service'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'
@@ -65,6 +65,11 @@ import { describeClassChange, stillHasAnAdmin } from './helpers'
  */
 function looksLikeEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+/** Ten digits once punctuation and a country code are stripped. */
+function looksLikePhone(value: string): boolean {
+  return value.replace(/\D/g, '').length >= 10
 }
 
 const ALL_ROLES = '__all__'
@@ -97,7 +102,8 @@ interface PeopleTabProps {
   onPatch: (id: string, patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus }) => Promise<boolean>
   onAdd: (input: {
     fullName: string
-    email: string
+    email?: string | null
+    phone?: string
     roleId: string
   }) => Promise<SchoolUser | null>
   /** An account created by provisioning, so the list picks it up. */
@@ -106,6 +112,17 @@ interface PeopleTabProps {
   roleFilter: string
   onRoleFilterChange: (roleId: string) => void
   record: RecordAccessEvent
+}
+
+/**
+ * What the account is known by, for a list row or a log entry.
+ *
+ * Email when there is one, the number otherwise. Not both: the People list
+ * shows one line under the name, and an account provisioned from a family's
+ * mobile has no address to show there.
+ */
+function identifierOf(user: { email: string | null; phone?: string }): string {
+  return user.email ?? user.phone ?? '—'
 }
 
 export function PeopleTab({
@@ -139,7 +156,7 @@ export function PeopleTab({
 
   const [addOpen, setAddOpen] = React.useState(false)
   const [provisionOpen, setProvisionOpen] = React.useState(false)
-  const [draft, setDraft] = React.useState({ fullName: '', email: '', roleId: '' })
+  const [draft, setDraft] = React.useState({ fullName: '', email: '', phone: '', roleId: '' })
   const [isAdding, setIsAdding] = React.useState(false)
 
   const changeRole = async (user: SchoolUser, roleId: string) => {
@@ -191,7 +208,7 @@ export function PeopleTab({
         kind: 'user.role',
         target: user.fullName,
         summary: `Activated ${user.fullName}'s account`,
-        detail: user.email,
+        detail: identifierOf(user),
       })
       showSuccess(`${user.fullName} can sign in now`)
     }
@@ -228,20 +245,37 @@ export function PeopleTab({
   }
 
   const openAdd = () => {
-    setDraft({ fullName: '', email: '', roleId: roles[roles.length - 1]?.id ?? '' })
+    setDraft({ fullName: '', email: '', phone: '', roleId: roles[roles.length - 1]?.id ?? '' })
     setAddOpen(true)
   }
 
   const submitAdd = async () => {
     const fullName = draft.fullName.trim()
     const email = draft.email.trim()
-    if (!fullName || !looksLikeEmail(email) || !draft.roleId) return
+    const phone = draft.phone.trim()
+    // Either will do, and the store enforces the same rule — this only keeps
+    // the button from submitting something it already knows will be refused.
+    const hasIdentifier = looksLikeEmail(email) || looksLikePhone(phone)
+    if (!fullName || !hasIdentifier || !draft.roleId) return
 
     setIsAdding(true)
     try {
-      const created = await onAdd({ fullName, email, roleId: draft.roleId })
+      const created = await onAdd({
+        fullName,
+        email: email || null,
+        phone: phone || undefined,
+        roleId: draft.roleId,
+      })
       if (!created) {
-        showError('That email already has an account')
+        // Which one clashed matters: a taken number is the ordinary case of two
+        // parents sharing a mobile, and the answer is the other parent's
+        // number, not "this person already has an account".
+        const taken = await identifierTaken({ email: email || null, phone: phone || undefined })
+        showError(
+          taken === 'phone'
+            ? 'That number already signs in to another account'
+            : 'That email already has an account',
+        )
         return
       }
       const roleName = roles.find(role => role.id === created.roleId)?.name ?? created.roleId
@@ -249,7 +283,7 @@ export function PeopleTab({
         kind: 'user.create',
         target: created.fullName,
         summary: `Added ${created.fullName} as ${roleName}`,
-        detail: created.email,
+        detail: identifierOf(created),
         change: { entity: 'user', id: created.id, before: null, after: { ...created } },
       })
       setAddOpen(false)
@@ -280,11 +314,16 @@ export function PeopleTab({
     if (roleFilter !== ALL_ROLES && user.roleId !== roleFilter) return false
     if (kindTypes && !kindTypes.includes(user.profileType)) return false
     if (!needle) return true
-    return user.fullName.toLowerCase().includes(needle) || user.email.toLowerCase().includes(needle)
+    return (
+      user.fullName.toLowerCase().includes(needle) ||
+      identifierOf(user).toLowerCase().includes(needle)
+    )
   })
 
   const canSubmit =
-    draft.fullName.trim().length > 0 && looksLikeEmail(draft.email) && draft.roleId !== ''
+    draft.fullName.trim().length > 0 &&
+    (looksLikeEmail(draft.email) || looksLikePhone(draft.phone)) &&
+    draft.roleId !== ''
 
   return (
     <div className="flex flex-col gap-4">
@@ -603,6 +642,21 @@ export function PeopleTab({
                 onChange={event => setDraft(current => ({ ...current, email: event.target.value }))}
                 className="mt-1.5"
               />
+            </div>
+            <div>
+              <Label htmlFor="new-person-phone">Mobile number</Label>
+              <Input
+                id="new-person-phone"
+                type="tel"
+                value={draft.phone}
+                autoComplete="off"
+                onChange={event => setDraft(current => ({ ...current, phone: event.target.value }))}
+                className="mt-1.5"
+              />
+              <p className="mt-1 text-caption text-muted-foreground">
+                Either one is enough — both can be signed in with. A number can only belong to
+                one account, so two parents sharing a mobile need an address for the second.
+              </p>
             </div>
             <div>
               <Label htmlFor="new-person-role">Role</Label>

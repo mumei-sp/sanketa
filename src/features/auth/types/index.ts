@@ -43,7 +43,10 @@ export type AccountStatus = 'invited' | 'active' | 'disabled'
 export interface AuthUser {
   id: string
   fullName: string
-  email: string
+  /** Null when the account signs in by number instead. */
+  email: string | null
+  /** The number this account signs in with, when it has one. */
+  phone?: string
   /** Structural kind of account — see `ProfileType`. */
   profileType: ProfileType
   /**

@@ -9,11 +9,11 @@
  * Editing an address here reaches every sibling; editing it on the form would
  * not.
  *
- * The email is the interesting column. Nothing in the school's records carries
- * one — the contacts have a phone and a relationship — and sign-in resolves an
- * account by address. So a guardian without one cannot be given an account,
- * and saying so here is more useful than a provisioning screen that silently
- * skips them.
+ * The contact details are the interesting part. Sign-in takes a mobile number
+ * or an email, so a guardian with either can be given an account and the phone
+ * the school already holds is usually enough. One with neither cannot, and
+ * saying so here is more useful than a provisioning screen that silently skips
+ * them.
  */
 
 import { Plus, Trash2, Star, Mail, Phone } from 'lucide-react'
@@ -104,13 +104,14 @@ export function StudentGuardians({
                         Has an account
                       </Badge>
                     ) : (
-                      guardian.email === null && (
+                      guardian.email === null &&
+                      !guardian.phone && (
                         <Badge
                           variant="outline"
                           className="text-[10px]"
-                          title="Sign-in resolves an account by email, so this guardian cannot be given one until an address is added."
+                          title="Sign-in needs a mobile number or an email address, and this guardian has neither on file."
                         >
-                          No email
+                          No contact details
                         </Badge>
                       )
                     )}

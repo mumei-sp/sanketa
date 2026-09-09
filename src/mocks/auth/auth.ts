@@ -1,7 +1,7 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/features/auth/types'
 import { authUtils } from '@/api/utils/auth'
 import { issueSession, revokeSession, rotateSession } from './sessions'
-import { findByEmail, listUsers } from '@/mocks/users'
+import { findByIdentifier, listUsers } from '@/mocks/users'
 import { studentsOfParent } from '@/mocks/parents'
 
 const MOCK_DELAY = 1200
@@ -33,7 +33,10 @@ export function mockAccountHints() {
   return listUsers()
     .filter(user => user.status === 'active')
     .map(user => ({
-      email: user.email,
+      // Whichever the account can actually be signed in with. A hint that
+      // shows a blank where the address would be is worse than one that shows
+      // the number the person would have typed anyway.
+      email: user.email ?? user.phone ?? '',
       name: user.fullName,
       role: user.roleId,
     }))
@@ -63,7 +66,7 @@ function studentScopeFor(account: {
 export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   await delay(MOCK_DELAY)
 
-  const account = findByEmail(data.identifier)
+  const account = findByIdentifier(data.identifier)
 
   if (!account || data.password !== MOCK_PASSWORD) {
     throw {
@@ -97,6 +100,7 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
       id: account.id,
       fullName: account.fullName,
       email: account.email,
+      phone: account.phone,
       role: account.roleId,
       profileType: account.profileType,
       assignedClasses: account.assignedClasses,

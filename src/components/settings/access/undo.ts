@@ -259,7 +259,7 @@ export async function undoEvent(event: AccessEvent, context: UndoContext): Promi
     return {
       ok: true,
       summary: `Restored ${restored.fullName}`,
-      detail: restored.email,
+      detail: restored.email ?? restored.phone,
       change: { entity, id, before: null, after: before },
     }
   }

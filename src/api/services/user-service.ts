@@ -34,15 +34,48 @@ export async function fetchUsers(): Promise<SchoolUser[]> {
 }
 
 /**
+ * Which identifier is already claimed, if either.
+ *
+ * A separate call rather than a richer return from `createUser`, because a
+ * screen wants to ask *before* it submits as well as after it fails — the
+ * provisioning list wants to mark a row as blocked without trying to create
+ * it. A backend would answer this from the same unique indexes the insert
+ * relies on.
+ *
+ * @apiRoute GET /api/v1/users/identifier-check
+ */
+export async function identifierTaken(input: {
+  email?: string | null
+  phone?: string
+  exceptId?: string
+}): Promise<'email' | 'phone' | null> {
+  return mockOrHttp(
+    async () => {
+      await withLatency({ min: 40, max: 120 })
+      return mockServer.claimedIdentifier(input)
+    },
+    async () => {
+      const { data } = await apiClient.get<{ taken: 'email' | 'phone' | null }>(
+        '/users/identifier-check',
+        { params: input },
+      )
+      return data.taken
+    },
+  )
+}
+
+/**
  * Add an account.
  *
- * Resolves to null when the email is already taken.
+ * Resolves to null when there is nothing to sign in with, or when either
+ * identifier is already taken — ask `identifierTaken` which.
  *
  * @apiRoute POST /api/v1/users
  */
 export async function createUser(input: {
   fullName: string
-  email: string
+  email?: string | null
+  phone?: string
   roleId: string
   profileType?: ProfileType
   status?: AccountStatus

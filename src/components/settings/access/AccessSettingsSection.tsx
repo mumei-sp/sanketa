@@ -200,7 +200,7 @@ export function AccessSettingsSection() {
 
   /** Add an account. Null back means the email was taken. */
   const addUser = React.useCallback(
-    async (input: { fullName: string; email: string; roleId: string }) => {
+    async (input: { fullName: string; email?: string | null; phone?: string; roleId: string }) => {
       const created = await createUserRequest(input)
       if (created) setUsers(current => (current ? [...current, created] : [created]))
       return created

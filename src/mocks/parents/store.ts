@@ -21,13 +21,13 @@
  * the fixture students still carry the old shape, and first run turns it into
  * rows.
  *
- * ── Seeding, and what it cannot do ─────────────────────────────────────
+ * ── Seeding ────────────────────────────────────────────────────────────
  * First run reads the embedded guardians and matches them across students on
  * name and phone, so siblings share one parent row. What it cannot invent is
- * an email: the contact details carry a phone and nothing else, and an account
- * needs an address to sign in with. So a seeded parent has `email: null` and
- * is not provisionable until a human supplies one — which is a real state the
- * People screen has to show, not an error to hide.
+ * an email — the contact details carry a phone and a relationship, nothing
+ * else — so a seeded parent has `email: null`. That used to mean they could
+ * not be given an account; sign-in takes a number now, so the phone the school
+ * already has is enough, and `email: null` is just a missing address.
  */
 
 import { newId } from '@/mocks/_shared'
@@ -38,10 +38,12 @@ export interface Parent {
   profileId: string
   fullName: string
   /**
-   * Null until someone supplies one.
+   * Null until someone supplies one, which for most parents is never.
    *
-   * Sign-in resolves an account by email, so a parent without one cannot have
-   * an account. Null rather than an empty string so "never had one" is
+   * Not a blocker for an account any more — sign-in takes the mobile number
+   * the school already holds. It matters for the second parent on a shared
+   * family number, who needs an address of their own because a number belongs
+   * to one account. Null rather than an empty string so "never had one" is
    * distinguishable from "cleared it".
    */
   email: string | null

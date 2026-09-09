@@ -27,7 +27,25 @@ import { teachersData } from '@/mocks/teachers/teachers'
 export interface SchoolUser {
   id: string
   fullName: string
-  email: string
+  /**
+   * Null when the account signs in by number instead.
+   *
+   * A school knows a family's mobile long before it knows an address, and for
+   * most families it never learns one. Requiring an email meant provisioning a
+   * parent began with inventing a fact about them, so it is optional — but at
+   * least one of `email` and `phone` has to be there, because an account that
+   * can be signed into needs something to be found by.
+   */
+  email: string | null
+  /**
+   * The number this account signs in with. Unique across the directory.
+   *
+   * Unique is the whole cost of this feature. Two parents of one child usually
+   * give the school the same mobile, and only one of them can hold it — the
+   * second needs their own number or an address. `claimedIdentifier` below
+   * reports which one clashed so a screen can say so rather than failing.
+   */
+  phone?: string
   /** Role id from the roles table. */
   roleId: string
   /**
@@ -143,10 +161,60 @@ export function listUsers(): SchoolUser[] {
   return load().rows.map(clone)
 }
 
-export function findByEmail(email: string): SchoolUser | undefined {
-  const wanted = email.trim().toLowerCase()
-  const found = load().rows.find(user => user.email.toLowerCase() === wanted)
+/**
+ * Normalised forms of the two things an account can be found by.
+ *
+ * A number is compared on its last ten digits, so `+91 98451 23457`,
+ * `9845123457` and `098451-23457` are one identifier. That is the same
+ * comparison the parents table uses to decide whether two guardians are one
+ * person, and it has to be, or a school could hold a number in the directory
+ * under one spelling and fail to match the account under another.
+ */
+const asEmail = (value: string | null | undefined) => value?.trim().toLowerCase() || undefined
+const asPhone = (value: string | null | undefined) => {
+  const digits = (value ?? '').replace(/\D/g, '').slice(-10)
+  return digits.length === 10 ? digits : undefined
+}
+
+/**
+ * Find an account by whatever the person typed.
+ *
+ * One function rather than `findByEmail` and `findByPhone`, because the sign-in
+ * form has one field and does not know which it was given — and neither should
+ * it. Whether the string looks like an address is not the question; whether it
+ * matches an account is.
+ */
+export function findByIdentifier(identifier: string): SchoolUser | undefined {
+  const email = asEmail(identifier)
+  const phone = asPhone(identifier)
+  const found = load().rows.find(
+    user =>
+      (email !== undefined && asEmail(user.email) === email) ||
+      (phone !== undefined && asPhone(user.phone) === phone),
+  )
   return found ? clone(found) : undefined
+}
+
+/**
+ * Which of an account's identifiers is already taken, if either.
+ *
+ * Returned rather than thrown, and naming the field, because "that email
+ * already has an account" and "that number already has an account" are
+ * different things for a school to do about — the second is the ordinary case
+ * of two parents sharing a mobile, and the fix is to ask for the other
+ * parent's number rather than to conclude the account exists.
+ */
+export function claimedIdentifier(input: {
+  email?: string | null
+  phone?: string
+  exceptId?: string
+}): 'email' | 'phone' | null {
+  const email = asEmail(input.email)
+  const phone = asPhone(input.phone)
+  const rows = load().rows.filter(user => user.id !== input.exceptId)
+  if (email !== undefined && rows.some(user => asEmail(user.email) === email)) return 'email'
+  if (phone !== undefined && rows.some(user => asPhone(user.phone) === phone)) return 'phone'
+  return null
 }
 
 /**
@@ -162,17 +230,20 @@ function isFamily(profileType: ProfileType): boolean {
 /**
  * Add an account.
  *
- * Name and email only, plus the role they start in. No password: the mock
+ * Name, one contact detail, and the role they start in. No password: the mock
  * auth accepts one shared one, and inventing a per-user credential here would
  * be pretending to a security this app does not have. A backend would send an
  * invitation and let the person set their own.
  *
- * Returns null when the email is taken — the one uniqueness a directory has to
- * enforce, because sign-in resolves an account by it.
+ * Returns null when there is nothing to sign in with, or when either
+ * identifier is already claimed. Callers that need to tell a school *which*
+ * clashed should ask `claimedIdentifier` first; this is the guard, not the
+ * explanation.
  */
 export function createUser(input: {
   fullName: string
-  email: string
+  email?: string | null
+  phone?: string
   roleId: string
   profileType?: ProfileType
   status?: AccountStatus
@@ -181,14 +252,18 @@ export function createUser(input: {
   assignedClasses?: string[]
 }): SchoolUser | null {
   const database = load()
-  const email = input.email.trim().toLowerCase()
-  if (database.rows.some(user => user.email.toLowerCase() === email)) return null
+  const email = asEmail(input.email) ?? null
+  const phone = input.phone?.trim() || undefined
+  // An account with neither is one nobody can sign into and nothing can find.
+  if (email === null && asPhone(phone) === undefined) return null
+  if (claimedIdentifier({ email, phone }) !== null) return null
 
   const profileType = input.profileType ?? 'staff'
   const user: SchoolUser = {
     id: newId('U'),
     fullName: input.fullName.trim(),
     email,
+    phone,
     roleId: input.roleId,
     profileType,
     // Derived from the kind, not defaulted to 'active' and left to callers.

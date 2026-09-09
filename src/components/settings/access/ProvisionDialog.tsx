@@ -7,12 +7,15 @@
  * account for the first.
  *
  * ── Why this is a list and not a button ────────────────────────────────
- * "Create accounts for 9A" is the obvious design and it cannot work here:
- * nothing in the school's records carries an email. Students have no address
- * field at all, and a guardian seeded from a student's contact details has a
- * phone and nothing else — while sign-in resolves an account by address. So
- * the work is one address per person, and the honest surface is a list that
- * says who is missing one rather than a button that silently skips them.
+ * It used to be that nothing in the school's records carried an email while
+ * sign-in resolved an account by address, so the work was one address per
+ * person. Sign-in takes a mobile number now, and the records are full of
+ * those — most rows here need nothing typed into them at all.
+ *
+ * It stays a list for the two cases that survive. A parent with no number on
+ * file still needs an address. And a number belongs to one account, so the
+ * second parent sharing a family mobile needs one too — the row says which,
+ * rather than a button silently skipping them.
  *
  * Everything created here starts disabled, and someone activates it on the
  * People screen afterwards. Not because the app cannot yet be trusted with a
@@ -42,7 +45,7 @@ import { border, text } from '@/theme/colors'
 import { getInitials } from '@/utils/format'
 import { useAppToast } from '@/hooks/use-app-toast'
 import { fetchParents, fetchParentLinks, type Parent } from '@/api/services/parent-service'
-import { createUser, type SchoolUser } from '@/api/services/user-service'
+import { createUser, identifierTaken, type SchoolUser } from '@/api/services/user-service'
 import { usePermissions } from '@/features/auth/PermissionContext'
 
 /** One row: somebody who could have an account and does not. */
@@ -53,6 +56,15 @@ interface Candidate {
 
 function looksLikeEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+/**
+ * Same number? Last ten digits, so a country code or a space cannot hide a
+ * clash — the same comparison the directory itself makes.
+ */
+function samePhone(a: string | null | undefined, b: string | null | undefined): boolean {
+  const digits = (value: string | null | undefined) => (value ?? '').replace(/\D/g, '').slice(-10)
+  return digits(a).length === 10 && digits(a) === digits(b)
 }
 
 interface ProvisionDialogProps {
@@ -113,9 +125,30 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
       })
   }, [open])
 
+  /**
+   * Whether this parent's own number can be the account's identifier.
+   *
+   * Read off the accounts already in hand rather than asked of the server per
+   * row: the dialog is given the directory, and forty round trips to learn
+   * what forty rows in memory already say would be a strange way to open a
+   * dialog.
+   */
+  const phoneFor = React.useCallback(
+    (parent: Parent): string | undefined => {
+      if (!parent.phone) return undefined
+      const claimed = usersRef.current.some(user => samePhone(user.phone, parent.phone))
+      return claimed ? undefined : parent.phone
+    },
+    [],
+  )
+
   const provision = async (candidate: Candidate) => {
     const email = (emails[candidate.parent.profileId] ?? '').trim()
-    if (!looksLikeEmail(email) || !parentRole) return
+    const phone = phoneFor(candidate.parent)
+    // Either identifier will do. Both when both are there — the number is what
+    // they will type, the address is where the school can reach them.
+    if (!phone && !looksLikeEmail(email)) return
+    if (!parentRole) return
 
     setBusy(candidate.parent.profileId)
     try {
@@ -124,13 +157,19 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
       // remembers to ask for that.
       const created = await createUser({
         fullName: candidate.parent.fullName,
-        email,
+        email: looksLikeEmail(email) ? email : null,
+        phone,
         roleId: parentRole.id,
         profileType: 'parent',
         parentId: candidate.parent.profileId,
       })
       if (!created) {
-        showError('That email already has an account')
+        const taken = await identifierTaken({ email: email || null, phone })
+        showError(
+          taken === 'phone'
+            ? 'That number already signs in to another account'
+            : 'That email already has an account',
+        )
         return
       }
       setDone(current => new Set(current).add(candidate.parent.profileId))
@@ -147,7 +186,9 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
   }
 
   const waiting = candidates?.filter(candidate => !done.has(candidate.parent.profileId)) ?? []
-  const withoutEmail = waiting.filter(candidate => !candidate.parent.email).length
+  // The rows that still need a human to type something: no number on file, or
+  // a number that already signs in to somebody else.
+  const needTyping = waiting.filter(candidate => !phoneFor(candidate.parent)).length
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,9 +196,9 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
         <DialogHeader>
           <DialogTitle>Give parents an account</DialogTitle>
           <DialogDescription>
-            Everyone on file who does not have one yet. Accounts are created disabled —
-            activate each one on the People screen once you know the address reaches the
-            family.
+            Everyone on file who does not have one yet. Most sign in with the mobile number
+            already on their record. Accounts are created disabled — activate each one on the
+            People screen once you know the number reaches the family.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,17 +219,17 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
           </p>
         ) : (
           <>
-            {withoutEmail > 0 && (
+            {needTyping > 0 && (
               <p
                 className="flex items-start gap-1.5 rounded-lg px-3 py-2 text-caption"
                 style={{ backgroundColor: 'var(--muted)', color: text.muted }}
               >
                 <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                {withoutEmail === 1
-                  ? 'One of these has no email on file. '
-                  : `${withoutEmail} of these have no email on file. `}
-                The school's records carry a phone and no address, so one has to be typed in
-                before an account can exist.
+                {needTyping === 1
+                  ? 'One of these needs an email address: '
+                  : `${needTyping} of these need an email address: `}
+                either the school has no number on file, or the number already signs in to
+                another account — a mobile can only belong to one.
               </p>
             )}
 
@@ -196,7 +237,8 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
               {waiting.map(candidate => {
                 const id = candidate.parent.profileId
                 const email = emails[id] ?? ''
-                const ready = looksLikeEmail(email)
+                const phone = phoneFor(candidate.parent)
+                const ready = phone !== undefined || looksLikeEmail(email)
                 return (
                   <div
                     key={id}
@@ -219,7 +261,11 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
                       </span>
                       <span className="block text-caption" style={{ color: text.muted }}>
                         {candidate.children === 1 ? '1 child' : `${candidate.children} children`}
-                        {candidate.parent.phone ? ` · ${candidate.parent.phone}` : ''}
+                        {phone
+                          ? ` · signs in with ${phone}`
+                          : candidate.parent.phone
+                            ? ` · ${candidate.parent.phone} is taken`
+                            : ' · no number on file'}
                       </span>
                     </span>
 
@@ -230,7 +276,7 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
                       <Input
                         id={`prov-${id}`}
                         type="email"
-                        placeholder="email@example.com"
+                        placeholder={phone ? 'email@example.com (optional)' : 'email@example.com'}
                         value={email}
                         disabled={busy === id}
                         onChange={event =>

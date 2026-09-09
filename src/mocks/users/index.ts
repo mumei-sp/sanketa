@@ -7,7 +7,8 @@
 
 export {
   listUsers,
-  findByEmail,
+  findByIdentifier,
+  claimedIdentifier,
   createUser,
   updateUser,
   deleteUser,
