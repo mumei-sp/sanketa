@@ -1,5 +1,7 @@
 import type { Student } from '../types'
 import type { StudentFormValues } from '../schemas/student-schema'
+import type { ParentOfStudent } from '@/api/services/parent-service'
+import { splitPhone } from '@/utils/format'
 
 /**
  * Transforms nested form structure to flat Student structure
@@ -29,7 +31,10 @@ export function formToStudent(formValues: StudentFormValues): Partial<Student> {
     gradeLevel: formValues.academicInfo?.gradeLevel,
     section: formValues.academicInfo?.section,
 
-    // Guardian Information
+    // Guardian Information — a transport field, not a stored one. The service
+    // turns it into `parents` + `student_parents` rows and drops it, the way
+    // the backend does inside the transaction that writes the student. Nothing
+    // reads it off a student record.
     guardians: {
       father: formValues.guardianInfo?.father
         ? {
@@ -79,8 +84,16 @@ export function formToStudent(formValues: StudentFormValues): Partial<Student> {
 /**
  * Transforms flat Student structure to nested form structure
  * Converts Student (flat) to StudentFormValues (nested)
+ *
+ * The guardian rows are a separate argument, and required, because they come
+ * from a different table and a different request. Making the caller pass them
+ * is the only thing that stops the form quietly rendering three empty
+ * guardian slots on a student who has three guardians.
  */
-export function studentToForm(student: Student): Partial<StudentFormValues> {
+export function studentToForm(
+  student: Student,
+  guardians: ParentOfStudent[],
+): Partial<StudentFormValues> {
   const formValues: Partial<StudentFormValues> = {
     personalInfo: {
       firstName: student.firstName ?? '',
@@ -106,47 +119,16 @@ export function studentToForm(student: Student): Partial<StudentFormValues> {
       gradeLevel: student.gradeLevel,
       section: student.section,
       enrollmentDate: undefined,
-      previousSchool: '',
-      // Note: enrollmentDate is not in Student type
-      // previousSchool is required in schema but not in Student type, defaulting to empty string
+      // Neither of these is stored on a student, so both are write-only: the
+      // form collects them and the save discards them. That was survivable
+      // for enrollmentDate, which is optional, and not for previousSchool,
+      // which the schema requires — an empty default failed validation on
+      // every edit, so the Save button on this form did nothing at all until
+      // the user scrolled up and noticed the one red field. 'N/A' is what the
+      // add form already defaults to, so the two paths now agree.
+      previousSchool: 'N/A',
     },
-    guardianInfo: {
-      father: student.guardians?.father
-        ? {
-          name: student.guardians.father.name,
-          phoneCountryCode: student.guardians.father.phoneCountryCode,
-          phone: student.guardians.father.phone,
-        }
-        : {
-          name: undefined,
-          phoneCountryCode: undefined,
-          phone: undefined,
-        },
-      mother: student.guardians?.mother
-        ? {
-          name: student.guardians.mother.name,
-          phoneCountryCode: student.guardians.mother.phoneCountryCode,
-          phone: student.guardians.mother.phone,
-        }
-        : {
-          name: undefined,
-          phoneCountryCode: undefined,
-          phone: undefined,
-        },
-      alternativeGuardian: student.guardians?.alternativeGuardian
-        ? {
-          name: student.guardians.alternativeGuardian.name,
-          relation: student.guardians.alternativeGuardian.relation,
-          phoneCountryCode: student.guardians.alternativeGuardian.phoneCountryCode,
-          phone: student.guardians.alternativeGuardian.phone,
-        }
-        : {
-          name: undefined,
-          relation: undefined,
-          phoneCountryCode: undefined,
-          phone: undefined,
-        },
-    },
+    guardianInfo: guardiansToFormSlots(guardians),
     additionalInfo: student.studentInfo
       ? {
         hobbies:
@@ -278,4 +260,42 @@ export function studentToApi(student: Student): Record<string, unknown> {
 
   // Remove undefined values
   return Object.fromEntries(Object.entries(apiPayload).filter(([_, value]) => value !== undefined))
+}
+
+
+/**
+ * Fill the form's three guardian slots from the student's actual parent rows.
+ *
+ * The form is the odd one out here: everything else that shows a guardian —
+ * the detail page, provisioning, a parent's own account — reads the `parents`
+ * tables, and the form used to read an embedded copy on the student record.
+ * Two copies of one fact, and the form held the stale one, so correcting a
+ * father's phone on the detail page and then saving the form put the old
+ * number back.
+ *
+ * Father and Mother take the links of that name. The single alternative slot
+ * takes the first link that is neither, which is all the form can express: a
+ * student with two extra guardians shows one of them here, and the other is
+ * edited on the detail page. The slot is left blank rather than filled with a
+ * guess when there is no such link.
+ */
+export function guardiansToFormSlots(
+  guardians: ParentOfStudent[],
+): StudentFormValues['guardianInfo'] {
+  const named = (relationship: string) =>
+    guardians.find(guardian => guardian.relationship === relationship)
+  const other = guardians.find(
+    guardian => guardian.relationship !== 'Father' && guardian.relationship !== 'Mother',
+  )
+
+  const slot = (guardian: ParentOfStudent | undefined) => {
+    const { countryCode, number } = splitPhone(guardian?.phone)
+    return { name: guardian?.fullName ?? '', phoneCountryCode: countryCode, phone: number }
+  }
+
+  return {
+    father: slot(named('Father')),
+    mother: slot(named('Mother')),
+    alternativeGuardian: { ...slot(other), relation: other?.relationship ?? '' },
+  }
 }

@@ -14,9 +14,12 @@
  * same person on two children's records is two unrelated strings. A parent
  * with two children must be one account that sees both.
  *
- * The embedded fields stay where they are. They are the contact details on the
- * student record, which is what the student form edits and what a class
- * teacher wants. This table is about people.
+ * The embedded fields were kept for a while as "the contact details on the
+ * record". They are gone now: the student form reads and writes this table
+ * through `reconcileGuardians`, and nothing else read them. What survives of
+ * them is `seed()` below, which is this mock's equivalent of a migration —
+ * the fixture students still carry the old shape, and first run turns it into
+ * rows.
  *
  * ── Seeding, and what it cannot do ─────────────────────────────────────
  * First run reads the embedded guardians and matches them across students on
@@ -271,6 +274,90 @@ export function linkParent(input: {
   if (!existing) database.links.push(link)
   persist()
   return cloneLink(link)
+}
+
+/** One slot of the student form's guardian section. */
+export interface GuardianSlot {
+  name?: string
+  /** Already joined with its dialling code — see `joinPhone`. */
+  phone?: string
+  relationship: string
+}
+
+/**
+ * Bring this student's guardian links in line with what the student form says.
+ *
+ * The form has three slots — father, mother, one alternative — holding a name
+ * and a phone and no id. This is what turns them into people: the rows that an
+ * account can be attached to, that a sibling shares, and that a parent's
+ * `studentIds` scope is built from. Without it a school could type a father's
+ * name on the enrolment form and find, later, that he cannot be given an
+ * account because nothing in the directory knows he exists.
+ *
+ * ── Which row a slot means ─────────────────────────────────────────────
+ * A slot carries no id, so the row it refers to has to be inferred, and the
+ * obvious rule — match on the name — is the wrong one: correcting a typo in a
+ * father's name would then read as a different father and enrol a second one.
+ * So a slot claims this student's existing link of the same kind (Father,
+ * Mother, or the first that is neither), and edits the person behind it. Only
+ * a slot with no link of its kind looks further afield, and there it does
+ * match on the person — that is the sibling case, where the same father typed
+ * on a second child's form must be the same row and not a twin.
+ *
+ * ── What it will not do ────────────────────────────────────────────────
+ * Emptying a slot does not unlink. A blank field is not a decision — most of
+ * them are blank because nobody filled them in — and unlinking a parent can
+ * take away their access to their child. Removing a guardian is done on the
+ * detail page, where the button says so.
+ */
+export function reconcileGuardians(studentProfileId: string, slots: GuardianSlot[]): void {
+  const database = load()
+  const studentId = String(studentProfileId)
+  const mine = () => database.links.filter(link => link.studentProfileId === studentId)
+
+  // Claimed as we go, so two slots cannot both take the same link — an
+  // alternative guardian recorded as 'Father' would otherwise be claimed by
+  // the father slot and then again by the alternative one.
+  const claimed = new Set<string>()
+  const claim = (matches: (link: StudentParent) => boolean) => {
+    const link = mine().find(candidate => !claimed.has(candidate.id) && matches(candidate))
+    if (link) claimed.add(link.id)
+    return link
+  }
+
+  slots.forEach(slot => {
+    const fullName = slot.name?.trim()
+    const isNamedRole = slot.relationship === 'Father' || slot.relationship === 'Mother'
+    const existing = claim(link =>
+      isNamedRole
+        ? link.relationship === slot.relationship
+        : link.relationship !== 'Father' && link.relationship !== 'Mother',
+    )
+
+    if (!fullName) return
+
+    if (existing) {
+      updateParent(existing.parentProfileId, { fullName, phone: slot.phone })
+      existing.relationship = slot.relationship
+      persist()
+      return
+    }
+
+    const candidate = { fullName, phone: slot.phone }
+    const parent =
+      database.parents.find(row => sameHuman(row, candidate)) ??
+      createParent({ fullName, phone: slot.phone })
+
+    linkParent({
+      studentProfileId: studentId,
+      parentProfileId: parent.profileId,
+      relationship: slot.relationship,
+      // The school rings somebody first, and on a record that names nobody yet
+      // that is whoever was entered first. Never moved off a parent who
+      // already holds it, since the form has no field that asks.
+      isPrimary: !mine().some(link => link.isPrimary),
+    })
+  })
 }
 
 export function unlinkParent(studentProfileId: string, parentProfileId: string): boolean {

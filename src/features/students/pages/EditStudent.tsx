@@ -10,6 +10,7 @@ import { StudentFormActions } from '../components/StudentFormActions'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
 import { updateStudent } from '@/api/services/student-service'
+import { fetchParentsOfStudent, type ParentOfStudent } from '@/api/services/parent-service'
 import { formToStudent } from '../utils/transform'
 import { STUDENT_MESSAGES, STUDENT_LABELS } from '../constants'
 import { useAppToast } from '@/hooks/use-app-toast'
@@ -20,6 +21,32 @@ export default function EditStudent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { student, isLoading, error } = useStudentById(id)
+
+  /**
+   * The guardian rows, which live in their own tables and so arrive in their
+   * own request. Null while in flight: the form must not mount with three
+   * blank guardian slots and then fill them in, because a save in that gap
+   * would be a save of what the screen was showing.
+   */
+  const [guardians, setGuardians] = React.useState<ParentOfStudent[] | null>(null)
+  React.useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    fetchParentsOfStudent(id)
+      .then(rows => {
+        if (!cancelled) setGuardians(rows)
+      })
+      .catch(loadError => {
+        console.error('Failed to load guardians', loadError)
+        // An empty list is the honest fallback: the slots render blank, and
+        // `reconcileGuardians` leaves blank slots alone, so a failed read
+        // cannot turn into a write that erases anybody.
+        if (!cancelled) setGuardians([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
   const { handleHandlersReady, handleSaveClick } = useStudentFormHandlers()
   const { showSuccess, showError } = useAppToast()
   const { can, role } = usePermissions()
@@ -75,14 +102,14 @@ export default function EditStudent() {
   }, [navigate])
 
   const breadcrumbs = React.useMemo(() => getStudentBreadcrumbs('edit'), [])
-  const defaultValues = student ? studentToForm(student) : undefined
+  const defaultValues = student && guardians ? studentToForm(student, guardians) : undefined
 
   return (
     <DetailPageLayout
       title="Edit Student"
       breadcrumbs={breadcrumbs}
       showBackButton
-      isLoading={isLoading}
+      isLoading={isLoading || (!!student && !guardians)}
       error={error || (!student && !isLoading ? STUDENT_MESSAGES.NOT_FOUND : null)}
       errorActionLabel={STUDENT_MESSAGES.BACK_TO_STUDENTS}
       onErrorAction={handleErrorAction}

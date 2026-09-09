@@ -1,8 +1,10 @@
 /**
  * Mock parent directory.
  *
- * Only `src/api/services/parent-service.ts` and the auth mock should import
- * this — it stands in for two backend tables.
+ * Only `src/api/services/parent-service.ts`, `student-service` (which
+ * reconciles the student form's guardian slots into these tables, the way the
+ * backend will inside one transaction) and the auth mock should import this —
+ * it stands in for two backend tables.
  */
 
 export {
@@ -14,6 +16,7 @@ export {
   updateParent,
   linkParent,
   unlinkParent,
+  reconcileGuardians,
   resetParents,
 } from './store'
-export type { Parent, StudentParent } from './store'
+export type { Parent, StudentParent, GuardianSlot } from './store'

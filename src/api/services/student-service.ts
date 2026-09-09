@@ -16,6 +16,8 @@ import {
   visibleToCaller,
 } from '@/mocks/_shared/caller'
 import { classSectionOf } from '@/utils/class-section-helpers'
+import { joinPhone } from '@/utils/format'
+import { reconcileGuardians, type GuardianSlot } from '@/mocks/parents'
 import { studentsData } from '@/mocks/students/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
 import { studentDetailData } from '@/mocks/students/details'
@@ -177,6 +179,32 @@ export async function fetchStudentDetailData(_id: string): Promise<StudentDetail
 // ---------------------------------------------------------------------------
 
 /**
+ * The student form's three guardian slots, as rows the parent tables can take.
+ *
+ * `guardians` is a transport field, not a stored one: it rides in on the
+ * create/update payload because that is where the form's guardian section
+ * lands, and the mock turns it into `parents` + `student_parents` rows and
+ * then drops it. The backend does the same work inside the one transaction
+ * that writes the student, which is why the HTTP path below does nothing
+ * special — it posts the payload and the server reconciles.
+ */
+function guardianSlots(guardians: Student['guardians']): GuardianSlot[] {
+  if (!guardians) return []
+  return [
+    { relationship: 'Father', slot: guardians.father },
+    { relationship: 'Mother', slot: guardians.mother },
+    {
+      relationship: guardians.alternativeGuardian?.relation?.trim() || 'Guardian',
+      slot: guardians.alternativeGuardian,
+    },
+  ].map(({ relationship, slot }) => ({
+    relationship,
+    name: slot?.name,
+    phone: joinPhone(slot?.phoneCountryCode, slot?.phone),
+  }))
+}
+
+/**
  * Create a new student.
  *
  * @apiRoute POST /api/v1/students
@@ -185,8 +213,9 @@ export async function createStudent(data: Partial<Student>): Promise<Student> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      const { guardians, ...rest } = data
       const newStudent: Student = {
-        ...data,
+        ...rest,
         id: newId('stu'),
         studentId: data.studentId || makeId('S', ID_BASE.student + studentsData.length),
         gpa: data.gpa ?? 0,
@@ -195,6 +224,7 @@ export async function createStudent(data: Partial<Student>): Promise<Student> {
         status: data.status ?? 'Active',
       } as Student
       studentsData.unshift(newStudent)
+      reconcileGuardians(String(newStudent.id), guardianSlots(guardians))
       return newStudent
     },
     async () => {
@@ -215,8 +245,14 @@ export async function updateStudent(id: string, data: Partial<Student>): Promise
       await withLatency()
       const index = studentsData.findIndex(s => s.id === id)
       if (index === -1) throw new Error('Student not found')
-      const updated = { ...studentsData[index], ...data }
+      const { guardians, ...rest } = data
+      const updated = { ...studentsData[index], ...rest }
+      // Dropped rather than merged: the fixture students still carry the old
+      // embedded shape, and a record that keeps both would answer the same
+      // question two ways the moment a guardian is edited on the detail page.
+      delete updated.guardians
       studentsData[index] = updated
+      reconcileGuardians(String(id), guardianSlots(guardians))
       return updated
     },
     async () => {
