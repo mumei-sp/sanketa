@@ -26,7 +26,7 @@
  * behaviour for the same reason — most people belong to exactly one school and
  * should never have to say which.
  */
-const DEFAULT_TENANT = 'nalanda'
+const DEFAULT_TENANT = 'kendriya'
 
 /**
  * Where the client remembers which school it is sending.
@@ -63,7 +63,7 @@ function current(): string {
  */
 const forgetters = new Set<() => void>()
 
-/** The active school's code — `nalanda`, `kaveri`. */
+/** The active school's code — `kendriya`, `vidya-mandir`. */
 export function activeTenant(): string {
   return current()
 }

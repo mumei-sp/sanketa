@@ -42,10 +42,10 @@ interface Database {
 let db: Database | null = null
 
 /**
- * The four seeded logins all belong to Nalanda.
+ * The four seeded logins all belong to Kendriya Vidyalaya.
  *
  * Ids match `users`' seeded ids. A second school with nobody in it is the
- * honest starting state — Kaveri exists in `tenants` and has no members
+ * honest starting state — Vidya Mandir exists in `tenants` and has no members
  * until somebody is given one.
  */
 function seed(): Database {
@@ -53,7 +53,7 @@ function seed(): Database {
     rows: ['1', '2', '3', '4'].map((userId, index) => ({
       id: `UTM-${index + 1}`,
       userId,
-      tenantCode: 'nalanda',
+      tenantCode: 'kendriya',
       isActive: true,
     })),
   }
