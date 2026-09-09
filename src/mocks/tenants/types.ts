@@ -13,8 +13,47 @@
 import type { Student } from '@/features/students/types'
 import type { Role } from '@/config/permissions'
 
+/**
+ * One person's profile at this school, as a school's seed script would state it.
+ *
+ * `parentPhone` rather than a parent id: parent ids are generated when the
+ * parents table seeds itself from the roster, so a fixture cannot know one.
+ * A number is a fact about the person, and the store does the join — matching
+ * on the last ten digits, which is what the parents table does to decide
+ * whether two guardians are one human.
+ */
+export interface ProfileFixture {
+  id: string
+  /** → the global `users.id`. */
+  userId: string
+  studentId?: string
+  teacherId?: string
+  staffId?: string
+  /** Their own number, if they are also a parent here. */
+  parentPhone?: string
+  /** `teacher_classes`. Per school, which is why it is here and not global. */
+  assignedClasses?: string[]
+}
+
+/** Who is at this school, what they may do, and what kind of person they are. */
+export interface TenantAccessFixtures {
+  profiles: ProfileFixture[]
+  /** Many per profile — that is the whole point. */
+  roles: { profileId: string; roleId: string; expiresAt?: string }[]
+  /** Classifications, by built-in code. */
+  typeCodes: { profileId: string; code: string; isPrimary?: boolean }[]
+}
+
 export interface TenantFixtures {
   students: Student[]
+  /**
+   * The school's own people.
+   *
+   * Absent means nobody has a profile here yet — which is a real state, not an
+   * empty one to paper over. A login can hold a membership to a school and be
+   * nobody in it; being able to knock is not being expected.
+   */
+  access?: TenantAccessFixtures
   /**
    * Roles this school invented, on top of the built-in set.
    *

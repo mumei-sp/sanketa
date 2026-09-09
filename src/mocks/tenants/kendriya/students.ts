@@ -352,7 +352,7 @@ export const studentFixtures: Student[] = [
     id: '8',
     userId: 8,
     profileType: 0,
-    name: 'Chloe Davis',
+    name: 'Nikhil Iyengar',
     studentId: 'S-2108',
     class: '9B',
     gpa: 3.5,
@@ -360,6 +360,14 @@ export const studentFixtures: Student[] = [
     percentage: 91,
     status: 'Active',
     avatarUrl: '',
+    // His mother teaches here — 8A and 8B, not this class. The member of staff
+    // whose child attends the school is the case a single role per person
+    // could never express, so the seed carries it and it cannot regress
+    // unnoticed. Her number matches the staff record, which is how the profile
+    // seed finds her without hardcoding a generated id.
+    guardians: {
+      mother: { name: 'Meera Iyengar', phoneCountryCode: '+91', phone: '9880114477' },
+    },
   },
   // Additional students to reach 40 total
   {

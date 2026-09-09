@@ -3,6 +3,11 @@
  *
  * The second school. Eight students, and one role Kendriya does not have —
  * which is the point of roles being a school's own data rather than the app's.
+ *
+ * No `access`: nobody has a profile here yet. That is deliberate and it is the
+ * honest state of a school that has been created and not staffed. A login can
+ * hold a membership here and be nobody in it, and the app has to mean that
+ * rather than quietly inheriting whoever the other school employs.
  */
 
 import { studentFixtures } from './students'
