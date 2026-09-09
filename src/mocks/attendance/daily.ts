@@ -13,7 +13,7 @@ import type {
 } from '@/features/attendance/types'
 import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
 import { studentsData } from '@/mocks/students/students'
-import { classSectionOf } from '@/utils/class-section-helpers'
+import { classSectionOf, rollNumberOf } from '@/utils/class-section-helpers'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { fullName } from '@/mocks/_shared/fake'
 
@@ -86,7 +86,7 @@ function rosterFromDirectory(classLabel: string): ClassRosterStudent[] {
         // generated roster's reads `01`, so a register showed two formats in
         // one column depending on whether the class had anyone in it — and
         // sorted them lexically.
-        rollNumber: student.rollNumber?.split('-').pop() ?? String(index + 1).padStart(2, '0'),
+        rollNumber: rollNumberOf(student.rollNumber) ?? String(index + 1).padStart(2, '0'),
         avatarUrl:
           student.profilePictureUrl ??
           `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,

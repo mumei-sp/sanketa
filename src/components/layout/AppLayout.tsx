@@ -19,6 +19,7 @@ import { useGlobalSearchShortcut } from '@/features/search/use-search-shortcut'
 import { NotificationProvider } from '@/features/notifications/NotificationContext'
 import { PermissionProvider, usePermissions } from '@/features/auth/PermissionContext'
 import { PreviewBanner } from '@/features/auth/PreviewBanner'
+import { FamilyScopeProvider } from '@/features/family/FamilyScopeContext'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 
 /**
@@ -281,11 +282,16 @@ export function AppLayout({ logoPath }: AppLayoutProps) {
     // router (the bell navigates on select) but outside the sidebar, so the
     // feed keeps streaming while the mobile drawer is open.
     <PermissionProvider>
-      <NotificationProvider>
-        <SidebarProvider>
-          <LayoutContent logoPath={logoPath} />
-        </SidebarProvider>
-      </NotificationProvider>
+      {/* Inside permissions, because the child list comes from a read that the
+          permission layer filters. Outside the sidebar, so switching child on
+          one page is still the child in view on the next. */}
+      <FamilyScopeProvider>
+        <NotificationProvider>
+          <SidebarProvider>
+            <LayoutContent logoPath={logoPath} />
+          </SidebarProvider>
+        </NotificationProvider>
+      </FamilyScopeProvider>
     </PermissionProvider>
   )
 }

@@ -51,7 +51,12 @@ function make9AUT1Submission(subjectId: string): GradeSubmission {
       maxMarks: ut1Exam.maxMarks,
       remarks: '',
     })),
-    status: 'submitted',
+    // Published, not merely submitted. The status has existed since grades
+    // were built and never meant anything; now it gates whether a family can
+    // read the marks, so a school with nothing published would show every
+    // parent an empty page and look broken rather than careful. Unit Test 1
+    // was marked and released two months ago, which is the ordinary case.
+    status: 'published',
     submittedBy: 'Priya Nair',
     // Unit Test 1 was submitted ~60 days ago.
     submittedAt: relativeDate(-60).toISOString(),

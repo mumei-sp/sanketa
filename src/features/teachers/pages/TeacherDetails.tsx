@@ -6,6 +6,7 @@ import { spacing } from '@/config/spacing'
 import { fontSizes } from '@/config/typography'
 import { text, border, background } from '@/theme/colors'
 import { AttendanceSummaryBadges } from '@/components/ui/attendance-summary-badges'
+import { attendanceMonthKey } from '@/utils/academic-date'
 import { useTeacherById } from '../hooks/use-teacher-by-id'
 import { getDisplayName } from '../utils/formatting'
 import { getTeacherBreadcrumbs } from '../utils/breadcrumbs'
@@ -40,7 +41,7 @@ export default function TeacherDetails() {
   }, [])
 
   // Get attendance data for the currently displayed month
-  const monthKey = `${calYear}-${calMonth}`
+  const monthKey = attendanceMonthKey(calYear, calMonth)
   const currentAttendance = teacher?.monthlyAttendance?.[monthKey]
   const calendarHighlights = currentAttendance?.highlights ?? []
   const attendanceSummary = currentAttendance?.summary

@@ -30,6 +30,7 @@ import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getClassLabels } from '@/utils/class-section-helpers'
 import { fetchStudents } from '@/api/services/student-service'
 import type { AbilityScope } from '@/config/ability'
+import type { AccountStatus } from '@/features/auth/types'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import {
@@ -178,7 +179,7 @@ export function AccessSettingsSection() {
    * that failed to save.
    */
   const patchUser = React.useCallback(
-    async (id: string, patch: { roleId?: string; assignedClasses?: string[] }) => {
+    async (id: string, patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus }) => {
       setSavingId(id)
       try {
         const updated = await updateUserAccess(id, patch)

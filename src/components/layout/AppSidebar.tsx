@@ -24,6 +24,7 @@ import { getInitials } from '@/utils/format'
 import { Logo } from './Logo'
 import { navigationItems, visibleNavigationItems, ChevronDownIcon } from '@/config/navigation'
 import { usePermissions } from '@/features/auth/PermissionContext'
+import { useFamilyScope } from '@/features/family/FamilyScopeContext'
 import { cn } from '@/lib/utils'
 
 interface AppSidebarProps {
@@ -39,7 +40,11 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
 
   // What this role can actually open. Everything below iterates this rather
   // than the full config, so a hidden page has no entry to click.
-  const visibleItems = React.useMemo(() => visibleNavigationItems(navigationItems, can), [can])
+  const { isFamily } = useFamilyScope()
+  const visibleItems = React.useMemo(
+    () => visibleNavigationItems(navigationItems, can, isFamily),
+    [can, isFamily],
+  )
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
 
   const isActive = (path: string) => {

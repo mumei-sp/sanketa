@@ -94,7 +94,7 @@ interface PeopleTabProps {
   users: SchoolUser[] | null
   classLabels: string[]
   savingId: string | null
-  onPatch: (id: string, patch: { roleId?: string; assignedClasses?: string[] }) => Promise<boolean>
+  onPatch: (id: string, patch: { roleId?: string; assignedClasses?: string[]; status?: AccountStatus }) => Promise<boolean>
   onAdd: (input: {
     fullName: string
     email: string
@@ -174,6 +174,26 @@ export function PeopleTab({
       showSuccess(`${user.fullName} is now ${now}`, {
         description: 'Takes effect at their next sign-in.',
       })
+    }
+  }
+
+  /**
+   * Let a provisioned account sign in.
+   *
+   * The only way an account moves off `disabled`, and deliberately a decision
+   * someone makes per person rather than a side effect of provisioning: until
+   * a school has checked the address belongs to the family, an active account
+   * is a stranger's login.
+   */
+  const activate = async (user: SchoolUser) => {
+    if (await onPatch(user.id, { status: 'active' })) {
+      record({
+        kind: 'user.role',
+        target: user.fullName,
+        summary: `Activated ${user.fullName}'s account`,
+        detail: user.email,
+      })
+      showSuccess(`${user.fullName} can sign in now`)
     }
   }
 
@@ -384,6 +404,18 @@ export function PeopleTab({
                     )}
                     {/* Only when it is not the ordinary case — a list where
                         every row says "Active" says nothing. */}
+                    {user.status !== 'active' && canEditAccess && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void activate(user)}
+                        className="ml-2 rounded-full border px-2 py-0.5 text-[10px] font-medium hover:bg-muted disabled:opacity-50"
+                        style={{ borderColor: 'var(--heading)', color: 'var(--heading)' }}
+                        title="Let this person sign in"
+                      >
+                        Activate
+                      </button>
+                    )}
                     {user.status !== 'active' && (
                       <Badge
                         variant="outline"

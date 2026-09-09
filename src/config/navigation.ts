@@ -34,6 +34,20 @@ export interface NavItem {
    * making every parent restate the union of its children.
    */
   permission?: Permission
+  /**
+   * Hidden from student and parent accounts.
+   *
+   * A family holds `students.read` so the app can find their own children, and
+   * `finance.read` so they can be shown a balance — but the destinations
+   * behind those permissions are the staff roster and the collection ledger,
+   * which are not smaller versions of anything a family wants. Permission says
+   * what may be read; this says whether there is a page worth offering.
+   *
+   * The right long-term answer is a family variant for each, the way the
+   * dashboard, attendance and marks have one. Until there is, offering the
+   * staff page is worse than offering nothing.
+   */
+  staffOnly?: boolean
   children?: NavItem[]
 }
 
@@ -80,6 +94,7 @@ export const navigationItems: NavItem[] = [
     title: "Students",
     icon: Users,
     path: "/students",
+    staffOnly: true,
     children: [
       {
         title: "All Students",
@@ -155,6 +170,7 @@ export const navigationItems: NavItem[] = [
     title: "Finance",
     icon: DollarSign,
     path: "/finance",
+    staffOnly: true,
     children: [
       {
         title: "Fees Collection",
@@ -190,10 +206,14 @@ export const ChevronDownIcon = ChevronDown
 export function visibleNavigationItems(
   items: NavItem[],
   can: (permission: Permission) => boolean,
+  isFamily = false,
 ): NavItem[] {
   return items.reduce<NavItem[]>((visible, item) => {
+    if (isFamily && item.staffOnly) return visible
     if (item.children?.length) {
-      const children = item.children.filter(child => !child.permission || can(child.permission))
+      const children = item.children.filter(
+        child => !(isFamily && child.staffOnly) && (!child.permission || can(child.permission)),
+      )
       if (children.length > 0) visible.push({ ...item, children })
       return visible
     }

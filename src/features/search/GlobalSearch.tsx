@@ -47,6 +47,7 @@ import { fetchTeachers } from '@/api/services/teacher-service'
 import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
 import { navigationItems, visibleNavigationItems } from '@/config/navigation'
 import { usePermissions } from '@/features/auth/PermissionContext'
+import { useFamilyScope } from '@/features/family/FamilyScopeContext'
 import type { Permission } from '@/config/permissions'
 import {
   rankItems,
@@ -84,8 +85,11 @@ const ACTIONS: (SearchItem & { permission: Permission })[] = [
  * hides — the leak nobody notices until an accountant types "expen" and lands
  * on a page they were never meant to see.
  */
-function destinationsFor(can: (permission: Permission) => boolean): SearchItem[] {
-  return visibleNavigationItems(navigationItems, can).flatMap(item =>
+function destinationsFor(
+  can: (permission: Permission) => boolean,
+  isFamily: boolean,
+): SearchItem[] {
+  return visibleNavigationItems(navigationItems, can, isFamily).flatMap(item =>
     item.children?.length
       ? item.children.map(child => ({
           id: `nav:${child.path}`,
@@ -317,7 +321,8 @@ export function GlobalSearch({
   const navigate = useNavigate()
   const { can } = usePermissions()
   const records = useSearchIndex(open, can)
-  const destinations = React.useMemo(() => destinationsFor(can), [can])
+  const { isFamily } = useFamilyScope()
+  const destinations = React.useMemo(() => destinationsFor(can, isFamily), [can, isFamily])
   const actions = React.useMemo(
     () => ACTIONS.filter(action => can(action.permission)),
     [can],

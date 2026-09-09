@@ -112,3 +112,19 @@ export function canWriteStudent(
   }
   return can({ classSection })
 }
+
+/**
+ * The roll number as it is spoken — '15', not '07A-15'.
+ *
+ * Student records store the roll number prefixed with the class, because a
+ * roll number is only unique inside one, and it is that long form that gets
+ * printed on a form. Every screen that shows the number *next to* the class —
+ * the attendance register, a mark sheet, a parent's home page — repeats the
+ * class in it, so the prefix reads as a stutter. Taking the last segment here
+ * rather than at each call site is the difference between three screens that
+ * agree and three that each chose for themselves.
+ */
+export function rollNumberOf(rollNumber: string | undefined | null): string | undefined {
+  const last = rollNumber?.split('-').pop()?.trim()
+  return last || undefined
+}

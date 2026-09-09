@@ -42,8 +42,15 @@ export function StudentGuardians({
   onUnlink,
 }: StudentGuardiansProps) {
   const addButton = onAdd ? (
-    <Button variant="ghost" size="icon" className="size-7" onClick={onAdd}>
-      <Plus className="size-4" />
+    <Button
+      variant="ghost"
+      size="icon"
+      className="size-7"
+      onClick={onAdd}
+      aria-label="Add a parent or guardian"
+      title="Add a parent or guardian"
+    >
+      <Plus className="size-4" aria-hidden />
     </Button>
   ) : undefined
 
@@ -72,7 +79,13 @@ export function StudentGuardians({
                   role={onEdit ? 'button' : undefined}
                   tabIndex={onEdit ? 0 : undefined}
                   onKeyDown={event => {
-                    if (event.key === 'Enter') onEdit?.(guardian)
+                    // Space as well as Enter: this carries role="button", and a
+                    // button that ignores Space is one a keyboard user reports
+                    // as broken rather than as inconsistent.
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      onEdit?.(guardian)
+                    }
                   }}
                 >
                   <p
@@ -139,7 +152,7 @@ export function StudentGuardians({
                     aria-label={`Unlink ${guardian.fullName} from this student`}
                     title="Unlink from this student"
                   >
-                    <Trash2 className="size-3.5" />
+                    <Trash2 className="size-3.5" aria-hidden />
                   </Button>
                 )}
               </div>

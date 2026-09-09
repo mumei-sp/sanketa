@@ -1,4 +1,6 @@
 import * as React from 'react'
+import { FamilyHome } from '@/features/family/pages/FamilyHome'
+import { useFamilyScope } from '@/features/family/FamilyScopeContext'
 import { Settings } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
@@ -45,6 +47,15 @@ import type {
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 
 export default function Dashboard() {
+  // Families get their own home page; see the note in FamilyHome. The school
+  // dashboard's tiles — enrolment, earnings, gender split — say nothing at the
+  // size of one child.
+  const { isFamily } = useFamilyScope()
+  if (isFamily) return <FamilyHome />
+  return <SchoolDashboard />
+}
+
+function SchoolDashboard() {
   // Greeting header — all derived (auth user + clock), nothing hard-coded
   const currentUser = useCurrentUser()
   const greeting = getTimeOfDayGreeting()

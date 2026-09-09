@@ -8,7 +8,11 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
-import { visibleRecordToCaller, visibleToCaller } from '@/mocks/_shared/caller'
+import {
+  callerSeesEveryRow,
+  visibleRecordToCaller,
+  visibleToCaller,
+} from '@/mocks/_shared/caller'
 import { classRosters } from '@/mocks/attendance/daily'
 import { gradeSubmissions, findSubmission, upsertSubmission } from '@/mocks/grades/grades'
 import { EXAMS, GRADEABLE_SUBJECT_IDS } from '@/features/grades/constants'
@@ -116,6 +120,11 @@ export async function fetchGradeSubmission(
       await withLatency({ min: 250, max: 500 })
       const sub = findSubmission(classId, examId, subjectId)
       if (!sub) return null
+      // Marks reach a family only once the school publishes them. The status
+      // has existed since grades were built and meant nothing to anybody —
+      // this is the job it was waiting for. A teacher amending a sheet through
+      // the afternoon should not have a parent reading each version.
+      if (sub.status !== 'published' && !callerSeesEveryRow('read', 'Grade')) return null
       // Class-shaped: the submission itself is not about one student, its
       // entries are. So the envelope survives and the lines inside it narrow —
       // a family gets their own child's mark, not a class's worth of them.
@@ -125,6 +134,11 @@ export async function fetchGradeSubmission(
         'Grade',
         entry => ({ studentId: entry.studentId, classSection: classId }),
       )
+      // Nothing of theirs in it means it is not theirs. Handing back the empty
+      // envelope still tells a parent that 9A sat this paper, who marked it and
+      // when — which is a different class's business, and exactly the shape of
+      // leak that survives a filter because the filter appeared to work.
+      if (entries.length === 0 && sub.entries.length > 0) return null
       return { ...sub, entries }
     },
     async () => {

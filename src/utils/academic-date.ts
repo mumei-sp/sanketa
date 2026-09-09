@@ -329,3 +329,16 @@ export function isMonthInRange(monthName: string, year: number, range: DateRange
 
   return monthEnd >= range.startDate && monthStart <= range.endDate
 }
+
+/**
+ * The key a month's attendance is filed under: `2026-8` for September 2026.
+ *
+ * The month is zero-indexed and unpadded because that is what `new Date()`
+ * hands back and what the records were first written with. Neither is what
+ * anyone would choose, which is the point of having this in one place: the
+ * family attendance page hand-rolled `2026-09` instead, matched nothing, and
+ * told every parent their child had no attendance on record.
+ */
+export function attendanceMonthKey(year: number, monthIndex: number): string {
+  return `${year}-${monthIndex}`
+}

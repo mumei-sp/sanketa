@@ -49,6 +49,7 @@ import * as detailService from '@/api/services/student-detail-service'
 
 import type { StudentDetailData, StudentHealthRecord, StudentScholarship, StudentActivity, StudentBehaviorEntry } from '../types'
 import type { DocumentItem } from '@/components/ui/documents-list'
+import { attendanceMonthKey } from '@/utils/academic-date'
 
 // ── Modal state discriminated union ──
 
@@ -340,7 +341,7 @@ export default function StudentDetails() {
   }, [deleteTarget, studentId])
 
   // ── Derived data ──
-  const monthKey = `${calYear}-${calMonth}`
+  const monthKey = attendanceMonthKey(calYear, calMonth)
   const currentAttendance = localData?.monthlyAttendance[monthKey]
   const calendarHighlights = currentAttendance?.highlights ?? []
   const attendanceSummary = currentAttendance?.summary
