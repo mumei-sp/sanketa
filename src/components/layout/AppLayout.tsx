@@ -21,6 +21,8 @@ import { PermissionProvider, usePermissions } from '@/features/auth/PermissionCo
 import { PreviewBanner } from '@/features/auth/PreviewBanner'
 import { FamilyScopeProvider } from '@/features/family/FamilyScopeContext'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
+import { SchoolSwitcher } from '@/features/tenancy/SchoolSwitcher'
+import { NoRoleHereNotice } from '@/features/tenancy/NoRoleHereNotice'
 
 /**
  * The palette is a chunk of its own — several hundred kilobytes of index and
@@ -76,6 +78,9 @@ function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' })
 
   return (
     <>
+      {/* First, because it changes what everything else means. Renders nothing
+          for the overwhelming majority who work at one school. */}
+      <SchoolSwitcher variant={variant} />
       {canOpenSettings && (
         <Button
           variant="ghost"
@@ -271,6 +276,7 @@ function LayoutContent({ logoPath }: AppLayoutProps) {
 
       {/* Outside every gate on purpose — see the component. */}
       <PreviewBanner />
+      <NoRoleHereNotice />
     </>
   )
 }
