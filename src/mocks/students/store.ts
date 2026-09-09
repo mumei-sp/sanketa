@@ -26,8 +26,9 @@
 
 import type { Student } from '@/features/students/types'
 import { studentFixtures } from './students'
+import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
-const DB_KEY = 'sanketa:mock-db:students'
+const TABLE = 'students'
 
 interface Database {
   rows: Student[]
@@ -36,6 +37,13 @@ interface Database {
 }
 
 let db: Database | null = null
+
+// These rows belong to one school; the key says which. Dropping the cached
+// copy on a switch is what stops the last school's rows being served as this
+// one's — see `tenant-context`.
+onTenantSwitch(() => {
+  db = null
+})
 
 /**
  * A cheap fingerprint of the seed rows.
@@ -64,7 +72,7 @@ function seed(): Database {
 function load(): Database {
   if (db) return db
   try {
-    const raw = localStorage.getItem(DB_KEY)
+    const raw = localStorage.getItem(tenantKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       // An empty array is not a school. A stored file that says so is a
@@ -92,7 +100,7 @@ function load(): Database {
 function persist(): void {
   if (!db) return
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db))
+    localStorage.setItem(tenantKey(TABLE), JSON.stringify(db))
   } catch {
     // Quota or private mode; the in-memory copy still serves this session.
   }

@@ -23,6 +23,7 @@
 import { newId } from '@/mocks/_shared'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 import { teachersData } from '@/mocks/teachers/teachers'
+import { globalKey } from '@/mocks/_shared/tenant-context'
 
 export interface SchoolUser {
   id: string
@@ -83,7 +84,7 @@ export interface SchoolUser {
   assignedClasses?: string[]
 }
 
-const DB_KEY = 'sanketa:mock-db:users'
+const TABLE = 'users'
 
 interface Database {
   rows: SchoolUser[]
@@ -119,7 +120,7 @@ function seed(): Database {
 function load(): Database {
   if (db) return db
   try {
-    const raw = localStorage.getItem(DB_KEY)
+    const raw = localStorage.getItem(globalKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       if (Array.isArray(parsed.rows) && parsed.rows.length > 0) {
@@ -147,7 +148,7 @@ function load(): Database {
 function persist(): void {
   if (!db) return
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db))
+    localStorage.setItem(globalKey(TABLE), JSON.stringify(db))
   } catch {
     // Quota or private mode; the in-memory copy still serves this session.
   }

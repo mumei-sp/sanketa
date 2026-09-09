@@ -18,6 +18,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
+import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
 /** What kind of change happened. Kept coarse — the summary carries detail. */
 export type AccessEventKind =
@@ -74,7 +75,7 @@ export interface AccessEvent {
   undoOf?: string
 }
 
-const DB_KEY = 'sanketa:mock-db:access-log'
+const TABLE = 'access-log'
 
 /**
  * How much history to keep.
@@ -91,6 +92,13 @@ interface Database {
 }
 
 let db: Database | null = null
+
+// These rows belong to one school; the key says which. Dropping the cached
+// copy on a switch is what stops the last school's rows being served as this
+// one's — see `tenant-context`.
+onTenantSwitch(() => {
+  db = null
+})
 
 /**
  * A little history on first run.
@@ -137,7 +145,7 @@ function seed(): Database {
 function load(): Database {
   if (db) return db
   try {
-    const raw = localStorage.getItem(DB_KEY)
+    const raw = localStorage.getItem(tenantKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       if (Array.isArray(parsed.rows)) {
@@ -156,7 +164,7 @@ function load(): Database {
 function persist(): void {
   if (!db) return
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db))
+    localStorage.setItem(tenantKey(TABLE), JSON.stringify(db))
   } catch {
     // Quota or private mode; the in-memory copy still serves this session.
   }

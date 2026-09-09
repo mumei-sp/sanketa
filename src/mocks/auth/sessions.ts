@@ -15,7 +15,12 @@
  * when the real one rotates.
  */
 
-const DB_KEY = 'sanketa:mock-db:sessions'
+import { globalKey } from '@/mocks/_shared/tenant-context'
+
+// Global, not per-school. One person's session is one session however many
+// schools they belong to — which school they are looking at is a per-request
+// choice carried in the context token, not a property of being signed in.
+const TABLE = 'sessions'
 
 interface StoredSession {
   refreshToken: string
@@ -43,7 +48,7 @@ let db: Database | null = null
 function load(): Database {
   if (db) return db
   try {
-    const raw = localStorage.getItem(DB_KEY)
+    const raw = localStorage.getItem(globalKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       if (Array.isArray(parsed.rows)) {
@@ -63,7 +68,7 @@ function load(): Database {
 function persist(): void {
   if (!db) return
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db))
+    localStorage.setItem(globalKey(TABLE), JSON.stringify(db))
   } catch {
     // Quota or private mode; the in-memory copy still serves this session.
   }

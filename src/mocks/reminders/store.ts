@@ -14,6 +14,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
+import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
 export interface PaymentReminder {
   id: string
@@ -26,13 +27,20 @@ export interface PaymentReminder {
   sentBy: string
 }
 
-const DB_KEY = 'sanketa:mock-db:payment-reminders'
+const TABLE = 'payment-reminders'
 
 interface Database {
   rows: PaymentReminder[]
 }
 
 let db: Database | null = null
+
+// These rows belong to one school; the key says which. Dropping the cached
+// copy on a switch is what stops the last school's rows being served as this
+// one's — see `tenant-context`.
+onTenantSwitch(() => {
+  db = null
+})
 
 /**
  * Empty, deliberately.
@@ -48,7 +56,7 @@ function seed(): Database {
 function load(): Database {
   if (db) return db
   try {
-    const raw = localStorage.getItem(DB_KEY)
+    const raw = localStorage.getItem(tenantKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       if (Array.isArray(parsed.rows)) {
@@ -67,7 +75,7 @@ function load(): Database {
 function persist(): void {
   if (!db) return
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db))
+    localStorage.setItem(tenantKey(TABLE), JSON.stringify(db))
   } catch {
     // Quota or private mode; the in-memory copy still serves this session.
   }
