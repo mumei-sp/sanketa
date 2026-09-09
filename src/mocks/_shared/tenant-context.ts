@@ -28,7 +28,29 @@
  */
 const DEFAULT_TENANT = 'greenwood'
 
-let active = DEFAULT_TENANT
+/**
+ * Where the client remembers which school it is sending.
+ *
+ * `X-Active-Tenant-Id` is a header the client puts on every request, so the
+ * client is what has to remember it across a reload — the same way it
+ * remembers the token it sends alongside. Kept out of the session object
+ * because it is a choice the person makes and unmakes, not something the
+ * server issued.
+ */
+const ACTIVE_KEY = 'sanketa:active-tenant'
+
+let active: string | null = null
+
+function current(): string {
+  if (active !== null) return active
+  try {
+    active = localStorage.getItem(ACTIVE_KEY) || DEFAULT_TENANT
+  } catch {
+    // Unavailable in private mode; the default serves this session.
+    active = DEFAULT_TENANT
+  }
+  return active
+}
 
 /**
  * Stores that must forget their cached rows when the school changes.
@@ -43,7 +65,7 @@ const forgetters = new Set<() => void>()
 
 /** The active school's code — `greenwood`, `riverside`. */
 export function activeTenant(): string {
-  return active
+  return current()
 }
 
 /**
@@ -53,7 +75,7 @@ export function activeTenant(): string {
  * own when you look in devtools, which is the same reason schemas are named.
  */
 export function tenantKey(table: string): string {
-  return `sanketa:mock-db:${active}:${table}`
+  return `sanketa:mock-db:${current()}:${table}`
 }
 
 /** The key for a table that belongs to no school. */
@@ -74,12 +96,22 @@ export function onTenantSwitch(forget: () => void): void {
  * `assertTenantAccess` in the token mock.
  */
 export function setActiveTenant(tenantCode: string): void {
-  if (tenantCode === active) return
+  if (tenantCode === current()) return
   active = tenantCode
+  try {
+    localStorage.setItem(ACTIVE_KEY, tenantCode)
+  } catch {
+    // Private mode; the switch still holds for this session.
+  }
   forgetters.forEach(forget => forget())
 }
 
 /** Back to the default school. Used when a session ends. */
 export function resetTenantContext(): void {
   setActiveTenant(DEFAULT_TENANT)
+  try {
+    localStorage.removeItem(ACTIVE_KEY)
+  } catch {
+    // Nothing to forget.
+  }
 }

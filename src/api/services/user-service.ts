@@ -9,8 +9,8 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
-import * as mockServer from '@/mocks/users'
-import type { SchoolUser } from '@/mocks/users'
+import * as mockServer from '@/mocks/global/users'
+import type { SchoolUser } from '@/mocks/global/users'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 
 export type { SchoolUser }

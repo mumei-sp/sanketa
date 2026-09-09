@@ -60,6 +60,23 @@ export interface AuthUser {
   studentIds?: string[]
   /** Role id from the roles table, not a display name. */
   role: string
+  /**
+   * Every school this login may reach.
+   *
+   * The context token's `tenantIds` claim. This is the *authority*: a request
+   * naming a school outside this list is refused, which is why the list is
+   * resolved by the server at sign-in and not assembled by the client.
+   */
+  tenantCodes?: string[]
+  /**
+   * The school this session is looking at — `X-Active-Tenant-Id`.
+   *
+   * A choice, not a permission: it is only ever honoured after being checked
+   * against `tenantCodes`. Defaults to the first school when a caller says
+   * nothing, which is the fallback `TenantContext.getEffectiveTenantId()`
+   * makes, and means someone with one school never has to choose.
+   */
+  activeTenant?: string
   avatarUrl?: string
   /**
    * Class sections this user may write to, when their role is scoped.

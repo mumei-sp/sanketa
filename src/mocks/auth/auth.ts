@@ -1,8 +1,10 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/features/auth/types'
 import { authUtils } from '@/api/utils/auth'
-import { issueSession, revokeSession, rotateSession } from './sessions'
-import { findByIdentifier, listUsers } from '@/mocks/users'
+import { issueSession, revokeSession, rotateSession } from '@/mocks/global/sessions/store'
+import { findByIdentifier, listUsers } from '@/mocks/global/users'
 import { studentsOfParent } from '@/mocks/parents'
+import { resolveTenants } from '@/mocks/global'
+import { setActiveTenant, resetTenantContext } from '@/mocks/_shared/tenant-context'
 
 const MOCK_DELAY = 1200
 
@@ -90,6 +92,26 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
     }
   }
 
+  // Which schools this login can be routed to. The mock's
+  // `findTenantResolutionsByKeycloakUserId`, and a list for the same reason:
+  // one login, many schools.
+  const tenants = resolveTenants(account.id)
+  if (tenants.length === 0) {
+    // A login belonging to no school can reach nothing, and saying so beats
+    // signing them into an empty app. Separate from `ACCOUNT_NOT_ACTIVE`
+    // because the fix is different: somebody has to enrol them.
+    throw {
+      code: 'NO_TENANT_ACCESS',
+      message: 'This account is not attached to a school yet.',
+      status: 403,
+    }
+  }
+
+  // Before the student scope is resolved, because that reads the *school's*
+  // link table — asking which children someone has is only answerable once
+  // you know which school is being asked about.
+  setActiveTenant(tenants[0].schema)
+
   const tokens = issueSession(account.id)
   const response: AuthResponse = {
     ...tokens,
@@ -105,6 +127,11 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
       profileType: account.profileType,
       assignedClasses: account.assignedClasses,
       studentIds: studentScopeFor(account),
+      // Every school this login may reach, and the one it is looking at.
+      // The pair a context token carries: `tenantIds` is the authority and
+      // the active one is a per-request choice checked against it.
+      tenantCodes: tenants.map(tenant => tenant.code),
+      activeTenant: tenants[0].code,
     },
   }
 
@@ -207,4 +234,7 @@ export async function mockRefresh(refreshToken: string): Promise<AuthResponse> {
  */
 export function mockLogout(refreshToken: string | null): void {
   if (refreshToken) revokeSession(refreshToken)
+  // Back to the default school, so the next sign-in does not begin against
+  // whichever schema the last person was looking at.
+  resetTenantContext()
 }
