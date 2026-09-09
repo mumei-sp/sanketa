@@ -27,6 +27,7 @@ import {
   type ScopeAxis,
 } from '@/config/permissions'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
+import { tenantFixtures } from '@/mocks/tenants'
 
 const TABLE = 'roles'
 
@@ -54,8 +55,15 @@ onTenantSwitch(() => {
 })
 
 function seed(): Database {
+  // Built-ins are the app's and every school gets them; `extraRoles` are the
+  // ones this school invented. A Librarian at one school and not at another is
+  // the whole reason roles are tenant data rather than global.
+  const own = tenantFixtures().extraRoles ?? []
   return {
-    rows: BUILTIN_ROLES.map(role => ({ ...role, permissions: [...role.permissions] })),
+    rows: [...BUILTIN_ROLES, ...own].map(role => ({
+      ...role,
+      permissions: [...role.permissions],
+    })),
     knownPermissions: [...ALL_PERMISSIONS],
   }
 }

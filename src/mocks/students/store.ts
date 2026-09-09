@@ -17,15 +17,19 @@
  *
  * ── Reseeding ──────────────────────────────────────────────────────────
  * The fixtures are fingerprinted and the fingerprint stored with the rows, so
- * editing `students.ts` reseeds instead of being silently ignored. The other
- * tables have the opposite behaviour and it is tolerable there — nobody edits
- * the roles fixture twice a week — but the student directory is the fixture
- * people actually reach for, and a store that quietly serves last week's copy
- * of it costs an hour before anyone thinks to look in localStorage.
+ * editing a school's roster reseeds instead of being silently ignored. The
+ * other tables have the opposite behaviour and it is tolerable there — nobody
+ * edits the roles fixture twice a week — but the student directory is the
+ * fixture people actually reach for, and a store that quietly serves last
+ * week's copy of it costs an hour before anyone thinks to look in
+ * localStorage.
+ *
+ * The seed comes from the *active school's* folder, so the fingerprint is
+ * that school's too — editing Vidya Mandir's roster must not reseed Kendriya's.
  */
 
 import type { Student } from '@/features/students/types'
-import { studentFixtures } from './students'
+import { tenantFixtures } from '@/mocks/tenants'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
 const TABLE = 'students'
@@ -61,11 +65,12 @@ function signatureOf(fixtures: Student[]): string {
 }
 
 function seed(): Database {
+  const fixtures = tenantFixtures().students
   // Copies, so the fixture literal stays pristine and `resetStudents` has
   // something unmodified to put back.
   return {
-    rows: studentFixtures.map(student => ({ ...student })),
-    seed: signatureOf(studentFixtures),
+    rows: fixtures.map(student => ({ ...student })),
+    seed: signatureOf(fixtures),
   }
 }
 
@@ -83,7 +88,7 @@ function load(): Database {
       if (
         Array.isArray(parsed.rows) &&
         parsed.rows.length > 0 &&
-        parsed.seed === signatureOf(studentFixtures)
+        parsed.seed === signatureOf(tenantFixtures().students)
       ) {
         db = parsed
         return db
