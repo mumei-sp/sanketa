@@ -36,6 +36,9 @@ export async function login(data: LoginRequest): Promise<AuthResponse> {
       const { data: response } = await apiClient.post<AuthResponse>('/auth/login', data)
       return response
     },
+    // Signing in is how a caller gets a context token; it cannot be asked to
+    // present one first. The server's equivalent is `permitAll` on this path.
+    { anonymous: true },
   )
 }
 
@@ -49,6 +52,7 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
       const { data: response } = await apiClient.post<AuthResponse>('/auth/register', data)
       return response
     },
+    { anonymous: true },
   )
 }
 
@@ -86,6 +90,9 @@ export async function refreshSession(): Promise<AuthResponse> {
       authUtils.setUser(data.user)
       return data
     },
+    // Refreshing is how an expired context token gets replaced. Requiring a
+    // valid one here would make the expiry unrecoverable.
+    { anonymous: true },
   )
 }
 
@@ -116,6 +123,9 @@ export async function logout(): Promise<void> {
       async () => {
         await apiClient.post('/auth/logout', { refreshToken })
       },
+      // The token is being thrown away; validating it first would only mean a
+      // person whose token had expired could not sign out.
+      { anonymous: true },
     )
   } catch (error) {
     // The session is already over locally; a failed revoke is worth knowing

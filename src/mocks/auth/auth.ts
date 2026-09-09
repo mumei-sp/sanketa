@@ -5,6 +5,11 @@ import { findByIdentifier, listUsers } from '@/mocks/global/users'
 import { studentsOfParent } from '@/mocks/parents'
 import { resolveTenants } from '@/mocks/global'
 import { setActiveTenant, resetTenantContext } from '@/mocks/_shared/tenant-context'
+import {
+  clearContextToken,
+  issueContextToken,
+  storeContextToken,
+} from './tenant-context-token'
 
 const MOCK_DELAY = 1200
 
@@ -112,6 +117,10 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   // you know which school is being asked about.
   setActiveTenant(tenants[0].schema)
 
+  // The context token, minted here because this is where the tenant list is
+  // resolved and therefore the only place that can vouch for it.
+  storeContextToken(issueContextToken(account.id, tenants.map(tenant => tenant.code)))
+
   const tokens = issueSession(account.id)
   const response: AuthResponse = {
     ...tokens,
@@ -198,15 +207,36 @@ export async function mockRefresh(refreshToken: string): Promise<AuthResponse> {
   // effect, and it is what a server would do anyway.
   const account = listUsers().find(user => user.id === rotated.userId)
   const stored = authUtils.getUser()
+
+  // The tenant list is re-resolved, not carried over. A refresh is the moment
+  // a membership added or revoked since sign-in takes effect, and rebuilding
+  // the session without it was dropping `tenantCodes` entirely — the next call
+  // would then have a session that authorised no school at all.
+  const tenants = account ? resolveTenants(account.id) : []
+  if (account && tenants.length === 0) {
+    throw {
+      code: 'NO_TENANT_ACCESS',
+      message: 'This account is no longer attached to a school.',
+      status: 403,
+    }
+  }
+
   const user = account
     ? {
         id: account.id,
         fullName: account.fullName,
         email: account.email,
+        phone: account.phone,
         role: account.roleId,
         profileType: account.profileType,
         assignedClasses: account.assignedClasses,
         studentIds: studentScopeFor(account),
+        tenantCodes: tenants.map(tenant => tenant.code),
+        // Keep looking at the same school across a refresh when it is still
+        // one of theirs; otherwise fall back to the first they hold.
+        activeTenant: tenants.some(tenant => tenant.code === stored?.activeTenant)
+          ? stored?.activeTenant
+          : tenants[0].code,
       }
     : stored
 
@@ -216,6 +246,13 @@ export async function mockRefresh(refreshToken: string): Promise<AuthResponse> {
       message: 'Your session has expired. Please sign in again.',
       status: 401,
     }
+  }
+
+  // A fresh context token, for the same reason the refresh token rotates: the
+  // old one is spent, and its 900 seconds were counted from the last sign-in.
+  if (account) {
+    setActiveTenant(user.activeTenant ?? tenants[0].code)
+    storeContextToken(issueContextToken(account.id, tenants.map(tenant => tenant.code)))
   }
 
   const response: AuthResponse = { ...rotated, user }
@@ -234,6 +271,7 @@ export async function mockRefresh(refreshToken: string): Promise<AuthResponse> {
  */
 export function mockLogout(refreshToken: string | null): void {
   if (refreshToken) revokeSession(refreshToken)
+  clearContextToken()
   // Back to the default school, so the next sign-in does not begin against
   // whichever schema the last person was looking at.
   resetTenantContext()
