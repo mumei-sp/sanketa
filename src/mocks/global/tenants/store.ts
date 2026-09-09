@@ -47,15 +47,15 @@ function seed(): Database {
   return {
     rows: [
       {
-        code: 'greenwood',
-        name: 'Greenwood International School',
-        schema: 'greenwood',
+        code: 'nalanda',
+        name: 'Nalanda Vidyalaya',
+        schema: 'nalanda',
         isActive: true,
       },
       {
-        code: 'riverside',
-        name: 'Riverside Public School',
-        schema: 'riverside',
+        code: 'kaveri',
+        name: 'Kaveri Vidya Mandir',
+        schema: 'kaveri',
         isActive: true,
       },
     ],
