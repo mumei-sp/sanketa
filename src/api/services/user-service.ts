@@ -18,7 +18,10 @@ import { addMembership, activeTenantCode } from '@/mocks/global'
 import {
   assignProfileType,
   createProfile,
+  deleteProfile,
   grantRole,
+  listProfileTypes,
+  profileOf,
   resolveTenantAccess,
   revokeRole,
   updateProfile,
@@ -91,6 +94,80 @@ export async function fetchPeople(): Promise<Person[]> {
     async () => {
       const { data } = await apiClient.get<Person[]>('/users', { params: { expand: 'profile' } })
       return data
+    },
+  )
+}
+
+/**
+ * Make somebody who already has an account into somebody *here*.
+ *
+ * The act the People screen was missing. A person can hold a login and be
+ * nobody at a school — enrolled at a second one before anyone decided what
+ * they do there — and until now the screen could name that state and not
+ * resolve it.
+ *
+ * Three writes again, for the same reason `createUser` makes three: the
+ * membership so they can be routed here, the profile so they are somebody
+ * here, and the kind so the profile has a shape. Roles come after, one chip at
+ * a time — deliberately, because deciding somebody works here and deciding
+ * what they may do are two decisions and an administrator may want a moment
+ * between them.
+ *
+ * @apiRoute POST /api/v1/tenants/{tenantCode}/profiles
+ */
+export async function enrolPersonHere(
+  userId: string,
+  profileTypeCode: string,
+): Promise<string | null> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      if (profileOf(userId)) return null
+
+      // Idempotent, so somebody already routable here is not disturbed.
+      addMembership({ userId, tenantCode: activeTenantCode() })
+
+      const type = listProfileTypes().find(candidate => candidate.code === profileTypeCode)
+      if (!type) return null
+
+      const profile = createProfile({
+        userId,
+        // The pointer that matches the kind. An employee number from the login
+        // id, which is what a school with no HR system would do anyway; the
+        // family pointers are left for whoever links the records, since a
+        // parent with no children linked is not yet a parent of anybody.
+        staffId: type.capacity === 'staff' ? `E-${userId}` : undefined,
+      })
+      assignProfileType(profile.id, type.id, true)
+      return profile.id
+    },
+    async () => {
+      const { data } = await apiClient.post<{ profileId: string }>(
+        `/tenants/${activeTenantCode()}/profiles`,
+        { userId, profileType: profileTypeCode },
+      )
+      return data.profileId
+    },
+  )
+}
+
+/**
+ * Take that back — remove somebody's profile at this school.
+ *
+ * Their roles go with it. The login survives, and so does every other school
+ * they belong to.
+ *
+ * @apiRoute DELETE /api/v1/tenants/{tenantCode}/profiles/{profileId}
+ */
+export async function removeProfileHere(profileId: string): Promise<boolean> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      return deleteProfile(profileId)
+    },
+    async () => {
+      await apiClient.delete(`/tenants/${activeTenantCode()}/profiles/${profileId}`)
+      return true
     },
   )
 }

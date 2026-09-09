@@ -212,6 +212,11 @@ export function AccessSettingsSection() {
     [showError],
   )
 
+  /** Re-read the joined list. Named, because three writes now want it. */
+  const refreshPeople = React.useCallback(async () => {
+    setPeople(await fetchPeople())
+  }, [])
+
   /**
    * Give or take one role at this school.
    *
@@ -224,7 +229,7 @@ export function AccessSettingsSection() {
       setSavingId(profileId)
       try {
         await setPersonRole(profileId, roleId, held)
-        setPeople(await fetchPeople())
+        await refreshPeople()
         return true
       } catch (error) {
         console.error('Failed to change the role', error)
@@ -234,7 +239,7 @@ export function AccessSettingsSection() {
         setSavingId(null)
       }
     },
-    [showError],
+    [showError, refreshPeople],
   )
 
   const setClasses = React.useCallback(
@@ -242,7 +247,7 @@ export function AccessSettingsSection() {
       setSavingId(profileId)
       try {
         await setPersonClasses(profileId, classSections)
-        setPeople(await fetchPeople())
+        await refreshPeople()
         return true
       } catch (error) {
         console.error('Failed to change the classes', error)
@@ -391,8 +396,10 @@ export function AccessSettingsSection() {
               onPatch={patchUser}
               onSetRole={setRole}
               onSetClasses={setClasses}
+              onRefreshPeople={refreshPeople}
+              setSavingId={setSavingId}
               onAdd={addUser}
-              onProvisioned={() => void fetchPeople().then(setPeople)}
+              onProvisioned={() => void refreshPeople()}
               roleFilter={roleFilter}
               onRoleFilterChange={setRoleFilter}
               record={record}

@@ -34,12 +34,20 @@ export type AccessEventKind =
  * What a reversible change was made to.
  *
  * `role` and `user` are the global rows — a role's permissions, an account's
- * identity. `profile-role` and `profile-classes` are per-school: who holds
- * what at *this* school, which is where access lives now. Separate entities
- * because undoing them means writing to different tables, and because an entry
- * made at one school must not be reversible from another.
+ * identity. `profile`, `profile-role` and `profile-classes` are per-school:
+ * whether somebody is anybody at *this* school, and what they hold there.
+ * Separate entities because undoing them means writing to different tables,
+ * and because an entry made at one school must not be reversible from another.
+ *
+ * `profile` is the biggest of them to reverse: removing a profile takes every
+ * role granted since with it, because those rows are *about* the profile.
  */
-export type AccessEntity = 'role' | 'user' | 'profile-role' | 'profile-classes'
+export type AccessEntity =
+  | 'role'
+  | 'user'
+  | 'profile'
+  | 'profile-role'
+  | 'profile-classes'
 
 /**
  * The change in a form something other than a person can read.

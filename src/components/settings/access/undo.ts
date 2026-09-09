@@ -34,6 +34,7 @@ import {
 import {
   deleteUser,
   restoreUser,
+  removeProfileHere,
   setPersonClasses,
   setPersonRole,
   type Person,
@@ -108,6 +109,24 @@ export function undoBlocker(event: AccessEvent, context: UndoContext): string | 
       }
     }
     return null
+  }
+
+  // Undoing "added them to this school" removes the profile, and every role
+  // granted since goes with it. Refused when they hold the last role that
+  // reaches settings, for the same reason taking that role directly is.
+  if (entity === 'profile') {
+    const person = people.find(candidate => candidate.profileId === id)
+    if (before === null && after) {
+      if (!person) return 'They are no longer at this school.'
+      if (person.user.id === currentUserId) return 'That is your own profile.'
+      if (!stillHasAnAdmin(people, roles, { id: person.user.id, roleIds: [] })) {
+        return 'Someone must be able to manage settings.'
+      }
+      return null
+    }
+    // Undoing a removal would have to put the roles back too, and the entry
+    // does not carry them. Better to say so than to restore half of it.
+    return 'Adding somebody back has to be done from the People screen.'
   }
 
   // ── Per-school access ──
@@ -235,7 +254,7 @@ export async function undoEvent(event: AccessEvent, context: UndoContext): Promi
   // `undoBlocker` returns early when there is no change, so this is safe.
   const { entity, id, before, after } = event.change as AccessChange
 
-  if (entity === 'profile-role' || entity === 'profile-classes') {
+  if (entity === 'profile' || entity === 'profile-role' || entity === 'profile-classes') {
     return undoTenantAccess(event, entity, id, before, after)
   }
 
@@ -307,11 +326,23 @@ export async function undoEvent(event: AccessEvent, context: UndoContext): Promi
  */
 async function undoTenantAccess(
   event: AccessEvent,
-  entity: 'profile-role' | 'profile-classes',
+  entity: 'profile' | 'profile-role' | 'profile-classes',
   id: string,
   before: Record<string, unknown> | null,
   after: Record<string, unknown> | null,
 ): Promise<UndoOutcome> {
+  if (entity === 'profile') {
+    if (!(await removeProfileHere(id))) {
+      return { ok: false, reason: 'Could not take that back.' }
+    }
+    return {
+      ok: true,
+      summary: reversalSummary(event.summary),
+      detail: 'Their roles at this school went with it.',
+      change: { entity, id, before: after, after: null },
+    }
+  }
+
   if (entity === 'profile-role') {
     const [profileId, roleId] = id.split(':')
     // `before: null` was a grant, so undoing it revokes, and the other way

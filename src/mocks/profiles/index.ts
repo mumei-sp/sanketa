@@ -13,6 +13,7 @@ export {
   roleIdsOf,
   profilesWithRole,
   createProfile,
+  deleteProfile,
   updateProfile,
   grantRole,
   revokeRole,

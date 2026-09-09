@@ -50,7 +50,13 @@ import { getInitials } from '@/utils/format'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { identifierTaken, type Person, type SchoolUser } from '@/api/services/user-service'
+import {
+  enrolPersonHere,
+  identifierTaken,
+  type Person,
+  type SchoolUser,
+} from '@/api/services/user-service'
+import { listProfileTypes } from '@/mocks/profiles'
 import type { AccountStatus } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'
@@ -119,6 +125,10 @@ interface PeopleTabProps {
   /** One chip, one change. See `setPersonRole`. */
   onSetRole: (profileId: string, roleId: string, held: boolean) => Promise<boolean>
   onSetClasses: (profileId: string, classSections: string[]) => Promise<boolean>
+  /** Re-read the joined list, after a change that reshapes a row. */
+  onRefreshPeople: () => Promise<void>
+  /** Set while a row is mid-write, so the row can quiet itself. */
+  setSavingId: (id: string | null) => void
   onAdd: (input: {
     fullName: string
     email?: string | null
@@ -151,6 +161,8 @@ export function PeopleTab({
   onPatch,
   onSetRole,
   onSetClasses,
+  onRefreshPeople,
+  setSavingId,
   onAdd,
   onProvisioned,
   roleFilter,
@@ -179,6 +191,27 @@ export function PeopleTab({
   const [provisionOpen, setProvisionOpen] = React.useState(false)
   const [draft, setDraft] = React.useState({ fullName: '', email: '', phone: '', roleId: '' })
   const [isAdding, setIsAdding] = React.useState(false)
+  /**
+   * The kind picked for somebody being given a profile, by user id.
+   *
+   * Per row rather than one shared value: an administrator working down a list
+   * of three new arrivals should not have the second one's choice overwrite
+   * the first's.
+   */
+  const [enrolKind, setEnrolKind] = React.useState<Record<string, string>>({})
+
+  /**
+   * The kinds of person this school recognises, its own additions included.
+   *
+   * Read straight from the store rather than through a service, which is the
+   * one place this screen reaches past the API boundary — the list is
+   * reference data a school edits elsewhere, and a route for it is worth
+   * adding the day something else needs it.
+   */
+  const profileTypes = React.useMemo(
+    () => listProfileTypes().filter(type => type.isActive),
+    [],
+  )
 
   /**
    * Give or take one role. Several may be held at once.
@@ -240,6 +273,42 @@ export function PeopleTab({
         detail: identifierOf(person.user),
       })
       showSuccess(`${person.user.fullName} can sign in now`)
+    }
+  }
+
+  /**
+   * Make somebody who has an account into somebody here.
+   *
+   * Logged as its own entity, because undoing it removes the profile — and
+   * with it every role granted since. That is the right reversal and it is
+   * worth being explicit that it is not a small one.
+   */
+  const enrol = async (person: Person) => {
+    const code = enrolKind[person.user.id] ?? 'staff'
+    setSavingId(person.user.id)
+    try {
+      const profileId = await enrolPersonHere(person.user.id, code)
+      if (!profileId) {
+        showError('Could not add them to this school')
+        return
+      }
+      const kind = profileTypes.find(type => type.code === code)?.name ?? code
+      record({
+        kind: 'user.create',
+        target: person.user.fullName,
+        summary: `Added ${person.user.fullName} to this school as ${kind}`,
+        detail: identifierOf(person.user),
+        change: { entity: 'profile', id: profileId, before: null, after: { userId: person.user.id } },
+      })
+      showSuccess(`${person.user.fullName} is now at this school`, {
+        description: 'Give them a role to decide what they can do.',
+      })
+      await onRefreshPeople()
+    } catch (error) {
+      console.error('Failed to add them to this school', error)
+      showError('Could not add them to this school')
+    } finally {
+      setSavingId(null)
     }
   }
 
@@ -560,11 +629,47 @@ export function PeopleTab({
                 </div>
 
                 {person.profileId === null ? (
-                  <p className="flex items-start gap-1.5 text-caption text-muted-foreground">
-                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                    They can sign in but have no profile at this school, so they reach
-                    nothing here. An administrator has to give them one.
-                  </p>
+                  <div className="flex flex-col gap-2">
+                    <p className="flex items-start gap-1.5 text-caption text-muted-foreground">
+                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                      They can sign in but are nobody at this school yet, so they reach
+                      nothing here.
+                    </p>
+                    {canEditAccess && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Label htmlFor={`kind-${user.id}`} className="sr-only">
+                          What {user.fullName} is at this school
+                        </Label>
+                        <Select
+                          value={enrolKind[user.id] ?? 'staff'}
+                          disabled={busy}
+                          onValueChange={value =>
+                            setEnrolKind(current => ({ ...current, [user.id]: value }))
+                          }
+                        >
+                          <SelectTrigger id={`kind-${user.id}`} className="h-control w-[170px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {profileTypes.map(type => (
+                              <SelectItem key={type.id} value={type.code}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          className="gap-1.5"
+                          disabled={busy}
+                          onClick={() => void enrol(person)}
+                        >
+                          <UserPlus className="size-3.5" />
+                          Add to this school
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
                     {roles.map(candidate => {

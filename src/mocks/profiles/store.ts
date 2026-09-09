@@ -373,6 +373,28 @@ export function assignProfileType(profileId: string, profileTypeId: string, isPr
   persist()
 }
 
+/**
+ * Remove somebody's profile at this school, and everything hanging off it.
+ *
+ * Their roles and classifications go with it, which is the point: a profile is
+ * what those rows are *about*, and leaving them behind would be rows naming a
+ * person this school no longer has. The global login is untouched — they can
+ * still sign in, and still reach whatever other school they belong to.
+ *
+ * Exists so that giving somebody a profile is reversible. A directory where
+ * one action cannot be taken back is a directory people are afraid of.
+ */
+export function deleteProfile(profileId: string): boolean {
+  const database = load()
+  const index = database.profiles.findIndex(row => row.id === profileId)
+  if (index === -1) return false
+  database.profiles.splice(index, 1)
+  database.roles = database.roles.filter(row => row.profileId !== profileId)
+  database.typeLinks = database.typeLinks.filter(link => link.profileId !== profileId)
+  persist()
+  return true
+}
+
 /** Wipe and reseed — the equivalent of re-running the backend's seed script. */
 export function resetProfiles(): void {
   db = seed()
