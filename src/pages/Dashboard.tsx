@@ -50,8 +50,11 @@ export default function Dashboard() {
   // Families get their own home page; see the note in FamilyHome. The school
   // dashboard's tiles — enrolment, earnings, gender split — say nothing at the
   // size of one child.
-  const { isFamily } = useFamilyScope()
-  if (isFamily) return <FamilyHome />
+  const { isFamily, isStaff } = useFamilyScope()
+  // Family *only*. Somebody who is both — the teacher whose child attends —
+  // keeps the staff page and reaches her son through the child switcher, rather
+  // than trading her job for a parent's view of it.
+  if (isFamily && !isStaff) return <FamilyHome />
   return <SchoolDashboard />
 }
 

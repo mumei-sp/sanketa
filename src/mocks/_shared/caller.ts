@@ -23,16 +23,37 @@
 
 import { authUtils } from '@/api/utils/auth'
 import { listRoles } from '@/mocks/roles/store'
+import { resolveTenantAccess } from '@/mocks/profiles'
 import { defineAbilityFor, subjectFor, type AppAbility, type SubjectFields } from '@/config/ability'
 import { findRole, type Action, type Subject } from '@/config/permissions'
 
-/** Built per call: a session or a role can change between two reads. */
+/**
+ * Built per call: a session, a role or the active school can change between
+ * two reads.
+ *
+ * Roles and both scope axes come from the caller's *profile at the active
+ * school*, not from the session. The session says who they are and which
+ * schools they may reach; what they may do is a fact about the school they
+ * are looking at, and a session stamped at sign-in cannot answer it for two
+ * schools at once. Resolving per call is also what fixes the old complaint
+ * that linking a child needed a sign-out before it took effect.
+ */
 function abilityForCurrentSession(): AppAbility {
   const session = authUtils.getUser()
-  const role = findRole(listRoles(), session?.role) ?? null
-  return defineAbilityFor(role, {
-    classSections: session?.assignedClasses ?? [],
-    studentIds: session?.studentIds ?? [],
+  if (!session) return defineAbilityFor(null, { classSections: [], studentIds: [] })
+
+  const access = resolveTenantAccess(session.id)
+  const table = listRoles()
+  // Unknown ids are dropped rather than treated as unrestricted: a profile can
+  // name a role a school has since deleted.
+  const held = access.roleIds.flatMap(id => {
+    const role = findRole(table, id)
+    return role ? [role] : []
+  })
+
+  return defineAbilityFor(held, {
+    classSections: access.assignedClasses,
+    studentIds: access.studentIds,
   })
 }
 

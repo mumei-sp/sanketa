@@ -87,9 +87,10 @@ const ACTIONS: (SearchItem & { permission: Permission })[] = [
  */
 function destinationsFor(
   can: (permission: Permission) => boolean,
-  isFamily: boolean,
+  /** Family and *not* staff — the caller works that out; see `AppSidebar`. */
+  familyOnly: boolean,
 ): SearchItem[] {
-  return visibleNavigationItems(navigationItems, can, isFamily).flatMap(item =>
+  return visibleNavigationItems(navigationItems, can, familyOnly).flatMap(item =>
     item.children?.length
       ? item.children.map(child => ({
           id: `nav:${child.path}`,
@@ -321,8 +322,8 @@ export function GlobalSearch({
   const navigate = useNavigate()
   const { can } = usePermissions()
   const records = useSearchIndex(open, can)
-  const { isFamily } = useFamilyScope()
-  const destinations = React.useMemo(() => destinationsFor(can, isFamily), [can, isFamily])
+  const { isFamily, isStaff } = useFamilyScope()
+  const destinations = React.useMemo(() => destinationsFor(can, isFamily && !isStaff), [can, isFamily, isStaff])
   const actions = React.useMemo(
     () => ACTIONS.filter(action => can(action.permission)),
     [can],

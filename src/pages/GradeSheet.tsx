@@ -9,6 +9,9 @@ import { useFamilyScope } from '@/features/family/FamilyScopeContext'
  * number about a person.
  */
 export default function GradeSheet() {
-  const { isFamily } = useFamilyScope()
-  return isFamily ? <FamilyGrades /> : <GradeSheetPage />
+  const { isFamily, isStaff } = useFamilyScope()
+  // Family *only*. Somebody who is both — the teacher whose child attends —
+  // keeps the staff page and reaches her son through the child switcher, rather
+  // than trading her job for a parent's view of it.
+  return isFamily && !isStaff ? <FamilyGrades /> : <GradeSheetPage />
 }

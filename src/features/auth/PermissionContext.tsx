@@ -28,6 +28,8 @@ import {
   type SubjectFields,
 } from '@/config/ability'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { resolveTenantAccess } from '@/mocks/profiles'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
 
 /**
  * Where an action is being attempted — the record it is about.
@@ -128,10 +130,56 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     void load()
   }, [load])
 
-  const realRole = React.useMemo(
-    () => findRole(roles, currentUser?.role) ?? null,
-    [roles, currentUser?.role],
+  /**
+   * The access this account actually has at the school it is looking at.
+   *
+   * Read from the profile rather than the session: the session says who they
+   * are and which schools they may reach, and what they may do is a fact about
+   * the school in front of them. A teacher at one school and a parent at
+   * another has two answers, and a field on the session can hold one.
+   */
+  // Keyed on the school as well as the person, so switching recomputes rather
+  // than serving the last school's answer. Switching currently reloads the
+  // app, so this is belt as well as braces — until a switcher does it live.
+  const school = activeTenant()
+  const access = React.useMemo(
+    () => resolveTenantAccess(currentUser?.id),
+    // `school` is not passed in, it is read inside — the resolver asks the
+    // tenant context which school is active. So it is a real dependency that
+    // the linter cannot see, and dropping it would serve the previous
+    // school's roles after a switch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentUser?.id, school],
   )
+
+  /**
+   * Every role held here. Unknown ids are dropped — a profile can name a role
+   * the school has since deleted.
+   */
+  const realRoles = React.useMemo(
+    () =>
+      access.roleIds.flatMap((id: string) => {
+        const role = findRole(roles, id)
+        return role ? [role] : []
+      }),
+    [roles, access.roleIds],
+  )
+
+  /**
+   * The one role a preview narrows against.
+   *
+   * A preview shows what *another* role would see, clamped to what the viewer
+   * really holds — so it needs a single set of the viewer's own permissions to
+   * clamp against, which for someone holding several is their union.
+   */
+  const realRole = React.useMemo<Role | null>(() => {
+    if (realRoles.length === 0) return null
+    if (realRoles.length === 1) return realRoles[0]
+    return {
+      ...realRoles[0],
+      permissions: [...new Set(realRoles.flatMap((role: Role) => role.permissions))],
+    }
+  }, [realRoles])
 
   const [request, setRequest] = React.useState<PreviewRequest | null>(null)
 
@@ -167,20 +215,24 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
   /**
    * What this account is narrowed to, on both axes.
    *
-   * Assembled here because this is the only place that knows both the session
-   * and the running preview. Both halves now come off the session, resolved at
-   * sign-in the way a token would carry them — `assignedClasses` for staff,
-   * `studentIds` for a student's own record or a parent's children.
+   * Assembled here because this is the only place that knows both the profile
+   * and the running preview. `assignedClasses` for staff, `studentIds` for a
+   * student's own record or a parent's children — both per school, which is
+   * why they come from the profile rather than the session.
    */
   const scope = React.useMemo<AbilityScope>(() => {
     if (preview) return preview.scope
-    return {
-      classSections: currentUser?.assignedClasses ?? [],
-      studentIds: currentUser?.studentIds ?? [],
-    }
-  }, [preview, currentUser?.assignedClasses, currentUser?.studentIds])
+    return { classSections: access.assignedClasses, studentIds: access.studentIds }
+  }, [preview, access.assignedClasses, access.studentIds])
 
-  const ability = React.useMemo(() => defineAbilityFor(role, scope), [role, scope])
+  /**
+   * A preview replaces every role with the one being previewed; otherwise the
+   * ability is the union of all of them, each narrowed on its own axis.
+   */
+  const ability = React.useMemo(
+    () => defineAbilityFor(preview ? preview.role : realRoles, scope),
+    [preview, realRoles, scope],
+  )
 
   const value = React.useMemo<PermissionContextValue>(() => {
     /**

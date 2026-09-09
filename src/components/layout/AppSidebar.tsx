@@ -40,10 +40,10 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
 
   // What this role can actually open. Everything below iterates this rather
   // than the full config, so a hidden page has no entry to click.
-  const { isFamily } = useFamilyScope()
+  const { isFamily, isStaff } = useFamilyScope()
   const visibleItems = React.useMemo(
-    () => visibleNavigationItems(navigationItems, can, isFamily),
-    [can, isFamily],
+    () => visibleNavigationItems(navigationItems, can, isFamily && !isStaff),
+    [can, isFamily, isStaff],
   )
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
 

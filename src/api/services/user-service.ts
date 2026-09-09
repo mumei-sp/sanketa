@@ -10,6 +10,8 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/global/users'
+import { addMembership, activeTenantCode } from '@/mocks/global'
+import { assignProfileType, createProfile, grantRole } from '@/mocks/profiles'
 import type { SchoolUser } from '@/mocks/global/users'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 
@@ -77,6 +79,7 @@ export async function createUser(input: {
   email?: string | null
   phone?: string
   roleId: string
+  teacherId?: string
   profileType?: ProfileType
   status?: AccountStatus
   studentId?: string
@@ -86,13 +89,43 @@ export async function createUser(input: {
   return mockOrHttp(
     async () => {
       await withLatency()
-      return mockServer.createUser(input)
+      const user = mockServer.createUser(input)
+      if (!user) return null
+
+      // Three writes, one act. A global login is no use on its own: without a
+      // membership the person cannot be routed to a school and sign-in refuses
+      // them, and without a profile they arrive as nobody with no roles. The
+      // backend does all three in the transaction that answers this route —
+      // see SCHEMA-FIXES, which notes that no such write path exists there yet.
+      addMembership({ userId: user.id, tenantCode: activeTenantCode() })
+
+      const profile = createProfile({
+        userId: user.id,
+        studentId: input.studentId,
+        parentId: input.parentId,
+        teacherId: input.teacherId,
+        // Staff get an employee number from their login id, which is what a
+        // school with no HR system would do anyway.
+        staffId: isStaffKind(input.profileType) ? `E-${user.id}` : undefined,
+        assignedClasses: input.assignedClasses,
+      })
+      grantRole(profile.id, input.roleId)
+      // Built-in type ids are `PT-<code>`, and the codes are the profile-type
+      // names, so this needs no lookup.
+      assignProfileType(profile.id, `PT-${input.profileType ?? 'staff'}`, true)
+
+      return user
     },
     async () => {
       const { data } = await apiClient.post<SchoolUser>('/users', input)
       return data
     },
   )
+}
+
+/** Kinds whose record is an employment record rather than a family one. */
+function isStaffKind(profileType?: ProfileType): boolean {
+  return profileType === undefined || profileType === 'staff' || profileType === 'admin'
 }
 
 /**

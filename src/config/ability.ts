@@ -110,7 +110,19 @@ export function permissionDefinition(id: Permission): PermissionDefinition | und
 }
 
 /**
- * Build the ability for one signed-in account.
+ * One role or many, as many.
+ *
+ * `Array.isArray` does not narrow a `readonly Role[]` union on its own, and
+ * the alternative — making every caller wrap a single role in brackets — is
+ * three call sites paying for one signature.
+ */
+function asRoleList(roles: Role | readonly Role[] | null): readonly Role[] {
+  if (roles === null) return []
+  return Array.isArray(roles) ? (roles as readonly Role[]) : [roles as Role]
+}
+
+/**
+ * Build the ability for one signed-in account, from every role it holds.
  *
  * A permission is narrowed only when the role's axis is one the permission
  * declares it can be narrowed on. That double condition is what lets the same
@@ -118,35 +130,61 @@ export function permissionDefinition(id: Permission): PermissionDefinition | und
  * for a student: the teacher's axis is `classes`, which `attendance.read` does
  * not offer, so no condition is written.
  *
- * @param role   Their role, or null when signed out or unassigned.
+ * ── Why roles are plural, and what that costs ──────────────────────────
+ * A person can be more than one thing at one school. The teacher whose child
+ * attends is the ordinary case, and a single role could not express her: as a
+ * teacher she reaches her own class sections, as a parent she reaches her own
+ * child, and her child is in a class she does not teach.
+ *
+ * Each role is applied with *its own* axis, and CASL unions the rules — so she
+ * gets `{ classSection: { $in: [her classes] } }` from one and
+ * `{ studentId: { $in: [her children] } }` from the other, and a record
+ * matching either passes. That is the right answer and it falls out of rule
+ * union with no special casing.
+ *
+ * The cost is that roles must stay purely additive. There are no `cannot`
+ * rules in the catalogue and there must not be: CASL is last-rule-wins, so one
+ * deny would make the *order* roles are listed in silently change what
+ * somebody may do. `role_permissions.granted` is pinned to true in the schema
+ * for the same reason — see SCHEMA-FIXES.
+ *
+ * @param roles  Every role held, or null/[] when signed out or unassigned.
+ *               A single role is accepted for the callers that only have one.
  * @param scope  What they are narrowed to on each axis. Ignored on any axis
- *               the role does not use.
+ *               no role uses.
  */
-export function defineAbilityFor(role: Role | null, scope: AbilityScope): AppAbility {
+export function defineAbilityFor(
+  roles: Role | readonly Role[] | null,
+  scope: AbilityScope,
+): AppAbility {
   const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility)
 
-  const axis = role?.scopeBy
+  const held = asRoleList(roles)
 
-  role?.permissions.forEach(permission => {
-    const definition = BY_ID.get(permission)
-    // A stored id with no definition behind it grants nothing — a role written
-    // by an older build can name a permission this one has dropped.
-    if (!definition) return
+  held.forEach(role => {
+    const axis = role.scopeBy
 
-    const narrows = axis !== undefined && definition.scopableBy?.includes(axis) === true
+    role.permissions.forEach(permission => {
+      const definition = BY_ID.get(permission)
+      // A stored id with no definition behind it grants nothing — a role
+      // written by an older build can name a permission this one has dropped.
+      if (!definition) return
 
-    if (!narrows) {
-      can(definition.action, definition.subject)
-      return
-    }
+      const narrows = axis !== undefined && definition.scopableBy?.includes(axis) === true
 
-    // A narrowed holder with nothing on that axis yet gets no rule at all
-    // rather than one whose condition can never match. The difference is
-    // visible to the UI: `can('mark', 'Attendance')` should be false for a
-    // teacher with no classes, not true-until-you-name-one.
-    if (valuesFor(axis, scope).length === 0) return
+      if (!narrows) {
+        can(definition.action, definition.subject)
+        return
+      }
 
-    can(definition.action, definition.subject, conditionFor(axis, scope))
+      // A narrowed holder with nothing on that axis yet gets no rule at all
+      // rather than one whose condition can never match. The difference is
+      // visible to the UI: `can('mark', 'Attendance')` should be false for a
+      // teacher with no classes, not true-until-you-name-one.
+      if (valuesFor(axis, scope).length === 0) return
+
+      can(definition.action, definition.subject, conditionFor(axis, scope))
+    })
   })
 
   return build()
