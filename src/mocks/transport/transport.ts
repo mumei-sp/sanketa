@@ -5,7 +5,11 @@ import type {
   StudentTransportAssignment,
   TransportFeeStructure,
   TransportAlert,
+  FeeStatus,
 } from '@/features/transport/types'
+import { listStudents } from '@/mocks/students/store'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
+import { rng, pick, chance } from '@/mocks/tenants/_generate/random'
 
 // ============================================================================
 // Drivers
@@ -400,26 +404,93 @@ export const mockRoutes: TransportRoute[] = [
 // Student Assignments
 // ============================================================================
 
-export const mockStudentAssignments: StudentTransportAssignment[] = [
-  { id: 'STA-001', studentId: 'S-001', studentName: 'Aarav Sharma', class: '10A', section: 'A', routeId: 'RT-001', routeName: 'Route A - Jayanagar', stopId: 'S-001', stopName: 'Jayanagar 9th Block', pickupTime: '07:15', dropTime: '16:30', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-002', studentId: 'S-002', studentName: 'Diya Patel', class: '9B', section: 'B', routeId: 'RT-001', routeName: 'Route A - Jayanagar', stopId: 'S-002', stopName: 'Jayanagar 4th Block', pickupTime: '07:25', dropTime: '16:20', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-003', studentId: 'S-003', studentName: 'Ishaan Reddy', class: '8A', section: 'A', routeId: 'RT-001', routeName: 'Route A - Jayanagar', stopId: 'S-003', stopName: 'Lalbagh Gate', pickupTime: '07:35', dropTime: '16:10', type: 'one-way', feeStatus: 'Pending' },
-  { id: 'STA-004', studentId: 'S-004', studentName: 'Ananya Nair', class: '10A', section: 'A', routeId: 'RT-002', routeName: 'Route B - Koramangala', stopId: 'S-006', stopName: 'Koramangala 8th Block', pickupTime: '07:10', dropTime: '16:35', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-005', studentId: 'S-005', studentName: 'Vivaan Kumar', class: '7A', section: 'A', routeId: 'RT-002', routeName: 'Route B - Koramangala', stopId: 'S-007', stopName: 'Koramangala 4th Block', pickupTime: '07:20', dropTime: '16:25', type: 'two-way', feeStatus: 'Overdue' },
-  { id: 'STA-006', studentId: 'S-006', studentName: 'Kavya Iyer', class: '9A', section: 'A', routeId: 'RT-002', routeName: 'Route B - Koramangala', stopId: 'S-008', stopName: 'Forum Mall', pickupTime: '07:30', dropTime: '16:15', type: 'one-way', feeStatus: 'Paid' },
-  { id: 'STA-007', studentId: 'S-007', studentName: 'Rohan Gupta', class: '8B', section: 'B', routeId: 'RT-003', routeName: 'Route C - HSR Layout', stopId: 'S-010', stopName: 'HSR Sector 7', pickupTime: '07:10', dropTime: '16:40', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-008', studentId: 'S-008', studentName: 'Priya Menon', class: '10B', section: 'B', routeId: 'RT-003', routeName: 'Route C - HSR Layout', stopId: 'S-011', stopName: 'HSR Sector 2', pickupTime: '07:20', dropTime: '16:30', type: 'two-way', feeStatus: 'Pending' },
-  { id: 'STA-009', studentId: 'S-009', studentName: 'Arjun Desai', class: '7B', section: 'B', routeId: 'RT-003', routeName: 'Route C - HSR Layout', stopId: 'S-012', stopName: 'Silk Board', pickupTime: '07:35', dropTime: '16:15', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-010', studentId: 'S-010', studentName: 'Meera Joshi', class: '9A', section: 'A', routeId: 'RT-004', routeName: 'Route D - Whitefield', stopId: 'S-013', stopName: 'Whitefield Main Road', pickupTime: '06:50', dropTime: '17:00', type: 'one-way', feeStatus: 'Paid' },
-  { id: 'STA-011', studentId: 'S-011', studentName: 'Karthik Rao', class: '8A', section: 'A', routeId: 'RT-004', routeName: 'Route D - Whitefield', stopId: 'S-014', stopName: 'ITPL Main Road', pickupTime: '07:05', dropTime: '16:45', type: 'one-way', feeStatus: 'Overdue' },
-  { id: 'STA-012', studentId: 'S-012', studentName: 'Sneha Kulkarni', class: '10A', section: 'A', routeId: 'RT-005', routeName: 'Route E - Electronic City', stopId: 'S-016', stopName: 'Electronic City Phase 1', pickupTime: '06:45', dropTime: '17:10', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-013', studentId: 'S-013', studentName: 'Aditya Hegde', class: '7A', section: 'A', routeId: 'RT-005', routeName: 'Route E - Electronic City', stopId: 'S-017', stopName: 'Bommanahalli', pickupTime: '07:05', dropTime: '16:50', type: 'two-way', feeStatus: 'Pending' },
-  { id: 'STA-014', studentId: 'S-014', studentName: 'Nisha Verma', class: '9B', section: 'B', routeId: 'RT-001', routeName: 'Route A - Jayanagar', stopId: 'S-004', stopName: 'Wilson Garden', pickupTime: '07:45', dropTime: '16:00', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-015', studentId: 'S-015', studentName: 'Rahul Bhat', class: '8A', section: 'A', routeId: 'RT-002', routeName: 'Route B - Koramangala', stopId: 'S-009', stopName: 'Madiwala', pickupTime: '07:40', dropTime: '16:05', type: 'two-way', feeStatus: 'Paid' },
-  { id: 'STA-016', studentId: 'S-016', studentName: 'Tanvi Acharya', class: '10B', section: 'B', routeId: 'RT-005', routeName: 'Route E - Electronic City', stopId: 'S-018', stopName: 'BTM Layout', pickupTime: '07:20', dropTime: '16:35', type: 'one-way', feeStatus: 'Paid' },
-  { id: 'STA-017', studentId: 'S-017', studentName: 'Siddharth Jain', class: '7B', section: 'B', routeId: 'RT-001', routeName: 'Route A - Jayanagar', stopId: 'S-005', stopName: 'Richmond Circle', pickupTime: '07:55', dropTime: '15:50', type: 'two-way', feeStatus: 'Pending' },
-  { id: 'STA-018', studentId: 'S-018', studentName: 'Lakshmi Prasad', class: '9A', section: 'A', routeId: 'RT-003', routeName: 'Route C - HSR Layout', stopId: 'S-012', stopName: 'Silk Board', pickupTime: '07:35', dropTime: '16:15', type: 'two-way', feeStatus: 'Paid' },
+/**
+ * Who rides the buses.
+ *
+ * ── What this replaced ─────────────────────────────────────────────────
+ * Eighteen riders written out here by hand, over a school of 441, and not one
+ * of their `studentId` codes resolved to a student — `S-001` through `S-018`
+ * against a directory that issues `S-2101` upward. They carried their own
+ * names and their own classes too, so the transport screen listed Aarav Sharma
+ * in 10A while the directory had him in 7A. Eighteen phantom riders on five
+ * buses whose route cards claimed 38 students each.
+ *
+ * ── Assigned by where they live ────────────────────────────────────────
+ * The five routes run to Jayanagar, Koramangala, HSR Layout, Whitefield and
+ * Electronic City, and every student record carries an address in a Bangalore
+ * locality. So a student rides the bus that passes their own house, which is
+ * how a school allocates a seat — and it means the transport screen, the
+ * student's address and the route map all describe one arrangement.
+ *
+ * Students in the other nineteen localities are dropped off by their families,
+ * which is also true of most of a Bangalore school.
+ */
+
+/** Which route serves which locality, matched against a student's address. */
+const ROUTE_CATCHMENTS: readonly { routeId: string; locality: string }[] = [
+  { routeId: 'RT-001', locality: 'Jayanagar' },
+  { routeId: 'RT-002', locality: 'Koramangala' },
+  { routeId: 'RT-003', locality: 'HSR Layout' },
+  { routeId: 'RT-004', locality: 'Whitefield' },
+  { routeId: 'RT-005', locality: 'Electronic City' },
 ]
+
+/** Whether the fee for the seat has been paid. Most have. */
+function seatFeeStatus(roll: number): FeeStatus {
+  if (roll < 0.72) return 'Paid'
+  if (roll < 0.9) return 'Pending'
+  return 'Overdue'
+}
+
+export const mockStudentAssignments: StudentTransportAssignment[] = (() => {
+  const source = rng(`${activeTenant()}:transport:v1`)
+  const rows: StudentTransportAssignment[] = []
+  const roster = listStudents()
+
+  ROUTE_CATCHMENTS.forEach(({ routeId, locality }) => {
+    const route = mockRoutes.find(candidate => candidate.id === routeId)
+    if (!route) return
+    const riders = roster.filter(student => (student.address ?? '').includes(locality))
+
+    riders.forEach(student => {
+      // Not everybody in the catchment takes the bus — a parent dropping a
+      // child on the way to work is the commonest arrangement in the city.
+      if (!chance(source, 0.62)) return
+      if (rows.filter(row => row.routeId === routeId).length >= route.capacity) return
+
+      const stop = pick(source, route.stops)
+      rows.push({
+        id: `STA-${String(rows.length + 1).padStart(3, '0')}`,
+        studentId: student.studentId,
+        studentName:
+          student.fullName ?? student.displayName ?? student.name ?? student.studentId,
+        class: student.class ?? `${student.gradeLevel}${student.section}`,
+        section: student.section ?? '',
+        routeId: route.id,
+        routeName: route.name,
+        stopId: stop.id,
+        stopName: stop.name,
+        pickupTime: stop.pickupTime,
+        dropTime: stop.dropTime,
+        // A one-way seat is the child who is picked up and collected in the
+        // evening by a parent, which about a fifth of them are.
+        type: chance(source, 0.8) ? 'two-way' : 'one-way',
+        feeStatus: seatFeeStatus(source()),
+      })
+    })
+  })
+
+  return rows
+})()
+
+// A route card claiming 38 riders above a list holding four was the same
+// disagreement in miniature, so the counts follow the seats.
+mockRoutes.forEach(route => {
+  route.studentsAssigned = mockStudentAssignments.filter(row => row.routeId === route.id).length
+  route.stops.forEach(stop => {
+    stop.studentsCount = mockStudentAssignments.filter(row => row.stopId === stop.id).length
+  })
+})
 
 // ============================================================================
 // Fee Structures
