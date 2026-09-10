@@ -7,6 +7,9 @@ import type { UserProfile, ProfileType } from '@/types/user-profile'
  * Note: Some UserProfile fields (userId, profileType) are optional for backward compatibility
  * with existing code that doesn't include these fields yet.
  */
+/** How a member of the teaching staff is engaged. */
+export type TeacherEmployment = 'full-time' | 'part-time' | 'substitute'
+
 export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
   /** User ID - optional for backward compatibility */
   userId?: string | number
@@ -18,6 +21,16 @@ export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
 
   /** Subject or specialization taught by the teacher */
   subject: string
+
+  /**
+   * How they are employed.
+   *
+   * On the row because the teachers dashboard counts them — it used to show
+   * 62 full-time, 18 part-time and 6 substitute over a faculty list of
+   * eighteen, three numbers that could not be reconciled with anything. A
+   * count has to be a count of rows, so the rows have to say.
+   */
+  employmentType?: TeacherEmployment
 
   /**
    * Class sections this teacher may add to and amend — registers, marks and

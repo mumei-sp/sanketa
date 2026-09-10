@@ -1,35 +1,47 @@
 /**
- * Mock teacher statistics data for development and testing
- * TODO: Replace with real API calls when backend is ready
+ * The teachers dashboard's aggregates, counted off the faculty list.
+ *
+ * ── What this replaced ─────────────────────────────────────────────────
+ * Four hardcoded numbers — 86 total, 62 full-time, 18 part-time, 6
+ * substitute — over a faculty list of eighteen, and a department table
+ * distributing those 86 across ten departments. So the Teachers page said 86
+ * and the dashboard tile said 90 (18 × a multiplier) and the list below both
+ * of them held eighteen people, and no two of the three agreed.
+ *
+ * A count is a count of rows. These count rows.
  */
 
 import type { DepartmentData, TeacherStatistics } from '@/features/teachers/types'
+import { teachersData } from './teachers'
+import { departmentOf } from './assignments'
 
+const countOf = (kind: string) =>
+  teachersData.filter(teacher => teacher.employmentType === kind).length
 
-/**
- * Mock teacher statistics
- * This represents aggregated statistics about teachers
- */
 export const teacherStatisticsData: TeacherStatistics = {
-  total: 86,
-  fullTime: 62,
-  partTime: 18,
-  substitute: 6,
+  total: teachersData.length,
+  fullTime: countOf('full-time'),
+  partTime: countOf('part-time'),
+  substitute: countOf('substitute'),
 }
 
 /**
- * Mock department distribution data
- * Shows teacher counts by department/subject area
+ * Teacher counts by department, largest first.
+ *
+ * Percentages are of the real total, so they add to 100 rather than to
+ * whatever the hardcoded rows happened to sum to.
  */
-export const departmentDistributionData: DepartmentData[] = [
-  { name: 'Science', count: 14, percentage: 16 },
-  { name: 'Mathematics', count: 13, percentage: 15 },
-  { name: 'English', count: 12, percentage: 14 },
-  { name: 'Social Studies', count: 10, percentage: 12 },
-  { name: 'Hindi', count: 9, percentage: 10 },
-  { name: 'Computer Science', count: 8, percentage: 9 },
-  { name: 'Physical Education', count: 7, percentage: 8 },
-  { name: 'Art', count: 5, percentage: 6 },
-  { name: 'Music', count: 4, percentage: 5 },
-  { name: 'Library', count: 4, percentage: 5 },
-]
+export const departmentDistributionData: DepartmentData[] = (() => {
+  const counts = new Map<string, number>()
+  teachersData.forEach(teacher => {
+    const department = departmentOf(teacher.subject)
+    counts.set(department, (counts.get(department) ?? 0) + 1)
+  })
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([name, count]) => ({
+      name,
+      count,
+      percentage: Math.round((count / teachersData.length) * 100),
+    }))
+})()
