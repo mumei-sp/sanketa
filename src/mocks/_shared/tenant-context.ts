@@ -18,6 +18,8 @@
  * A store declares which it is by the key it asks for.
  */
 
+import { authUtils } from '@/api/utils/auth'
+
 /**
  * The school a call is against when nothing has said otherwise.
  *
@@ -41,13 +43,68 @@ const ACTIVE_KEY = 'sanketa:active-tenant'
 
 let active: string | null = null
 
+/**
+ * Which school to serve, correcting a preference the session cannot hold.
+ *
+ * ── Why the check is here and not only in the adapter ─────────────────
+ * `applyTenantContext` already corrects a stale `X-Active-Tenant-Id` — but it
+ * runs per request, and several fixtures are module constants resolved at
+ * import: the faculty, the timetables, the fee ledger, the mark sheets, the
+ * registers, the bus lists. Those evaluate before the first request, so a
+ * stored preference naming a school the account does not hold was served to
+ * them and corrected afterwards, for everybody else.
+ *
+ * It showed as a dashboard reading 441 enrolled students — Kendriya's roster,
+ * loaded lazily after the correction — above 33 active teachers, which is
+ * Vidya Mandir's staff room, read eagerly before it. Two schools on one
+ * screen, which is the one thing the boundary exists to prevent.
+ *
+ * So the correction happens at the first read of all, which is here. This is
+ * not an authorisation check standing in for the token's — the token's 403 is
+ * still the thing that refuses a switch. It is the client declining to act on
+ * its own remembered choice when the session it now has cannot honour it,
+ * which is what `applyTenantContext` does one layer up.
+ */
 function current(): string {
   if (active !== null) return active
+
+  let stored: string | null = null
   try {
-    active = localStorage.getItem(ACTIVE_KEY) || DEFAULT_TENANT
+    stored = localStorage.getItem(ACTIVE_KEY)
   } catch {
-    // Unavailable in private mode; the default serves this session.
-    active = DEFAULT_TENANT
+    // Unavailable in private mode; the fallbacks below serve this session.
+  }
+
+  // No session yet — the login screen, or a signed-out tab. Nothing to check
+  // the preference against, so answer and *do not* remember the answer.
+  //
+  // Memoising here was the sharper edge of the same bug. Sign-in is a
+  // client-side navigation, so a read before it — the login screen renders,
+  // something touches a store — pinned the module to the default school for
+  // the life of the page. An account holding only Vidya Mandir would then
+  // have every eagerly-resolved fixture built from Kendriya, and nothing
+  // afterwards could rebuild a `const`.
+  const held = authUtils.getUser()?.tenantCodes
+  if (!held || held.length === 0) {
+    return stored || DEFAULT_TENANT
+  }
+
+  // `tenantIds[0]` is what the backend falls back to when a request names no
+  // school, so a corrected preference lands on the same school there as here.
+  if (stored !== null && held.includes(stored)) {
+    active = stored
+    return active
+  }
+
+  active = held[0]
+  // Written back, not merely overridden in memory. A stored preference that is
+  // never honoured is a lie in devtools — the one place somebody goes to check
+  // whether the boundary is holding — and it would make every load pay the
+  // correction again.
+  try {
+    localStorage.setItem(ACTIVE_KEY, active)
+  } catch {
+    // Private mode; the correction still holds for this session.
   }
   return active
 }

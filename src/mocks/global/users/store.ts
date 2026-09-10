@@ -26,6 +26,7 @@
 import { newId } from '@/mocks/_shared'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 import { globalKey } from '@/mocks/_shared/tenant-context'
+import { seedSignature } from '@/mocks/_shared/seed-signature'
 
 export interface SchoolUser {
   id: string
@@ -71,22 +72,45 @@ const TABLE = 'users'
 
 interface Database {
   rows: SchoolUser[]
+  /** Which seed these rows came from — see `seedSignature`. */
+  seed?: string
 }
 
 let db: Database | null = null
 
+const SEED_ROWS: SchoolUser[] = [
+  // Identity only. What each of them *is* at a school lives in that school's
+  // folder — see `tenants/kendriya`, which gives these ids their profiles,
+  // roles and classes.
+  { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', status: 'active' },
+  { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', status: 'active' },
+  { id: '3', fullName: 'Meera Iyengar', email: 'teacher@sanketa.edu', status: 'active' },
+  { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', status: 'active' },
+  /**
+   * The father with a child at each school.
+   *
+   * The row this whole global/tenant split exists for: he signs in once and is
+   * a parent at two schools, rather than holding two accounts that happen to
+   * share a phone number. Until he existed, no seeded login held more than one
+   * school — so the switcher rendered nothing, the context token never carried
+   * two tenant ids, and its 403-on-a-school-you-do-not-hold was unreachable.
+   *
+   * `email: null` on purpose. The school has his mobile because that is what a
+   * school collects, and sign-in takes a number; most parents never give an
+   * address. It is also what makes him the account that proves an email is not
+   * required, which is the other thing this row is here to hold down.
+   *
+   * The number is load-bearing: `9845123457` is what Aarav Sharma's record at
+   * Kendriya and Ira Sharma's at Vidya Mandir both name as their father's, and
+   * it is how each school's parent table joins him to his own child. Change it
+   * here and he silently becomes somebody with two memberships and no
+   * children.
+   */
+  { id: '5', fullName: 'Rohan Sharma', email: null, phone: '9845123457', status: 'active' },
+]
+
 function seed(): Database {
-  return {
-    rows: [
-      // Identity only. What each of them *is* at a school lives in that
-      // school's folder — see `tenants/kendriya`, which gives ids 1 to 4
-      // their profiles, roles and classes.
-      { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', status: 'active' },
-      { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', status: 'active' },
-      { id: '3', fullName: 'Meera Iyengar', email: 'teacher@sanketa.edu', status: 'active' },
-      { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', status: 'active' },
-    ],
-  }
+  return { rows: SEED_ROWS.map(row => ({ ...row })), seed: seedSignature(SEED_ROWS) }
 }
 
 function load(): Database {
@@ -95,7 +119,16 @@ function load(): Database {
     const raw = localStorage.getItem(globalKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
-      if (Array.isArray(parsed.rows) && parsed.rows.length > 0) {
+      // A file written from an older seed is reseeded rather than migrated —
+      // adding a seeded login is invisible otherwise, which is how the
+      // two-school father would have gone unnoticed on every browser that had
+      // ever run the app. Accounts created by hand since go with it, the same
+      // bargain the student directory makes.
+      if (
+        Array.isArray(parsed.rows) &&
+        parsed.rows.length > 0 &&
+        parsed.seed === seedSignature(SEED_ROWS)
+      ) {
         // Rows written before `status` existed could sign in, which is what
         // every account could at the time. The per-school columns that used to
         // live here are dropped rather than migrated: their values described a
@@ -108,7 +141,7 @@ function load(): Database {
           status: row.status ?? ('active' as AccountStatus),
         }))
         const changed = JSON.stringify(migrated) !== JSON.stringify(parsed.rows)
-        db = { rows: migrated }
+        db = { rows: migrated, seed: parsed.seed }
         if (changed) persist()
         return db
       }

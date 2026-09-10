@@ -6,6 +6,11 @@
  * session's token authorises two or more — and why the backend falls back to
  * the first tenant when a request names none.
  *
+ * The people who do are mostly not staff. The seeded case is Rohan Sharma, a
+ * parent with a son at Kendriya and a daughter at Vidya Mandir: one login, two
+ * memberships, and a different child on the dashboard depending on which
+ * school is active.
+ *
  * ── Why switching reloads ─────────────────────────────────────────────
  * Because every row in the app changes. Students, staff, roles, marks, fees,
  * the notice board — all of it is per-school, and the page you are standing on
@@ -102,8 +107,10 @@ export function SchoolSwitcher({ variant = 'pill' }: { variant?: 'pill' | 'bar' 
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
+        {/* Not "you work at" — the first person to hold two schools is a
+            parent with a child at each, and he does not work at either. */}
         <DropdownMenuLabel className="text-caption text-muted-foreground">
-          You work at {schools.length} schools
+          You have access to {schools.length} schools
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {schools.map(school => (

@@ -27,6 +27,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
+import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 import { listParents } from '@/mocks/parents'
 import { tenantFixtures } from '@/mocks/tenants'
@@ -93,6 +94,8 @@ interface Database {
   types: ProfileType[]
   roles: ProfileRole[]
   typeLinks: ProfileTypeLink[]
+  /** Which `access` fixture these rows came from — see `seedSignature`. */
+  seed?: string
 }
 
 let db: Database | null = null
@@ -182,7 +185,20 @@ function seed(): Database {
       isPrimary: row.isPrimary === true,
     }))
 
-  return { profiles, types, roles, typeLinks }
+  return { profiles, types, roles, typeLinks, seed: signatureOf() }
+}
+
+/**
+ * A fingerprint of this school's `access` block.
+ *
+ * Without it, adding a profile to a school's seed is invisible on any browser
+ * that has run the app — which is how giving Rohan Sharma a profile at each
+ * school would have changed nothing at all for anyone but a first-time
+ * visitor. Over the fixture, never the live rows, so granting somebody a role
+ * on the People screen does not reseed the table it was granted in.
+ */
+function signatureOf(): string {
+  return seedSignature(tenantFixtures().access ?? null)
 }
 
 function load(): Database {
@@ -198,7 +214,8 @@ function load(): Database {
         Array.isArray(parsed.profiles) &&
         Array.isArray(parsed.types) &&
         Array.isArray(parsed.roles) &&
-        Array.isArray(parsed.typeLinks)
+        Array.isArray(parsed.typeLinks) &&
+        parsed.seed === signatureOf()
       ) {
         db = parsed
         return db

@@ -33,6 +33,7 @@
 import { newId } from '@/mocks/_shared'
 import { listStudents } from '@/mocks/students'
 import { tenantFixtures } from '@/mocks/tenants'
+import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
 export interface Parent {
@@ -98,21 +99,14 @@ onTenantSwitch(() => {
  * survived: a directory of people whose children are gone, showing up in
  * guardian pickers and parent counts and nowhere explicable.
  *
- * Taken over the *fixtures*, not the live directory, and over the guardian
- * blocks rather than the whole record. Both restrictions matter: fingerprint
- * the live rows and enrolling one student reseeds the whole parent table,
- * throwing away the guardian that enrolment just created; fingerprint whole
- * records and correcting a mark rebuilds the family tree.
+ * Taken over the guardian blocks rather than the whole record, so correcting a
+ * mark does not rebuild the family tree. Over the fixtures rather than the
+ * live directory for the reason in `_shared/seed-signature.ts`.
  */
 function signatureOf(): string {
-  const text = JSON.stringify(
+  return seedSignature(
     tenantFixtures().students.map(student => [String(student.id), student.guardians]),
   )
-  let hash = 0
-  for (let i = 0; i < text.length; i += 1) {
-    hash = (Math.imul(31, hash) + text.charCodeAt(i)) | 0
-  }
-  return `${text.length}:${hash}`
 }
 
 /** Same person? Name and phone together, both loosely compared. */

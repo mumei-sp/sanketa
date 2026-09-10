@@ -17,12 +17,8 @@
  *
  * ── Reseeding ──────────────────────────────────────────────────────────
  * The fixtures are fingerprinted and the fingerprint stored with the rows, so
- * editing a school's roster reseeds instead of being silently ignored. The
- * other tables have the opposite behaviour and it is tolerable there — nobody
- * edits the roles fixture twice a week — but the student directory is the
- * fixture people actually reach for, and a store that quietly serves last
- * week's copy of it costs an hour before anyone thinks to look in
- * localStorage.
+ * editing a school's roster reseeds instead of being silently ignored — see
+ * `_shared/seed-signature.ts`, which the other reseeding stores share.
  *
  * The seed comes from the *active school's* folder, so the fingerprint is
  * that school's too — editing Vidya Mandir's roster must not reseed Kendriya's.
@@ -31,6 +27,7 @@
 import type { Student } from '@/features/students/types'
 import { tenantFixtures } from '@/mocks/tenants'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
+import { seedSignature } from '@/mocks/_shared/seed-signature'
 
 const TABLE = 'students'
 
@@ -49,28 +46,13 @@ onTenantSwitch(() => {
   db = null
 })
 
-/**
- * A cheap fingerprint of the seed rows.
- *
- * A hash rather than a hand-bumped version number, because the version number
- * is the thing you forget to bump on exactly the change you needed it for.
- */
-function signatureOf(fixtures: Student[]): string {
-  const text = JSON.stringify(fixtures)
-  let hash = 0
-  for (let i = 0; i < text.length; i += 1) {
-    hash = (Math.imul(31, hash) + text.charCodeAt(i)) | 0
-  }
-  return `${fixtures.length}:${hash}`
-}
-
 function seed(): Database {
   const fixtures = tenantFixtures().students
   // Copies, so the fixture literal stays pristine and `resetStudents` has
   // something unmodified to put back.
   return {
     rows: fixtures.map(student => ({ ...student })),
-    seed: signatureOf(fixtures),
+    seed: seedSignature(fixtures),
   }
 }
 
@@ -88,7 +70,7 @@ function load(): Database {
       if (
         Array.isArray(parsed.rows) &&
         parsed.rows.length > 0 &&
-        parsed.seed === signatureOf(tenantFixtures().students)
+        parsed.seed === seedSignature(tenantFixtures().students)
       ) {
         db = parsed
         return db

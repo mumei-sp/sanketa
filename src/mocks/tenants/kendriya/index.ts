@@ -2,8 +2,9 @@
  * Kendriya Vidyalaya's schema contents.
  *
  * The default school, and the one every screenshot and demo has been against:
- * forty students across grades 7 to 9, their guardians embedded on the
- * records the way the school's own records carry them.
+ * 441 students across all nineteen sections, their guardians embedded on the
+ * records the way the school's own records carry them, and a staff room of
+ * thirty-one.
  *
  * Only seed data lives here. The tables themselves are shared — a school does
  * not get its own `students` table any more than it gets its own `CREATE
@@ -33,6 +34,16 @@ export const kendriya: TenantFixtures = {
         parentPhone: '9880114477',
       },
       { id: 'UP-4', userId: '4', staffId: 'E-0004' },
+      {
+        id: 'UP-5',
+        userId: '5',
+        // Aarav Sharma's father. Joined to his own child by the number, the
+        // way the guardian rows on the roster are — see `ProfileFixture`.
+        // He is a parent at Vidya Mandir too, on one account: the two-school
+        // family is the case the global identity tables exist for, and it is
+        // asserted from both ends, here and in `../vidya-mandir/index.ts`.
+        parentPhone: '9845123457',
+      },
     ],
     roles: [
       { profileId: 'UP-1', roleId: 'admin' },
@@ -40,6 +51,7 @@ export const kendriya: TenantFixtures = {
       { profileId: 'UP-3', roleId: 'teacher' },
       { profileId: 'UP-3', roleId: 'parent' },
       { profileId: 'UP-4', roleId: 'accountant' },
+      { profileId: 'UP-5', roleId: 'parent' },
     ],
     typeCodes: [
       { profileId: 'UP-1', code: 'admin', isPrimary: true },
@@ -47,6 +59,7 @@ export const kendriya: TenantFixtures = {
       { profileId: 'UP-3', code: 'teacher', isPrimary: true },
       { profileId: 'UP-3', code: 'parent' },
       { profileId: 'UP-4', code: 'staff', isPrimary: true },
+      { profileId: 'UP-5', code: 'parent', isPrimary: true },
     ],
   },
 }

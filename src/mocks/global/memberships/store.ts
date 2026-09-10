@@ -21,6 +21,7 @@
 
 import { newId } from '@/mocks/_shared'
 import { globalKey } from '@/mocks/_shared/tenant-context'
+import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { findTenant } from '@/mocks/global/tenants/store'
 import type { Tenant } from '@/mocks/global/tenants/store'
 
@@ -37,26 +38,38 @@ const TABLE = 'memberships'
 
 interface Database {
   rows: Membership[]
+  /** Which seed these rows came from — see `seedSignature`. */
+  seed?: string
 }
 
 let db: Database | null = null
 
 /**
- * The four seeded logins all belong to Kendriya Vidyalaya.
+ * Who starts out where.
  *
- * Ids match `users`' seeded ids. A second school with nobody in it is the
- * honest starting state — Vidya Mandir exists in `tenants` and has no members
- * until somebody is given one.
+ * The four staff logins belong to Kendriya Vidyalaya. Rohan Sharma belongs to
+ * both, which is the case the table exists for: a parent with a child at each
+ * school is *two rows here and one account*, not two accounts. Everything
+ * about multi-school — the switcher, the context token's `tenantIds`, its
+ * 403 on a school you do not hold, `applyTenantContext`'s correction of a
+ * stale preference — was unexercised until one row said this, because no
+ * seeded login held more than one school.
+ *
+ * `UNIQUE(user_id, tenant_id)` in the real table is what makes a second
+ * school's attempt to enrol an existing parent a no-op rather than a
+ * duplicate; `addMembership` is idempotent on the pair for the same reason.
  */
+const SEED_ROWS: Membership[] = [
+  { id: 'UTM-1', userId: '1', tenantCode: 'kendriya', isActive: true },
+  { id: 'UTM-2', userId: '2', tenantCode: 'kendriya', isActive: true },
+  { id: 'UTM-3', userId: '3', tenantCode: 'kendriya', isActive: true },
+  { id: 'UTM-4', userId: '4', tenantCode: 'kendriya', isActive: true },
+  { id: 'UTM-5', userId: '5', tenantCode: 'kendriya', isActive: true },
+  { id: 'UTM-6', userId: '5', tenantCode: 'vidya-mandir', isActive: true },
+]
+
 function seed(): Database {
-  return {
-    rows: ['1', '2', '3', '4'].map((userId, index) => ({
-      id: `UTM-${index + 1}`,
-      userId,
-      tenantCode: 'kendriya',
-      isActive: true,
-    })),
-  }
+  return { rows: SEED_ROWS.map(row => ({ ...row })), seed: seedSignature(SEED_ROWS) }
 }
 
 function load(): Database {
@@ -65,7 +78,10 @@ function load(): Database {
     const raw = localStorage.getItem(globalKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
-      if (Array.isArray(parsed.rows)) {
+      // Reseeded rather than migrated when the seed changes, so adding a
+      // membership to the seed is visible on a browser that has run the app
+      // before. See `seedSignature`.
+      if (Array.isArray(parsed.rows) && parsed.seed === seedSignature(SEED_ROWS)) {
         db = parsed
         return db
       }
