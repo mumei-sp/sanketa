@@ -188,12 +188,35 @@ interface Household {
   grades: string[]
 }
 
-function makeHousehold(source: Rng, config: RosterConfig, index: number): Household {
+/**
+ * Pick a surname, spreading the load across the community's pool.
+ *
+ * Two candidates, take the less-used one — "power of two choices", which
+ * flattens a distribution far better than one draw for the cost of a second
+ * pull. A single draw gave a class of twenty-four with three Baigs and two
+ * pairs besides: repeated surnames in a register are real, but that many in
+ * one class is the birthday paradox, not a neighbourhood.
+ */
+function spreadSurname(source: Rng, community: Community, used: Map<string, number>): string {
+  const first = pick(source, community.surnames)
+  const second = pick(source, community.surnames)
+  const count = (name: string) => used.get(name) ?? 0
+  const chosen = count(second) < count(first) ? second : first
+  used.set(chosen, count(chosen) + 1)
+  return chosen
+}
+
+function makeHousehold(
+  source: Rng,
+  config: RosterConfig,
+  index: number,
+  surnamesUsed: Map<string, number>,
+): Household {
   const community = weighted(source, COMMUNITIES)
   const shapeRoll = source()
   return {
     community,
-    surname: pick(source, community.surnames),
+    surname: spreadSurname(source, community, surnamesUsed),
     fatherName: pick(source, community.fathers),
     motherName: pick(source, community.mothers),
     // Two numbers per household, both unique across the school — the second
@@ -312,12 +335,13 @@ export function generateRoster(config: RosterConfig): Student[] {
 
   // ── Households, until the seats are taken ──
   const households: Household[] = []
+  const surnamesUsed = new Map<string, number>()
   const children: { household: Household; grade: string }[] = []
   const gradesWithSeats = () =>
     [...seatsByGrade.entries()].filter(([, seats]) => seats > 0).map(([grade]) => grade)
 
   while (children.length < totalSeats) {
-    const household = makeHousehold(source, config, households.length)
+    const household = makeHousehold(source, config, households.length, surnamesUsed)
     households.push(household)
 
     // Most families have one child here. Two is common, three is not — and a

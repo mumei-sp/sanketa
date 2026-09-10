@@ -1,4 +1,29 @@
 import type { AttendanceRecord, AttendanceStatus } from '@/features/attendance/types'
+import { listStudents } from '@/mocks/students'
+import { teachersData } from '@/mocks/teachers/teachers'
+import { classSectionOf } from '@/utils/class-section-helpers'
+import { getDisplayName } from '@/features/students/utils/formatting'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
+import { rng, type Rng } from '@/mocks/tenants/_generate/random'
+
+/**
+ * The attendance register that the overview screen reads.
+ *
+ * ── What this replaced ─────────────────────────────────────────────────
+ * A cast of eighteen students written out here by hand — Emma Williams,
+ * Thomas Green, Isabella Rodriguez — none of whom were in the student
+ * directory, plus five teachers (Dr. Sarah Johnson, Prof. Robert Smith) who
+ * were not on the staff list and four support staff who were not anywhere. So
+ * the attendance screen was about a different school from every other screen,
+ * and the ids on its rows (`1`, `t1`, `s1`) pointed at nothing.
+ *
+ * That mattered beyond tidiness. A parent's scope narrows attendance to their
+ * own child by student id; against a parallel cast it matched nobody, and the
+ * empty result looked like the filter working.
+ *
+ * Statuses come off a seeded stream rather than `Math.random`, so a register
+ * does not rewrite itself between two views of the same day.
+ */
 
 /**
  * Generate date strings for the last N calendar days
@@ -27,165 +52,97 @@ function isWeekend(dateStr: string): boolean {
 }
 
 /**
- * Generate a random attendance status with realistic probabilities
+ * Roll one person's attendance across the range.
+ *
+ * Absence rates differ by who you are: children are off more than staff, and
+ * staff are off more than they are late. One shared probability made teachers
+ * as absent as their pupils.
  */
-/** @internal Generate a random attendance status with realistic probabilities */
-export function generateAttendanceStatus(isWeekendDay: boolean): AttendanceStatus {
-  if (isWeekendDay) {
-    return 'na' // Non-school days
-  }
-
-  // Realistic probabilities: 85% present, 8% late, 7% absent
-  const rand = Math.random()
-  if (rand < 0.85) return 'present'
-  if (rand < 0.93) return 'late'
-  return 'absent'
+function rollAttendance(
+  source: Rng,
+  dates: string[],
+  absentRate: number,
+  lateRate: number,
+): Record<string, AttendanceStatus> {
+  const attendance: Record<string, AttendanceStatus> = {}
+  dates.forEach(dateStr => {
+    if (isWeekend(dateStr)) {
+      attendance[dateStr] = 'na'
+      return
+    }
+    const roll = source()
+    attendance[dateStr] = roll < absentRate ? 'absent' : roll < absentRate + lateRate ? 'late' : 'present'
+  })
+  return attendance
 }
 
 /**
- * Generate mock attendance data for the last N days
+ * Support staff.
+ *
+ * The one group with no table of its own — the schema has `staff` but the mock
+ * has never seeded it, so these four are still written out. Named as the rest
+ * of the school is named, at least, and flagged here so it is clear this is
+ * the gap and not a design.
+ */
+const SUPPORT_STAFF: readonly { id: string; staffId: string; name: string }[] = [
+  { id: 'st-1', staffId: 'ST-2001', name: 'Shivanna Gowda' },
+  { id: 'st-2', staffId: 'ST-2002', name: 'Lalitha Bai' },
+  { id: 'st-3', staffId: 'ST-2003', name: 'Peter Fernandes' },
+  { id: 'st-4', staffId: 'ST-2004', name: 'Nagaveni Shetty' },
+]
+
+/**
+ * Attendance for the last N days, for students, teachers and support staff.
+ *
+ * The student rows are the directory's own rows, so a scope narrowed to one
+ * child finds that child here. Twenty-four of them rather than all four
+ * hundred: this feeds a summary table that is read by eye, and the register a
+ * teacher marks is `daily.ts`, which covers everybody.
  */
 export function generateMockAttendanceData(days: number = 10): AttendanceRecord[] {
   const dateRange = getLastNDays(days)
   const records: AttendanceRecord[] = []
+  const source = rng(`${activeTenant()}:attendance-overview:${days}`)
 
-  // Student names and IDs (mix of different classes)
-  const studentData = [
-    { id: '1', studentId: 'S-2102', name: 'Emma Williams', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma' },
-    { id: '2', studentId: 'S-2105', name: 'Thomas Green', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas' },
-    { id: '3', studentId: 'S-2005', name: 'Sophie Martin', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie' },
-    { id: '4', studentId: 'S-2108', name: 'Lucas Müller', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas' },
-    { id: '5', studentId: 'S-2110', name: 'Hannah Lee', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hannah' },
-    { id: '6', studentId: 'S-2112', name: 'Daniel Park', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Daniel' },
-    { id: '7', studentId: 'S-2115', name: 'Aisha Khan', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aisha' },
-    { id: '8', studentId: 'S-2118', name: 'Matteo Ricci', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Matteo' },
-    { id: '9', studentId: 'S-2120', name: 'Grace Johnson', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Grace' },
-    { id: '10', studentId: 'S-2122', name: 'Omar Hassan', class: '9A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Omar' },
-    { id: '11', studentId: 'S-2201', name: 'Isabella Rodriguez', class: '8B', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Isabella' },
-    { id: '12', studentId: 'S-2203', name: 'James Wilson', class: '8B', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James' },
-    { id: '13', studentId: 'S-2205', name: 'Mia Anderson', class: '8B', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mia' },
-    { id: '14', studentId: 'S-2207', name: 'Noah Brown', class: '8B', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Noah' },
-    { id: '15', studentId: 'S-2209', name: 'Olivia Davis', class: '8B', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Olivia' },
-    { id: '16', studentId: 'S-2211', name: 'Ethan Miller', class: '7A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ethan' },
-    { id: '17', studentId: 'S-2213', name: 'Ava Garcia', class: '7A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ava' },
-    { id: '18', studentId: 'S-2215', name: 'Liam Martinez', class: '7A', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liam' },
-  ]
-
-  // Teacher names and IDs
-  const teacherData = [
-    { id: 't1', teacherId: 'T-1001', name: 'Dr. Sarah Johnson', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah' },
-    { id: 't2', teacherId: 'T-1002', name: 'Prof. Robert Smith', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robert' },
-    { id: 't3', teacherId: 'T-1003', name: 'Ms. Emily Brown', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily' },
-    { id: 't4', teacherId: 'T-1004', name: 'Mr. David Lee', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David' },
-    { id: 't5', teacherId: 'T-1005', name: 'Mrs. Jennifer White', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jennifer' },
-  ]
-
-  // Staff names and IDs
-  const staffData = [
-    { id: 's1', staffId: 'ST-2001', name: 'John Anderson', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=JohnStaff' },
-    { id: 's2', staffId: 'ST-2002', name: 'Mary Thompson', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=MaryStaff' },
-    { id: 's3', staffId: 'ST-2003', name: 'Peter Wilson', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PeterStaff' },
-    { id: 's4', staffId: 'ST-2004', name: 'Lisa Davis', avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LisaStaff' },
-  ]
-
-  // Generate student records
-  studentData.forEach(student => {
-    const attendance: Record<string, AttendanceStatus> = {}
-    dateRange.forEach(dateStr => {
-      const isWeekendDay = isWeekend(dateStr)
-      // Add some variation - some students have better attendance
-      const studentRand = Math.random()
-      let status: AttendanceStatus
-
-      if (isWeekendDay) {
-        status = 'na'
-      } else if (studentRand < 0.1) {
-        // 10% chance of being absent on a school day
-        status = 'absent'
-      } else if (studentRand < 0.15) {
-        // 5% chance of being late
-        status = 'late'
-      } else {
-        status = 'present'
-      }
-
-      attendance[dateStr] = status
+  listStudents()
+    .slice(0, 24)
+    .forEach(student => {
+      const name = getDisplayName(student)
+      records.push({
+        id: String(student.id),
+        studentId: student.studentId,
+        name,
+        type: 'student',
+        class: classSectionOf(student),
+        avatarUrl:
+          student.profilePictureUrl ??
+          `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
+        attendance: rollAttendance(source, dateRange, 0.07, 0.05),
+      })
     })
 
+  teachersData.slice(0, 6).forEach(teacher => {
+    const name = teacher.fullName ?? teacher.displayName ?? teacher.teacherId
     records.push({
-      id: student.id,
-      studentId: student.studentId,
-      name: student.name,
-      type: 'student',
-      class: student.class,
-      avatarUrl: student.avatarUrl,
-      attendance,
-    })
-  })
-
-  // Generate teacher records
-  teacherData.forEach(teacher => {
-    const attendance: Record<string, AttendanceStatus> = {}
-    dateRange.forEach(dateStr => {
-      const isWeekendDay = isWeekend(dateStr)
-      const teacherRand = Math.random()
-      let status: AttendanceStatus
-
-      if (isWeekendDay) {
-        status = 'na'
-      } else if (teacherRand < 0.05) {
-        // 5% chance of being absent
-        status = 'absent'
-      } else if (teacherRand < 0.08) {
-        // 3% chance of being late
-        status = 'late'
-      } else {
-        status = 'present'
-      }
-
-      attendance[dateStr] = status
-    })
-
-    records.push({
-      id: teacher.id,
+      id: `t-${teacher.id}`,
       teacherId: teacher.teacherId,
-      name: teacher.name,
+      name,
       type: 'teacher',
-      avatarUrl: teacher.avatarUrl,
-      attendance,
+      avatarUrl:
+        teacher.avatarUrl ??
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
+      attendance: rollAttendance(source, dateRange, 0.04, 0.02),
     })
   })
 
-  // Generate staff records
-  staffData.forEach(staff => {
-    const attendance: Record<string, AttendanceStatus> = {}
-    dateRange.forEach(dateStr => {
-      const isWeekendDay = isWeekend(dateStr)
-      const staffRand = Math.random()
-      let status: AttendanceStatus
-
-      if (isWeekendDay) {
-        status = 'na'
-      } else if (staffRand < 0.08) {
-        // 8% chance of being absent
-        status = 'absent'
-      } else if (staffRand < 0.12) {
-        // 4% chance of being late
-        status = 'late'
-      } else {
-        status = 'present'
-      }
-
-      attendance[dateStr] = status
-    })
-
+  SUPPORT_STAFF.forEach(staff => {
     records.push({
       id: staff.id,
       staffId: staff.staffId,
       name: staff.name,
       type: 'staff',
-      avatarUrl: staff.avatarUrl,
-      attendance,
+      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(staff.name)}`,
+      attendance: rollAttendance(source, dateRange, 0.06, 0.03),
     })
   })
 

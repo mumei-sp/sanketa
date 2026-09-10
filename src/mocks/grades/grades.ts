@@ -1,25 +1,72 @@
 /**
- * Mock grade data for the grades feature.
+ * Seeded grade submissions.
  *
- * Pre-populates Class 9A with submitted Unit Test 1 grades (all subjects)
- * and a draft Half Yearly Math submission. Other classes have no data yet.
+ * ── What this replaced ─────────────────────────────────────────────────
+ * One class. 9A had Unit Test 1 published across every subject and a
+ * half-yearly Maths draft; the other eighteen sections had never been marked.
+ * So the grade sheet was empty for 95% of the school, a report card could only
+ * be printed for one class, and the "published" flag that gates whether a
+ * family can read a mark was only ever exercised by twenty students.
  *
- * Uses student rosters from attendance-daily.ts for consistency.
+ * The marks were also drawn with `Math.random()`, which meant they changed on
+ * every page load. A teacher opening a mark sheet twice saw two different sets
+ * of marks, and no bug about a particular mark could be reproduced. They come
+ * off a seeded stream now.
+ *
+ * ── What exists, and why that shape ────────────────────────────────────
+ * Two unit tests, published, for every class and every gradeable subject —
+ * because by the middle of September a school has marked two unit tests. The
+ * half yearly has not been sat yet, so there is nothing for it except a single
+ * draft one teacher started early, which is what keeps the draft state
+ * demonstrable. Everything after that is a blank sheet, correctly.
  */
 
 import { classRosters } from '@/mocks/attendance/daily'
 import { GRADEABLE_SUBJECT_IDS, EXAMS } from '@/features/grades/constants'
+import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
 import { relativeDate } from '@/mocks/_shared/date-helpers'
+import { subjectTeacherOf } from '@/mocks/teachers/assignments'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
+import { rng, bell, type Rng } from '@/mocks/tenants/_generate/random'
 import type { GradeSubmission, GradeEntry } from '@/features/grades/types'
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-/** Generate realistic marks for a student given max marks */
-function randomMarks(maxMarks: number, floor = 20): number {
-  const pct = floor + Math.random() * (100 - floor)
-  return Math.round((pct / 100) * maxMarks)
+/**
+ * How well one student generally does, as a percentage.
+ *
+ * Per student and stable, because a mark drawn independently per subject
+ * produces a report card like "Maths 18, Hindi 41, Science 39" for the same
+ * child — nobody is that uneven, and a report card built on it says nothing a
+ * teacher could act on. A student has an ability and a subject moves them off
+ * it; that is what makes "weak in Maths" a readable signal rather than noise.
+ *
+ * Two populations again, matching the roster's own percentages, so the class
+ * with a struggling tail on the students page has one here too.
+ */
+const abilities = new Map<string, number>()
+function abilityOf(studentId: string): number {
+  const cached = abilities.get(studentId)
+  if (cached !== undefined) return cached
+  const source = rng(`${activeTenant()}:ability:${studentId}`)
+  const ability = source() < 0.9 ? bell(source, 52, 97) : bell(source, 26, 56)
+  abilities.set(studentId, ability)
+  return ability
+}
+
+/**
+ * A mark out of `maxMarks` for one student in one subject.
+ *
+ * Their general standard, plus a subject swing of up to about twelve points —
+ * enough for a favourite subject and a weak one to be visible, not enough to
+ * make the same child top of one class and failing the next.
+ */
+function marksFor(source: Rng, studentId: string, maxMarks: number): number {
+  const swing = (bell(source, -1, 1)) * 12
+  const percent = Math.min(99, Math.max(12, abilityOf(studentId) + swing))
+  return Math.round((percent / 100) * maxMarks)
 }
 
 /** Build a blank entry for a student */
@@ -32,61 +79,65 @@ export function blankEntry(studentId: string, studentName: string, rollNumber: s
 // Pre-populated Submissions
 // ============================================================================
 
-const ut1Exam = EXAMS.find(e => e.id === 'ut1')!
-const halfExam = EXAMS.find(e => e.id === 'half')!
-const roster9A = classRosters['9A'] ?? []
+/** Unit tests one and two — sat, marked, and released. */
+const PUBLISHED_EXAM_IDS = ['ut1', 'ut2'] as const
 
-/** Generate a submitted grade submission for 9A, UT1, one subject */
-function make9AUT1Submission(subjectId: string): GradeSubmission {
+/** How long ago each was submitted, in days. */
+const SUBMITTED_DAYS_AGO: Record<string, number> = { ut1: -104, ut2: -58 }
+
+function makeSubmission(
+  classId: string,
+  examId: string,
+  subjectId: string,
+  options: { published: boolean; filledUpTo?: number },
+): GradeSubmission | null {
+  const exam = EXAMS.find(entry => entry.id === examId)
+  const roster = classRosters[classId] ?? []
+  if (!exam || roster.length === 0) return null
+
+  const source = rng(`${activeTenant()}:marks:${classId}:${examId}:${subjectId}`)
+  const filledUpTo = options.filledUpTo ?? roster.length
+
   return {
-    id: `sub-9a-ut1-${subjectId}`,
-    classId: '9A',
-    examId: 'ut1',
+    id: `sub-${classId.toLowerCase()}-${examId}-${subjectId}`,
+    classId,
+    examId,
     subjectId,
-    entries: roster9A.map(s => ({
-      studentId: s.id,
-      studentName: s.name,
-      rollNumber: s.rollNumber,
-      marksObtained: randomMarks(ut1Exam.maxMarks, 25),
-      maxMarks: ut1Exam.maxMarks,
+    entries: roster.map((student, index) => ({
+      studentId: student.id,
+      studentName: student.name,
+      rollNumber: student.rollNumber,
+      marksObtained: index < filledUpTo ? marksFor(source, student.id, exam.maxMarks) : null,
+      maxMarks: exam.maxMarks,
       remarks: '',
     })),
-    // Published, not merely submitted. The status has existed since grades
-    // were built and never meant anything; now it gates whether a family can
+    // Published, not merely submitted. The status gates whether a family can
     // read the marks, so a school with nothing published would show every
-    // parent an empty page and look broken rather than careful. Unit Test 1
-    // was marked and released two months ago, which is the ordinary case.
-    status: 'published',
-    submittedBy: 'Priya Nair',
-    // Unit Test 1 was submitted ~60 days ago.
-    submittedAt: relativeDate(-60).toISOString(),
+    // parent an empty page and look broken rather than careful.
+    status: options.published ? 'published' : 'draft',
+    submittedBy: subjectTeacherOf(classId, subjectId),
+    submittedAt: relativeDate(SUBMITTED_DAYS_AGO[examId] ?? -30).toISOString(),
   }
 }
 
-// Seed all UT1 subjects for 9A
-const seededSubmissions: GradeSubmission[] = GRADEABLE_SUBJECT_IDS.map(sid =>
-  make9AUT1Submission(sid),
-)
+const seededSubmissions: GradeSubmission[] = DEFAULT_CLASS_SECTIONS.flatMap(section =>
+  PUBLISHED_EXAM_IDS.flatMap(examId =>
+    GRADEABLE_SUBJECT_IDS.map(subjectId =>
+      makeSubmission(section.label, examId, subjectId, { published: true }),
+    ),
+  ),
+).filter((submission): submission is GradeSubmission => submission !== null)
 
-// Add a draft Half Yearly Math submission for 9A (partial — only first 8 students have marks)
-seededSubmissions.push({
-  id: 'sub-9a-half-math',
-  classId: '9A',
-  examId: 'half',
-  subjectId: 'math',
-  entries: roster9A.map((s, i) => ({
-    studentId: s.id,
-    studentName: s.name,
-    rollNumber: s.rollNumber,
-    marksObtained: i < 8 ? randomMarks(halfExam.maxMarks, 30) : null,
-    maxMarks: halfExam.maxMarks,
-    remarks: '',
-  })),
-  status: 'draft',
-  submittedBy: 'Priya Nair',
-  // Half Yearly draft saved ~30 days ago.
-  submittedAt: relativeDate(-30).toISOString(),
+// One teacher has started entering half-yearly Maths for 9A before the exam
+// has been sat — a partly-filled draft, which is the state the grade-entry
+// screen's save-and-come-back-later path exists for. Deliberately one, so
+// "draft" stays visible without pretending the school has marked a paper it
+// has not written yet.
+const halfYearlyDraft = makeSubmission('9A', 'half', 'math', {
+  published: false,
+  filledUpTo: 8,
 })
+if (halfYearlyDraft) seededSubmissions.push(halfYearlyDraft)
 
 // ============================================================================
 // Mutable in-memory store (for mock CRUD)

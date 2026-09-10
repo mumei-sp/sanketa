@@ -8,15 +8,32 @@ import type { Exam } from './types'
 // Exam Definitions
 // ============================================================================
 
+/**
+ * Which April the current academic year began in.
+ *
+ * April because that is the year start the school config declares. Derived
+ * rather than written down: the exam dates below were fixed at 2035 and 2036,
+ * so every exam in the app was nine years in the future — which made the
+ * report card, the "upcoming exams" list and the term selector all describe a
+ * school year nobody in the demo was living in.
+ */
+function academicYearStart(base: Date = new Date()): number {
+  return base.getMonth() >= 3 ? base.getFullYear() : base.getFullYear() - 1
+}
+
 /** All exams in the academic year, grouped by term */
-export const EXAMS: Exam[] = [
-  { id: 'ut1',  name: 'Unit Test 1',  termId: 'term-1', termName: 'Term 1', maxMarks: 50,  date: '2035-05-15' },
-  { id: 'ut2',  name: 'Unit Test 2',  termId: 'term-1', termName: 'Term 1', maxMarks: 50,  date: '2035-07-10' },
-  { id: 'half', name: 'Half Yearly',  termId: 'term-1', termName: 'Term 1', maxMarks: 100, date: '2035-09-20' },
-  { id: 'ut3',  name: 'Unit Test 3',  termId: 'term-2', termName: 'Term 2', maxMarks: 50,  date: '2035-11-15' },
-  { id: 'ut4',  name: 'Unit Test 4',  termId: 'term-2', termName: 'Term 2', maxMarks: 50,  date: '2036-01-10' },
-  { id: 'ann',  name: 'Annual',       termId: 'term-2', termName: 'Term 2', maxMarks: 100, date: '2036-03-15' },
-]
+export const EXAMS: Exam[] = (() => {
+  const year = academicYearStart()
+  const next = year + 1
+  return [
+    { id: 'ut1',  name: 'Unit Test 1',  termId: 'term-1', termName: 'Term 1', maxMarks: 50,  date: `${year}-05-15` },
+    { id: 'ut2',  name: 'Unit Test 2',  termId: 'term-1', termName: 'Term 1', maxMarks: 50,  date: `${year}-07-10` },
+    { id: 'half', name: 'Half Yearly',  termId: 'term-1', termName: 'Term 1', maxMarks: 100, date: `${year}-09-20` },
+    { id: 'ut3',  name: 'Unit Test 3',  termId: 'term-2', termName: 'Term 2', maxMarks: 50,  date: `${year}-11-15` },
+    { id: 'ut4',  name: 'Unit Test 4',  termId: 'term-2', termName: 'Term 2', maxMarks: 50,  date: `${next}-01-10` },
+    { id: 'ann',  name: 'Annual',       termId: 'term-2', termName: 'Term 2', maxMarks: 100, date: `${next}-03-15` },
+  ]
+})()
 
 /** Get unique term IDs in order */
 export const TERM_IDS = [...new Set(EXAMS.map(e => e.termId))]

@@ -1,226 +1,197 @@
 /**
- * Mock data for fees collection feature.
+ * The fee ledger.
  *
- * Pre-populated with 10 students × 4 fee categories.
- * Paid records include payment transaction data.
- * Mutable arrays for mock CRUD operations.
+ * ── What this replaced ─────────────────────────────────────────────────
+ * Ten students, hand-written, four categories each — forty rows for a school
+ * of forty-one, so three quarters of the roster had never been billed. The
+ * amounts were ₹1,200 for a term's tuition, which is a fortnight of tiffin;
+ * the names and classes typed next to each row disagreed with the directory
+ * nine times out of ten (harmless, since `resolveStudent` overrode both, and
+ * misleading to anybody reading the file); and the collection totals, the
+ * monthly trend and the per-category progress bars were three unrelated sets
+ * of hardcoded numbers that did not add up to each other or to the rows.
+ *
+ * Now every student is billed, at amounts a Bangalore school actually charges,
+ * and the stats are counted off the rows.
+ *
+ * ── Why families, not students, decide who pays ────────────────────────
+ * A student's payment status is drawn from their *household*, so siblings are
+ * in arrears together or paid up together. That is how fee books read — one
+ * parent pays for both children on one day, or neither gets paid for — and it
+ * is what makes the arrears list usable as a demo: the follow-up call is to a
+ * family, not to a child.
  */
 
-import { CircleCheckBig, CircleDashed, OctagonAlert } from 'lucide-react'
 import type {
-  FeeStat,
+  FeeCategory,
   FeeTrendData,
   FeeProgressData,
   FeeCollectionRecord,
   PaymentTransaction,
   PaymentMethod,
+  FeeStatus,
 } from '@/features/fees-collection/types'
 import { yyyymm, displayDate, relativeDate } from '@/mocks/_shared/date-helpers'
-import { findStudentByCode } from '@/mocks/students'
+import { listStudents } from '@/mocks/students'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
+import { rng, int, pick, chance, weighted } from '@/mocks/tenants/_generate/random'
+
+// ============================================================================
+// The fee structure
+// ============================================================================
 
 /**
- * Look up a student by their `studentId` (e.g. "S-2101") and return the name
- * + class from the canonical student directory. Falls back to the caller-
- * supplied defaults if the id isn't found (keeps the mock resilient to
- * student-list edits that drop someone).
+ * One term's bill, in rupees.
+ *
+ * Tuition rises through the school, the way it does — a class 10 seat costs
+ * more than a class 1 seat at the same school, because of the board year.
+ * These are one term of three, which is how Indian schools bill.
  */
-function resolveStudent(id: string, fallbackName: string, fallbackClass: string): { name: string; cls: string } {
-  const match = findStudentByCode(id)
-  if (!match) return { name: fallbackName, cls: fallbackClass }
-  const name =
-    match.fullName ||
-    match.displayName ||
-    match.name ||
-    [match.firstName, match.lastName].filter(Boolean).join(' ') ||
-    fallbackName
-  return { name, cls: match.class || fallbackClass }
+function termBill(grade: number): Record<FeeCategory, number> {
+  const tuition = 15000 + grade * 900
+  return {
+    'Tuition Fee': tuition,
+    'Books & Supplies': grade <= 5 ? 2400 : 3600,
+    Activities: 1800 + (grade >= 6 ? 600 : 0),
+    Miscellaneous: 900,
+  }
+}
+
+const CATEGORIES: readonly FeeCategory[] = [
+  'Tuition Fee',
+  'Books & Supplies',
+  'Activities',
+  'Miscellaneous',
+]
+
+/**
+ * How a household pays.
+ *
+ * The point of the spread is the tail. A ledger where everything is settled
+ * has no arrears screen to build, and one where everything is overdue is a
+ * school that would have closed; what a bursar actually has is a large
+ * majority who pay on the first reminder and a stubborn tenth who do not.
+ */
+const PAYERS = [
+  { kind: 'prompt', weight: 46 },
+  { kind: 'ontime', weight: 28 },
+  { kind: 'slow', weight: 17 },
+  { kind: 'arrears', weight: 9 },
+] as const
+
+type PayerKind = (typeof PAYERS)[number]['kind']
+
+const METHODS: readonly PaymentMethod[] = ['online', 'online', 'online', 'bank_transfer', 'cash', 'cheque']
+
+/** What one household does about one category. */
+function statusFor(kind: PayerKind, category: FeeCategory, source: () => number): FeeStatus {
+  switch (kind) {
+    case 'prompt':
+      return 'Paid'
+    case 'ontime':
+      // Tuition first, always. The rest follows when somebody remembers.
+      if (category === 'Tuition Fee') return 'Paid'
+      return chance(source, 0.6) ? 'Paid' : 'Pending'
+    case 'slow':
+      if (category === 'Tuition Fee') return chance(source, 0.5) ? 'Partially Paid' : 'Pending'
+      return chance(source, 0.35) ? 'Paid' : 'Pending'
+    case 'arrears':
+      if (category === 'Tuition Fee') return 'Overdue'
+      return chance(source, 0.5) ? 'Overdue' : 'Pending'
+  }
 }
 
 // ============================================================================
-// Dashboard Stats (static — service will compute dynamically)
-// ============================================================================
-
-export const feeStats: FeeStat[] = [
-  {
-    label: 'Fees Collected',
-    value: 92500,
-    icon: CircleCheckBig,
-    iconBg: 'var(--heading)',
-    iconColor: 'var(--card)',
-  },
-  {
-    label: 'Pending Fees',
-    value: 12300,
-    icon: CircleDashed,
-    iconBg: 'var(--accent)',
-    iconColor: 'var(--accent-foreground)',
-  },
-  {
-    label: 'Overdue Payments',
-    value: 4750,
-    icon: OctagonAlert,
-    iconBg: 'var(--primary)',
-    iconColor: 'var(--primary-foreground)',
-  },
-]
-
-export const feeTrendData: FeeTrendData[] = [
-  { month: 'Apr', amount: 68000 },
-  { month: 'May', amount: 72000 },
-  { month: 'Jun', amount: 65000 },
-  { month: 'Jul', amount: 78000 },
-  { month: 'Aug', amount: 82000 },
-  { month: 'Sep', amount: 75000 },
-  { month: 'Oct', amount: 88000 },
-  { month: 'Nov', amount: 91000 },
-  { month: 'Dec', amount: 85000 },
-  { month: 'Jan', amount: 93000 },
-  { month: 'Feb', amount: 89000 },
-  { month: 'Mar', amount: 92500 },
-]
-
-export const feeProgressData: FeeProgressData[] = [
-  { category: 'Tuition Fee', percentage: 87.5, collected: 70000, total: 80000, color: 'var(--heading)' },
-  { category: 'Books & Supplies', percentage: 87.5, collected: 10500, total: 12000, color: 'var(--heading)' },
-  { category: 'Activities', percentage: 90, collected: 7200, total: 8000, color: 'var(--heading)' },
-  { category: 'Miscellaneous', percentage: 86.5, collected: 4800, total: 5550, color: 'var(--heading)' },
-]
-
-// ============================================================================
-// Helpers
+// Generation
 // ============================================================================
 
 let txnCounter = 0
 function nextTxnId(): string { return `TXN-${yyyymm()}-${String(++txnCounter).padStart(4, '0')}` }
 function nextReceiptId(): string { return `REC-${yyyymm()}-${String(txnCounter).padStart(4, '0')}` }
 
-interface FeeInput {
-  amount: number
-  date: string
-  status: FeeCollectionRecord['status']
-  paid?: { method: PaymentMethod; paidDate: string }
+/**
+ * Which household a student belongs to, for the purposes of paying.
+ *
+ * The primary guardian's number, which is what the parents table matches
+ * siblings on too. Falling back to the student's own code means an orphan
+ * record is its own household rather than joining a phantom one.
+ */
+function householdKey(student: { guardians?: { father?: { phone?: string }; mother?: { phone?: string } }; studentId: string }): string {
+  return student.guardians?.father?.phone ?? student.guardians?.mother?.phone ?? student.studentId
 }
 
-function studentFees(
-  id: string,
-  fallbackName: string,
-  fallbackClass: string,
-  fees: { tuition: FeeInput; books: FeeInput; activities: FeeInput; misc: FeeInput },
-): FeeCollectionRecord[] {
-  // Prefer the canonical student record — falls through to the caller's defaults
-  // if the id was dropped / renamed upstream.
-  const { name, cls } = resolveStudent(id, fallbackName, fallbackClass)
-  function makeRecord(category: FeeCollectionRecord['feeCategory'], f: FeeInput): FeeCollectionRecord {
-    const rec: FeeCollectionRecord = {
-      studentId: id, studentName: name, class: cls,
-      feeCategory: category, totalAmount: f.amount, dueDate: f.date, status: f.status,
-    }
-    if (f.paid && f.status === 'Paid') {
-      const txnId = nextTxnId()
-      rec.paidAmount = f.amount
-      rec.paidDate = f.paid.paidDate
-      rec.paymentMethod = f.paid.method
-      rec.transactionId = txnId
-      rec.receiptId = nextReceiptId()
-    }
-    return rec
-  }
+function build(): FeeCollectionRecord[] {
+  const roster = listStudents()
+  const source = rng(`${activeTenant()}:fees:v1`)
 
-  return [
-    makeRecord('Tuition Fee', fees.tuition),
-    makeRecord('Books & Supplies', fees.books),
-    makeRecord('Activities', fees.activities),
-    makeRecord('Miscellaneous', fees.misc),
-  ]
+  // One payer kind per household, decided once and shared by its children.
+  const payers = new Map<string, PayerKind>()
+  const dueOffsets = new Map<string, number>()
+  roster.forEach(student => {
+    const key = householdKey(student)
+    if (payers.has(key)) return
+    payers.set(key, weighted(source, PAYERS).kind)
+    // A family's four bills fall in one window — the school raises them
+    // together — scattered across the quarter so the ledger is never all due
+    // on one day.
+    dueOffsets.set(key, int(source, -40, 45))
+  })
+
+  const rows: FeeCollectionRecord[] = []
+
+  roster.forEach(student => {
+    const key = householdKey(student)
+    const kind = payers.get(key) ?? 'ontime'
+    const dueOffset = dueOffsets.get(key) ?? 0
+    const bill = termBill(Number(student.gradeLevel ?? 1))
+    const name =
+      student.fullName ||
+      student.displayName ||
+      student.name ||
+      [student.firstName, student.lastName].filter(Boolean).join(' ')
+
+    CATEGORIES.forEach((category, index) => {
+      const status = statusFor(kind, category, source)
+      const due = relativeDate(dueOffset + index * 4)
+      const record: FeeCollectionRecord = {
+        studentId: student.studentId,
+        studentName: name,
+        class: student.class ?? `${student.gradeLevel}${student.section}`,
+        feeCategory: category,
+        totalAmount: bill[category],
+        dueDate: displayDate(due),
+        status,
+      }
+
+      if (status === 'Paid') {
+        record.paidAmount = bill[category]
+        // Paid a few days before it was due, which is what a bank mandate or
+        // a parent with a reminder looks like.
+        record.paidDate = displayDate(relativeDate(dueOffset + index * 4 - int(source, 1, 9)))
+        record.paymentMethod = pick(source, METHODS)
+        record.transactionId = nextTxnId()
+        record.receiptId = nextReceiptId()
+      } else if (status === 'Partially Paid') {
+        // Part paid means part paid: a figure, not a flag. Without it the
+        // outstanding column reads as the whole bill on a family that has
+        // already handed over half of it.
+        record.paidAmount = Math.round((bill[category] * int(source, 30, 70)) / 100 / 100) * 100
+        record.paidDate = displayDate(relativeDate(dueOffset + index * 4 - int(source, 1, 6)))
+        record.paymentMethod = pick(source, METHODS)
+      }
+
+      rows.push(record)
+    })
+  })
+
+  return rows
 }
 
 // ============================================================================
 // Fee Collection Records (mutable)
 // ============================================================================
 
-export const feeCollectionData: FeeCollectionRecord[] = [
-  ...studentFees('S-2101', 'Michael Chen', '7A', {
-    tuition: { amount: 1200, date: 'Mar 15, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 10, 2035' } },
-    books: { amount: 250, date: 'Mar 20, 2035', status: 'Pending' },
-    activities: { amount: 300, date: 'Mar 25, 2035', status: 'Paid', paid: { method: 'cash', paidDate: 'Mar 20, 2035' } },
-    misc: { amount: 150, date: 'Mar 30, 2035', status: 'Partially Paid' },
-  }),
-  ...studentFees('S-2102', 'Emma Williams', '7B', {
-    tuition: { amount: 1200, date: 'Mar 12, 2035', status: 'Partially Paid' },
-    books: { amount: 200, date: 'Mar 18, 2035', status: 'Paid', paid: { method: 'cheque', paidDate: 'Mar 14, 2035' } },
-    activities: { amount: 250, date: 'Mar 20, 2035', status: 'Pending' },
-    misc: { amount: 100, date: 'Mar 28, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 22, 2035' } },
-  }),
-  ...studentFees('S-2103', 'Rajesh Kumar', '7A', {
-    tuition: { amount: 1200, date: 'Mar 10, 2035', status: 'Paid', paid: { method: 'bank_transfer', paidDate: 'Mar 5, 2035' } },
-    books: { amount: 280, date: 'Mar 14, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 10, 2035' } },
-    activities: { amount: 300, date: 'Mar 18, 2035', status: 'Paid', paid: { method: 'cash', paidDate: 'Mar 14, 2035' } },
-    misc: { amount: 120, date: 'Mar 22, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 18, 2035' } },
-  }),
-  ...studentFees('S-2104', 'Priya Sharma', '7C', {
-    tuition: { amount: 1200, date: 'Mar 8, 2035', status: 'Overdue' },
-    books: { amount: 230, date: 'Mar 12, 2035', status: 'Pending' },
-    activities: { amount: 280, date: 'Mar 16, 2035', status: 'Pending' },
-    misc: { amount: 180, date: 'Mar 20, 2035', status: 'Overdue' },
-  }),
-  ...studentFees('S-2105', 'Hannah Lee', '8A', {
-    tuition: { amount: 1350, date: 'Mar 5, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 1, 2035' } },
-    books: { amount: 220, date: 'Mar 10, 2035', status: 'Partially Paid' },
-    activities: { amount: 300, date: 'Mar 15, 2035', status: 'Pending' },
-    misc: { amount: 160, date: 'Mar 20, 2035', status: 'Paid', paid: { method: 'cash', paidDate: 'Mar 15, 2035' } },
-  }),
-  ...studentFees('S-2106', 'Arjun Patel', '8A', {
-    tuition: { amount: 1350, date: 'Mar 7, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 3, 2035' } },
-    books: { amount: 240, date: 'Mar 12, 2035', status: 'Paid', paid: { method: 'bank_transfer', paidDate: 'Mar 8, 2035' } },
-    activities: { amount: 320, date: 'Mar 17, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 13, 2035' } },
-    misc: { amount: 140, date: 'Mar 22, 2035', status: 'Pending' },
-  }),
-  ...studentFees('S-2107', 'Sophia Martinez', '8B', {
-    tuition: { amount: 1350, date: 'Mar 6, 2035', status: 'Partially Paid' },
-    books: { amount: 260, date: 'Mar 11, 2035', status: 'Overdue' },
-    activities: { amount: 290, date: 'Mar 16, 2035', status: 'Paid', paid: { method: 'cheque', paidDate: 'Mar 12, 2035' } },
-    misc: { amount: 170, date: 'Mar 21, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 17, 2035' } },
-  }),
-  ...studentFees('S-2108', 'Ananya Gupta', '7B', {
-    tuition: { amount: 1200, date: 'Mar 9, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 5, 2035' } },
-    books: { amount: 210, date: 'Mar 14, 2035', status: 'Paid', paid: { method: 'cash', paidDate: 'Mar 10, 2035' } },
-    activities: { amount: 270, date: 'Mar 19, 2035', status: 'Partially Paid' },
-    misc: { amount: 130, date: 'Mar 24, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 19, 2035' } },
-  }),
-  ...studentFees('S-2109', 'Thomas Green', '7C', {
-    tuition: { amount: 1200, date: 'Mar 11, 2035', status: 'Pending' },
-    books: { amount: 245, date: 'Mar 16, 2035', status: 'Pending' },
-    activities: { amount: 310, date: 'Mar 21, 2035', status: 'Paid', paid: { method: 'bank_transfer', paidDate: 'Mar 17, 2035' } },
-    misc: { amount: 155, date: 'Mar 26, 2035', status: 'Overdue' },
-  }),
-  ...studentFees('S-2110', 'Neha Reddy', '8B', {
-    tuition: { amount: 1350, date: 'Mar 4, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Feb 28, 2035' } },
-    books: { amount: 255, date: 'Mar 9, 2035', status: 'Paid', paid: { method: 'online', paidDate: 'Mar 5, 2035' } },
-    activities: { amount: 300, date: 'Mar 14, 2035', status: 'Paid', paid: { method: 'cash', paidDate: 'Mar 10, 2035' } },
-    misc: { amount: 145, date: 'Mar 19, 2035', status: 'Paid', paid: { method: 'cheque', paidDate: 'Mar 14, 2035' } },
-  }),
-]
-
-// ---------------------------------------------------------------------------
-// Overwrite hardcoded Mar-2035 due / paid dates with dynamic values.
-//
-// Due dates scatter across the current quarter (next 90 days) so the fee
-// ledger always shows current-quarter items. Paid dates land roughly 5 days
-// before the due date so the "paid early" pattern stays plausible.
-// Runs before paymentTransactions is derived so the transaction rows pick
-// up the new dates.
-// ---------------------------------------------------------------------------
-
-feeCollectionData.forEach((record, i) => {
-  // Group fees by student so each student's four categories share a window.
-  const studentIndex = Math.floor(i / 4)
-  const dueOffset = -10 + (studentIndex % 10) * 6 // -10..+44 days relative to today
-  const dueDate = relativeDate(dueOffset)
-  record.dueDate = displayDate(dueDate)
-  if (record.paidDate) {
-    record.paidDate = displayDate(relativeDate(dueOffset - 5))
-  }
-})
+export const feeCollectionData: FeeCollectionRecord[] = build()
 
 // ============================================================================
 // Payment Transactions (mutable — built from paid records)
@@ -241,6 +212,52 @@ export const paymentTransactions: PaymentTransaction[] = feeCollectionData
     paidDate: r.paidDate!,
     receiptId: r.receiptId!,
   }))
+
+// ============================================================================
+// Dashboard aggregates — counted, not typed
+// ============================================================================
+
+/**
+ * What the school has actually banked.
+ *
+ * `paidAmount`, not `totalAmount` of the paid rows — the two differ by every
+ * part payment in the ledger, and the stat tiles were reading the second.
+ */
+const collectedTotal = feeCollectionData.reduce((sum, r) => sum + (r.paidAmount ?? 0), 0)
+
+/**
+ * Monthly collection through the academic year.
+ *
+ * Shaped rather than flat: the year's money arrives in the three months a
+ * school raises its term bills — April, August and December — and the months
+ * between are stragglers and instalments. A flat twelfth per month is the
+ * chart that gives away that nobody modelled a term.
+ */
+const MONTH_SHARE: readonly [string, number][] = [
+  ['Apr', 0.19], ['May', 0.06], ['Jun', 0.05], ['Jul', 0.04],
+  ['Aug', 0.17], ['Sep', 0.06], ['Oct', 0.05], ['Nov', 0.04],
+  ['Dec', 0.16], ['Jan', 0.07], ['Feb', 0.06], ['Mar', 0.05],
+]
+
+export const feeTrendData: FeeTrendData[] = MONTH_SHARE.map(([month, share]) => ({
+  month,
+  // × 3, because the ledger above holds one term of three and the trend is
+  // the whole year.
+  amount: Math.round((collectedTotal * 3 * share) / 1000) * 1000,
+}))
+
+export const feeProgressData: FeeProgressData[] = CATEGORIES.map(category => {
+  const rows = feeCollectionData.filter(r => r.feeCategory === category)
+  const total = rows.reduce((sum, r) => sum + r.totalAmount, 0)
+  const collected = rows.reduce((sum, r) => sum + (r.paidAmount ?? 0), 0)
+  return {
+    category,
+    percentage: total === 0 ? 0 : Math.round((collected / total) * 1000) / 10,
+    collected,
+    total,
+    color: 'var(--heading)',
+  }
+})
 
 // ============================================================================
 // Lookup helpers (for service layer)

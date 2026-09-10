@@ -16,6 +16,9 @@ import { listStudents } from '@/mocks/students'
 import { classSectionOf, rollNumberOf } from '@/utils/class-section-helpers'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { fullName } from '@/mocks/_shared/fake'
+import { classTeacherOf } from '@/mocks/teachers/assignments'
+import { activeTenant } from '@/mocks/_shared/tenant-context'
+import { rng, pick, type Rng } from '@/mocks/tenants/_generate/random'
 
 // ============================================================================
 // Class Rosters
@@ -115,21 +118,29 @@ function isWeekend(dateStr: string): boolean {
   return day === 0 || day === 6
 }
 
-/** Generate random entries for a class roster */
-function generateRandomEntries(roster: ClassRosterStudent[]): AttendanceEntry[] {
+const ABSENCE_REASONS = ['Sick leave', 'Family emergency', 'Doctor appointment', 'Not feeling well']
+const LATENESS_REASONS = ['Late bus', 'Traffic delay', 'Overslept', undefined]
+
+/**
+ * One day's register for one class.
+ *
+ * Drawn from a seeded stream rather than `Math.random`, so a register does not
+ * change every time the page is reloaded. It used to: a teacher looking at
+ * last Tuesday saw a different set of absences each visit, and any bug about
+ * a particular student's attendance was unreproducible by construction.
+ */
+function generateEntries(source: Rng, roster: ClassRosterStudent[]): AttendanceEntry[] {
   return roster.map(student => {
-    const rand = Math.random()
+    const roll = source()
     let status: MarkableAttendanceStatus = 'present'
     let note: string | undefined
 
-    if (rand > 0.92) {
+    if (roll > 0.94) {
       status = 'absent'
-      const reasons = ['Sick leave', 'Family emergency', 'Doctor appointment', 'Not feeling well']
-      note = reasons[Math.floor(Math.random() * reasons.length)]
-    } else if (rand > 0.85) {
+      note = pick(source, ABSENCE_REASONS)
+    } else if (roll > 0.88) {
       status = 'late'
-      const reasons = ['Late bus', 'Traffic delay', 'Overslept', undefined]
-      note = reasons[Math.floor(Math.random() * reasons.length)]
+      note = pick(source, LATENESS_REASONS)
     }
 
     return { studentId: student.id, status, note }
@@ -137,18 +148,18 @@ function generateRandomEntries(roster: ClassRosterStudent[]): AttendanceEntry[] 
 }
 
 /**
- * Generate submissions for a class for every weekday of the current calendar
- * month up to today (inclusive). A couple of days are intentionally skipped
- * per class to simulate "not yet marked" entries — common in a real roster.
+ * Every weekday of the current month up to today, marked for one class.
+ *
+ * A few days go unmarked, because in a real school a few days go unmarked —
+ * the history view needs unsubmitted rows to be about anything. Which days
+ * they are is drawn from the class's own stream, so it differs per class
+ * instead of being two hardcoded dates in 9A.
  */
 function generateClassSubmissions(classId: string, roster: ClassRosterStudent[]): AttendanceSubmission[] {
   const submissions: AttendanceSubmission[] = []
-  const teachers: Record<string, string> = {
-    '9A': 'Priya Nair',
-    '8B': 'Rahul Iyer',
-    '7A': 'Meera Iyengar',
-  }
-  const teacher = teachers[classId] ?? 'Admin'
+  if (roster.length === 0) return submissions
+  const source = rng(`${activeTenant()}:register:${classId}`)
+  const teacher = classTeacherOf(classId)
 
   const now = new Date()
   const year = now.getFullYear()
@@ -159,17 +170,14 @@ function generateClassSubmissions(classId: string, roster: ClassRosterStudent[])
   for (let day = 1; day <= lastDay; day++) {
     const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
     if (isWeekend(dateStr)) continue
-
-    // Preserve the "missing" pattern: skip a couple of days per class so the
-    // history view has some unsubmitted rows to render.
-    if (classId === '9A' && (day === 17 || day === 21)) continue
-    if (classId === '8B' && day === 10) continue
+    // Roughly one weekday in twelve never got marked.
+    if (source() < 0.08) continue
 
     submissions.push({
       id: `sub-${classId}-${dateStr}`,
       classId,
       date: dateStr,
-      entries: generateRandomEntries(roster),
+      entries: generateEntries(source, roster),
       submittedBy: teacher,
       submittedAt: `${dateStr}T09:15:00`,
     })
@@ -178,14 +186,16 @@ function generateClassSubmissions(classId: string, roster: ClassRosterStudent[])
   return submissions
 }
 
-/** All pre-filled attendance submissions */
-export const attendanceSubmissions: AttendanceSubmission[] = [
-  // The same three classes as before, now filled from whoever is actually
-  // enrolled in them rather than from a parallel cast.
-  ...generateClassSubmissions('9A', classRosters['9A'] ?? []),
-  ...generateClassSubmissions('8B', classRosters['8B'] ?? []),
-  ...generateClassSubmissions('7A', classRosters['7A'] ?? []),
-]
+/**
+ * All pre-filled attendance submissions — every class, not three of them.
+ *
+ * Three classes had a month of registers and sixteen had none, so the daily
+ * attendance screen was empty for most of the school and the attendance
+ * percentages on the dashboard described 1/6th of it.
+ */
+export const attendanceSubmissions: AttendanceSubmission[] = DEFAULT_CLASS_SECTIONS.flatMap(
+  section => generateClassSubmissions(section.label, classRosters[section.label] ?? []),
+)
 
 // ============================================================================
 // Helper Functions

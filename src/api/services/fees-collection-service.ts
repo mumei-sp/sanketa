@@ -49,13 +49,19 @@ export async function fetchFeeStats(): Promise<FeeStat[]> {
       // how it attended overall, is not their child's data in aggregate — it
       // is somebody else's, summed.
       if (!callerSeesEveryRow('read', 'Finance')) return []
+      // Banked, outstanding, and outstanding past its due date. Collected is
+      // `paidAmount`, not the total of the paid rows: a part payment banks
+      // part of the bill, and counting it whole overstated collection while
+      // also counting the same money again under pending.
       let collected = 0
       let pending = 0
       let overdue = 0
       feeCollectionData.forEach(r => {
-        if (r.status === 'Paid') collected += r.totalAmount
-        else if (r.status === 'Pending' || r.status === 'Partially Paid') pending += r.totalAmount
-        else if (r.status === 'Overdue') overdue += r.totalAmount
+        const paid = r.paidAmount ?? 0
+        collected += paid
+        const outstanding = Math.max(0, r.totalAmount - paid)
+        if (r.status === 'Overdue') overdue += outstanding
+        else if (r.status !== 'Paid') pending += outstanding
       })
       return [
         { label: 'Fees Collected', value: collected, icon: CircleCheckBig, iconBg: 'var(--heading)', iconColor: 'var(--card)' },
