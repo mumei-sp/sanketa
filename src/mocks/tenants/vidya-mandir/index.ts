@@ -11,10 +11,12 @@
  */
 
 import { studentFixtures } from './students'
+import { teacherFixtures } from './teachers'
 import type { TenantFixtures } from '../types'
 
 export const vidyaMandir: TenantFixtures = {
   students: studentFixtures,
+  teachers: teacherFixtures,
   extraRoles: [
     {
       id: 'librarian',

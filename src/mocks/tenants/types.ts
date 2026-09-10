@@ -11,6 +11,7 @@
  */
 
 import type { Student } from '@/features/students/types'
+import type { Teacher } from '@/features/teachers/types'
 import type { Role } from '@/config/permissions'
 
 /**
@@ -46,6 +47,16 @@ export interface TenantAccessFixtures {
 
 export interface TenantFixtures {
   students: Student[]
+  /**
+   * The school's own staff.
+   *
+   * Here rather than shared, because a teacher is a fact about a school and
+   * not about the app. One shared list meant the same person taught the same
+   * class in the same period at both schools — and everything built on the
+   * staff list inherited it: the timetable, the signature on a register, the
+   * name on a mark sheet, the workload chart, every teacher's detail page.
+   */
+  teachers: Teacher[]
   /**
    * The school's own people.
    *

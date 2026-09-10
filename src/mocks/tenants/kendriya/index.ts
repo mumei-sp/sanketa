@@ -11,10 +11,12 @@
  */
 
 import { studentFixtures } from './students'
+import { teacherFixtures } from './teachers'
 import type { TenantFixtures } from '../types'
 
 export const kendriya: TenantFixtures = {
   students: studentFixtures,
+  teachers: teacherFixtures,
   access: {
     profiles: [
       { id: 'UP-1', userId: '1', staffId: 'E-0001' },

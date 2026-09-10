@@ -31,5 +31,5 @@ const BY_CODE: Record<string, TenantFixtures> = {
  * is the kind of wrong that survives review.
  */
 export function tenantFixtures(): TenantFixtures {
-  return BY_CODE[activeTenant()] ?? { students: [] }
+  return BY_CODE[activeTenant()] ?? { students: [], teachers: [] }
 }
