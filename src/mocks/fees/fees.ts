@@ -218,14 +218,6 @@ export const paymentTransactions: PaymentTransaction[] = feeCollectionData
 // ============================================================================
 
 /**
- * What the school has actually banked.
- *
- * `paidAmount`, not `totalAmount` of the paid rows — the two differ by every
- * part payment in the ledger, and the stat tiles were reading the second.
- */
-const collectedTotal = feeCollectionData.reduce((sum, r) => sum + (r.paidAmount ?? 0), 0)
-
-/**
  * Monthly collection through the academic year.
  *
  * Shaped rather than flat: the year's money arrives in the three months a
@@ -239,11 +231,23 @@ const MONTH_SHARE: readonly [string, number][] = [
   ['Dec', 0.16], ['Jan', 0.07], ['Feb', 0.06], ['Mar', 0.05],
 ]
 
+/**
+ * What the year collects, not three times what this term has collected.
+ *
+ * The ledger holds one term, and part of that term is not yet due — 74% of it
+ * is banked today. Tripling *that* understated the year by a quarter and made
+ * the dashboard's earnings line sit permanently below its expenses line, on a
+ * school that is not in fact losing a crore a year. A year collects nearly all
+ * of what it bills; the shortfall is the arrears tail, not the calendar.
+ */
+const billedTotal = feeCollectionData.reduce((sum, r) => sum + r.totalAmount, 0)
+const ANNUAL_COLLECTION_RATE = 0.95
+
 export const feeTrendData: FeeTrendData[] = MONTH_SHARE.map(([month, share]) => ({
   month,
   // × 3, because the ledger above holds one term of three and the trend is
   // the whole year.
-  amount: Math.round((collectedTotal * 3 * share) / 1000) * 1000,
+  amount: Math.round((billedTotal * ANNUAL_COLLECTION_RATE * 3 * share) / 1000) * 1000,
 }))
 
 export const feeProgressData: FeeProgressData[] = CATEGORIES.map(category => {

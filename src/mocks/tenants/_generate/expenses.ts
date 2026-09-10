@@ -184,8 +184,12 @@ const pad4 = (n: number) => String(n).padStart(4, '0')
  * only has to be the right order of magnitude: what matters is that salaries
  * dominate the pie the way they dominate a real school's accounts, and that
  * the number moves when the faculty does.
+ *
+ * Sized so the year roughly balances against what the fee ledger collects.
+ * A school runs a thin surplus; one whose costs exceed its fees by a crore
+ * would have closed, and the dashboard's earnings chart said exactly that.
  */
-const MONTHLY_COST_PER_TEACHER = 42000
+const MONTHLY_COST_PER_TEACHER = 36000
 
 /** Support staff the ledger pays but the faculty list does not hold. */
 const SUPPORT_HEADCOUNT_RATIO = 0.4

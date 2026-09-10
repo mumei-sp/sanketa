@@ -11,9 +11,12 @@ import type {
 } from '@/features/dashboard/types'
 import { relativeDate } from '@/mocks/_shared/date-helpers'
 import { studentCount, listStudents } from '@/mocks/students'
+import { feeTrendData } from '@/mocks/fees/fees'
+import { expenseTrendData } from '@/mocks/expenses/expenses'
 import { teachersData } from '@/mocks/teachers/teachers'
 import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
 import { loadSchoolConfig } from '@/api/services/school-config-service'
+import { MONTH_SHORT_LABELS } from '@/config/school-config'
 import { getUniqueGrades } from '@/utils/class-section-helpers'
 
 /**
@@ -181,38 +184,66 @@ export function buildPerformanceDatasets(): PerformanceDataset[] {
  */
 export const performanceDatasets: PerformanceDataset[] = buildPerformanceDatasets()
 
+/**
+ * Money in against money out, by month.
+ *
+ * ── What this replaced ─────────────────────────────────────────────────
+ * Twenty hardcoded pairs — ₹5,200 of earnings in January against ₹3,400 of
+ * expenses — for a school that collects over a crore a term and pays out
+ * ₹18 lakh a month in salaries. Three orders of magnitude out, and unrelated
+ * to either the fee ledger or the expense ledger it sat between on the same
+ * dashboard. "This Year" also ran January to December, so two thirds of the
+ * line was months that have not happened.
+ *
+ * Both series are read off the two ledgers now. The dashboard's earnings line
+ * and the finance page's collection total are the same money.
+ */
+/**
+ * Both sides, month by month, from the start of the academic year to now.
+ *
+ * April onward, because that is the year a school keeps its accounts in and
+ * the one `academicYearStartMonth` declares — and because the chart orders
+ * its axis that way. Handing it the last eight *calendar* months put February
+ * and March on the right-hand end, after September, reading as the future
+ * when they were in fact the tail of the previous year.
+ *
+ * The shape is the real one and worth keeping: fees arrive in three lumps as
+ * the terms are billed, while salaries and the standing contracts go out
+ * level every month. A school's cash position swinging like that is why it
+ * has a chart at all.
+ */
+function earningsSeries(scale: number): { month: string; earnings: number; expenses: number }[] {
+  const feesByMonth = new Map(feeTrendData.map(row => [row.month, row.amount]))
+  const expensesByMonth = new Map(expenseTrendData.map(row => [row.month, row.amount]))
+  const now = new Date()
+  const startMonth = loadSchoolConfig().academicYearStartMonth
+  const monthsElapsed = ((now.getMonth() - startMonth + 12) % 12) + 1
+
+  return Array.from({ length: monthsElapsed }, (_, i) => {
+    const label = MONTH_SHORT_LABELS[(startMonth + i) % 12]
+    return {
+      month: label,
+      // Whole rupees. Passing thousands and letting the axis append its own
+      // "K" labelled ₹62 lakh as ₹6K — the chart was reporting a school's
+      // month in the low thousands of rupees.
+      earnings: Math.round((feesByMonth.get(label) ?? 0) * scale),
+      expenses: Math.round((expensesByMonth.get(label) ?? 0) * scale),
+    }
+  })
+}
+
 export const earningsDatasets: EarningsDataset[] = [
   {
     label: 'Last Year',
     value: 'last-year',
-    data: [
-      { month: 'Jan', earnings: 5200, expenses: 3400 },
-      { month: 'Feb', earnings: 4800, expenses: 3100 },
-      { month: 'Mar', earnings: 5100, expenses: 3500 },
-      { month: 'Apr', earnings: 3800, expenses: 3000 },
-      { month: 'May', earnings: 5600, expenses: 3200 },
-      { month: 'Jun', earnings: 4200, expenses: 3800 },
-      { month: 'Jul', earnings: 5500, expenses: 3100 },
-      { month: 'Aug', earnings: 4600, expenses: 2900 },
-    ],
+    // A school that grew: last year's intake was smaller, so last year's fees
+    // and last year's salary bill were both lower.
+    data: earningsSeries(0.91),
   },
   {
     label: 'This Year',
     value: 'this-year',
-    data: [
-      { month: 'Jan', earnings: 5800, expenses: 3600 },
-      { month: 'Feb', earnings: 5200, expenses: 3300 },
-      { month: 'Mar', earnings: 5900, expenses: 3700 },
-      { month: 'Apr', earnings: 4500, expenses: 3200 },
-      { month: 'May', earnings: 6100, expenses: 3500 },
-      { month: 'Jun', earnings: 4800, expenses: 4000 },
-      { month: 'Jul', earnings: 6200, expenses: 3400 },
-      { month: 'Aug', earnings: 5100, expenses: 3100 },
-      { month: 'Sep', earnings: 5700, expenses: 3800 },
-      { month: 'Oct', earnings: 6400, expenses: 3900 },
-      { month: 'Nov', earnings: 5500, expenses: 3600 },
-      { month: 'Dec', earnings: 6800, expenses: 4200 },
-    ],
+    data: earningsSeries(1),
   },
 ]
 

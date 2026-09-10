@@ -32,7 +32,16 @@ interface EarningsChartProps {
 
 const MIN_WIDTH_PER_ITEM = 60
 
+/**
+ * Rupees on the axis, in the units Indians read them in.
+ *
+ * Lakhs and crores, not thousands all the way up: a school's month is ₹62
+ * lakh, and `₹6255K` is a number nobody would say out loud. Below a lakh the
+ * K is still the natural unit, so it stays.
+ */
 const formatYAxis = (value: number) => {
+  if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`
+  if (value >= 100000) return `₹${(value / 100000).toFixed(0)}L`
   if (value >= 1000) return `₹${(value / 1000).toFixed(0)}K`
   return `₹${value.toLocaleString('en-IN')}`
 }
