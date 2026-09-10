@@ -20,8 +20,11 @@
 
 import * as React from 'react'
 import type { SchoolConfig } from './school-config'
-import { DEFAULT_SCHOOL_CONFIG } from './school-config'
-import { loadSchoolConfig, saveSchoolConfig } from '@/api/services/school-config-service'
+import {
+  loadSchoolConfig,
+  saveSchoolConfig,
+  resetSchoolConfig,
+} from '@/api/services/school-config-service'
 import { applyAppearance, subscribeToSystemMode } from '@/theme/apply-appearance'
 
 // ============================================================================
@@ -98,8 +101,10 @@ export function SchoolConfigProvider({ children }: SchoolConfigProviderProps) {
   }, [])
 
   const resetConfig = React.useCallback(() => {
-    setConfig({ ...DEFAULT_SCHOOL_CONFIG })
-    saveSchoolConfig({ ...DEFAULT_SCHOOL_CONFIG })
+    // Back to how *this school* started. Writing `DEFAULT_SCHOOL_CONFIG` gave
+    // every school the app's nineteen sections and the name "Sanketa School",
+    // which at a school running twelve is not a reset but a replacement.
+    setConfig(resetSchoolConfig())
   }, [])
 
   const value = React.useMemo<SchoolConfigContextValue>(

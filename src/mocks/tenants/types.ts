@@ -14,6 +14,7 @@ import type { Student } from '@/features/students/types'
 import type { Teacher } from '@/features/teachers/types'
 import type { FleetFixtures } from './_generate/transport'
 import type { ExpenseFixtures } from './_generate/expenses'
+import type { SchoolConfig } from '@/config/school-config'
 import type { Role } from '@/config/permissions'
 
 /**
@@ -76,6 +77,15 @@ export interface TenantFixtures {
    * children you teach, and a shared ledger could depend on neither.
    */
   expenses: ExpenseFixtures
+  /**
+   * The school's own settings, as far as they differ from the app's defaults.
+   *
+   * Class sections above all. They were the app's — one list, one storage key
+   * — so renaming 8B at one school renamed it at the other, and a school of
+   * 317 ran the nineteen sections of a school of 441 because it had no way to
+   * say otherwise. A partial, so a school states only what is its own.
+   */
+  config: Partial<SchoolConfig>
   /**
    * The school's own people.
    *

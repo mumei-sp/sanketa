@@ -21,7 +21,7 @@
  */
 
 import type { Student } from '@/features/students/types'
-import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { classSections } from './config'
 import { generateRoster, BANGALORE } from '../_generate'
 
 /**
@@ -137,7 +137,7 @@ export const studentFixtures: Student[] = generateRoster({
   city: BANGALORE,
   // The school's own sections, so the roster and the timetable are about the
   // same nineteen classes.
-  sections: DEFAULT_CLASS_SECTIONS.map(({ grade, section }) => ({ grade, section })),
+  sections: classSections.map(({ grade, section }) => ({ grade, section })),
   classSize: [20, 30],
   codePrefix: 'S-',
   // Past the anchors' S-2101 and S-2102, so nothing is issued twice.

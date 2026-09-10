@@ -36,12 +36,12 @@
 
 import type { ClassTimetable, TimetableSlot, TimetableException } from '@/features/timetable/types'
 import {
-  DEFAULT_CLASS_SECTIONS,
   DEFAULT_PERIODS,
   DEFAULT_SCHOOL_DAYS,
   DEFAULT_SUBJECTS,
 } from '@/config/school-config'
 import { teachersData } from '@/mocks/teachers/teachers'
+import { tenantSections } from '@/mocks/tenants'
 import { departmentOf } from '@/mocks/teachers/assignments'
 import { currentAcademicYear, academicYearStart, isoDate, relativeIso } from '@/mocks/_shared/date-helpers'
 import { rng, int, pick } from '@/mocks/tenants/_generate/random'
@@ -136,7 +136,7 @@ export function generateTimetables(): ClassTimetable[] {
     teacherBusy.get(teacherId)?.delete(key(day, period))
   }
 
-  const classes = DEFAULT_CLASS_SECTIONS.map(section => ({
+  const classes = tenantSections().map(section => ({
     ...section,
     quota: quotaFor(section.grade),
   }))

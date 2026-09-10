@@ -11,6 +11,7 @@
  */
 
 import { activeTenant } from '@/mocks/_shared/tenant-context'
+import { DEFAULT_CLASS_SECTIONS, type ClassSection } from '@/config/school-config'
 import { kendriya } from './kendriya'
 import { vidyaMandir } from './vidya-mandir'
 import type { TenantFixtures } from './types'
@@ -30,6 +31,19 @@ const BY_CODE: Record<string, TenantFixtures> = {
  * which is true, instead of looking like a copy of the school next door, which
  * is the kind of wrong that survives review.
  */
+/**
+ * The active school's class sections.
+ *
+ * Its own, falling back to the app's defaults for a school that states none.
+ * Seed-time only: what an administrator has since edited lives in the stored
+ * config, which `loadSchoolConfig` merges over this. The fixtures that build
+ * a roster, a timetable or a register need the school's starting shape, and
+ * they need it before any of that is loaded.
+ */
+export function tenantSections(): ClassSection[] {
+  return tenantFixtures().config.classSections ?? DEFAULT_CLASS_SECTIONS
+}
+
 export function tenantFixtures(): TenantFixtures {
   return (
     BY_CODE[activeTenant()] ?? {
@@ -37,6 +51,7 @@ export function tenantFixtures(): TenantFixtures {
       teachers: [],
       transport: { drivers: [], vehicles: [], routes: [], feeStructures: [] },
       expenses: { expenses: [], reimbursements: [], trend: [], breakdown: [] },
+      config: {},
     }
   )
 }

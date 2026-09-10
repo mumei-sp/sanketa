@@ -19,6 +19,8 @@ import {
   SCHOOL_CONFIG_STORAGE_KEY,
 } from '@/config/school-config'
 import { DEFAULT_APPEARANCE, getPreset } from '@/theme/appearance'
+import { tenantFixtures } from '@/mocks/tenants'
+import { tenantKey } from '@/mocks/_shared/tenant-context'
 
 /**
  * Load school config from localStorage.
@@ -93,23 +95,48 @@ function migrateAppearance(
   return migrated
 }
 
+/**
+ * The school's own starting configuration, over the app's defaults.
+ *
+ * A school's name, its class sections and the subjects it teaches are the
+ * school's data. They were the app's: one `DEFAULT_SCHOOL_CONFIG` and one
+ * storage key shared by both schools, so renaming 8B at one school renamed it
+ * at the other, and a school of 317 ran the nineteen sections of a school of
+ * 441 because it had no way to say otherwise.
+ */
+function baseConfig(): SchoolConfig {
+  return { ...DEFAULT_SCHOOL_CONFIG, ...tenantFixtures().config }
+}
+
+/**
+ * Where an administrator's edits are kept.
+ *
+ * Per school, like every other tenant-scoped table. Shared, an administrator
+ * adding a section at one school added it at the other — and the two schools
+ * are not even in the same city.
+ */
+function configKey(): string {
+  return tenantKey(SCHOOL_CONFIG_STORAGE_KEY)
+}
+
 export function loadSchoolConfig(): SchoolConfig {
+  const base = baseConfig()
   try {
-    const raw = localStorage.getItem(SCHOOL_CONFIG_STORAGE_KEY)
-    if (!raw) return { ...DEFAULT_SCHOOL_CONFIG }
+    const raw = localStorage.getItem(configKey())
+    if (!raw) return { ...base }
 
     const parsed = JSON.parse(raw) as Partial<SchoolConfig>
     const migratedSubjects = migrateSubjectColors(parsed.subjects)
 
     return {
-      ...DEFAULT_SCHOOL_CONFIG,
+      ...base,
       ...parsed,
       ...(migratedSubjects ? { subjects: migratedSubjects } : {}),
       // Deep-merged like `appearance`, so a config stored before a category
       // existed still gets a default for it rather than treating it as muted.
       notifications: {
         categories: {
-          ...DEFAULT_SCHOOL_CONFIG.notifications.categories,
+          ...base.notifications.categories,
           ...(parsed.notifications?.categories ?? {}),
         },
       },
@@ -117,7 +144,7 @@ export function loadSchoolConfig(): SchoolConfig {
     }
   } catch {
     console.warn('Failed to parse school config from localStorage, using defaults')
-    return { ...DEFAULT_SCHOOL_CONFIG }
+    return { ...base }
   }
 }
 
@@ -126,8 +153,27 @@ export function loadSchoolConfig(): SchoolConfig {
  */
 export function saveSchoolConfig(config: SchoolConfig): void {
   try {
-    localStorage.setItem(SCHOOL_CONFIG_STORAGE_KEY, JSON.stringify(config))
+    localStorage.setItem(configKey(), JSON.stringify(config))
   } catch (err) {
     console.error('Failed to save school config to localStorage:', err)
   }
+}
+
+/**
+ * Back to how the school started, not to how the app starts.
+ *
+ * "Reset to Defaults" used to write `DEFAULT_SCHOOL_CONFIG`, which is the
+ * app's shape — nineteen sections and the name "Sanketa School". At a school
+ * that runs twelve sections and is called something else, that is not a reset,
+ * it is another school's configuration. Clearing the stored edits and letting
+ * `loadSchoolConfig` rebuild from the school's own base is the reset the
+ * button claims to be.
+ */
+export function resetSchoolConfig(): SchoolConfig {
+  try {
+    localStorage.removeItem(configKey())
+  } catch {
+    // Private mode; the returned config still serves this session.
+  }
+  return loadSchoolConfig()
 }

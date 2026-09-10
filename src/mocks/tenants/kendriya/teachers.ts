@@ -20,7 +20,7 @@
 
 import type { Teacher } from '@/features/teachers/types'
 import { SCHOOL_DOMAIN, PHONE_COUNTRY_CODE } from '@/mocks/_shared/constants'
-import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { classSections } from './config'
 import { generateFaculty, dealSections } from '../_generate/faculty'
 
 const namedFaculty: Teacher[] = [
@@ -417,5 +417,5 @@ const teacherFixturesGenerated = generateFaculty({
 /** Kendriya's faculty, both halves of it. */
 export const teacherFixtures: Teacher[] = dealSections(
   [...namedFaculty, ...teacherFixturesGenerated],
-  DEFAULT_CLASS_SECTIONS.map(section => section.label),
+  classSections.map(section => section.label),
 )

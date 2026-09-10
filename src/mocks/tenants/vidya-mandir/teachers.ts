@@ -13,13 +13,18 @@
  * are chosen because a leak across the boundary would then be silent, and this
  * file exists because one was.
  *
- * A smaller school, but not a smaller staff room: it runs the same nineteen
- * sections at six periods a day, so it owes the same 570 class-periods and
- * needs the same thirty-odd people. The classes are smaller, not fewer.
+ * A smaller staff room, because it is a smaller school in the way that
+ * matters: twelve sections rather than nineteen. Twelve at six periods over
+ * five days is 360 class-periods, and a teacher takes about twenty-four a
+ * week — so about twenty people, not thirty-three.
+ *
+ * It ran nineteen sections until the class list became the school's own
+ * rather than the app's. That one inherited fact made a school of 317 need
+ * the staff of a school of 441, and come out spending more than it.
  */
 
 import type { Teacher } from '@/features/teachers/types'
-import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { classSections } from './config'
 import { generateFaculty, dealSections } from '../_generate/faculty'
 
 /** Vidya Mandir's own domain — a school's staff are on the school's mail. */
@@ -37,25 +42,24 @@ export const teacherFixtures: Teacher[] = dealSections(
     // Counted the same way as Kendriya's: the periods each department owes
     // across nineteen sections, over a teacher's week of about twenty-four.
     vacancies: [
-      { subject: 'Mathematics', count: 5 },
-      { subject: 'English Language', count: 3 },
-      { subject: 'English Literature', count: 2 },
+      { subject: 'Mathematics', count: 3 },
+      { subject: 'English Language', count: 2 },
+      { subject: 'English Literature', count: 1 },
       { subject: 'Science - Biology', count: 2 },
-      { subject: 'Science - Chemistry', count: 2 },
-      { subject: 'Science - Physics', count: 1 },
-      { subject: 'Social Studies - History', count: 2 },
-      { subject: 'Social Studies - Civics', count: 2 },
-      { subject: 'Hindi', count: 4 },
-      { subject: 'Computer Science', count: 2 },
+      { subject: 'Science - Chemistry', count: 1 },
+      { subject: 'Social Studies - History', count: 1 },
+      { subject: 'Social Studies - Civics', count: 1 },
+      { subject: 'Hindi', count: 3 },
+      { subject: 'Computer Science', count: 1 },
       { subject: 'Physical Education', count: 2 },
       { subject: 'Arts - Visual Arts', count: 1 },
-      { subject: 'Arts - Music', count: 2 },
+      { subject: 'Arts - Music', count: 1 },
       { subject: 'Library', count: 1 },
       // Karnataka's own language, taught here as it is everywhere in the
       // state. Outside the timetable grid for now — the subject list the
       // timetable draws on is the app's ten, not a school's.
-      { subject: 'Kannada', count: 2 },
+      { subject: 'Kannada', count: 1 },
     ],
   }),
-  DEFAULT_CLASS_SECTIONS.map(section => section.label),
+  classSections.map(section => section.label),
 )

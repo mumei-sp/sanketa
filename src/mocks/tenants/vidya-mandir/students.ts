@@ -20,7 +20,7 @@
  */
 
 import type { Student } from '@/features/students/types'
-import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { classSections } from './config'
 import { generateRoster, MYSURU } from '../_generate'
 
 const anchors: Student[] = [
@@ -74,10 +74,11 @@ const anchors: Student[] = [
 export const studentFixtures: Student[] = generateRoster({
   code: 'vidya-mandir',
   city: MYSURU,
-  sections: DEFAULT_CLASS_SECTIONS.map(({ grade, section }) => ({ grade, section })),
-  // Smaller classes than Kendriya's, because it is a smaller school and the
-  // two should not report the same numbers.
-  classSize: [14, 22],
+  sections: classSections.map(({ grade, section }) => ({ grade, section })),
+  // Twelve sections rather than Kendriya's nineteen, so its classes are of
+  // an ordinary size rather than thin — see `./config.ts`. A smaller school
+  // is fewer classes, not emptier ones.
+  classSize: [24, 32],
   codePrefix: 'VM-',
   codeBase: 3010,
   admissionPrefix: 'VM-ADM',
