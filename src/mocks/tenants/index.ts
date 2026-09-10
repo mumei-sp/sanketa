@@ -36,6 +36,7 @@ export function tenantFixtures(): TenantFixtures {
       students: [],
       teachers: [],
       transport: { drivers: [], vehicles: [], routes: [], feeStructures: [] },
+      expenses: { expenses: [], reimbursements: [], trend: [], breakdown: [] },
     }
   )
 }

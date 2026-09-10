@@ -13,6 +13,7 @@
 import type { Student } from '@/features/students/types'
 import type { Teacher } from '@/features/teachers/types'
 import type { FleetFixtures } from './_generate/transport'
+import type { ExpenseFixtures } from './_generate/expenses'
 import type { Role } from '@/config/permissions'
 
 /**
@@ -67,6 +68,14 @@ export interface TenantFixtures {
    * their own address.
    */
   transport: FleetFixtures
+  /**
+   * What the school spends, and what its staff claim back.
+   *
+   * Per school because the biggest line is salaries and the next is
+   * consumables — one depends on who you employ and the other on how many
+   * children you teach, and a shared ledger could depend on neither.
+   */
+  expenses: ExpenseFixtures
   /**
    * The school's own people.
    *

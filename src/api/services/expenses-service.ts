@@ -51,7 +51,14 @@ export async function fetchExpenseBreakdown(): Promise<{
   return mockOrHttp(
     async () => {
       await withLatency()
-      return { total: 1250000, breakdown: [...expenseBreakdownData] }
+      // Summed, not typed. `total: 1250000` was a constant sitting beside a
+      // breakdown that added to something else entirely, so the donut's
+      // centre and its own slices disagreed — ₹12,50,000 over segments
+      // totalling ₹2.45 crore.
+      return {
+        total: expenseBreakdownData.reduce((sum, row) => sum + row.amount, 0),
+        breakdown: [...expenseBreakdownData],
+      }
     },
     async () => {
       const { data } = await apiClient.get<{ total: number; breakdown: ExpenseBreakdownData[] }>(
