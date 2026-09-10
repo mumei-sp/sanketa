@@ -89,7 +89,12 @@ export const studentColumns: ColumnDef<Student>[] = [
   },
   {
     accessorKey: 'percentage',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Attendance" />,
+    // `percentage` is the academic score — `performance` is derived from it and
+    // the detail page prints it as a GPA. The column claimed to be attendance,
+    // so the table asserted an attendance figure for every student that was in
+    // fact their marks. Attendance lives in the registers, and putting it here
+    // would mean a real column fed from them.
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Avg. Score" />,
     cell: ({ row }) => {
       return <AttendanceIndicator value={row.original.percentage} />
     },

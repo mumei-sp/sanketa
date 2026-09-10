@@ -27,7 +27,7 @@ import {
   studentCount,
 } from '@/mocks/students'
 import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
-import { studentDetailData } from '@/mocks/students/details'
+import { studentDetailFor } from '@/mocks/students/details'
 import {
   academicPerformanceLastSemester,
   academicPerformanceThisSemester,
@@ -171,8 +171,11 @@ export async function fetchStudentDetailData(_id: string): Promise<StudentDetail
           })) !== undefined
         : callerSeesEveryRow('read', 'Student')
       if (!allowed) return EMPTY_STUDENT_DETAIL
-      // The mock dataset currently ships a single shared detail record.
-      return studentDetailData
+      // Every student used to get one shared record — the same allergy, the
+      // same medals, and a documents list naming a student who was never in
+      // the directory. It is derived per student now, so an id that resolves
+      // to nobody has nothing to show rather than somebody else's page.
+      return subject ? studentDetailFor(subject) : EMPTY_STUDENT_DETAIL
     },
     async () => {
       const { data } = await apiClient.get<StudentDetailData>(`/students/${_id}/details`)

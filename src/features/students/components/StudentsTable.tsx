@@ -212,7 +212,8 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
             { label: 'Class', value: student.class },
             { label: 'GPA', value: student.gpa.toFixed(1) },
             { label: 'Performance', value: <PerformanceBadge performance={student.performance} /> },
-            { label: 'Attendance', value: <AttendanceIndicator value={student.percentage} /> },
+            // Their marks, not their attendance — see `student-columns.tsx`.
+            { label: 'Avg. Score', value: <AttendanceIndicator value={student.percentage} /> },
           ]}
           onClick={() => navigate(`/students/details/${student.id}`)}
         />

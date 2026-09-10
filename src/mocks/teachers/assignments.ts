@@ -64,9 +64,15 @@ export function classTeacherOf(classLabel: string): string {
  */
 export function subjectTeacherOf(classLabel: string, subjectId: string): string {
   const subject = DEFAULT_SUBJECTS.find(entry => entry.id === subjectId)
+  const wanted = subject?.name.toLowerCase()
+  // Contains, not equals. The faculty list says what a teacher actually
+  // teaches — 'Science - Biology', 'English Literature', 'Arts - Music' — and
+  // the subject list says 'Science', 'English', 'Music'. Compared for equality
+  // only Mathematics, Hindi, Computer Science and PE ever matched, so a
+  // Science paper was signed by whoever the fallback landed on.
   const candidates = teachersData
     .map((teacher, index) => ({ teacher, index }))
-    .filter(({ teacher }) => teacher.subject === subject?.name)
+    .filter(({ teacher }) => !!wanted && (teacher.subject ?? '').toLowerCase().includes(wanted))
   if (candidates.length > 0) {
     return nameOf(candidates[hash(`${classLabel}|${subjectId}`) % candidates.length].index)
   }

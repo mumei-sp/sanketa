@@ -22,6 +22,7 @@
  */
 
 import { classRosters } from '@/mocks/attendance/daily'
+import { findStudent } from '@/mocks/students/store'
 import { GRADEABLE_SUBJECT_IDS, EXAMS } from '@/features/grades/constants'
 import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
 import { relativeDate } from '@/mocks/_shared/date-helpers'
@@ -37,21 +38,31 @@ import type { GradeSubmission, GradeEntry } from '@/features/grades/types'
 /**
  * How well one student generally does, as a percentage.
  *
- * Per student and stable, because a mark drawn independently per subject
- * produces a report card like "Maths 18, Hindi 41, Science 39" for the same
- * child — nobody is that uneven, and a report card built on it says nothing a
- * teacher could act on. A student has an ability and a subject moves them off
- * it; that is what makes "weak in Maths" a readable signal rather than noise.
+ * Read off their own record, not drawn. Two reasons.
  *
- * Two populations again, matching the roster's own percentages, so the class
- * with a struggling tail on the students page has one here too.
+ * Per student rather than per mark, because a mark drawn independently per
+ * subject produces a report card like "Maths 18, Hindi 41, Science 39" for the
+ * same child — nobody is that uneven, and a report card built on it says
+ * nothing a teacher could act on. A student has a standard and a subject moves
+ * them off it, which is what makes "weak in Maths" a readable signal.
+ *
+ * And off the record rather than off a stream of its own, because the students
+ * page, the detail page's GPA and this mark sheet are three views of one
+ * child's academic standing. Drawn separately they disagreed: the directory
+ * called her a 67% student and her mark sheet averaged 83%, and there is no
+ * reading of the data in which both are true.
+ *
+ * Filler roster rows — a class with nobody enrolled still gets a register —
+ * carry ids that resolve to no student, so those fall back to a draw.
  */
 const abilities = new Map<string, number>()
 function abilityOf(studentId: string): number {
   const cached = abilities.get(studentId)
   if (cached !== undefined) return cached
+  const student = findStudent(studentId)
   const source = rng(`${activeTenant()}:ability:${studentId}`)
-  const ability = source() < 0.9 ? bell(source, 52, 97) : bell(source, 26, 56)
+  const ability =
+    student?.percentage ?? (source() < 0.9 ? bell(source, 52, 97) : bell(source, 26, 56))
   abilities.set(studentId, ability)
   return ability
 }

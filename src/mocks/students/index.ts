@@ -14,5 +14,9 @@ export {
   resetStudents,
 } from './store'
 export { attendanceOverviewData, enrollmentTrendsData } from './dashboard'
-export { studentDetailData } from './details'
 export * from './academic-performance'
+// `./details` is deliberately not re-exported. It reads the class registers to
+// build a student's attendance calendar, and the registers are built from this
+// barrel — routing it through here would make the barrel import itself, with
+// module evaluation order deciding whether it worked. The one caller imports
+// the file.
