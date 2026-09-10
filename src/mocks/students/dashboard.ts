@@ -6,7 +6,7 @@ import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
  * Derived from the student directory so a change to the roster ripples through the
  * Students dashboard widgets instead of drifting out of sync.
  */
-const TOTAL_ENROLLMENT = studentCount() * SCHOOL_SCALE.enrollmentMultiplier
+const TOTAL_ENROLLMENT = studentCount()
 const DAILY_PRESENT_AVG = Math.round(TOTAL_ENROLLMENT * SCHOOL_SCALE.attendanceRate)
 const clamp = (n: number) => Math.min(TOTAL_ENROLLMENT, Math.max(0, Math.round(n)))
 

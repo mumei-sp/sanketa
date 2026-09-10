@@ -32,6 +32,7 @@
 
 import { newId } from '@/mocks/_shared'
 import { listStudents } from '@/mocks/students'
+import { tenantFixtures } from '@/mocks/tenants'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
 export interface Parent {
@@ -69,6 +70,13 @@ const TABLE = 'parents'
 interface Database {
   parents: Parent[]
   links: StudentParent[]
+  /**
+   * Which roster these rows were derived from. See `signatureOf`.
+   *
+   * Absent on a file written before this existed, which reads as "does not
+   * match" and reseeds — the right answer, since the rosters changed.
+   */
+  seed?: string
 }
 
 let db: Database | null = null
@@ -79,6 +87,33 @@ let db: Database | null = null
 onTenantSwitch(() => {
   db = null
 })
+
+/**
+ * A fingerprint of the guardians this table was derived from.
+ *
+ * The student directory reseeds itself whenever its fixtures change, and this
+ * table is derived from that directory — so a roster change leaves it holding
+ * the guardians of students who no longer exist. `load()` already prunes dead
+ * links, which keeps the family view honest, but the parents themselves
+ * survived: a directory of people whose children are gone, showing up in
+ * guardian pickers and parent counts and nowhere explicable.
+ *
+ * Taken over the *fixtures*, not the live directory, and over the guardian
+ * blocks rather than the whole record. Both restrictions matter: fingerprint
+ * the live rows and enrolling one student reseeds the whole parent table,
+ * throwing away the guardian that enrolment just created; fingerprint whole
+ * records and correcting a mark rebuilds the family tree.
+ */
+function signatureOf(): string {
+  const text = JSON.stringify(
+    tenantFixtures().students.map(student => [String(student.id), student.guardians]),
+  )
+  let hash = 0
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (Math.imul(31, hash) + text.charCodeAt(i)) | 0
+  }
+  return `${text.length}:${hash}`
+}
 
 /** Same person? Name and phone together, both loosely compared. */
 function sameHuman(a: { fullName: string; phone?: string }, b: { fullName: string; phone?: string }) {
@@ -95,8 +130,9 @@ function seed(): Database {
   const parents: Parent[] = []
   const links: StudentParent[] = []
   let sequence = 0
+  const roster = listStudents()
 
-  listStudents().forEach(student => {
+  roster.forEach(student => {
     const guardians = student.guardians
     if (!guardians) return
 
@@ -138,7 +174,7 @@ function seed(): Database {
     })
   })
 
-  return { parents, links }
+  return { parents, links, seed: signatureOf() }
 }
 
 function load(): Database {
@@ -147,7 +183,11 @@ function load(): Database {
     const raw = localStorage.getItem(tenantKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
-      if (Array.isArray(parsed.parents) && Array.isArray(parsed.links)) {
+      if (
+        Array.isArray(parsed.parents) &&
+        Array.isArray(parsed.links) &&
+        parsed.seed === signatureOf()
+      ) {
         db = parsed
         // The cascade a real `student_parents` FK would do for free. The
         // student directory reseeds itself whenever its fixtures are edited,

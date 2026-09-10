@@ -1,21 +1,29 @@
-import type { Student } from '@/features/students/types'
-
 /**
  * Vidya Mandir's roster.
  *
- * Deliberately small — eight students across three classes. Its job is to
- * prove that a second school is a second schema, not to be a second demo:
- * forty more rows would double the fixture surface and demonstrate nothing the
- * eighth row does not.
+ * A smaller school in a different city, generated from the same machinery as
+ * Kendriya's with a different seed — so it is a genuinely different set of
+ * families, not Kendriya's first three hundred with the ids changed. Its
+ * classes are the same labels, which is the collision the tenant boundary has
+ * to survive: a teacher scoped to `8A` at one school must not read `8A` here.
  *
- * Two things are on purpose. The class labels overlap Kendriya's (`8A` exists
- * at both) because that is exactly the collision a tenant boundary has to
- * survive — a teacher scoped to `8A` at one school must not read `8A` at the
- * other. And the first student's father is Rohan Sharma on 9845123457, the
- * same human as Kendriya's first parent, because a parent with a child at each
- * school is the case the whole global/tenant split exists for.
+ * ── The one that is written out ────────────────────────────────────────
+ * Ira Sharma's father is Rohan Sharma on 9845123457 — the same human as
+ * Kendriya's first parent, on the same number. One father, two schools, one
+ * login: the case the global identity tables exist for, and the one that would
+ * silently stop being tested if this row drifted.
+ *
+ * Families are Mysuru families, on Mysuru addresses. That is not decoration:
+ * a second school whose students all live in Bangalore localities reads as one
+ * school's data copied twice, which is exactly what the boundary is supposed
+ * to make impossible.
  */
-export const studentFixtures: Student[] = [
+
+import type { Student } from '@/features/students/types'
+import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { generateRoster, MYSURU } from '../_generate'
+
+const anchors: Student[] = [
   {
     id: 'vm-1',
     userId: 5001,
@@ -23,15 +31,19 @@ export const studentFixtures: Student[] = [
     firstName: 'Ira',
     lastName: 'Sharma',
     fullName: 'Ira Sharma',
+    displayName: 'Ira Sharma',
+    preferredName: 'Ira',
     name: 'Ira Sharma',
-    dateOfBirth: '2011-02-11',
+    dateOfBirth: '2013-02-11',
     gender: 1,
-    primaryPhone: '9845123460',
+    primaryPhone: '9845123458',
     phoneCountryCode: '+91',
-    address: '42, 7th A Cross, HSR Layout, Bangalore, Karnataka 560102, India',
+    profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ira%20Sharma',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ira%20Sharma',
+    address: '18, 3rd Cross, Saraswathipuram, Mysuru, Karnataka 570009, India',
     studentId: 'VM-3001',
-    admissionNumber: 'VM-ADM-2024-001',
-    admissionDate: '2024-06-03',
+    admissionNumber: 'VM-ADM-2019-004',
+    admissionDate: '2019-06-03',
     rollNumber: '08A-04',
     gradeLevel: '8',
     section: 'A',
@@ -40,146 +52,38 @@ export const studentFixtures: Student[] = [
     performance: 'Good',
     percentage: 91,
     status: 'Active',
-    avatarUrl: '',
-    // The same person as Kendriya's P-2001 — one father, one child at each school.
+    studentInfo: {
+      hobbies: 'Bharatanatyam, Reading',
+      specialNeedsSupport: false,
+      medicalConditionAlert: false,
+      medicalInfo: 'No known allergies',
+      fatherOccupation: 'Software Engineer',
+      motherOccupation: 'Bank Manager',
+    },
+    // The same two people as Kendriya's Aarav Sharma, character for
+    // character — that is what makes them one parent and not four.
     guardians: {
       father: { name: 'Rohan Sharma', phoneCountryCode: '+91', phone: '9845123457' },
       mother: { name: 'Meera Sharma', phoneCountryCode: '+91', phone: '9845123458' },
     },
-  },
-  {
-    id: 'vm-2',
-    userId: 5002,
-    profileType: 0,
-    name: 'Kabir Joshi',
-    studentId: 'VM-3002',
-    rollNumber: '08A-05',
-    gradeLevel: '8',
-    section: 'A',
-    class: '8A',
-    gpa: 3.1,
-    performance: 'Good',
-    percentage: 78,
-    status: 'Active',
-    avatarUrl: '',
-    guardians: {
-      father: { name: 'Anil Joshi', phoneCountryCode: '+91', phone: '9900456701' },
-    },
-  },
-  {
-    id: 'vm-3',
-    userId: 5003,
-    profileType: 0,
-    name: 'Tara Bhat',
-    studentId: 'VM-3003',
-    rollNumber: '08A-06',
-    gradeLevel: '8',
-    section: 'A',
-    class: '8A',
-    gpa: 2.4,
-    performance: 'Needs Support',
-    percentage: 64,
-    status: 'Active',
-    avatarUrl: '',
-    guardians: {
-      mother: { name: 'Shalini Bhat', phoneCountryCode: '+91', phone: '9900456702' },
-    },
-  },
-  {
-    id: 'vm-4',
-    userId: 5004,
-    profileType: 0,
-    name: 'Rehan Qureshi',
-    studentId: 'VM-3004',
-    rollNumber: '09B-01',
-    gradeLevel: '9',
-    section: 'B',
-    class: '9B',
-    gpa: 3.9,
-    performance: 'Good',
-    percentage: 95,
-    status: 'Active',
-    avatarUrl: '',
-    guardians: {
-      father: { name: 'Imran Qureshi', phoneCountryCode: '+91', phone: '9900456703' },
-      mother: { name: 'Farah Qureshi', phoneCountryCode: '+91', phone: '9900456704' },
-    },
-  },
-  {
-    id: 'vm-5',
-    userId: 5005,
-    profileType: 0,
-    name: 'Divya Raghavan',
-    studentId: 'VM-3005',
-    rollNumber: '09B-02',
-    gradeLevel: '9',
-    section: 'B',
-    class: '9B',
-    gpa: 3.4,
-    performance: 'Good',
-    percentage: 85,
-    status: 'Active',
-    avatarUrl: '',
-    guardians: {
-      father: { name: 'Suresh Raghavan', phoneCountryCode: '+91', phone: '9900456705' },
-    },
-  },
-  {
-    id: 'vm-6',
-    userId: 5006,
-    profileType: 0,
-    name: 'Aditya Kulkarni',
-    studentId: 'VM-3006',
-    rollNumber: '09B-03',
-    gradeLevel: '9',
-    section: 'B',
-    class: '9B',
-    gpa: 2.0,
-    performance: 'At Risk',
-    percentage: 58,
-    status: 'On Leave',
-    avatarUrl: '',
-    guardians: {
-      father: { name: 'Prakash Kulkarni', phoneCountryCode: '+91', phone: '9900456706' },
-    },
-  },
-  {
-    id: 'vm-7',
-    userId: 5007,
-    profileType: 0,
-    name: 'Sneha Pillai',
-    studentId: 'VM-3007',
-    rollNumber: '10A-01',
-    gradeLevel: '10',
-    section: 'A',
-    class: '10A',
-    gpa: 3.7,
-    performance: 'Good',
-    percentage: 92,
-    status: 'Active',
-    avatarUrl: '',
-    guardians: {
-      mother: { name: 'Latha Pillai', phoneCountryCode: '+91', phone: '9900456707' },
-    },
-  },
-  {
-    id: 'vm-8',
-    userId: 5008,
-    profileType: 0,
-    name: 'Vikrant Desai',
-    studentId: 'VM-3008',
-    rollNumber: '10A-02',
-    gradeLevel: '10',
-    section: 'A',
-    class: '10A',
-    gpa: 2.8,
-    performance: 'Good',
-    percentage: 71,
-    status: 'Active',
-    avatarUrl: '',
-    guardians: {
-      father: { name: 'Mahesh Desai', phoneCountryCode: '+91', phone: '9900456708' },
-      mother: { name: 'Nita Desai', phoneCountryCode: '+91', phone: '9900456709' },
-    },
+    syncedAt: '2026-04-01T09:00:00.000Z',
+    syncVersion: 1,
   },
 ]
+
+export const studentFixtures: Student[] = generateRoster({
+  code: 'vidya-mandir',
+  city: MYSURU,
+  sections: DEFAULT_CLASS_SECTIONS.map(({ grade, section }) => ({ grade, section })),
+  // Smaller classes than Kendriya's, because it is a smaller school and the
+  // two should not report the same numbers.
+  classSize: [14, 22],
+  codePrefix: 'VM-',
+  codeBase: 3010,
+  admissionPrefix: 'VM-ADM',
+  idPrefix: 'vm-',
+  userIdBase: 5100,
+  phoneBase: 9880200000,
+  academicYearStart: 2026,
+  anchors,
+})

@@ -29,22 +29,22 @@ export const ID_BASE = {
 } as const
 
 /**
- * Scaling multipliers that turn the small demo mocks into realistic campus
- * numbers. The student directory ships ~40 rows for tables; `teachersData` ships
- * ~18 for cards. These factors expand them to what a real Sanketa campus
- * would report on headline KPIs.
+ * School-wide rates the dashboards size their charts with.
  *
- * Exporting from _shared/constants.ts rather than dashboard.ts lets every
- * chart (gender donut, attendance bars, trend graphs) pull from the same
- * source and stay consistent with the stat tiles.
+ * ── What used to be here ───────────────────────────────────────────────
+ * Two multipliers: `enrollmentMultiplier: 30` and `facultyMultiplier: 5`. The
+ * roster shipped forty students, so every headline was a small number scaled
+ * up — "1,200 Enrolled Students" over a directory you could page through in
+ * two screens, and ninety teachers over a list of eighteen. Any number the
+ * dashboard showed disagreed with the screen it linked to, and the trend
+ * charts were built on the invented total rather than the real one.
+ *
+ * The roster is generated at the size of a school now (see
+ * `mocks/tenants/_generate/roster.ts`), so the counts come from the tables and
+ * the multipliers are gone. What is left is a rate, which is a fact about a
+ * school rather than a way of hiding a small fixture.
  */
 export const SCHOOL_SCALE = {
-  /** Multiplier applied to `studentCount()` to get total enrolment. */
-  enrollmentMultiplier: 30,
-  /** Multiplier applied to teachersData.length to get total faculty. */
-  facultyMultiplier: 5,
-  /** Number of grade levels in the school (used to approximate per-grade counts). */
-  gradeCount: 12,
-  /** Average attendance rate — used to size daily/weekly attendance figures. */
+  /** Average daily attendance — used to size daily/weekly attendance figures. */
   attendanceRate: 0.93,
 } as const

@@ -10,7 +10,7 @@ import type {
   TodoItem,
 } from '@/features/dashboard/types'
 import { relativeDate } from '@/mocks/_shared/date-helpers'
-import { studentCount } from '@/mocks/students'
+import { studentCount, listStudents } from '@/mocks/students'
 import { teachersData } from '@/mocks/teachers/teachers'
 import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
 import { loadSchoolConfig } from '@/api/services/school-config-service'
@@ -22,16 +22,8 @@ import { getUniqueGrades } from '@/utils/class-section-helpers'
  * so the Grade-9 total can never exceed total enrolment, attendance can
  * never exceed total enrolment, etc.
  */
-const TOTAL_ENROLLMENT = studentCount() * SCHOOL_SCALE.enrollmentMultiplier
-const AVG_PER_GRADE = Math.round(TOTAL_ENROLLMENT / SCHOOL_SCALE.gradeCount)
+const TOTAL_ENROLLMENT = studentCount()
 const DAILY_PRESENT_AVG = Math.round(TOTAL_ENROLLMENT * SCHOOL_SCALE.attendanceRate)
-
-/** Split a grade cohort into boys/girls with a small offset from 50/50. */
-function gradeGenderSplit(total: number, boysPct = 0.5) {
-  const boys = Math.round(total * boysPct)
-  const girls = total - boys
-  return { boys, girls }
-}
 
 /** Verbose "March 11, 2035" style date used by todos on the Dashboard. */
 function verboseDate(daysFromToday: number): string {
@@ -51,7 +43,7 @@ export const dashboardStats: DashboardStat[] = [
   {
     id: 'active-teachers',
     label: 'Active Teachers',
-    value: teachersData.length * SCHOOL_SCALE.facultyMultiplier,
+    value: teachersData.length,
     icon: Users,
     iconBg: 'var(--accent)',
     iconColor: 'var(--accent-foreground)',
@@ -226,22 +218,21 @@ export const earningsDatasets: EarningsDataset[] = [
 
 /**
  * Build gender datasets for every grade the admin has configured.
- * Each cohort is a slice of AVG_PER_GRADE with a small deterministic
- * per-grade size + boys/girls offset so the donut doesn't look identical
- * across grades. Values are clamped to never exceed TOTAL_ENROLLMENT.
+ *
+ * Counted off the directory, one grade at a time. It used to be an average
+ * cohort size times a per-grade jitter factor — invented numbers that added
+ * up to an invented total, so the Grade 8 donut and the Grade 8 register
+ * described different schools. A grade with nobody enrolled now reads as zero,
+ * which is the truth about a section the school has configured and not filled.
  */
 export function buildGenderDatasets(): GenderDataset[] {
   const config = loadSchoolConfig()
   const grades = getUniqueGrades(config.classSections)
+  const roster = listStudents()
   return grades.map(grade => {
-    // Stable 0.90..1.10 size multiplier + 0.46..0.54 boys share per grade.
-    const sizeMul = 0.9 + seededFraction(`size|${grade}`) * 0.2
-    const boysPct = 0.46 + seededFraction(`boys|${grade}`) * 0.08
-    const cohort = Math.min(
-      TOTAL_ENROLLMENT,
-      Math.max(10, Math.round(AVG_PER_GRADE * sizeMul)),
-    )
-    const { boys, girls } = gradeGenderSplit(cohort, boysPct)
+    const cohort = roster.filter(student => String(student.gradeLevel) === grade)
+    const boys = cohort.filter(student => student.gender === 0).length
+    const girls = cohort.length - boys
     return {
       label: `Grade ${grade}`,
       value: `grade-${grade}`,

@@ -27,16 +27,36 @@ import {
 } from 'lucide-react'
 import type { DashboardStat } from '../types'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
-import { studentCount } from '@/mocks/students'
+import { listStudents, studentCount } from '@/mocks/students'
 import { teachersData } from '@/mocks/teachers/teachers'
 
-// Student / teacher counts derive from the canonical mocks. The mocks ship
-// small demo datasets (~40 students, ~18 teachers); these multipliers scale
-// them up to what a real Sanketa campus would report (~1,200 students, ~90
-// faculty), so the dashboard reads plausibly without losing the link to the
-// underlying seed data.
-const ENROLLMENT_MULTIPLIER = 30
-const FACULTY_MULTIPLIER = 5
+// Counts come from the tables. They used to be the seed size times a
+// multiplier — 40 × 30 for students, 18 × 5 for faculty — which put "1,200
+// Enrolled Students" above a directory holding forty, and every tile the
+// dashboard offered disagreed with the screen it linked to. The roster is
+// generated at the size of a school now, so a tile can simply count.
+const roster = listStudents()
+
+/** On the register but away — a term's illness, a family posted out. */
+const onLeave = roster.filter(student => student.status === 'On Leave').length
+
+/**
+ * Admitted since this academic year began.
+ *
+ * April because that is what the school config calls the year start. A
+ * generated roster admits most of its students in June of their class-1 year
+ * and a few mid-way through, so this counts the transfers-in as well as the
+ * new class 1 — which is what a school means by new admissions.
+ */
+const newAdmissions = (() => {
+  const now = new Date()
+  const yearStart = new Date(now.getFullYear(), 3, 1)
+  if (now < yearStart) yearStart.setFullYear(now.getFullYear() - 1)
+  return roster.filter(student => {
+    if (!student.admissionDate) return false
+    return new Date(student.admissionDate) >= yearStart
+  }).length
+})()
 
 /**
  * Full registry of available dashboard stat tiles (15 options).
@@ -47,7 +67,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'enrolled-students',
     label: 'Enrolled Students',
-    value: studentCount() * ENROLLMENT_MULTIPLIER,
+    value: studentCount(),
     description: 'Total active students',
     icon: GraduationCap,
     iconBg: 'var(--primary)',
@@ -56,8 +76,8 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'new-admissions',
     label: 'New Admissions',
-    value: 28,
-    description: 'This month',
+    value: newAdmissions,
+    description: 'This academic year',
     icon: UserPlus,
     iconBg: 'var(--heading)',
     iconColor: 'var(--card)',
@@ -65,7 +85,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'students-on-leave',
     label: 'Students on Leave',
-    value: 12,
+    value: onLeave,
     description: 'Currently on leave',
     icon: UserX,
     iconBg: 'var(--primary)',
@@ -76,7 +96,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'active-teachers',
     label: 'Active Teachers',
-    value: teachersData.length * FACULTY_MULTIPLIER,
+    value: teachersData.length,
     description: 'Full & part-time',
     icon: Users,
     iconBg: 'var(--heading)',
