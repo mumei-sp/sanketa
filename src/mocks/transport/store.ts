@@ -36,6 +36,8 @@ import {
   mockVehicles,
 } from './transport'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
+import { seedSignature } from '@/mocks/_shared/seed-signature'
+import { tenantFixtures } from '@/mocks/tenants'
 
 const TABLE = 'transport'
 
@@ -45,6 +47,8 @@ interface Database {
   drivers: TransportDriver[]
   feeStructures: TransportFeeStructure[]
   assignments: StudentTransportAssignment[]
+  /** Which fleet these rows were seeded from — see `seedSignature`. */
+  seed?: string
 }
 
 /** Every collection's rows are identified the same way. */
@@ -61,13 +65,28 @@ onTenantSwitch(() => {
   db = null
 })
 
+/**
+ * A fingerprint of the fleet this was seeded from.
+ *
+ * Without it, moving the buses into the schools' folders would have changed
+ * nothing on any browser that had run the app: Vidya Mandir would have kept
+ * serving the five Bangalore routes it had already written to its own key.
+ * Over the routes and the fleet, not the assignments, because a rider added
+ * by hand is not a reason to rebuild the fleet.
+ */
+function signatureOf(): string {
+  const fleet = tenantFixtures().transport
+  return seedSignature([fleet.routes, fleet.vehicles, fleet.drivers, fleet.feeStructures])
+}
+
 function seed(): Database {
   return {
-    routes: mockRoutes.map(row => ({ ...row })),
+    routes: mockRoutes.map(row => ({ ...row, stops: row.stops.map(stop => ({ ...stop })) })),
     vehicles: mockVehicles.map(row => ({ ...row })),
     drivers: mockDrivers.map(row => ({ ...row })),
     feeStructures: mockFeeStructures.map(row => ({ ...row })),
     assignments: mockStudentAssignments.map(row => ({ ...row })),
+    seed: signatureOf(),
   }
 }
 
@@ -85,7 +104,8 @@ function load(): Database {
         Array.isArray(parsed.vehicles) &&
         Array.isArray(parsed.drivers) &&
         Array.isArray(parsed.feeStructures) &&
-        Array.isArray(parsed.assignments)
+        Array.isArray(parsed.assignments) &&
+        parsed.seed === signatureOf()
       ) {
         db = parsed
         return db

@@ -12,6 +12,7 @@
 
 import type { Student } from '@/features/students/types'
 import type { Teacher } from '@/features/teachers/types'
+import type { FleetFixtures } from './_generate/transport'
 import type { Role } from '@/config/permissions'
 
 /**
@@ -57,6 +58,15 @@ export interface TenantFixtures {
    * name on a mark sheet, the workload chart, every teacher's detail page.
    */
   teachers: Teacher[]
+  /**
+   * The school's buses, drivers and routes.
+   *
+   * Per school for the same reason and with a louder symptom: shared, a
+   * Mysuru school ran five Bangalore routes in vehicles registered KA-01 and
+   * carried nobody, because a rider is matched to a route by the locality on
+   * their own address.
+   */
+  transport: FleetFixtures
   /**
    * The school's own people.
    *

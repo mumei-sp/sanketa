@@ -19,11 +19,13 @@
 
 import { studentFixtures } from './students'
 import { teacherFixtures } from './teachers'
+import { transportFixtures } from './transport'
 import type { TenantFixtures } from '../types'
 
 export const vidyaMandir: TenantFixtures = {
   students: studentFixtures,
   teachers: teacherFixtures,
+  transport: transportFixtures,
   access: {
     profiles: [
       {
