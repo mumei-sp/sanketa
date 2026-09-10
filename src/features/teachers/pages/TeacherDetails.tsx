@@ -93,11 +93,23 @@ export default function TeacherDetails() {
           {/* ═══ RIGHT COLUMN ═══ */}
           <div className="md:col-span-2 xl:col-span-1" style={{ display: 'flex', flexDirection: 'column', gap: spacing['4'] }}>
             {/* Calendar with attendance summary */}
+            {/*
+              The month the calendar shows is the month the state says, and the
+              state starts at today. It was pinned to `year={2035} month={2}`,
+              so every teacher's attendance calendar opened on March 2035 —
+              nine years out, and a month `monthlyAttendance` has no key for,
+              which is why the grid was blank while the summary underneath it
+              counted a different month's days.
+            */}
             <MiniCalendar
-              year={2035}
-              month={2}
+              year={calYear}
+              month={calMonth}
               highlights={calendarHighlights}
-              today={calYear === 2035 && calMonth === 2 ? 2 : undefined}
+              today={
+                calYear === new Date().getFullYear() && calMonth === new Date().getMonth()
+                  ? new Date().getDate()
+                  : undefined
+              }
               onMonthChange={handleMonthChange}
             >
               {attendanceSummary && (

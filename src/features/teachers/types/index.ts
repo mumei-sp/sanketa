@@ -1,4 +1,5 @@
 import type { UserProfile, ProfileType } from '@/types/user-profile'
+import type { EmploymentType } from './teacher-detail'
 
 /**
  * Teacher interface based on UserProfile
@@ -7,9 +8,6 @@ import type { UserProfile, ProfileType } from '@/types/user-profile'
  * Note: Some UserProfile fields (userId, profileType) are optional for backward compatibility
  * with existing code that doesn't include these fields yet.
  */
-/** How a member of the teaching staff is engaged. */
-export type TeacherEmployment = 'full-time' | 'part-time' | 'substitute'
-
 export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
   /** User ID - optional for backward compatibility */
   userId?: string | number
@@ -29,8 +27,13 @@ export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
    * 62 full-time, 18 part-time and 6 substitute over a faculty list of
    * eighteen, three numbers that could not be reconciled with anything. A
    * count has to be a count of rows, so the rows have to say.
+   *
+   * The same `EmploymentType` the detail record already used, rather than a
+   * second spelling of the same three values. Declaring `'full-time'` here
+   * beside the detail record's `'Full-Time'` made `TeacherDetail extends
+   * Teacher` an error and left two encodings for callers to reconcile.
    */
-  employmentType?: TeacherEmployment
+  employmentType?: EmploymentType
 
   /**
    * Class sections this teacher may add to and amend — registers, marks and

@@ -2,6 +2,8 @@ import type { TeacherDetail, EmploymentType, ScheduleBlock, WorkloadDataPoint, T
 import type { Teacher } from '@/features/teachers/types'
 import { teachersData } from './teachers'
 import { relativeDisplay } from '@/mocks/_shared/date-helpers'
+import { classTimetables, classSections } from '@/mocks/timetable/timetable'
+import { DEFAULT_PERIODS, MONTH_SHORT_LABELS } from '@/config/school-config'
 
 // ── Seed-based helpers (deterministic per teacher) ──────────────────────────
 
@@ -23,38 +25,51 @@ function randInt(min: number, max: number, rand: () => number): number {
 
 // ── Pools of varied data ────────────────────────────────────────────────────
 
+/**
+ * Where the staff live.
+ *
+ * These used to be 45 Jalan Sudirman in Jakarta, 2218 Baker Street in London,
+ * 78 Rue de Rivoli in Paris and 101 Rajadamri Road in Bangkok — ten addresses,
+ * none of them in the city the school is in, dealt round the faculty. The
+ * teachers commute in from the localities anyone teaching in Bengaluru
+ * commutes in from.
+ */
 const ADDRESSES = [
-  '45 Jalan Sudirman, Jakarta, Indonesia',
-  '12 Jalan Thamrin, Jakarta, Indonesia',
-  '2218 Baker Street, London, United Kingdom',
-  '78 Rue de Rivoli, Paris, France',
-  '15 Orchard Road, Singapore',
-  '320 Collins Street, Melbourne, Australia',
-  '5 Marina Boulevard, Singapore',
-  '88 Jalan Ampang, Kuala Lumpur, Malaysia',
-  '42 King Street, Sydney, Australia',
-  '101 Rajadamri Road, Bangkok, Thailand',
+  '14, 2nd Cross, Basavanagudi, Bengaluru, Karnataka 560004, India',
+  '208, 5th Main Road, Jayanagar, Bengaluru, Karnataka 560041, India',
+  '46, 11th Cross, Rajajinagar, Bengaluru, Karnataka 560010, India',
+  '7, Sampige Road, Malleshwaram, Bengaluru, Karnataka 560003, India',
+  '112, 3rd Block, Banashankari, Bengaluru, Karnataka 560070, India',
+  '89, 8th Cross, Vijayanagar, Bengaluru, Karnataka 560040, India',
+  'Flat 402, Nandi Enclave, J. P. Nagar, Bengaluru, Karnataka 560078, India',
+  '33, 4th Cross, R. T. Nagar, Bengaluru, Karnataka 560032, India',
+  '19, Attur Layout, Yelahanka, Bengaluru, Karnataka 560064, India',
+  '76, BEML Layout, Kengeri, Bengaluru, Karnataka 560060, India',
 ]
 
-const EMPLOYMENT_TYPES: EmploymentType[] = ['Full-Time', 'Full-Time', 'Full-Time', 'Part-Time', 'Full-Time', 'Full-Time', 'Substitute', 'Full-Time', 'Part-Time', 'Full-Time']
-
-const CLASS_POOLS = [
-  ['BC - SA - 1A'], ['BC - SA - 2A'], ['BC - SA - 1B'], ['SA - 3A'],
-  ['BC - SA - 2B'], ['PE - 1A', 'PE - 2A'], ['BC - SA - 1A'], ['SC - 3B'],
-  ['SC - 2A'], ['EN - 1B', 'EN - 2B'],
-]
+/**
+ * The employment column, off the faculty row.
+ *
+ * It used to be dealt from a rotation of ten values here, which disagreed with
+ * the counts on the Teachers dashboard by construction: a teacher the
+ * dashboard counted as full-time could open as a substitute, and neither
+ * screen was wrong on its own.
+ */
+function employmentOf(teacher: Teacher): EmploymentType {
+  return teacher.employmentType ?? 'Full-Time'
+}
 
 // Training events: a mix of upcoming (positive offsets) and completed (negative),
 // dated relative to today so the detail view always has plausible recent history.
 const TRAINING_POOL: Omit<TrainingEvent, 'id'>[] = [
   { event: 'Digital Learning Tools Training', type: 'Training', date: relativeDisplay(20), location: 'Zoom – International Education Network', status: 'Upcoming' },
-  { event: 'Classroom Management Certification', type: 'Certification', date: relativeDisplay(-60), location: 'Cambridge University Online (UK)', status: 'Completed' },
-  { event: 'Advanced English Teaching Methods', type: 'Workshop', date: relativeDisplay(-90), location: 'London, UK – British Council', status: 'Completed' },
-  { event: 'Inclusive Education Practices', type: 'Workshop', date: relativeDisplay(35), location: 'UNESCO HQ – Paris', status: 'Upcoming' },
-  { event: 'Student Assessment Strategies', type: 'Seminar', date: relativeDisplay(55), location: 'EdTech Global – Online', status: 'Upcoming' },
-  { event: 'Curriculum Design Fundamentals', type: 'Training', date: relativeDisplay(-200), location: 'Stanford Online – EdX', status: 'Completed' },
-  { event: 'Child Psychology in Education', type: 'Seminar', date: relativeDisplay(-170), location: 'Singapore – National Institute of Education', status: 'Completed' },
-  { event: 'Data-Driven Instruction Workshop', type: 'Workshop', date: relativeDisplay(-140), location: 'Melbourne, AU – Education Conference', status: 'Completed' },
+  { event: 'CBSE Capacity Building Programme', type: 'Certification', date: relativeDisplay(-60), location: 'CBSE Regional Office, Bengaluru', status: 'Completed' },
+  { event: 'NEP 2020 Pedagogy Orientation', type: 'Workshop', date: relativeDisplay(-90), location: 'DSERT, Bengaluru', status: 'Completed' },
+  { event: 'Inclusive Education Practices', type: 'Workshop', date: relativeDisplay(35), location: 'NIEPMD – Online', status: 'Upcoming' },
+  { event: 'Student Assessment Strategies', type: 'Seminar', date: relativeDisplay(55), location: 'Azim Premji University, Bengaluru', status: 'Upcoming' },
+  { event: 'Curriculum Design Fundamentals', type: 'Training', date: relativeDisplay(-200), location: 'IIT Bombay – NPTEL', status: 'Completed' },
+  { event: 'Child Psychology in Education', type: 'Seminar', date: relativeDisplay(-170), location: 'NIMHANS, Bengaluru', status: 'Completed' },
+  { event: 'Data-Driven Instruction Workshop', type: 'Workshop', date: relativeDisplay(-140), location: 'Regional Institute of Education, Mysuru', status: 'Completed' },
   { event: 'First Aid & Safety Certification', type: 'Certification', date: relativeDisplay(-240), location: 'Red Cross – Bangalore Chapter', status: 'Completed' },
 ]
 
@@ -68,113 +83,137 @@ const LEAVE_REASONS = [
 const LEAVE_TYPES = ['Sick Leave', 'Personal Leave', 'Medical Leave', 'Family Leave']
 
 const DAYS: ScheduleBlock['day'][] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const HOURS = [8, 9, 10, 11, 12, 13, 14, 15]
-const CLASS_CODES = ['8C', '9A', '9B', '8A', '8B', '9C']
 const SCHEDULE_VARIANTS: ScheduleBlock['variant'][] = ['accent', 'dark', 'primary']
 
 // ── Generator functions ─────────────────────────────────────────────────────
 
+/**
+ * A file size that does not change on every render.
+ *
+ * These were `Math.random()`, so the same document was 2.9 MB and then 3.4 MB
+ * between two views of one teacher.
+ */
+function sized(teacher: Teacher, slot: number): string {
+  const rand = seededRandom(parseInt(String(teacher.id)) * 31 + slot)
+  return (1 + rand() * 3).toFixed(1)
+}
+
 function generateDocuments(teacher: Teacher): TeacherDocument[] {
   const name = (teacher.displayName || teacher.fullName || 'Teacher').replace(/\s+/g, '')
   return [
-    { id: 'd1', name: `Employment_Contract_${name}_${teacher.teacherId}.pdf`, type: 'PDF', size: `${(2 + Math.random() * 2).toFixed(1)} MB` },
-    { id: 'd2', name: `Certification_${teacher.subject.split(' ')[0]}_${name}.pdf`, type: 'PDF', size: `${(1 + Math.random() * 1.5).toFixed(1)} MB` },
-    { id: 'd3', name: `ID_Passport_${name}_${teacher.teacherId}.pdf`, type: 'PDF', size: `${(1.5 + Math.random() * 1.5).toFixed(1)} MB` },
+    { id: 'd1', name: `Employment_Contract_${name}_${teacher.teacherId}.pdf`, type: 'PDF', size: `${sized(teacher, 1)} MB` },
+    { id: 'd2', name: `Certification_${teacher.subject.split(' - ')[0].replace(/\s+/g, '')}_${name}.pdf`, type: 'PDF', size: `${sized(teacher, 2)} MB` },
+    { id: 'd3', name: `Aadhaar_${name}_Redacted.pdf`, type: 'PDF', size: `${sized(teacher, 3)} MB` },
   ]
 }
 
 /**
- * Generate a realistic weekly schedule: teachers have 4-6 classes per day,
- * spread across the 5-day week (20-30 classes/week total).
- * Classes are in contiguous blocks with gaps for breaks/prep.
+ * A teacher's week, read out of the timetable.
+ *
+ * It used to be invented here: three or four class codes drawn from a pool of
+ * six — one of which, `9C`, is not a class the school has — scattered over
+ * four to six random hours a day. So a teacher's own schedule and the
+ * timetable of the class they teach were about different weeks, and the two
+ * screens could be opened side by side to see it. Now there is a timetable for
+ * every class, so this is a filter, not a fiction.
+ *
+ * The schedule grid is hour-based and periods are forty-five minutes, so the
+ * six teaching periods map onto 8:00 through 13:00 in order. That loses the
+ * quarter-hours; it does not lose who is teaching whom.
  */
-function generateSchedule(seed: number): ScheduleBlock[] {
-  const rand = seededRandom(seed)
-  const blocks: ScheduleBlock[] = []
-  // Assign 3-4 class codes this teacher teaches regularly
-  const teacherClasses = [
-    CLASS_CODES[Math.floor(rand() * CLASS_CODES.length)],
-    CLASS_CODES[Math.floor(rand() * CLASS_CODES.length)],
-    CLASS_CODES[Math.floor(rand() * CLASS_CODES.length)],
-    CLASS_CODES[Math.floor(rand() * CLASS_CODES.length)],
-  ]
+const PERIOD_HOUR = new Map(
+  DEFAULT_PERIODS.filter(period => !period.isBreak).map((period, index) => [period.id, 8 + index]),
+)
 
-  const used = new Set<string>()
+const SECTION_LABEL = new Map(classSections.map(section => [section.id, section.label]))
 
-  for (const day of DAYS) {
-    // Each day: 4-6 classes out of 8 possible hours
-    const classesPerDay = randInt(4, 6, rand)
-    // Pick which hours have classes — prefer morning-heavy with a lunch gap
-    const availableHours = [...HOURS]
-    const chosenHours: number[] = []
-    for (let i = 0; i < classesPerDay && availableHours.length > 0; i++) {
-      const idx = Math.floor(rand() * availableHours.length)
-      chosenHours.push(availableHours[idx])
-      availableHours.splice(idx, 1)
-    }
-    chosenHours.sort((a, b) => a - b)
+/** Cycled so adjacent cells in the grid read apart from each other. */
+const VARIANT_BY_SUBJECT = new Map<string, ScheduleBlock['variant']>()
+function variantFor(subjectId: string): ScheduleBlock['variant'] {
+  const existing = VARIANT_BY_SUBJECT.get(subjectId)
+  if (existing) return existing
+  const variant = SCHEDULE_VARIANTS[VARIANT_BY_SUBJECT.size % SCHEDULE_VARIANTS.length]
+  VARIANT_BY_SUBJECT.set(subjectId, variant)
+  return variant
+}
 
-    for (const hour of chosenHours) {
-      const key = `${day}-${hour}`
-      if (!used.has(key)) {
-        used.add(key)
-        blocks.push({
-          day,
-          hour,
-          classCode: pick(teacherClasses, rand),
-          variant: pick(SCHEDULE_VARIANTS, rand),
-        })
-      }
-    }
-  }
-  return blocks
+function scheduleFor(teacher: Teacher): ScheduleBlock[] {
+  return classTimetables.flatMap(timetable =>
+    timetable.slots
+      .filter(slot => slot.teacherId === teacher.teacherId)
+      .flatMap(slot => {
+        const day = DAYS[slot.dayOfWeek]
+        const hour = PERIOD_HOUR.get(slot.periodId)
+        const classCode = SECTION_LABEL.get(timetable.classSectionId)
+        if (!day || hour === undefined || !classCode) return []
+        return [{ day, hour, classCode, variant: variantFor(slot.subjectId) }]
+      }),
+  )
+}
+
+/** Just Wednesday, for the Daily view. */
+function dailyScheduleFor(teacher: Teacher): ScheduleBlock[] {
+  return scheduleFor(teacher).filter(block => block.day === 'Wed')
 }
 
 /**
- * Generate a daily schedule (just Wednesday's classes) for the Daily view.
+ * The months a workload chart covers, ending with this one.
+ *
+ * The periods were hardcoded as April-to-November with "This month" as
+ * November. It has not been November for ten months, so every teacher's
+ * workload chart was labelled with somebody else's calendar.
  */
-function generateDailySchedule(seed: number): ScheduleBlock[] {
-  const weeklyBlocks = generateSchedule(seed)
-  return weeklyBlocks.filter(b => b.day === 'Wed')
-}
-
-/**
- * Generate realistic workload data for a given range of months.
- * Total classes per month: 80-120, teaching hours: 70-85% of total.
- */
-function generateWorkloadDataForMonths(seed: number, months: string[]): WorkloadDataPoint[] {
-  const rand = seededRandom(seed)
-  return months.map(month => {
-    const total = randInt(80, 120, rand)
-    const teaching = Math.round(total * (0.70 + rand() * 0.15))
-    return { month, totalClasses: total, teachingHours: teaching, extraDuties: total - teaching }
+function recentMonths(count: number, base: Date = new Date()): string[] {
+  return Array.from({ length: count }, (_, i) => {
+    const index = (base.getMonth() - (count - 1 - i) + 12) % 12
+    return MONTH_SHORT_LABELS[index]
   })
 }
 
-const WORKLOAD_PERIODS: Record<string, string[]> = {
-  'Last 8 months': ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-  'Last 6 months': ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-  'Last 3 months': ['Sep', 'Oct', 'Nov'],
-  'This month': ['Nov'],
+const WORKLOAD_SPANS: Record<string, number> = {
+  'Last 8 months': 8,
+  'Last 6 months': 6,
+  'Last 3 months': 3,
+  'This month': 1,
 }
 
-function generateWorkloadData(seed: number): WorkloadDataPoint[] {
-  return generateWorkloadDataForMonths(seed, WORKLOAD_PERIODS['Last 8 months'])
+/**
+ * A teacher's monthly load, from the periods they actually hold.
+ *
+ * Their week times four teaching weeks, with a small per-month drift for
+ * holidays and exam weeks. It used to be 80 to 120 classes a month drawn at
+ * random, which for the librarian holding nineteen periods a week was three
+ * times the truth and for nobody was it derived from anything.
+ */
+function monthlyLoad(teacher: Teacher, months: string[]): WorkloadDataPoint[] {
+  const weekly = scheduleFor(teacher).length
+  const rand = seededRandom(parseInt(String(teacher.id)) * 977 + 13)
+  return months.map(month => {
+    // Four teaching weeks, less a day or two for a holiday most months.
+    const totalClasses = Math.max(0, Math.round(weekly * (3.6 + rand() * 0.6)))
+    const teachingHours = Math.round(totalClasses * 0.75)
+    // Duties are the rest of the job: invigilation, the bus rota, assembly.
+    const extraDuties = randInt(4, 10, rand)
+    return { month, totalClasses, teachingHours, extraDuties }
+  })
 }
 
-function generateWorkloadByPeriod(seed: number): Record<string, WorkloadDataPoint[]> {
+function workloadFor(teacher: Teacher): WorkloadDataPoint[] {
+  return monthlyLoad(teacher, recentMonths(WORKLOAD_SPANS['Last 8 months']))
+}
+
+function workloadByPeriodFor(teacher: Teacher): Record<string, WorkloadDataPoint[]> {
   const data: Record<string, WorkloadDataPoint[]> = {}
-  const periods = Object.keys(WORKLOAD_PERIODS)
-  periods.forEach((period, i) => {
-    data[period] = generateWorkloadDataForMonths(seed + i * 50, WORKLOAD_PERIODS[period])
+  Object.entries(WORKLOAD_SPANS).forEach(([label, span]) => {
+    data[label] = monthlyLoad(teacher, recentMonths(span))
   })
   return data
 }
 
-function generateScheduleByView(seed: number): Record<string, ScheduleBlock[]> {
+function scheduleByView(teacher: Teacher): Record<string, ScheduleBlock[]> {
   return {
-    'Weekly': generateSchedule(seed),
-    'Daily': generateDailySchedule(seed),
+    'Weekly': scheduleFor(teacher),
+    'Daily': dailyScheduleFor(teacher),
   }
 }
 
@@ -308,14 +347,17 @@ function buildTeacherDetailsMap(): Record<string, TeacherDetail> {
     const seed = parseInt(String(teacher.id)) * 1000 + 7
     map[teacher.id] = {
       ...teacher,
-      employmentType: EMPLOYMENT_TYPES[index % EMPLOYMENT_TYPES.length],
+      employmentType: employmentOf(teacher),
       address: ADDRESSES[index % ADDRESSES.length],
-      classAssignments: CLASS_POOLS[index % CLASS_POOLS.length],
+      // The classes they may amend, as the faculty row states them. This was
+      // a pool of strings like `'BC - SA - 1A'` — a code from some other
+      // school's data, dealt round ten at a time.
+      classAssignments: teacher.assignedClasses ?? [],
       documents: generateDocuments(teacher),
-      schedule: generateSchedule(seed),
-      workloadData: generateWorkloadData(seed + 1),
-      workloadByPeriod: generateWorkloadByPeriod(seed + 1),
-      scheduleByView: generateScheduleByView(seed),
+      schedule: scheduleFor(teacher),
+      workloadData: workloadFor(teacher),
+      workloadByPeriod: workloadByPeriodFor(teacher),
+      scheduleByView: scheduleByView(teacher),
       trainingEvents: generateTrainingEvents(seed + 2),
       leaveRequests: generateLeaveRequests(seed + 3),
       performanceMetrics: generatePerformanceMetrics(seed + 4),

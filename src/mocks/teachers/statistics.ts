@@ -12,17 +12,18 @@
  */
 
 import type { DepartmentData, TeacherStatistics } from '@/features/teachers/types'
+import type { EmploymentType } from '@/features/teachers/types/teacher-detail'
 import { teachersData } from './teachers'
 import { departmentOf } from './assignments'
 
-const countOf = (kind: string) =>
+const countOf = (kind: EmploymentType) =>
   teachersData.filter(teacher => teacher.employmentType === kind).length
 
 export const teacherStatisticsData: TeacherStatistics = {
   total: teachersData.length,
-  fullTime: countOf('full-time'),
-  partTime: countOf('part-time'),
-  substitute: countOf('substitute'),
+  fullTime: countOf('Full-Time'),
+  partTime: countOf('Part-Time'),
+  substitute: countOf('Substitute'),
 }
 
 /**

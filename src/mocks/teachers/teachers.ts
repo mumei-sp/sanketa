@@ -1,5 +1,7 @@
 import type { Teacher } from '@/features/teachers/types'
 import { SCHOOL_DOMAIN, PHONE_COUNTRY_CODE } from '@/mocks/_shared/constants'
+import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { additionalFaculty } from './additional-faculty'
 
 /**
  * Every teacher owns two class sections, and between them the eighteen of them
@@ -22,7 +24,7 @@ import { SCHOOL_DOMAIN, PHONE_COUNTRY_CODE } from '@/mocks/_shared/constants'
  *
  * Subjects align with CBSE / ICSE secondary-school curricula.
  */
-export const teachersData: Teacher[] = [
+const namedFaculty: Teacher[] = [
   {
     id: '1',
     userId: 2001,
@@ -39,7 +41,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1001',
     assignedClasses: ['1A', '1B'],
     subject: 'Mathematics',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `aditi.sharma@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aditi',
   },
@@ -59,7 +61,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1002',
     assignedClasses: ['2A', '2B'],
     subject: 'Social Studies - Civics',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `priya.nair@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya',
   },
@@ -79,7 +81,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1003',
     assignedClasses: ['3A', '4A'],
     subject: 'English Language',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `rahul.iyer@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul',
   },
@@ -99,7 +101,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1004',
     assignedClasses: ['5A', '5B'],
     subject: 'Social Studies - History',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `ayesha.khan@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ayesha',
   },
@@ -119,7 +121,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1005',
     assignedClasses: ['6A', '7A'],
     subject: 'Arts - Visual Arts',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `vikram.reddy@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram',
   },
@@ -139,7 +141,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1006',
     assignedClasses: ['8A', '8B'],
     subject: 'Physical Education',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `meera.iyengar@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Meera',
   },
@@ -159,7 +161,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1007',
     assignedClasses: ['9A', '9B'],
     subject: 'Mathematics - Algebra',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `karthik.menon@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Karthik',
   },
@@ -179,7 +181,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1008',
     assignedClasses: ['10A', '10B'],
     subject: 'Science - Biology',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `anjali.krishnan@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anjali',
   },
@@ -199,7 +201,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1009',
     assignedClasses: ['7B', '7C'],
     subject: 'Science - Chemistry',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `suresh.kumar@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Suresh',
   },
@@ -219,7 +221,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1010',
     assignedClasses: ['8C', '6A'],
     subject: 'English Literature',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `divya.patel@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Divya',
   },
@@ -239,7 +241,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1011',
     assignedClasses: ['1A', '3A'],
     subject: 'Science - Physics',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `arvind.rao@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arvind',
   },
@@ -259,7 +261,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1012',
     assignedClasses: ['2A', '4A'],
     subject: 'Hindi',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `ritika.banerjee@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ritika',
   },
@@ -279,7 +281,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1013',
     assignedClasses: ['5A', '7B'],
     subject: 'Computer Science',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `imran.ali@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Imran',
   },
@@ -299,7 +301,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1014',
     assignedClasses: ['8A', '9A'],
     subject: 'Kannada',
-    employmentType: 'full-time',
+    employmentType: 'Full-Time',
     email: `lakshmi.subramanian@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lakshmi',
   },
@@ -319,7 +321,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1015',
     assignedClasses: ['10A', '7C'],
     subject: 'Social Studies - Geography',
-    employmentType: 'part-time',
+    employmentType: 'Part-Time',
     email: `deepak.chatterjee@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Deepak',
   },
@@ -339,7 +341,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1016',
     assignedClasses: ['1B', '2B'],
     subject: 'Arts - Music',
-    employmentType: 'part-time',
+    employmentType: 'Part-Time',
     email: `sneha.desai@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha',
   },
@@ -359,7 +361,7 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1017',
     assignedClasses: ['5B', '8C'],
     subject: 'Mathematics - Geometry',
-    employmentType: 'substitute',
+    employmentType: 'Substitute',
     email: `michael.dsouza@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
   },
@@ -379,8 +381,50 @@ export const teachersData: Teacher[] = [
     teacherId: 'T-1018',
     assignedClasses: ['9B', '10B'],
     subject: 'Urdu',
-    employmentType: 'substitute',
+    employmentType: 'Substitute',
     email: `fatima.siddiqui@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima',
   },
 ]
+
+/**
+ * Deal the sections round the whole faculty.
+ *
+ * `assignedClasses` is authorisation — the classes whose registers and marks a
+ * teacher may amend — so it is stated rather than derived from the timetable,
+ * for the reason set out on the field itself. What it must not be is lopsided:
+ * the generated half arrives with none, and leaving them empty means a third
+ * of the staff can read everything and write nothing.
+ *
+ * Two each, dealt round the section list, so every section is held and no
+ * section is held by half the school. Rows that already state their own are
+ * left alone: the hand-written eighteen say which classes they hold, and the
+ * access seed relies on Meera Iyengar holding 8A and 8B.
+ */
+function dealSections(faculty: Teacher[]): Teacher[] {
+  const sections = DEFAULT_CLASS_SECTIONS.map(section => section.label)
+  let cursor = 0
+  faculty.forEach(teacher => {
+    const held = teacher.assignedClasses?.length ?? 0
+    if (held > 0) {
+      cursor += held
+      return
+    }
+    teacher.assignedClasses = [
+      sections[cursor % sections.length],
+      sections[(cursor + 1) % sections.length],
+    ]
+    cursor += 2
+  })
+  return faculty
+}
+
+/**
+ * The faculty, both halves of it.
+ *
+ * The eighteen above are hand-written and stay that way — other fixtures name
+ * them, and T-1006 is a profile in the access seed. The rest are generated
+ * from the load the timetable implies; see `additional-faculty.ts` for why
+ * eighteen could not staff nineteen sections.
+ */
+export const teachersData: Teacher[] = dealSections([...namedFaculty, ...additionalFaculty])

@@ -12,9 +12,9 @@ export interface CalendarHighlight {
 }
 
 interface MiniCalendarProps {
-  /** Initial year (defaults to 2035 for mock) */
+  /** Year shown. Defaults to this year — it used to default to 2035. */
   year?: number
-  /** Initial month (0-indexed, defaults to 2 = March) */
+  /** Month shown, 0-indexed. Defaults to this month — it used to default to March. */
   month?: number
   /** Dates to highlight */
   highlights?: CalendarHighlight[]

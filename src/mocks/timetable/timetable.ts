@@ -23,14 +23,10 @@ import type {
   Subject,
   ClassSection,
   ClassTimetable,
-  TimetableSlot,
   TimetableException,
 } from '@/features/timetable/types'
-import { currentAcademicYear, academicYearStart, relativeIso, isoDate } from '@/mocks/_shared/date-helpers'
-
-/** Dynamic academic year + effective-from date (Apr 1 of current AY). */
-const ACADEMIC_YEAR = currentAcademicYear()
-const EFFECTIVE_FROM = isoDate(academicYearStart())
+import { DEFAULT_CLASS_SECTIONS } from '@/config/school-config'
+import { generateTimetables, generateExceptions } from './generate'
 
 // ============================================================================
 // Subjects Registry — colors from theme tokens, never hardcoded hex
@@ -66,247 +62,34 @@ export function getSubjectById(id: string): Subject | undefined {
 // Class Sections
 // ============================================================================
 
-export const classSections: ClassSection[] = [
-  // Grade 1
-  { id: 'cls-1a', grade: '1', section: 'A', label: '1A' },
-  { id: 'cls-1b', grade: '1', section: 'B', label: '1B' },
-  // Grade 2
-  { id: 'cls-2a', grade: '2', section: 'A', label: '2A' },
-  { id: 'cls-2b', grade: '2', section: 'B', label: '2B' },
-  // Grade 3
-  { id: 'cls-3a', grade: '3', section: 'A', label: '3A' },
-  // Grade 4
-  { id: 'cls-4a', grade: '4', section: 'A', label: '4A' },
-  // Grade 5
-  { id: 'cls-5a', grade: '5', section: 'A', label: '5A' },
-  { id: 'cls-5b', grade: '5', section: 'B', label: '5B' },
-  // Grade 6
-  { id: 'cls-6a', grade: '6', section: 'A', label: '6A' },
-  // Grade 7
-  { id: 'cls-7a', grade: '7', section: 'A', label: '7A' },
-  // Grade 8
-  { id: 'cls-8a', grade: '8', section: 'A', label: '8A' },
-  { id: 'cls-8b', grade: '8', section: 'B', label: '8B' },
-  // Grade 9
-  { id: 'cls-9a', grade: '9', section: 'A', label: '9A' },
-  { id: 'cls-9b', grade: '9', section: 'B', label: '9B' },
-  // Grade 10
-  { id: 'cls-10a', grade: '10', section: 'A', label: '10A' },
-  { id: 'cls-10b', grade: '10', section: 'B', label: '10B' },
-]
+/**
+ * The school's sections.
+ *
+ * From the school config, not a second copy of it. The copy that used to live
+ * here held sixteen — it was missing 7B, 7C and 8C — so the timetable's class
+ * picker silently omitted three sections that have students in them, and the
+ * only symptom was a class you could not select.
+ */
+export const classSections: ClassSection[] = DEFAULT_CLASS_SECTIONS.map(section => ({
+  ...section,
+}))
 
 // ============================================================================
-// Helper: build slot
+// Timetables — one per class, generated
 // ============================================================================
 
-function slot(day: number, periodId: string, subjectId: string, subjectName: string, teacherId: string, teacherName: string, room?: string): TimetableSlot {
-  return { dayOfWeek: day, periodId, subjectId, subjectName, teacherId, teacherName, room }
-}
-
-// ============================================================================
-// Class 9A Timetable
-// ============================================================================
-
-const class9ASlots: TimetableSlot[] = [
-  // Monday
-  slot(0, 'p1', 'math',  'Mathematics',       '1', 'Ms. Lee',    'Room 201'),
-  slot(0, 'p2', 'eng',   'English',            '2', 'Mr. Roy',    'Room 201'),
-  slot(0, 'p3', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 3'),
-  slot(0, 'p4', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 201'),
-  slot(0, 'p5', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 201'),
-  slot(0, 'p6', 'cs',    'Computer Science',   '1', 'Ms. Lee',    'Lab 1'),
-  // Tuesday
-  slot(1, 'p1', 'eng',   'English',            '2', 'Mr. Roy',    'Room 201'),
-  slot(1, 'p2', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 201'),
-  slot(1, 'p3', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 201'),
-  slot(1, 'p4', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 3'),
-  slot(1, 'p5', 'pe',    'Physical Education',  '4', 'Mr. Sharma', 'Ground'),
-  slot(1, 'p6', 'art',   'Art',                '2', 'Mr. Roy',    'Art Room'),
-  // Wednesday
-  slot(2, 'p1', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 3'),
-  slot(2, 'p2', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 201'),
-  slot(2, 'p3', 'eng',   'English',            '2', 'Mr. Roy',    'Room 201'),
-  slot(2, 'p4', 'cs',    'Computer Science',   '1', 'Ms. Lee',    'Lab 1'),
-  slot(2, 'p5', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 201'),
-  slot(2, 'p6', 'music', 'Music',              '5', 'Mr. Shah',   'Music Room'),
-  // Thursday
-  slot(3, 'p1', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 201'),
-  slot(3, 'p2', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 3'),
-  slot(3, 'p3', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 201'),
-  slot(3, 'p4', 'eng',   'English',            '2', 'Mr. Roy',    'Room 201'),
-  slot(3, 'p5', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 201'),
-  slot(3, 'p6', 'library','Library',            '2', 'Mr. Roy',    'Library'),
-  // Friday
-  slot(4, 'p1', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 201'),
-  slot(4, 'p2', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 201'),
-  slot(4, 'p3', 'pe',    'Physical Education',  '4', 'Mr. Sharma', 'Ground'),
-  slot(4, 'p4', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 3'),
-  slot(4, 'p5', 'eng',   'English',            '2', 'Mr. Roy',    'Room 201'),
-  slot(4, 'p6', 'cs',    'Computer Science',   '1', 'Ms. Lee',    'Lab 1'),
-]
-
-// ============================================================================
-// Class 8B Timetable
-// ============================================================================
-
-const class8BSlots: TimetableSlot[] = [
-  // Monday
-  slot(0, 'p1', 'eng',   'English',            '2', 'Mr. Roy',    'Room 105'),
-  slot(0, 'p2', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 2'),
-  slot(0, 'p3', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 105'),
-  slot(0, 'p4', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 105'),
-  slot(0, 'p5', 'art',   'Art',                '2', 'Mr. Roy',    'Art Room'),
-  slot(0, 'p6', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 105'),
-  // Tuesday
-  slot(1, 'p1', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 105'),
-  slot(1, 'p2', 'eng',   'English',            '2', 'Mr. Roy',    'Room 105'),
-  slot(1, 'p3', 'pe',    'Physical Education',  '4', 'Mr. Sharma', 'Ground'),
-  slot(1, 'p4', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 105'),
-  slot(1, 'p5', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 2'),
-  slot(1, 'p6', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 105'),
-  // Wednesday
-  slot(2, 'p1', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 105'),
-  slot(2, 'p2', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 105'),
-  slot(2, 'p3', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 2'),
-  slot(2, 'p4', 'eng',   'English',            '2', 'Mr. Roy',    'Room 105'),
-  slot(2, 'p5', 'cs',    'Computer Science',   '1', 'Ms. Lee',    'Lab 1'),
-  slot(2, 'p6', 'music', 'Music',              '5', 'Mr. Shah',   'Music Room'),
-  // Thursday
-  slot(3, 'p1', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 2'),
-  slot(3, 'p2', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 105'),
-  slot(3, 'p3', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 105'),
-  slot(3, 'p4', 'cs',    'Computer Science',   '1', 'Ms. Lee',    'Lab 1'),
-  slot(3, 'p5', 'eng',   'English',            '2', 'Mr. Roy',    'Room 105'),
-  slot(3, 'p6', 'pe',    'Physical Education',  '4', 'Mr. Sharma', 'Ground'),
-  // Friday
-  slot(4, 'p1', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 105'),
-  slot(4, 'p2', 'eng',   'English',            '2', 'Mr. Roy',    'Room 105'),
-  slot(4, 'p3', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 105'),
-  slot(4, 'p4', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 105'),
-  slot(4, 'p5', 'library','Library',            '2', 'Mr. Roy',    'Library'),
-  slot(4, 'p6', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 2'),
-]
-
-// ============================================================================
-// Class 7A Timetable
-// ============================================================================
-
-const class7ASlots: TimetableSlot[] = [
-  // Monday
-  slot(0, 'p1', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 1'),
-  slot(0, 'p2', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 301'),
-  slot(0, 'p3', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 301'),
-  slot(0, 'p4', 'eng',   'English',            '2', 'Mr. Roy',    'Room 301'),
-  slot(0, 'p5', 'cs',    'Computer Science',   '1', 'Ms. Lee',    'Lab 1'),
-  slot(0, 'p6', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 301'),
-  // Tuesday
-  slot(1, 'p1', 'eng',   'English',            '2', 'Mr. Roy',    'Room 301'),
-  slot(1, 'p2', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 301'),
-  slot(1, 'p3', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 301'),
-  slot(1, 'p4', 'art',   'Art',                '2', 'Mr. Roy',    'Art Room'),
-  slot(1, 'p5', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 301'),
-  slot(1, 'p6', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 1'),
-  // Wednesday
-  slot(2, 'p1', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 301'),
-  slot(2, 'p2', 'eng',   'English',            '2', 'Mr. Roy',    'Room 301'),
-  slot(2, 'p3', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 1'),
-  slot(2, 'p4', 'pe',    'Physical Education',  '4', 'Mr. Sharma', 'Ground'),
-  slot(2, 'p5', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 301'),
-  slot(2, 'p6', 'library','Library',            '2', 'Mr. Roy',    'Library'),
-  // Thursday
-  slot(3, 'p1', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 301'),
-  slot(3, 'p2', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 1'),
-  slot(3, 'p3', 'eng',   'English',            '2', 'Mr. Roy',    'Room 301'),
-  slot(3, 'p4', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 301'),
-  slot(3, 'p5', 'music', 'Music',              '5', 'Mr. Shah',   'Music Room'),
-  slot(3, 'p6', 'cs',    'Computer Science',   '1', 'Ms. Lee',    'Lab 1'),
-  // Friday
-  slot(4, 'p1', 'math',  'Mathematics',        '1', 'Ms. Lee',    'Room 301'),
-  slot(4, 'p2', 'sst',   'Social Studies',     '4', 'Mr. Sharma', 'Room 301'),
-  slot(4, 'p3', 'eng',   'English',            '2', 'Mr. Roy',    'Room 301'),
-  slot(4, 'p4', 'hindi', 'Hindi',              '5', 'Mr. Shah',   'Room 301'),
-  slot(4, 'p5', 'pe',    'Physical Education',  '4', 'Mr. Sharma', 'Ground'),
-  slot(4, 'p6', 'sci',   'Science',            '3', 'Ms. Patel',  'Lab 1'),
-]
-
-// ============================================================================
-// All Timetables
-// ============================================================================
-
-export const classTimetables: ClassTimetable[] = [
-  {
-    id: `tt-9a-${ACADEMIC_YEAR}`,
-    classSectionId: 'cls-9a',
-    academicYear: ACADEMIC_YEAR,
-    effectiveFrom: EFFECTIVE_FROM,
-    slots: class9ASlots,
-  },
-  {
-    id: `tt-8b-${ACADEMIC_YEAR}`,
-    classSectionId: 'cls-8b',
-    academicYear: ACADEMIC_YEAR,
-    effectiveFrom: EFFECTIVE_FROM,
-    slots: class8BSlots,
-  },
-  {
-    id: `tt-7a-${ACADEMIC_YEAR}`,
-    classSectionId: 'cls-7a',
-    academicYear: ACADEMIC_YEAR,
-    effectiveFrom: EFFECTIVE_FROM,
-    slots: class7ASlots,
-  },
-]
+/**
+ * Every class's week.
+ *
+ * Generated rather than written out; `generate.ts` explains why, and what a
+ * grid has to satisfy before it is a timetable rather than a table of
+ * plausible cells. Mutable, because the timetable editor writes to it.
+ */
+export const classTimetables: ClassTimetable[] = generateTimetables()
 
 // ============================================================================
 // Exceptions (deviations from normal schedule)
 // ============================================================================
 
-export const timetableExceptions: TimetableException[] = [
-  {
-    id: 'exc-1',
-    classSectionId: 'cls-9a',
-    date: relativeIso(-6),
-    periodId: 'p1',
-    type: 'substitution',
-    originalSubject: 'Mathematics',
-    originalTeacher: 'Ms. Lee',
-    newSubject: 'Mathematics',
-    newTeacher: '3',
-    newTeacherName: 'Ms. Patel',
-    reason: 'Ms. Lee on medical leave',
-  },
-  {
-    id: 'exc-2',
-    classSectionId: 'cls-9a',
-    date: relativeIso(-2),
-    periodId: 'p5',
-    type: 'cancellation',
-    originalSubject: 'Hindi',
-    originalTeacher: 'Mr. Shah',
-    reason: 'School assembly — Independence Day rehearsal',
-  },
-  {
-    id: 'exc-3',
-    classSectionId: 'cls-9a',
-    date: relativeIso(2),
-    periodId: 'p6',
-    type: 'extra-class',
-    newSubject: 'Mathematics',
-    newTeacher: '1',
-    newTeacherName: 'Ms. Lee',
-    reason: 'Extra revision class before mid-term exam',
-  },
-  {
-    id: 'exc-4',
-    classSectionId: 'cls-8b',
-    date: relativeIso(-4),
-    periodId: 'p3',
-    type: 'substitution',
-    originalSubject: 'Mathematics',
-    originalTeacher: 'Ms. Lee',
-    newSubject: 'Science',
-    newTeacher: '3',
-    newTeacherName: 'Ms. Patel',
-    reason: 'Teacher swap for lab availability',
-  },
-]
+/** Substitutions, cancellations and extra classes — see `generate.ts`. */
+export const timetableExceptions: TimetableException[] = generateExceptions(classTimetables)
