@@ -9,8 +9,8 @@ import type {
   CalendarEvent,
   TodoItem,
 } from '@/features/dashboard/types'
-import { relativeDate } from '@/mocks/_shared/date-helpers'
 import { studentCount, listStudents } from '@/mocks/students'
+import { tenantFixtures } from '@/mocks/tenants'
 import { feeTrendData } from '@/mocks/fees/fees'
 import { expenseTrendData } from '@/mocks/expenses/expenses'
 import { teachersData } from '@/mocks/teachers/teachers'
@@ -27,12 +27,6 @@ import { getUniqueGrades } from '@/utils/class-section-helpers'
  */
 const TOTAL_ENROLLMENT = studentCount()
 const DAILY_PRESENT_AVG = Math.round(TOTAL_ENROLLMENT * SCHOOL_SCALE.attendanceRate)
-
-/** Verbose "March 11, 2035" style date used by todos on the Dashboard. */
-function verboseDate(daysFromToday: number): string {
-  const d = relativeDate(daysFromToday)
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-}
 
 export const dashboardStats: DashboardStat[] = [
   {
@@ -309,87 +303,49 @@ export const attendanceDatasets: AttendanceDataset[] = [
   },
 ]
 
-export const calendarEvents: CalendarEvent[] = [
-  {
-    id: 'evt-1',
-    date: 'March 2',
-    startTime: '05:02 AM',
-    endTime: '12:00 PM',
-    title: 'Annual Sport Competition',
-    subtitle: 'All Classes',
-    color: status.danger.base,
-    bgColor: 'var(--primary)',
-  },
-  {
-    id: 'evt-2',
-    date: 'March 5',
-    startTime: '02:00 PM',
-    endTime: '01:55 PM',
-    title: 'Parent-Teacher Meeting',
-    subtitle: 'Gr. 3A, 5B',
-    color: status.info.base,
-    bgColor: 'var(--primary)',
-  },
-  {
-    id: 'evt-3',
-    date: 'March 28',
-    startTime: '09:00 AM',
-    endTime: '05:00 PM',
-    title: 'Annual Science Fair',
-    subtitle: 'All Classes',
-    color: status.warning.base,
-    bgColor: 'var(--primary)',
-  },
-  {
-    id: 'evt-4',
-    date: 'April 10',
-    startTime: '10:00 AM',
-    endTime: '01:00 PM',
-    title: 'Inter-School Debate',
-    subtitle: 'Grade 8 & 9',
-    color: status.info.base,
-    bgColor: 'var(--primary)',
-  },
-  {
-    id: 'evt-5',
-    date: 'April 22',
-    startTime: '08:00 AM',
-    endTime: '03:00 PM',
-    title: 'Earth Day Celebration',
-    subtitle: 'All Classes',
-    color: status.success.base,
-    bgColor: 'var(--primary)',
-  },
-  {
-    id: 'evt-6',
-    date: 'February 14',
-    startTime: '09:00 AM',
-    endTime: '12:00 PM',
-    title: 'Art Exhibition',
-    subtitle: 'All Classes',
-    color: status.warning.base,
-    bgColor: 'var(--primary)',
-  },
-]
+/**
+ * The dashboard's little calendar strip.
+ *
+ * Built from the school's own calendar rather than kept as a third list of
+ * occasions. It was one: six events dated "March 2", "April 10" and
+ * "February 14", which agreed neither with the calendar page's fifteen nor
+ * with each other's year, and were the same six at both schools.
+ *
+ * Only what is still to come, soonest first, because the strip is a
+ * what's-next and not an archive.
+ */
+export const calendarEvents: CalendarEvent[] = (() => {
+  const palette = [status.info.base, status.warning.base, status.success.base, status.danger.base]
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-export const todoItems: TodoItem[] = [
-  {
-    id: 'todo-1',
-    text: 'Review Teacher Attendance Records',
-    date: verboseDate(-1),
-    completed: true,
-  },
-  {
-    id: 'todo-2',
-    text: 'Prepare Science Fair Guidelines',
-    date: verboseDate(2),
-    completed: false,
-  },
-  {
-    id: 'todo-3',
-    text: 'Update Library Book Inventory',
-    date: verboseDate(4),
-    completed: false,
-  },
-]
+  return tenantFixtures()
+    .calendar.filter(event => new Date(event.start) >= today)
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    .slice(0, 6)
+    .map((event, index) => {
+      const when = new Date(event.start)
+      const props = event.extendedProps
+      return {
+        id: `dash-${event.id}`,
+        date: when.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
+        startTime: props?.startTimeDisplay ?? '',
+        endTime: props?.endTimeDisplay ?? '',
+        title: event.title,
+        // Who it is for, which is what the strip has room for.
+        subtitle: props?.attendees ?? props?.location ?? '',
+        color: palette[index % palette.length],
+        bgColor: 'var(--primary)',
+      }
+    })
+})()
+
+/**
+ * The office's list.
+ *
+ * The school's own — Vidya Mandir's is about the Dasara roster and the half
+ * yearly marks, not Kendriya's science fair — and dated relative to today, so
+ * it is never three items all overdue.
+ */
+export const todoItems: TodoItem[] = tenantFixtures().todos.map(item => ({ ...item }))
 

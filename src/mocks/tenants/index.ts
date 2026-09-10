@@ -52,6 +52,9 @@ export function tenantFixtures(): TenantFixtures {
       transport: { drivers: [], vehicles: [], routes: [], feeStructures: [] },
       expenses: { expenses: [], reimbursements: [], trend: [], breakdown: [] },
       config: {},
+      notices: [],
+      calendar: [],
+      todos: [],
     }
   )
 }

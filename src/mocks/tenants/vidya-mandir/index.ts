@@ -22,6 +22,9 @@ import { teacherFixtures } from './teachers'
 import { transportFixtures } from './transport'
 import { expenseFixtures } from './expenses'
 import { configFixture } from './config'
+import { noticeFixtures } from './notices'
+import { calendarFixtures } from './calendar'
+import { todoFixtures } from './todos'
 import type { TenantFixtures } from '../types'
 
 export const vidyaMandir: TenantFixtures = {
@@ -30,6 +33,9 @@ export const vidyaMandir: TenantFixtures = {
   transport: transportFixtures,
   expenses: expenseFixtures,
   config: configFixture,
+  notices: noticeFixtures,
+  calendar: calendarFixtures,
+  todos: todoFixtures,
   access: {
     profiles: [
       {

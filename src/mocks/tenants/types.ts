@@ -15,6 +15,9 @@ import type { Teacher } from '@/features/teachers/types'
 import type { FleetFixtures } from './_generate/transport'
 import type { ExpenseFixtures } from './_generate/expenses'
 import type { SchoolConfig } from '@/config/school-config'
+import type { NoticeBoardEntry } from '@/features/notice-board/types'
+import type { CalendarEvent } from '@/features/calendar/types'
+import type { TodoItem } from '@/features/dashboard/types'
 import type { Role } from '@/config/permissions'
 
 /**
@@ -86,6 +89,24 @@ export interface TenantFixtures {
    * say otherwise. A partial, so a school states only what is its own.
    */
   config: Partial<SchoolConfig>
+  /**
+   * What the school has put on its board.
+   *
+   * The most local thing a school produces, and it was shared: both posted
+   * the same nine notices, including the same choir rehearsal postponed for
+   * the same auditorium renovation, in two cities four hours apart.
+   */
+  notices: NoticeBoardEntry[]
+  /**
+   * Its calendar — exams, meetings, holidays.
+   *
+   * Also the least shareable thing it has. Shared, the same English
+   * Literature exam sat in Room 204 on the same morning at both, and a school
+   * in Mysuru had no Dasara.
+   */
+  calendar: CalendarEvent[]
+  /** What the office has on its list this week. */
+  todos: TodoItem[]
   /**
    * The school's own people.
    *
