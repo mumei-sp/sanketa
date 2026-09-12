@@ -327,6 +327,7 @@ export const calendarEvents: CalendarEvent[] = (() => {
       const props = event.extendedProps
       return {
         id: `dash-${event.id}`,
+        start: when.toISOString(),
         date: when.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
         startTime: props?.startTimeDisplay ?? '',
         endTime: props?.endTimeDisplay ?? '',

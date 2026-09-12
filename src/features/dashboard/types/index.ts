@@ -89,6 +89,17 @@ export interface AttendanceDataset {
 
 export interface CalendarEvent {
   id: string
+  /**
+   * When it starts, ISO-8601.
+   *
+   * `date` below is for PRINTING and nothing else. The dashboard used to work
+   * the month and day back out of it with `startsWith('September')` and a
+   * `\d+` match, which meant the calendar rail agreed with any September in
+   * any year, and any change to how that string is formatted silently emptied
+   * it. The service has the real date; it just was not passing it on.
+   */
+  start: string
+  /** Printed on the badge — "September 12". Never parsed. */
   date: string
   startTime: string
   endTime: string

@@ -59,20 +59,6 @@ import type { NoticeBoardEntry } from '@/features/notice-board/types'
  * never depends on props or state belongs out here, where the omission is
  * correct rather than a lint rule being dodged.
  */
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
 
 export default function Dashboard() {
   // Families get their own home page; see the note in FamilyHome. The school
@@ -188,6 +174,9 @@ function SchoolDashboard() {
   const [notices, setNotices] = React.useState<NoticeBoardEntry[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [calendarDate, setCalendarDate] = React.useState(() => new Date())
+  // Held steady for the life of the page, so a re-render cannot move which day
+  // the calendar calls today.
+  const today = React.useMemo(() => new Date(), [])
 
   React.useEffect(() => {
     async function loadData() {
@@ -222,20 +211,26 @@ function SchoolDashboard() {
     loadData()
   }, [panels])
 
+  // The month on screen, matched on the event's own date rather than on the
+  // words printed on its badge. `startsWith(monthName)` also ignored the YEAR,
+  // so paging to September of any other year showed this September's events.
   const filteredEvents = React.useMemo(() => {
-    const monthName = MONTH_NAMES[calendarDate.getMonth()]
-    return events.filter(e => e.date.startsWith(monthName))
+    const month = calendarDate.getMonth()
+    const year = calendarDate.getFullYear()
+    return events.filter(event => {
+      const start = new Date(event.start)
+      return start.getMonth() === month && start.getFullYear() === year
+    })
   }, [events, calendarDate])
 
-  const highlightedDates: HighlightedDate[] = React.useMemo(() => {
-    return filteredEvents
-      .map(e => {
-        const match = e.date.match(/\d+/)
-        const day = match ? parseInt(match[0], 10) : 0
-        return { day, color: e.bgColor }
-      })
-      .filter(h => h.day > 0)
-  }, [filteredEvents])
+  const highlightedDates: HighlightedDate[] = React.useMemo(
+    () =>
+      filteredEvents.map(event => ({
+        day: new Date(event.start).getDate(),
+        color: event.bgColor,
+      })),
+    [filteredEvents],
+  )
 
   return (
     <div className="space-y-4">
@@ -438,9 +433,11 @@ function SchoolDashboard() {
                 backgroundColor: 'var(--wash-rail)',
               }}
             >
+              {/* `selectedDate` was 8 March 2035 — a day the calendar can never
+                  land on, so no day was ever marked as selected. */}
               <DashboardCalendar
                 embedded
-                selectedDate={new Date(2035, 2, 8)}
+                selectedDate={today}
                 highlightedDates={highlightedDates}
                 currentDate={calendarDate}
                 onMonthChange={setCalendarDate}
