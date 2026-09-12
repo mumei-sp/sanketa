@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
+import { statusVivid } from '@/theme/colors'
 import { useNotifications } from '../NotificationContext'
 import { NotificationPanel } from './NotificationPanel'
 import type { Notification } from '../types'
@@ -36,10 +37,18 @@ function UnreadBadge({ count, variant }: { count: number; variant: 'pill' | 'bar
     <span
       className={cn(
         'pointer-events-none absolute flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none',
-        'bg-destructive text-white',
+        // Not `bg-destructive`: that token is #f87171 in light and an equally
+        // light oklch red in dark, and white on it measures 2.77:1 — under half
+        // the 4.5:1 a 10px numeral needs. `statusVivid.danger.color` is the
+        // palette's own readable red and takes white at 8.31:1. Fixed in both
+        // themes, like the count it carries.
+        'text-white',
         variant === 'pill' ? 'top-1 right-1.5 h-4' : 'top-0.5 right-0.5 h-4',
       )}
-      style={{ boxShadow: '0 0 0 2px var(--background)' }}
+      style={{
+        backgroundColor: statusVivid.danger.color,
+        boxShadow: '0 0 0 2px var(--background)',
+      }}
     >
       {count > 9 ? '9+' : count}
     </span>

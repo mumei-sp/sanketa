@@ -8,7 +8,16 @@ interface StudentStatCardProps {
   value: number
   /** Render content inside the icon circle (ReactNode: icon or text) */
   iconContent: React.ReactNode
+  /** Icon circle fill. Translucent here, so it composites with the card. */
   iconBg: string
+  /**
+   * Icon/letter colour.
+   *
+   * `--heading`, because `iconBg` above is a TRANSLUCENT tint rather than a
+   * solid one — it mixes with the card and so darkens with the page. The
+   * `*-foreground` tokens are the fixed pair for a solid brand fill and were
+   * wrong here: navy on a circle that had gone dark measured 1.78:1.
+   */
   iconColor: string
   /** Card background color */
   cardBg: string
@@ -192,7 +201,7 @@ export function getStudentStats(
     value: total,
     iconContent: <Users className="w-3.5 h-3.5" style={{ color: 'var(--primary-foreground)' }} />,
     iconBg: withOpacity('var(--primary)', 0.7),
-    iconColor: 'var(--primary-foreground)',
+    iconColor: 'var(--heading)',
     cardBg: withOpacity('var(--accent)', 0.35),
     inverted: false,
   }
@@ -209,7 +218,7 @@ export function getStudentStats(
       // visually distinct from the grade number used elsewhere.
       iconContent: label.replace(/^\d+/, '') || label,
       iconBg: withOpacity('var(--primary)', 0.4),
-      iconColor: 'var(--primary-foreground)',
+      iconColor: 'var(--heading)',
       cardBg: 'var(--card)',
     })
   }
@@ -223,7 +232,7 @@ export function getStudentStats(
         value: gradeCounts.get(grade) ?? 0,
         iconContent: grade,
         iconBg: withOpacity('var(--accent)', 0.5),
-        iconColor: 'var(--accent-foreground)',
+        iconColor: 'var(--heading)',
         cardBg: 'var(--card)',
       })
       return
@@ -253,7 +262,7 @@ export function getStudentStats(
         value: gradeCounts.get(grade) ?? 0,
         iconContent: grade,
         iconBg: withOpacity('var(--accent)', 0.5),
-        iconColor: 'var(--accent-foreground)',
+        iconColor: 'var(--heading)',
         cardBg: 'var(--card)',
       })
     }

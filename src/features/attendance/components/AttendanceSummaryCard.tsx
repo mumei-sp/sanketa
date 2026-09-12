@@ -4,6 +4,16 @@ import type { AttendanceStatistics } from '../utils/attendance-stats'
 import { AttendanceTrendIcon } from './AttendanceTrendIcon'
 import { colors, withOpacity } from '@/theme/colors'
 
+/**
+ * The label on the trend pill.
+ *
+ * `--heading-accent` is the school's brand colour, held fixed in both themes
+ * by `applyAppearance` — the right pair for a fill that is itself a fixed
+ * value. `--heading` would follow the theme to near-white and land this back
+ * where it started.
+ */
+const PILL_LABEL = 'var(--heading-accent, var(--heading))'
+
 interface AttendanceSummaryCardProps {
   type: AttendanceRecordType
   statistics: AttendanceStatistics
@@ -98,12 +108,18 @@ function ColoredSection({
         <span className="text-numeric text-2xl">
           {formatNumber(statistics.totalPresent)}
         </span>
+        {/* The fill stays `status.success.base` — it is the one green distinct
+            against all three card colours, including the navy Staff card, where
+            a darker pill would vanish into it. What changes is the label: white
+            on it measured 2.17:1. The brand heading takes it to 4.63:1 and is
+            the colour everything else on these cards is already set in. Both are
+            fixed values, so the pair holds in either theme. */}
         <div
           className="flex items-center gap-1 px-2 py-0.5 rounded-md"
-          style={{ backgroundColor: colors.status.success.base, color: 'white' }}
+          style={{ backgroundColor: colors.status.success.base, color: PILL_LABEL }}
         >
-          <AttendanceTrendIcon size={10} />
-          <span className="text-badge" style={{ color: 'white' }}>
+          <AttendanceTrendIcon size={10} color={PILL_LABEL} />
+          <span className="text-badge" style={{ color: PILL_LABEL }}>
             {formatPercentage(statistics.attendancePercentage)}
           </span>
         </div>
@@ -143,7 +159,7 @@ function BreakdownSection({
               <span className="text-numeric font-semibold text-foreground">{formatNumber(item.value)}</span>
               <span
                 className="text-badge px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: colors.accent.muted, color: colors.text.muted }}
+                style={{ backgroundColor: 'var(--muted)', color: 'var(--text-body)' }}
               >
                 {formatPercentage(item.pct)}
               </span>
@@ -169,7 +185,7 @@ function BreakdownSection({
             </span>
             <span
               className="text-badge px-2 py-0.5 rounded w-fit"
-              style={{ backgroundColor: colors.accent.muted, color: colors.text.muted }}
+              style={{ backgroundColor: 'var(--muted)', color: 'var(--text-body)' }}
             >
               {formatPercentage(item.pct)}
             </span>
