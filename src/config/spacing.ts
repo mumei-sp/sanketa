@@ -1,9 +1,11 @@
 /**
  * Compact Spacing Configuration
  *
- * This file provides a uniform, compact spacing scale for dashboard-optimized density.
- * Spacing values are reduced by approximately one Tailwind step to improve
- * information density while maintaining visual clarity.
+ * A compact spacing scale for dashboard density. Large gaps are pulled in
+ * hardest, small ones not at all — see "How a value is derived" below. It was
+ * described here as "reduced by approximately one Tailwind step", which is
+ * neither uniform nor a step: the ratio runs from 1.00 at `0.5` to about 0.53
+ * at `96`.
  *
  * All values are in rem units, relative to the 14px root this app sets in
  * `index.css`. The px in each comment is what that token actually renders.
@@ -26,16 +28,34 @@
  * `typography.ts` never had this problem — it states `1.143rem` for 16px, the
  * root correctly accounted for. This file now matches that convention.
  *
- * Formula: intended px ÷ 14 (the root), where the intended px is the original
- * Tailwind value * 0.875 * 0.9-0.95 (the compact reduction).
+ * ── How a value is derived ─────────────────────────────────────────────
+ * `rem = intended px ÷ 14`, the root. The intended px is NOT the Tailwind
+ * value times a constant, which is what this said and what it has never been.
+ * The reduction TAPERS: it is nil at the small end and grows with the token.
+ *
+ *     token   0.5  1   1.5  2   2.5  3   4  |  5    6    8    12   20   48
+ *     px        2  4    6   8   10  12  16  | 18   20   24   32   48  104
+ *     Tailwind  2  4    6   8   10  12  16  | 20   24   32   48   80  192
+ *     ratio  1.00 ×6 ......................  0.90 0.83 0.75 0.67 0.60 0.54
+ *
+ * Which is the point of it. Two pixels cannot be made compact — shave 12% off
+ * a 4px gutter and it is 3.5px, a difference nobody sees and a fraction the
+ * browser rounds anyway. Density is won in the big gaps, so that is where the
+ * reduction goes, and the small end stays on Tailwind's own grid where the
+ * numbers are already as tight as they can usefully be.
+ *
+ * So there is no formula to apply to a NEW token — read the px you want off
+ * the table above, interpolate the ratio for its size, and divide by 14. Every
+ * comment below is the px that token actually renders; they were checked
+ * against the rem values, and all 32 agree.
  */
 
 /**
- * Compact spacing scale
- * Maps Tailwind spacing tokens to reduced values (down by ~1 step)
+ * The scale. Each comment is the px that token renders at this app's 14px root.
  *
- * Conversion: Original Tailwind value * 0.875 (14px/16px base ratio)
- * Then further reduced by ~10-15% for compact density
+ * Note the tokens are NOT in numeric order — `7`, `9` and `11` sit above `8`,
+ * `10` and `12`, grouped by the headings rather than by size. Read the px, not
+ * the position.
  */
 export const spacing = {
   // Pixel-based spacing
