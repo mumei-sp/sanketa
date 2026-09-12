@@ -13,6 +13,7 @@ import {
   calendarEventToFormValues,
 } from '@/api/services/calendar-service'
 import { CalendarCategoryTabs } from './CalendarCategoryTabs'
+import { ConsentTally } from './ConsentTally'
 import { CalendarView } from './CalendarView'
 import { ScheduleDetails } from './ScheduleDetails'
 import { EventForm } from './EventForm'
@@ -174,6 +175,10 @@ export function CalendarPage() {
         title="Calendar"
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Calendar' }]}
       />
+
+      {/* Who has answered, for any event that asks. Absent when none does —
+          most of a calendar is occasions nobody has to agree to. */}
+      <ConsentTally />
 
       {/* Category filter tabs */}
       <CalendarCategoryTabs

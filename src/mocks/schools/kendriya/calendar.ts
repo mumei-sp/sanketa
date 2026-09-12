@@ -28,6 +28,28 @@ export const calendarFixtures: CalendarEvent[] = [
     { priority: 'medium', attendees: 'Finance Committee', reach: { sides: ['staff'] }, reminder: '15min' },
   ),
 
+  /**
+   * The trip the design names, and the only fixture here that asks a question.
+   *
+   * Seeded as an ASK, not as an answer: the event is a school artefact like
+   * every other occasion on this calendar, while the responses table starts
+   * empty because a seeded consent would be a claim that a named parent
+   * allowed a named child to go somewhere.
+   */
+  createEvent(
+    'evt-consent-museum', 'Visvesvaraya Museum visit', 'Events',
+    calDay(24), '09:00 AM', '04:00 PM',
+    'Visvesvaraya Industrial and Technological Museum',
+    'Day trip. Packed lunch, school uniform, and a signed slip from home.',
+    {
+      priority: 'high',
+      attendees: 'Class 7 & 9 Parents',
+      reach: { grades: ['7', '9'], sides: ['family'] },
+      needsConsent: true,
+      consentBy: calDay(20),
+    },
+  ),
+
   // ── Week 2 (Mar 4–10) ────────────────────────────────────────────────
   createEvent(
     'evt-03', 'Sports Competition (Preliminary Round)', 'Events',

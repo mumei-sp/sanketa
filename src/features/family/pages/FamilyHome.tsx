@@ -30,7 +30,7 @@ import { accent, border, text, status, statusVivid, withOpacity } from '@/theme/
 import { fontSizes } from '@/config/typography'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
-import { getTimeOfDayGreeting, formatFriendlyDate } from '@/utils/date'
+import { getTimeOfDayGreeting, formatFriendlyDate, formatDateForDisplay } from '@/utils/date'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { classSectionOf, rollNumberOf } from '@/utils/class-section-helpers'
 import { attendanceMonthKey } from '@/utils/academic-date'
@@ -45,6 +45,11 @@ import { fetchFeeCollection } from '@/api/services/fees-collection-service'
 import { fetchExams, fetchGradeSheet, fetchGradeableSubjects } from '@/api/services/grade-service'
 import { fetchStudentRide } from '@/api/services/transport-service'
 import { requestCallback, type CallbackReason } from '@/api/services/callback-service'
+import {
+  fetchConsentAsks,
+  respondToConsent,
+  type ConsentAsk,
+} from '@/api/services/consent-service'
 import {
   Dialog,
   DialogContent,
@@ -168,6 +173,10 @@ export function FamilyHome() {
     teacherName: string | null
   } | null>(null)
   const [askNote, setAskNote] = React.useState('')
+  /** Trips and outings this child's family still has to answer. */
+  const [consent, setConsent] = React.useState<ConsentAsk[]>([])
+  const [reviewing, setReviewing] = React.useState<ConsentAsk | null>(null)
+  const [answering, setAnswering] = React.useState(false)
   const [sending, setSending] = React.useState(false)
 
   const studentId = selected ? String(selected.id) : null
@@ -328,6 +337,56 @@ export function FamilyHome() {
     }
   }, [asking, askNote, studentId, currentUser, toast])
 
+  const loadConsent = React.useCallback(() => {
+    if (!studentId) return
+    void fetchConsentAsks(studentId)
+      .then(setConsent)
+      .catch(error => console.error('Failed to load consent slips', error))
+  }, [studentId])
+
+  React.useEffect(() => {
+    setConsent([])
+    loadConsent()
+  }, [loadConsent])
+
+  const answerConsent = React.useCallback(
+    async (answer: 'given' | 'declined') => {
+      if (!reviewing || !currentUser) return
+      setAnswering(true)
+      try {
+        const saved = await respondToConsent({
+          eventId: reviewing.eventId,
+          studentId: reviewing.studentId,
+          answer,
+          answeredById: String(currentUser.id),
+          answeredByName: currentUser.fullName,
+        })
+        if (!saved) {
+          toast.showError('That answer could not be saved.')
+          return
+        }
+        toast.showSuccess(
+          answer === 'given' ? 'Consent given' : 'Consent declined',
+          { description: reviewing.title },
+        )
+        setReviewing(null)
+        loadConsent()
+      } catch (error) {
+        console.error('Failed to answer', error)
+        toast.showError('That answer could not be saved.')
+      } finally {
+        setAnswering(false)
+      }
+    },
+    [reviewing, currentUser, toast, loadConsent],
+  )
+
+  /** Only the ones still unanswered belong in "Needs you". */
+  const consentPending = React.useMemo(
+    () => consent.filter(ask => ask.answer === null),
+    [consent],
+  )
+
   const month = React.useMemo(() => {
     if (!detail) return null
     const now = new Date()
@@ -475,7 +534,7 @@ export function FamilyHome() {
           </div>
 
           {/* ── Needs you, and nothing when nothing does ── */}
-          {due.length > 0 ? (
+          {due.length > 0 || consentPending.length > 0 ? (
             <div className="flex flex-col gap-2">
               <span
                 className="text-caption font-semibold uppercase tracking-wide"
@@ -484,6 +543,34 @@ export function FamilyHome() {
                 Needs you
               </span>
               <TileWrapper columns={{ default: 1, md: 2 }} gap={16}>
+                {/* Consent first. A slip has a date the coach leaves on; a fee
+                    can be paid the day after and usually is. */}
+                {consentPending.map(ask => (
+                  <div
+                    key={ask.eventId}
+                    className={`flex items-center justify-between gap-4 rounded-xl p-4 ${CARD}`}
+                    style={{
+                      borderLeft: `3px solid ${statusVivid.info.color}`,
+                      backgroundColor: 'var(--card)',
+                    }}
+                  >
+                    <span className="min-w-0">
+                      <span
+                        className="block text-body font-semibold"
+                        style={{ color: 'var(--heading)' }}
+                      >
+                        Consent needed
+                      </span>
+                      <span className="block text-caption" style={{ color: text.muted }}>
+                        {ask.title}
+                        {ask.respondBy ? ` · by ${formatDateForDisplay(ask.respondBy)}` : ''}
+                      </span>
+                    </span>
+                    <Button variant="outline" size="sm" onClick={() => setReviewing(ask)}>
+                      Review
+                    </Button>
+                  </div>
+                ))}
                 {due.map(row => {
                   const tone = row.status === 'Overdue' ? statusVivid.danger : statusVivid.warning
                   return (
@@ -894,6 +981,50 @@ export function FamilyHome() {
           </div>
         </>
       )}
+
+      {/*
+        Reviewing a slip. Both answers are buttons of equal weight — a school
+        asking permission has to make "no" as easy to say as "yes", or it is
+        not asking.
+      */}
+      <Dialog
+        open={reviewing !== null}
+        onOpenChange={open => {
+          if (!open && !answering) setReviewing(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle style={{ color: 'var(--heading)' }}>{reviewing?.title}</DialogTitle>
+            <DialogDescription>
+              {reviewing ? formatDateForDisplay(reviewing.start) : ''}
+              {reviewing?.location ? ` · ${reviewing.location}` : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          <p className="text-body" style={{ color: text.body }}>
+            Do you give permission for {firstName} to take part?
+          </p>
+          {reviewing?.respondBy && (
+            <p className="text-caption" style={{ color: text.muted }}>
+              The school would like an answer by {formatDateForDisplay(reviewing.respondBy)}.
+            </p>
+          )}
+
+          <DialogFooter className="flex-row justify-end gap-2">
+            <Button
+              variant="outline"
+              disabled={answering}
+              onClick={() => void answerConsent('declined')}
+            >
+              No, not this time
+            </Button>
+            <Button disabled={answering} onClick={() => void answerConsent('given')}>
+              {answering ? 'Saving…' : 'Yes, I give permission'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/*
         One dialog for both buttons. It asks for a note and nothing else: the

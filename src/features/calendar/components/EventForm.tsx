@@ -173,6 +173,16 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
               description="What the card says. The choices below are what the app acts on."
             />
             <AudienceReachField name="reach" control={control} />
+            {/* Beside the audience on purpose: who is asked IS the audience.
+                A slip inherits the reach above rather than carrying one of
+                its own, which is the whole reason consent is a flag on an
+                event and not a table beside it. */}
+            <SwitchField
+              name="needsConsent"
+              control={control}
+              label="Ask families to consent"
+              description="Each family this reaches answers yes or no for their child."
+            />
             <TextareaField
               name="notes"
               control={control}

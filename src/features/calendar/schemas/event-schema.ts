@@ -37,6 +37,15 @@ export const EventFormSchema = z.object({
   /** The machine-readable half — see `config/audience.ts`. */
   reach: AudienceReachSchema,
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  /**
+   * Whether every family this reaches must answer yes or no.
+   *
+   * On the event rather than in a table of its own, so a consent slip inherits
+   * `reach` above — see `CalendarEventExtendedProps.needsConsent`.
+   */
+  needsConsent: z.boolean().default(false),
+  /** Shown to families as the date an answer is wanted by. Not enforced. */
+  consentBy: z.string().optional().or(z.literal('')),
   reminder: z.enum(['none', '5min', '15min', '30min', '1hr', '1day']).default('none'),
   notes: z.string().max(1000, 'Notes must be under 1000 characters').optional().or(z.literal('')),
 }).refine(

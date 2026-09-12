@@ -34,6 +34,22 @@ export interface CalendarEventExtendedProps {
   reach?: AudienceReach
   priority?: EventPriority
   reminder?: EventReminder
+  /**
+   * Whether each family this reaches has to answer yes or no.
+   *
+   * A consent slip is not a thing of its own: it is an event that asks a
+   * question. Putting the flag here rather than in a `consent_slips` table
+   * means it inherits `reach` above — so "Class 9 parents" already works, and
+   * `audienceReaches` decides who is asked, exactly as it decides who sees a
+   * notice. A parallel table would have needed a second audience
+   * implementation to go wrong independently of this one.
+   *
+   * The answers live in `mocks/tenant/consent`, keyed by event and student,
+   * because that is the part that is per-child rather than per-event.
+   */
+  needsConsent?: boolean
+  /** ISO date the school wants an answer by. Shown to the family, not enforced. */
+  consentBy?: string
 }
 
 export type CalendarEvent = EventInput & {

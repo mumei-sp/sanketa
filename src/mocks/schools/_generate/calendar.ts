@@ -51,6 +51,10 @@ interface EventExtras {
   reach?: AudienceReach
   priority?: EventPriority
   reminder?: EventReminder
+  /** Families this reaches must answer yes or no — see `needsConsent`. */
+  needsConsent?: boolean
+  /** ISO date an answer is wanted by. */
+  consentBy?: string
 }
 
 /**
@@ -91,6 +95,8 @@ export function createEvent(
       reach: extras?.reach,
       priority: extras?.priority,
       reminder: extras?.reminder,
+      needsConsent: extras?.needsConsent,
+      consentBy: extras?.consentBy,
     },
   }
 }
