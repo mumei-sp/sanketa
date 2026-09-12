@@ -115,7 +115,12 @@ function SchoolDaysTab({ draft, setDraft }: TimetableSettingsSectionProps) {
               style={{
                 backgroundColor: isSelected ? 'var(--accent)' : background.card,
                 border: `1.5px solid ${isSelected ? 'var(--heading)' : border.default}`,
-                color: isSelected ? 'var(--heading)' : text.muted,
+                // Selected sits on `--accent`, which is the school's colour and
+                // stays pale in both themes, so its label has to be the fixed
+                // auto-contrast partner rather than `--heading` — which follows
+                // the theme to near-white and measured 1.13:1 on its own chip.
+                // Unselected sits on the card and so takes a themed colour.
+                color: isSelected ? 'var(--accent-foreground)' : text.muted,
               }}
             >
               <span className="text-sm font-semibold">{DAY_LABELS[day].slice(0, 3)}</span>
