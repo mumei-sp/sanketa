@@ -18,6 +18,7 @@ export {
   listDesignations,
   designationOf,
   roleIdsOf,
+  roleGrantsOf,
   profilesWithRole,
   createProfile,
   deleteProfile,

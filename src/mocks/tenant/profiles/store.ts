@@ -231,6 +231,19 @@ export interface ProfileRole {
   roleId: string
   assignedAt: string
   /**
+   * The profile that granted it — `profile_roles.assigned_by`.
+   *
+   * The access log records the act as an event, which answers "what happened
+   * on Tuesday". This answers the question asked six months later, of a row
+   * rather than a day: *who gave this person this?* A log can be read past; a
+   * column on the grant cannot.
+   *
+   * Optional because the seed grants roles with nobody to attribute them to —
+   * the school's own fixture is not a person — and because a backend may have
+   * rows that predate the column.
+   */
+  assignedBy?: string
+  /**
    * When this assignment lapses, if it does.
    *
    * An acting head of department for one term is a real thing, and a role that
@@ -689,17 +702,57 @@ export function updateProfile(id: string, patch: Partial<Omit<Profile, 'id'>>): 
 }
 
 /** Idempotent on the pair, as `PRIMARY KEY (profile_id, role_id)` requires. */
-export function grantRole(profileId: string, roleId: string, expiresAt?: string): void {
+/**
+ * Give somebody a role, optionally until a date.
+ *
+ * Idempotent on the pair, as `PRIMARY KEY (profile_id, role_id)` requires — so
+ * re-granting is how an expiry is changed or lifted, and `expiresAt` is
+ * written on both paths rather than only on insert. Passing `undefined` makes
+ * a temporary role permanent, which is the button a school needs when the
+ * acting head turns out to be staying.
+ *
+ * `assignedBy` is the granter's profile id. Absent for the seed, which has
+ * nobody to name.
+ */
+export function grantRole(
+  profileId: string,
+  roleId: string,
+  options: { expiresAt?: string; assignedBy?: string } = {},
+): void {
   const database = load()
   const existing = database.roles.find(
     row => row.profileId === profileId && row.roleId === roleId,
   )
   if (existing) {
-    existing.expiresAt = expiresAt
+    existing.expiresAt = options.expiresAt
+    if (options.assignedBy !== undefined) existing.assignedBy = options.assignedBy
+    // Re-stamped: an expiry lifted or extended is a new decision by a new
+    // person, and dating it to the original grant would credit the wrong one.
+    existing.assignedAt = now()
   } else {
-    database.roles.push({ profileId, roleId, assignedAt: now(), expiresAt })
+    database.roles.push({
+      profileId,
+      roleId,
+      assignedAt: now(),
+      expiresAt: options.expiresAt,
+      assignedBy: options.assignedBy,
+    })
   }
   persist()
+}
+
+/**
+ * Every role this person holds here, with how it got there.
+ *
+ * `roleIdsOf` answers what they may do and is what the ability builder wants.
+ * This answers where it came from, which is what a People screen shows and
+ * what somebody asks six months later. Expired assignments are excluded from
+ * both — an expired role is not a role.
+ */
+export function roleGrantsOf(profileId: string): ProfileRole[] {
+  return liveRoles(load().roles)
+    .filter(row => row.profileId === profileId)
+    .map(row => ({ ...row }))
 }
 
 export function revokeRole(profileId: string, roleId: string): void {

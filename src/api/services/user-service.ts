@@ -23,12 +23,16 @@ import {
   deleteProfile,
   detachLogin,
   grantRole,
+  roleGrantsOf,
   listDesignations,
+  listProfiles,
   profileOf,
   resolveTenantAccess,
   revokeRole,
   updateProfile,
 } from '@/mocks/tenant/profiles'
+import { authUtils } from '@/api/utils/auth'
+import { callerMay } from '@/mocks/_shared/caller'
 import type { SchoolUser } from '@/mocks/global/users'
 import type { Capacity } from '@/mocks/tenant/profiles'
 import type { AccountStatus } from '@/features/auth/types'
@@ -200,17 +204,29 @@ export async function setPersonRole(
   profileId: string,
   roleId: string,
   held: boolean,
+  options: {
+    /**
+     * ISO date the role lapses on. Absent means permanent — and passing it
+     * absent on a role that had one is how an expiry is lifted.
+     */
+    expiresAt?: string
+  } = {},
 ): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
-      if (held) grantRole(profileId, roleId)
+      if (held) grantRole(profileId, roleId, { expiresAt: options.expiresAt, assignedBy: granterId() })
       else revokeRole(profileId, roleId)
       return true
     },
     async () => {
-      if (held) await apiClient.put(`/profiles/${profileId}/roles/${roleId}`)
-      else await apiClient.delete(`/profiles/${profileId}/roles/${roleId}`)
+      if (held) {
+        await apiClient.put(`/profiles/${profileId}/roles/${roleId}`, {
+          expiresAt: options.expiresAt ?? null,
+        })
+      } else {
+        await apiClient.delete(`/profiles/${profileId}/roles/${roleId}`)
+      }
       return true
     },
   )
@@ -269,6 +285,62 @@ export async function identifierTaken(input: {
       return data.taken
     },
   )
+}
+
+/**
+ * Who is doing the granting, as a profile id at this school.
+ *
+ * Read from the session rather than taken as an argument, for the reason
+ * `_shared/caller.ts` gives at length: a client that names its own actor can
+ * name somebody else. Undefined when nobody is signed in, which is the seed
+ * and the tests.
+ */
+function granterId(): string | undefined {
+  const session = authUtils.getUser()
+  return session ? profileOf(session.id)?.id : undefined
+}
+
+/**
+ * The roles one person holds here, each with when it was granted, by whom and
+ * when it lapses.
+ *
+ * `Person.roleIds` answers what they may do. This answers where it came from,
+ * which is the question a People screen is actually asked.
+ *
+ * @apiRoute GET /api/v1/profiles/{profileId}/roles
+ */
+export async function fetchRoleGrants(profileId: string): Promise<RoleGrant[]> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      if (!callerMay('read', 'User')) return []
+      return roleGrantsOf(profileId).map(grant => ({
+        roleId: grant.roleId,
+        assignedAt: grant.assignedAt,
+        expiresAt: grant.expiresAt,
+        grantedBy: grant.assignedBy ? (profileNameOf(grant.assignedBy) ?? null) : null,
+      }))
+    },
+    async () => {
+      const { data } = await apiClient.get<RoleGrant[]>(`/profiles/${profileId}/roles`)
+      return data
+    },
+  )
+}
+
+/** A role somebody holds, and how it got there. */
+export interface RoleGrant {
+  roleId: string
+  assignedAt: string
+  /** Absent means permanent. */
+  expiresAt?: string
+  /** Null when nobody can be named — the seed grants have no author. */
+  grantedBy: string | null
+}
+
+/** A granter's name, for display. Null rather than an id nobody can read. */
+function profileNameOf(profileId: string): string | null {
+  return listProfiles().find(row => row.id === profileId)?.fullName ?? null
 }
 
 /**

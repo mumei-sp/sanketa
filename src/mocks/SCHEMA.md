@@ -196,7 +196,16 @@ per person, many schools per person, and role sets that differ per school.
 
 `expires_at` is worth keeping — an acting head of department for one term is a
 real thing, and a role that expires on its own is better than one somebody has
-to remember to remove.
+to remember to remove. It is live: `roleIdsOf` and `roleGrantsOf` both read
+through `liveRoles`, so a lapsed assignment is not a role, and re-granting the
+same pair is how an expiry is extended or lifted without a second row.
+
+`assigned_by` answers the question a log cannot. The access log records the act
+— what happened on Tuesday — and is read backwards from now; this is a column
+on the grant, which is what somebody asks of a *row* six months later: who gave
+this person this? It is the granter's profile id, read from the session rather
+than passed in, for the reason `_shared/caller.ts` gives at length. Absent on
+the seed's own grants, which have nobody to name.
 
 ### `roles.scope_axis` — new, and this frontend's
 
@@ -253,7 +262,6 @@ Each is a code path nothing has run:
 - `user_tenant_mapping.is_active` — no membership is revoked.
 - `tenants.is_active` — both schools are live.
 - `users.status` — no account is invited or suspended.
-- `profile_roles.expires_at` — nothing expires.
 - A retired `staff_designations` row — every title at both schools is in use.
 - `is_deleted` — the field is on the profile and nothing sets it.
 
