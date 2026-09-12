@@ -22,6 +22,7 @@ import { fetchTeachers, fetchTeacherStatistics, fetchDepartmentDistribution, del
 import type { Teacher } from '@/features/teachers/types'
 import type { TeacherStatistics, DepartmentData } from '@/features/teachers/types'
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
+import { CallbackRequests } from '@/features/teachers/components/CallbackRequests'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'
 
@@ -397,6 +398,10 @@ export default function Teachers() {
           />
         </Tile>
       </TileWrapper>
+
+      {/* Parents waiting for a call. Absent entirely when nobody is — see the
+          component; a card that says "none" every day stops being read. */}
+      <CallbackRequests />
 
       {/* Toolbar */}
       <Tile

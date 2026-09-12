@@ -44,6 +44,17 @@ import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
 import { fetchFeeCollection } from '@/api/services/fees-collection-service'
 import { fetchExams, fetchGradeSheet, fetchGradeableSubjects } from '@/api/services/grade-service'
 import { fetchStudentRide } from '@/api/services/transport-service'
+import { requestCallback, type CallbackReason } from '@/api/services/callback-service'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { useAppToast } from '@/hooks/use-app-toast'
 import { useGradeCalculator } from '@/features/grades/hooks/use-grade-calculator'
 import type { GradeSheetRow, GradeSheetSummary } from '@/features/grades/types'
 import { useFamilyScope } from '../FamilyScopeContext'
@@ -145,6 +156,19 @@ export function FamilyHome() {
     subjects: { id: string; name: string; shortName: string }[]
   } | null>(null)
   const [ride, setRide] = React.useState<Awaited<ReturnType<typeof fetchStudentRide>>>(null)
+  /**
+   * The callback the parent is composing, and who it names.
+   *
+   * One dialog serves both buttons — the absence one and the reply under a
+   * teacher's note — because the two differ only in what they are ABOUT. A
+   * second dialog would have been the same form with a different title.
+   */
+  const [asking, setAsking] = React.useState<{
+    reason: CallbackReason
+    teacherName: string | null
+  } | null>(null)
+  const [askNote, setAskNote] = React.useState('')
+  const [sending, setSending] = React.useState(false)
 
   const studentId = selected ? String(selected.id) : null
   const classLabel = selected ? (classSectionOf(selected) ?? null) : null
@@ -271,6 +295,39 @@ export function FamilyHome() {
     }
   }, [studentId])
 
+  const toast = useAppToast()
+
+  const sendCallback = React.useCallback(async () => {
+    if (!asking || !studentId || !currentUser) return
+    setSending(true)
+    try {
+      const made = await requestCallback({
+        studentId,
+        requestedBy: currentUser.fullName,
+        teacherName: asking.teacherName,
+        reason: asking.reason,
+        note: askNote.trim(),
+      })
+      // `null` means the guard refused — the student is not this caller's. It
+      // cannot happen from the buttons below, which only ever pass the child
+      // already on screen, but the service answers the same way to anyone.
+      if (!made) {
+        toast.showError('That request could not be sent.')
+        return
+      }
+      toast.showSuccess('The school has your request', {
+        description: 'Someone will call you back.',
+      })
+      setAsking(null)
+      setAskNote('')
+    } catch (error) {
+      console.error('Failed to ask for a callback', error)
+      toast.showError('That request could not be sent.')
+    } finally {
+      setSending(false)
+    }
+  }, [asking, askNote, studentId, currentUser, toast])
+
   const month = React.useMemo(() => {
     if (!detail) return null
     const now = new Date()
@@ -387,12 +444,11 @@ export function FamilyHome() {
                 {mark === 'absent' && (
                   <button
                     type="button"
-                    disabled
-                    title="Sending a note to the school is not built yet"
-                    className="tap-target mt-1 w-fit cursor-not-allowed rounded-md px-2.5 py-1 text-caption font-medium opacity-60"
+                    onClick={() => setAsking({ reason: 'absence', teacherName: null })}
+                    className="tap-target mt-1 w-fit rounded-md px-2.5 py-1 text-caption font-medium transition-colors hover:opacity-80"
                     style={{ backgroundColor: accent.soft, color: 'var(--heading)' }}
                   >
-                    Send a note · coming soon
+                    Send a note
                   </button>
                 )}
               </span>
@@ -691,12 +747,13 @@ export function FamilyHome() {
                           replaced. */}
                       <button
                         type="button"
-                        disabled
-                        title="Replying to a teacher is not built yet"
-                        className="tap-target w-fit cursor-not-allowed rounded-md px-2.5 py-1 text-caption font-medium opacity-60"
+                        onClick={() =>
+                          setAsking({ reason: 'classroom-note', teacherName: note.reportedBy })
+                        }
+                        className="tap-target w-fit rounded-md px-2.5 py-1 text-caption font-medium transition-colors hover:opacity-80"
                         style={{ backgroundColor: accent.soft, color: 'var(--heading)' }}
                       >
-                        Reply to {note.reportedBy.split(' ')[0]} · coming soon
+                        Reply to {note.reportedBy.split(' ')[0]}
                       </button>
                     </div>
                   )}
@@ -837,6 +894,58 @@ export function FamilyHome() {
           </div>
         </>
       )}
+
+      {/*
+        One dialog for both buttons. It asks for a note and nothing else: the
+        child, the parent and the teacher are all already known, and a form that
+        re-asks what the page can see is a form people abandon.
+      */}
+      <Dialog
+        open={asking !== null}
+        onOpenChange={open => {
+          if (!open && !sending) {
+            setAsking(null)
+            setAskNote('')
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle style={{ color: 'var(--heading)' }}>
+              {asking?.teacherName ? `Reply to ${asking.teacherName}` : 'Send a note to the school'}
+            </DialogTitle>
+            <DialogDescription>
+              {asking?.reason === 'absence'
+                ? `Tell the school why ${firstName} is away. Somebody will call you back.`
+                : `Your message goes to ${asking?.teacherName ?? 'the school'}, who will call you back.`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            value={askNote}
+            onChange={event => setAskNote(event.target.value)}
+            rows={4}
+            maxLength={500}
+            autoFocus
+            placeholder={
+              asking?.reason === 'absence'
+                ? 'He has a fever and will be back on Thursday.'
+                : 'I would like to talk about the homework note.'
+            }
+          />
+
+          <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+            <span className="text-caption" style={{ color: text.muted }}>
+              {/* Said plainly, because it is the honest description of what this
+                  does — it books a call, it does not start a conversation. */}
+              This asks the school to ring you. It is not a chat.
+            </span>
+            <Button onClick={sendCallback} disabled={sending || askNote.trim().length === 0}>
+              {sending ? 'Sending…' : 'Ask for a call'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
