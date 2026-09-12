@@ -234,7 +234,13 @@ export const PERMISSION_DEFINITIONS = [
   { id: 'grades.create', action: 'create', subject: 'Grade', group: 'Academics', label: 'Enter grades', description: 'Record marks for an exam.', scopableBy: ['classes'] },
   { id: 'grades.update', action: 'update', subject: 'Grade', group: 'Academics', label: 'Amend grades', description: 'Change marks already recorded.', scopableBy: ['classes'] },
   { id: 'grades.delete', action: 'delete', subject: 'Grade', group: 'Academics', label: 'Delete grades', description: 'Remove a grade record permanently.', scopableBy: ['classes'] },
-  { id: 'timetable.read', action: 'read', subject: 'Timetable', group: 'Academics', label: 'View timetable', description: 'See the class timetable.' },
+  // Narrowed by student like every other family-facing read, and the last one
+  // to say so: a parent held this unconditionally and could open all nineteen
+  // sections' grids. A timetable is not *about* a student, so the service does
+  // the translation — the caller's children give their sections, and those are
+  // the grids they may see. Same shape as the fee ledger keying on `S-2101`
+  // while a scope holds profile ids.
+  { id: 'timetable.read', action: 'read', subject: 'Timetable', group: 'Academics', label: 'View timetable', description: 'See the class timetable.', scopableBy: ['students'] },
   { id: 'timetable.manage', action: 'manage', subject: 'Timetable', group: 'Academics', label: 'Manage timetable', description: 'Edit periods and add substitutions.' },
   { id: 'assignments.read', action: 'read', subject: 'Assignment', group: 'Academics', label: 'View assignments', description: 'See assignments.', scopableBy: ['students'] },
 

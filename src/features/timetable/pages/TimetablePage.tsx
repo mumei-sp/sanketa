@@ -6,7 +6,11 @@ import { spacing } from '@/config/spacing'
 import { border } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { useAppToast } from '@/hooks/use-app-toast'
-import { fetchAllClassTimetables, fetchClassTimetable } from '@/api/services/timetable-service'
+import {
+  fetchAllClassTimetables,
+  fetchClassSections,
+  fetchClassTimetable,
+} from '@/api/services/timetable-service'
 import { useClassTimetable } from '../hooks/use-class-timetable'
 import { TimetableGrid } from '../components/TimetableGrid'
 import { TimetableToolbar } from '../components/TimetableToolbar'
@@ -23,13 +27,63 @@ export function TimetablePage() {
   const { config } = useSchoolConfig()
   const { showSuccess, showError } = useAppToast()
 
-  // Class sections from school config
-  const classSections = config.classSections
-  const [selectedClassId, setSelectedClassId] = React.useState(() => {
-    if (classSections.length === 0) return ''
-    const defaultClass = classSections.find(s => s.label === '9A') ?? classSections[0]
-    return defaultClass.id
-  })
+  /**
+   * The sections this caller may look at.
+   *
+   * Asked of the service rather than taken from `config.classSections`, which
+   * is every section the school has. Scoping the service was not enough on its
+   * own: the grid honoured it and came back empty, while the picker beside it
+   * still listed all nineteen classes and offered a parent her way into each.
+   *
+   * The labels still come from the config, because that is where a section's
+   * display name lives; the service only says which ids are hers.
+   */
+  const [visibleIds, setVisibleIds] = React.useState<string[] | null>(null)
+
+  React.useEffect(() => {
+    let cancelled = false
+    void fetchClassSections()
+      .then(sections => {
+        if (!cancelled) setVisibleIds(sections.map(section => section.id))
+      })
+      .catch(() => {
+        // Nothing, not everything: a failed scope read must not open the list.
+        if (!cancelled) setVisibleIds([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const classSections = React.useMemo(
+    () =>
+      visibleIds === null
+        ? []
+        : config.classSections.filter(section => visibleIds.includes(section.id)),
+    [config.classSections, visibleIds],
+  )
+
+  /**
+   * Which class is on screen — derived, so it cannot name one that is not on
+   * the list.
+   *
+   * Stored as "what the user picked" rather than "what is selected", because
+   * the sections arrive asynchronously: state seeded before they land would
+   * hold `''` for ever, and an effect that corrected it afterwards would be a
+   * second source of truth for the same question.
+   *
+   * `9A` is only a preference for where staff start. A family has one section
+   * and it is theirs, so falling through to the first visible one serves both
+   * — where the old hardcoded `9A` showed a parent an empty grid for a class
+   * her child is not in.
+   */
+  const [pickedClassId, setPickedClassId] = React.useState<string | null>(null)
+  const selectedClassId = React.useMemo(() => {
+    if (pickedClassId && classSections.some(section => section.id === pickedClassId)) {
+      return pickedClassId
+    }
+    return (classSections.find(s => s.label === '9A') ?? classSections[0])?.id ?? ''
+  }, [pickedClassId, classSections])
 
   // Track which classes have timetables (for "Copy from..." feature)
   const [classesWithTimetables, setClassesWithTimetables] = React.useState<
@@ -162,7 +216,7 @@ export function TimetablePage() {
         <TimetableToolbar
           classSections={classSections}
           selectedClassId={selectedClassId}
-          onClassChange={setSelectedClassId}
+          onClassChange={setPickedClassId}
           isEditMode={isEditMode}
           canManage={canManage}
           onToggleEditMode={handleToggleEditMode}
