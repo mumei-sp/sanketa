@@ -1,6 +1,6 @@
-import { Ellipsis } from 'lucide-react'
+
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tile } from '@/components/tile'
 import type { FeeProgressData } from '../types'
@@ -95,9 +95,6 @@ export function FeeCollectionProgress({ data, isLoading = false }: FeeCollection
       {/* Title row */}
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <h3 className="text-section-title">Fees Collection Progress</h3>
-        <Button variant="ghost" size="icon" className="size-8">
-          <Ellipsis className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* 2×2 grid of individual progress cards */}

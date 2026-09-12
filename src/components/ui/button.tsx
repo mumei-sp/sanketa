@@ -43,6 +43,7 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  type,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
@@ -50,12 +51,34 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : "button"
 
+  /**
+   * A bare `<button>` inside a `<form>` is a SUBMIT button. That is the HTML
+   * default, not a choice anyone here made, and it means every unadorned
+   * `<Button>` in a form was one stray click away from submitting it — 35 of
+   * them on the Teachers page alone.
+   *
+   * Defaulting to "button" is safe because nothing in this app leans on the
+   * implicit behaviour: every form states its submit explicitly
+   * (`type="submit"` in the auth, notice and event forms, `type={onSubmit ?
+   * 'submit' : 'button'}` in `FormSheet`), and the teacher and student forms
+   * do not submit at all — their action bars call a handler directly.
+   *
+   * Left alone under `asChild`, where the rendered element may be an anchor or
+   * a menu item and `type` would be meaningless or wrong on it.
+   */
+  const typeProp = asChild
+    ? type !== undefined
+      ? { type }
+      : {}
+    : { type: type ?? ("button" as const) }
+
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      {...typeProp}
       {...props}
     />
   )

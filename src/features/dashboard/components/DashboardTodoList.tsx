@@ -222,7 +222,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
           <CardHeader className="flex-shrink-0 pb-2">
             <h3 className="text-section-title">To Do List</h3>
             <CardAction data-compact>
-              <button
+              <button type="button"
                 className="tap-area p-1 rounded-md hover:bg-accent transition-colors"
                 onClick={() => setIsAdding(true)}
               >
@@ -320,7 +320,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button
+                        <button type="button"
                           className="p-1 rounded-md opacity-0 touch:opacity-100 group-hover:opacity-100 focus:opacity-100 hover:bg-accent transition-all shrink-0"
                           onClick={e => e.stopPropagation()}
                         >

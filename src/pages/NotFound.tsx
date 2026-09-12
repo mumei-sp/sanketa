@@ -67,7 +67,7 @@ export default function NotFound() {
           <Home size={14} />
           Go to Dashboard
         </Link>
-        <button
+        <button type="button"
           onClick={() => window.history.back()}
           style={{
             display: 'inline-flex',

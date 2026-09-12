@@ -83,7 +83,7 @@ export function DataTablePaginationCustom<TData>({
         <span>of {totalRows} results</span>
       </div>
       <div className="flex items-center justify-center gap-2 sm:justify-end sm:flex-shrink-0">
-        <button
+        <button type="button"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
           className={cn(
@@ -99,7 +99,7 @@ export function DataTablePaginationCustom<TData>({
         {pagesToShow.map(pageNum => {
           const isActive = pageIndex + 1 === pageNum
           return (
-            <button
+            <button type="button"
               key={pageNum}
               onClick={() => table.setPageIndex(pageNum - 1)}
               className={cn(
@@ -115,7 +115,7 @@ export function DataTablePaginationCustom<TData>({
             </button>
           )
         })}
-        <button
+        <button type="button"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
           className={cn(

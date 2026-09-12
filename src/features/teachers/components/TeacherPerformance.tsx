@@ -51,7 +51,7 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
 
   const dropdownButton = (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
-      <button
+      <button type="button"
         className="hover:opacity-90 transition-opacity"
         onClick={() => setIsOpen(prev => !prev)}
         style={{
@@ -96,7 +96,7 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
           }}
         >
           {periods.map(period => (
-            <button
+            <button type="button"
               key={period}
               onClick={() => { setSelectedPeriod(period); setIsOpen(false) }}
               style={{

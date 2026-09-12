@@ -85,7 +85,7 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
 
   const dropdownButton = (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
-      <button
+      <button type="button"
         className="hover:opacity-90 transition-opacity"
         onClick={() => setIsOpen(prev => !prev)}
         style={{
@@ -130,7 +130,7 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
           }}
         >
           {PERIODS.map(period => (
-            <button
+            <button type="button"
               key={period}
               onClick={() => { setSelectedPeriod(period); setIsOpen(false) }}
               style={{

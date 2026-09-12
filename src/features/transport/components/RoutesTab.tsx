@@ -158,7 +158,7 @@ export function RoutesTab() {
       cell: ({ row }) => {
         const isExpanded = expandedRouteId === row.original.id
         return (
-          <button
+          <button type="button"
             onClick={e => toggleExpand(row.original.id, e)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:shadow-sm"
             style={{

@@ -100,7 +100,7 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
 
   const dropdownButton = (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
-      <button
+      <button type="button"
         className="hover:opacity-90 transition-opacity"
         onClick={() => setIsOpen(prev => !prev)}
         style={{
@@ -145,7 +145,7 @@ export function TeacherDevelopmentTraining({ events }: TeacherDevelopmentTrainin
           }}
         >
           {termOptions.map(s => (
-            <button
+            <button type="button"
               key={s}
               onClick={() => { setSemester(s); setIsOpen(false) }}
               style={{

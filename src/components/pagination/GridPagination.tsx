@@ -119,7 +119,7 @@ export function GridPagination({
         <span>of {totalItems} results</span>
       </div>
       <div className="flex items-center justify-center gap-2 sm:justify-end sm:flex-shrink-0">
-        <button
+        <button type="button"
           onClick={handlePrevious}
           disabled={currentPage === 1}
           className="tap-target flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"
@@ -142,7 +142,7 @@ export function GridPagination({
         {pagesToShow.map(pageNum => {
           const isActive = currentPage === pageNum
           return (
-            <button
+            <button type="button"
               key={pageNum}
               onClick={() => handlePageClick(pageNum)}
               className="tap-target flex h-8 min-w-10 items-center justify-center rounded-md px-3 font-medium transition-colors"
@@ -159,7 +159,7 @@ export function GridPagination({
             </button>
           )
         })}
-        <button
+        <button type="button"
           onClick={handleNext}
           disabled={currentPage === totalPages}
           className="tap-target flex h-8 min-w-10 items-center justify-center rounded-md border px-3 font-medium transition-colors"

@@ -1,5 +1,5 @@
-import { Ellipsis, Users } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
+import { Users } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { PanelTile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -97,9 +97,6 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
           <h3 className="text-section-title">Events</h3>
-          <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
-            <Ellipsis className="w-4 h-4 text-muted-foreground" />
-          </button>
         </div>
         <div className="px-4 flex-1 min-h-0 tile-list">
           <EventsContent events={events} />
@@ -113,11 +110,6 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
       <Card className="pt-4 pb-4 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-2">
           <h3 className="text-section-title">Events</h3>
-          <CardAction>
-            <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
-              <Ellipsis className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-0 pb-0 tile-list">
           <EventsContent events={events} />

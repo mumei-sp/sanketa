@@ -99,7 +99,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error.message}
             </pre>
           )}
-          <button
+          <button type="button"
             onClick={this.handleReset}
             style={{
               display: 'inline-flex',

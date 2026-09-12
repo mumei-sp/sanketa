@@ -41,7 +41,7 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
     >
       {/* Top-right actions */}
       <div className="absolute top-3 right-3 flex items-center gap-0.5">
-        <button
+        <button type="button"
           onClick={() => onEdit(driver)}
           className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
           style={{ backgroundColor: accent.soft }}
@@ -53,7 +53,7 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
         </button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <button
+            <button type="button"
               className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
               style={{ backgroundColor: accent.soft }}
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = status.danger.soft }}

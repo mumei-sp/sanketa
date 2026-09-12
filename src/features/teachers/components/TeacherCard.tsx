@@ -78,7 +78,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
       {(onEdit || onDelete) && (
         <div className="absolute top-3 right-3 flex items-center gap-0.5">
           {onEdit && (
-            <button
+            <button type="button"
               onClick={e => { e.stopPropagation(); onEdit(teacher) }}
               className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
               style={{ backgroundColor: accent.soft }}
@@ -92,7 +92,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
           {onDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button
+                <button type="button"
                   onClick={e => e.stopPropagation()}
                   className="tap-target w-7 h-7 rounded-md flex items-center justify-center transition-colors"
                   style={{ backgroundColor: accent.soft }}
@@ -188,13 +188,28 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
       <div className="flex items-center justify-between pt-3 border-t border-border/50">
         <div className="flex items-center gap-2">
           {/* Phone & MessageCircle: visible on tablet/mobile, hidden on desktop */}
-          <button onClick={e => e.stopPropagation()} className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
+          <button
+            type="button"
+            aria-label={`Call ${displayName}`}
+            onClick={e => e.stopPropagation()}
+            className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden"
+          >
             <Phone className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
-          <button onClick={e => e.stopPropagation()} className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
+          <button
+            type="button"
+            aria-label={`Message ${displayName} on WhatsApp`}
+            onClick={e => e.stopPropagation()}
+            className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+          >
             <WhatsAppIcon className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
-          <button onClick={e => e.stopPropagation()} className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden">
+          <button
+            type="button"
+            aria-label={`Send ${displayName} a message`}
+            onClick={e => e.stopPropagation()}
+            className="tap-target w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors lg:hidden"
+          >
             <MessageCircle className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
         </div>

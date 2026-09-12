@@ -83,7 +83,7 @@ export function TeacherSchedule({ schedule, scheduleByView }: TeacherSchedulePro
 
   const dropdownButton = (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
-      <button
+      <button type="button"
         className="hover:opacity-90 transition-opacity"
         onClick={() => setIsOpen(prev => !prev)}
         style={{
@@ -128,7 +128,7 @@ export function TeacherSchedule({ schedule, scheduleByView }: TeacherSchedulePro
           }}
         >
           {VIEWS.map(view => (
-            <button
+            <button type="button"
               key={view}
               onClick={() => { setSelectedView(view); setIsOpen(false) }}
               style={{

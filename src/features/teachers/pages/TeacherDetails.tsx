@@ -180,7 +180,7 @@ export default function TeacherDetails() {
                           </p>
                           {request.status === 'Pending' && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: spacing['3'] }}>
-                              <button
+                              <button type="button"
                                 style={{
                                   flex: 1,
                                   padding: `${spacing['2']} ${spacing['3']}`,
@@ -195,7 +195,7 @@ export default function TeacherDetails() {
                               >
                                 Approve
                               </button>
-                              <button
+                              <button type="button"
                                 style={{
                                   flex: 1,
                                   padding: `${spacing['2']} ${spacing['3']}`,

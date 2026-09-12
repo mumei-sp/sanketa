@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Ellipsis } from 'lucide-react'
+
 import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
 import { PanelTile } from '@/components/tile'
 import {
@@ -89,7 +89,6 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
                     <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium whitespace-nowrap">
                       Created By
                     </th>
-                    <th className="pb-2" />
                   </tr>
                 </thead>
               </table>
@@ -134,11 +133,6 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
                         </td>
                         <td className="py-3 pr-3 text-body-muted text-muted-foreground whitespace-nowrap align-middle">
                           {item.createdBy}
-                        </td>
-                        <td className="py-3 align-middle">
-                          <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
-                            <Ellipsis className="w-4 h-4 text-muted-foreground" />
-                          </button>
                         </td>
                       </tr>
                     ))}
