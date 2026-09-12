@@ -286,7 +286,7 @@ function SchoolDashboard() {
               className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1 transition-colors hover:opacity-80"
               style={{
                 color: 'var(--foreground)',
-                backgroundColor: 'color-mix(in srgb, var(--accent) 35%, var(--card))',
+                backgroundColor: 'var(--wash-control)',
                 border: `1px solid ${colors.border.default}`,
               }}
             >
@@ -427,7 +427,7 @@ function SchoolDashboard() {
             <Card
               className="pt-4 pb-2 flex flex-col gap-3 h-full"
               style={{
-                backgroundColor: 'color-mix(in srgb, var(--accent) 45%, var(--card))',
+                backgroundColor: 'var(--wash-rail)',
               }}
             >
               <DashboardCalendar

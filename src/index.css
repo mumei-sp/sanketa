@@ -219,7 +219,31 @@
   --secondary-foreground: #15446e; /* text.heading */
   /* Muted colors */
   --muted: #f3f6fa; /* cool subtle background */
-  --muted-foreground: #64748b; /* slate-500 — harmonizes with navy headings */
+  /* Darkened from slate-500 (#64748b), which measured 3.46:1 on the pale
+     primary, 3.77:1 on the accent and 4.23:1 on `--secondary` — a whole band
+     of labels, breadcrumbs, the ⌘K hint and table captions sitting under AA.
+     This is the LIGHTEST value that clears 4.5:1 on every surface it lands on
+     (4.68:1 against the pink, the binding case), so muted text is still a step
+     below `--text-body` — 1.59:1 apart, where slate-600 would have closed that
+     to 1.35:1 and flattened the ladder. Dark mode needs no change: its
+     `--muted-foreground` already measures 6.2–7.3:1. */
+  --muted-foreground: #526070;
+  /* Sunday in the calendar. Theme-aware because it is text on a themed
+     surface: `status.danger.base` (#FC5859) reads on the dark card (5.71:1)
+     and washes out on white (3.14:1), and the darker red that fixes white
+     (5.78:1) goes unreadable on the dark card (3.10:1). One value cannot
+     serve both, so there are two. */
+  --calendar-weekend: #B53A3B;
+
+  /* Brand washes for the dashboard's Customize control and its calendar rail.
+     They were written inline as `color-mix(var(--accent) 35%/45%, var(--card))`,
+     which is a pale tint over a white card and a MID tone over a dark one —
+     srgb(0.41 0.46 0.48), the one lightness where neither a light nor a dark
+     label reads (the weekday letters measured 1.76:1 there). Light keeps the
+     ratios it had; dark pulls the accent back to a hint so the wash stays a
+     surface rather than becoming a colour of its own. */
+  --wash-control: color-mix(in srgb, var(--accent) 35%, var(--card));
+  --wash-rail: color-mix(in srgb, var(--accent) 45%, var(--card));
   /* Accent colors (blue-based) */
   --accent: #cdeaf0; /* accent.base - converted to oklch: oklch(0.90 0.05 200) */
   --accent-foreground: #15446e; /* text.heading for contrast */
@@ -319,6 +343,10 @@
      read as mud on dark surfaces so they stay off. */
   --card-border: oklch(1 0 0 / 7%);
   --shadow-card: none;
+  /* See the light-mode note: the pale red is the one that reads on dark. */
+  --calendar-weekend: #FC5859;
+  --wash-control: color-mix(in srgb, var(--accent) 10%, var(--card));
+  --wash-rail: color-mix(in srgb, var(--accent) 14%, var(--card));
   /* Aurora stays but far quieter — a whisper of brand tint on the dark shell. */
   --app-aurora:
     radial-gradient(

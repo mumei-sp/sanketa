@@ -60,9 +60,10 @@
   text-transform: capitalize;
 }
 
-/* Sunday header */
+/* Sunday header. `--calendar-weekend` rather than a fixed red: a single value
+   cannot read on both a white header and a near-black one. See index.css. */
 .fc .fc-day-sun .fc-col-header-cell-cushion {
-  color: #FC5859;
+  color: var(--calendar-weekend);
 }
 
 /* ── Day Number ── */
@@ -74,9 +75,9 @@
   text-decoration: none;
 }
 
-/* Sunday day number */
+/* Sunday day number — same token as the header above. */
 .fc .fc-day-sun .fc-daygrid-day-number {
-  color: #FC5859;
+  color: var(--calendar-weekend);
 }
 
 /* Today's day number — primary pill with auto-contrast foreground so it reads

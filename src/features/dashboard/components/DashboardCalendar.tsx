@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Tile } from '@/components/tile'
 import { cn } from '@/lib/utils'
-import { status } from '@/theme/colors'
 
 export interface HighlightedDate {
   day: number
@@ -114,11 +113,20 @@ export function DashboardCalendar({
               )}
               style={
                 isSelected
-                  ? { backgroundColor: 'var(--heading)', color: 'white' }
+                  ? // `--heading-foreground` is the auto-contrast pair for a
+                    // `--heading` fill. Literal white was right only in light
+                    // mode; in dark `--heading` is near-white, so this was
+                    // white on near-white.
+                    { backgroundColor: 'var(--heading)', color: 'var(--heading-foreground)' }
                   : isHighlighted
-                    ? { backgroundColor: highlightColor, color: 'var(--heading)' }
+                    ? // The fill is a brand tint and stays pale in both themes,
+                      // so its label has to be fixed too — `--heading` follows
+                      // the theme to near-white and measured 1.23:1 here.
+                      { backgroundColor: highlightColor, color: 'var(--heading-accent, var(--heading))' }
                     : isSunday
-                      ? { color: status.danger.base }
+                      ? // Same token the full calendar uses; a single red cannot
+                        // read on both a pale rail and a dark one.
+                        { color: 'var(--calendar-weekend)' }
                       : undefined
               }
             >
