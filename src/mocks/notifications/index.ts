@@ -14,6 +14,5 @@ export {
   markAllRead,
   dismiss,
   subscribe,
-  resetDatabase,
 } from './store'
 export { deriveNotification } from './rules'

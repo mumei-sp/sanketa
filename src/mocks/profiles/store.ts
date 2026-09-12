@@ -578,9 +578,3 @@ export function detachLogin(profileId: string): boolean {
   persist()
   return true
 }
-
-/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
-export function resetProfiles(): void {
-  db = seed()
-  persist()
-}

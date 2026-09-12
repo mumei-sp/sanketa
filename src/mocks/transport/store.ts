@@ -398,9 +398,3 @@ export function listAlerts(now: Date = new Date()): TransportAlert[] {
   const rank: Record<TransportAlert['severity'], number> = { danger: 0, warning: 1, info: 2 }
   return alerts.sort((a, b) => rank[a.severity] - rank[b.severity])
 }
-
-/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
-export function resetTransport(): void {
-  db = seed()
-  persist()
-}

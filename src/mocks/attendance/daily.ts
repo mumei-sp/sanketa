@@ -15,7 +15,6 @@ import { tenantSections } from '@/mocks/tenants'
 import { listStudents } from '@/mocks/students'
 import { classSectionOf, rollNumberOf } from '@/utils/class-section-helpers'
 import { getDisplayName } from '@/features/students/utils/formatting'
-import { fullName } from '@/mocks/_shared/fake'
 import { classTeacherOf } from '@/mocks/teachers/assignments'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 import { rng, pick, type Rng } from '@/mocks/tenants/_generate/random'
@@ -26,31 +25,6 @@ import { rng, pick, type Rng } from '@/mocks/tenants/_generate/random'
 
 
 
-
-/**
- * Build a deterministic roster for a class that has no hand-authored one.
- *
- * The school config defines every class section (1A through 10B); only three
- * of them were written out by hand here, so picking any other class in the
- * daily-attendance screen threw `Class "1A" not found`. Seeding off the class
- * label keeps each generated roster stable across reloads.
- */
-function generateClassRoster(classLabel: string): ClassRosterStudent[] {
-  const labelSeed = [...classLabel].reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7)
-  const size = 10 + (labelSeed % 6) // 10–15 students
-  const slug = classLabel.toLowerCase()
-
-  return Array.from({ length: size }, (_, i) => {
-    const rollNumber = String(i + 1).padStart(2, '0')
-    const name = fullName(labelSeed + i * 101)
-    return {
-      id: `stu-${slug}-${rollNumber}`,
-      name,
-      rollNumber,
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
-    }
-  })
-}
 
 /**
  * All class rosters keyed by class label.
@@ -71,11 +45,13 @@ function generateClassRoster(classLabel: string): ClassRosterStudent[] {
  * So a roster row is now a student record, carrying `Student.id` — the same
  * key `student_parents` links on and the same one a family's scope holds.
  *
- * Classes with nobody enrolled still get a generated roster, because the
- * picker offers every section the school defines and an empty register is a
- * worse answer than a filler one. Generated rows keep their `stu-<class>-NN`
- * ids, which deliberately cannot match a student id: nobody's child is in a
- * filler class, and a scope should never match one.
+ * A class with nobody enrolled comes back empty, which is the truth about it.
+ * It used to come back filled with invented people — `stu-9a-01` and a
+ * generated name — on the argument that an empty register reads worse than a
+ * filler one. It does not: every section now belongs to the school that
+ * configured it, so a configured section with no children in it is a fact
+ * worth seeing rather than one worth papering over. Nothing has been filler
+ * since the rosters grew to cover every class.
  */
 function rosterFromDirectory(classLabel: string): ClassRosterStudent[] {
   return listStudents()
@@ -99,8 +75,7 @@ function rosterFromDirectory(classLabel: string): ClassRosterStudent[] {
 
 export const classRosters: Record<string, ClassRosterStudent[]> = Object.fromEntries(
   tenantSections().map(section => {
-    const enrolled = rosterFromDirectory(section.label)
-    return [section.label, enrolled.length > 0 ? enrolled : generateClassRoster(section.label)]
+    return [section.label, rosterFromDirectory(section.label)]
   }),
 )
 

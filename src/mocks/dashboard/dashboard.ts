@@ -172,13 +172,6 @@ export function buildPerformanceDatasets(): PerformanceDataset[] {
 }
 
 /**
- * Module-level export kept for backwards compatibility with anything that
- * imports `performanceDatasets` directly. Services should call
- * `buildPerformanceDatasets()` each request to pick up live config changes.
- */
-export const performanceDatasets: PerformanceDataset[] = buildPerformanceDatasets()
-
-/**
  * Money in against money out, by month.
  *
  * ── What this replaced ─────────────────────────────────────────────────
@@ -268,9 +261,6 @@ export function buildGenderDatasets(): GenderDataset[] {
     }
   })
 }
-
-/** Backwards-compatible module-level export. Prefer the builder in services. */
-export const genderDatasets: GenderDataset[] = buildGenderDatasets()
 
 // Daily/weekly attendance counts derive from TOTAL_ENROLLMENT × attendance
 // rate, with small per-day jitter so the bars aren't uniform. Values are

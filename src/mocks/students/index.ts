@@ -11,7 +11,6 @@ export {
   insertStudent,
   replaceStudent,
   patchStudents,
-  resetStudents,
 } from './store'
 export { attendanceOverviewData, enrollmentTrendsData } from './dashboard'
 export * from './academic-performance'

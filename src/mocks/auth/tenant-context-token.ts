@@ -120,7 +120,7 @@ export class TenantContextError extends Error {
 }
 
 /** Parse and check a token. Everything the filter does before it looks at the header. */
-export function verifyContextToken(token: string | null): TenantContextClaims {
+function verifyContextToken(token: string | null): TenantContextClaims {
   if (!token || !token.startsWith('v4.local.')) {
     throw new TenantContextError('TOKEN_INVALID', 401, 'No tenant context token.')
   }
@@ -155,7 +155,7 @@ export function verifyContextToken(token: string | null): TenantContextClaims {
  * No choice falls back to the first tenant in the claim, as the real filter
  * does, so somebody with one school never has to name it.
  */
-export function effectiveTenant(claims: TenantContextClaims, requested: string | null): string {
+function effectiveTenant(claims: TenantContextClaims, requested: string | null): string {
   if (!requested) return claims.tenantIds[0]
   if (!claims.tenantIds.includes(requested)) {
     throw new TenantContextError(

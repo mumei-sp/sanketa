@@ -453,9 +453,3 @@ export function unlinkParent(studentProfileId: string, parentProfileId: string):
   persist()
   return true
 }
-
-/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
-export function resetParents(): void {
-  db = seed()
-  persist()
-}

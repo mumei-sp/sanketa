@@ -369,7 +369,7 @@ function buildTeacherDetailsMap(): Record<string, TeacherDetail> {
   return map
 }
 
-export const teacherDetailsData = buildTeacherDetailsMap()
+const teacherDetailsData = buildTeacherDetailsMap()
 
 /**
  * Get teacher detail by ID

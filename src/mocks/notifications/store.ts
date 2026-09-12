@@ -94,7 +94,11 @@ onTenantSwitch(() => {
 
 /** Strip server-only columns before anything leaves the database. */
 function toPublic(row: StoredNotification): Notification {
-  const { seq: _seq, audience: _audience, ...rest } = row
+  const { seq, audience, ...rest } = row
+  // Destructured to drop them from `rest`, which is the whole point; `void`
+  // says so to a linter that otherwise reads them as forgotten.
+  void seq
+  void audience
   return rest
 }
 
@@ -342,13 +346,4 @@ export function publishDerived(key: string, event: DomainEvent): Notification | 
   database.derivedKeys = [...seen, key].slice(-500)
   persist()
   return published
-}
-
-/**
- * Wipe and reseed. Exposed for development — resetting the mock database is
- * the equivalent of re-running the backend's seed script.
- */
-export function resetDatabase(): void {
-  db = seedDatabase()
-  persist()
 }

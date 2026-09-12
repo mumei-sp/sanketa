@@ -9,7 +9,6 @@
 export * from './constants'
 export * from './date-helpers'
 export * from './id-helpers'
-export * from './fake'
 export * from './simulate-latency'
 export * from './pagination'
 export * from './seed-signature'

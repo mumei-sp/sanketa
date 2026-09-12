@@ -201,9 +201,3 @@ export function setMembershipActive(
   persist()
   return clone(row)
 }
-
-/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
-export function resetMemberships(): void {
-  db = seed()
-  persist()
-}

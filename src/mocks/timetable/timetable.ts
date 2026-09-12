@@ -53,11 +53,6 @@ export const subjects: Subject[] = [
   { id: 'library', name: 'Library',            shortName: 'Lib',     color: border.default },
 ]
 
-/** Look up subject by ID */
-export function getSubjectById(id: string): Subject | undefined {
-  return subjects.find(s => s.id === id)
-}
-
 // ============================================================================
 // Class Sections
 // ============================================================================

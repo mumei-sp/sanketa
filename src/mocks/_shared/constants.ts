@@ -6,14 +6,8 @@
 /** Canonical school domain. Every mock user email resolves against this. */
 export const SCHOOL_DOMAIN = 'sanketa.edu'
 
-/** Canonical school display name. */
-export const SCHOOL_NAME = 'Sanketa Public School'
-
 /** Display country code for Indian phone numbers. */
 export const PHONE_COUNTRY_CODE = '+91'
-
-/** ISO country the school operates in (used for addresses). */
-export const COUNTRY_CODE = 'IN'
 
 /** Canonical currency symbol + ISO code used across fees / expenses / etc. */
 export const CURRENCY = { symbol: '₹', code: 'INR' } as const

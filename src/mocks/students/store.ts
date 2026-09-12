@@ -172,9 +172,3 @@ export function patchStudents(
   })
   if (changed) persist()
 }
-
-/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
-export function resetStudents(): void {
-  db = seed()
-  persist()
-}

@@ -37,21 +37,3 @@ export function paginate<T>(items: readonly T[], opts: PaginateOptions = {}): Pa
     },
   }
 }
-
-/**
- * Shortcut for "give me everything, no pagination" — still in envelope shape
- * so consumers read the same structure everywhere.
- */
-export function paginateAll<T>(items: readonly T[]): PaginatedResponse<T> {
-  return {
-    data: [...items],
-    pagination: {
-      page: 1,
-      limit: items.length || 1,
-      total: items.length,
-      totalPages: 1,
-      hasNext: false,
-      hasPrev: false,
-    },
-  }
-}

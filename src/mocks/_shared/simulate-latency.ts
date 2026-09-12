@@ -17,7 +17,7 @@ export interface LatencyOptions {
  * Resolve after a random delay within `[min, max]` ms. Defaults produce 200–600ms
  * latency, realistic for a regional API over 4G without feeling sluggish.
  */
-export function simulateLatency(options: LatencyOptions = {}): Promise<void> {
+function simulateLatency(options: LatencyOptions = {}): Promise<void> {
   const { min = 200, max = 600 } = options
   const span = Math.max(0, max - min)
   const delay = Math.round(Math.random() * span + min)

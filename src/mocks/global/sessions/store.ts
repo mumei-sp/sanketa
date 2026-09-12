@@ -134,9 +134,3 @@ export function revokeSession(refreshToken: string): void {
   database.rows.splice(index, 1)
   persist()
 }
-
-/** Wipe — the equivalent of a server restart invalidating every session. */
-export function resetSessions(): void {
-  db = { rows: [] }
-  persist()
-}

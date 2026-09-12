@@ -26,7 +26,6 @@ export {
   createProfileType,
   deactivateProfileType,
   assignProfileType,
-  resetProfiles,
 } from './store'
 export type {
   Profile,

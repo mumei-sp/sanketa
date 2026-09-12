@@ -18,14 +18,6 @@ export function makeId(prefix: string, seed: number, pad = 4): string {
 }
 
 /**
- * Walk a seed counter to produce a list of IDs:
- *   seriesIds('S', 2101, 5) → ['S-2101', 'S-2102', 'S-2103', 'S-2104', 'S-2105']
- */
-export function seriesIds(prefix: string, start: number, count: number, pad = 4): string[] {
-  return Array.from({ length: count }, (_, i) => makeId(prefix, start + i, pad))
-}
-
-/**
  * Transaction ID: `TXN-202604-0042` — month segment updates automatically so
  * mock fee payments always look recent.
  */
@@ -37,7 +29,7 @@ export function txnId(sequence: number): string {
  * Short, URL-safe pseudo-UUID used for fresh records created by user action.
  * Not cryptographically random — good enough for mock CRUD.
  */
-export function shortUuid(): string {
+function shortUuid(): string {
   return (
     Date.now().toString(36) +
     Math.random().toString(36).slice(2, 8)

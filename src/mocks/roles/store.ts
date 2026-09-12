@@ -297,9 +297,3 @@ export function deleteRole(id: string): boolean {
   persist()
   return true
 }
-
-/** Wipe and reseed — the equivalent of re-running the backend's seed script. */
-export function resetRoles(): void {
-  db = seed()
-  persist()
-}

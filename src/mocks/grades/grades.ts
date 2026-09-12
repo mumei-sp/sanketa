@@ -29,7 +29,7 @@ import { relativeDate } from '@/mocks/_shared/date-helpers'
 import { subjectTeacherOf } from '@/mocks/teachers/assignments'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 import { rng, bell, type Rng } from '@/mocks/tenants/_generate/random'
-import type { GradeSubmission, GradeEntry } from '@/features/grades/types'
+import type { GradeSubmission } from '@/features/grades/types'
 
 // ============================================================================
 // Helpers
@@ -81,10 +81,6 @@ function marksFor(source: Rng, studentId: string, maxMarks: number): number {
 }
 
 /** Build a blank entry for a student */
-/** @internal Build a blank entry for a student */
-export function blankEntry(studentId: string, studentName: string, rollNumber: string, maxMarks: number): GradeEntry {
-  return { studentId, studentName, rollNumber, marksObtained: null, maxMarks, remarks: '' }
-}
 
 // ============================================================================
 // Pre-populated Submissions

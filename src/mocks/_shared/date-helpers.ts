@@ -20,12 +20,6 @@ function atMidnight(d: Date): Date {
   return copy
 }
 
-/** True if the given date is a Saturday (6) or Sunday (0). */
-function isWeekend(d: Date): boolean {
-  const day = d.getDay()
-  return day === 0 || day === 6
-}
-
 // ---------------------------------------------------------------------------
 // Formatting
 // ---------------------------------------------------------------------------
@@ -43,12 +37,6 @@ export function isoDate(d: Date | string | number = new Date()): string {
 export function displayDate(d: Date | string | number = new Date()): string {
   const date = typeof d === 'object' ? d : new Date(d)
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-/** Full ISO timestamp with seconds, UTC. */
-export function isoDateTime(d: Date | string | number = new Date()): string {
-  const date = typeof d === 'object' ? d : new Date(d)
-  return date.toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 
 // ---------------------------------------------------------------------------
@@ -72,67 +60,6 @@ export function relativeIso(offset: number, base?: Date): string {
 /** Same as relativeDate but returns the display string. */
 export function relativeDisplay(offset: number, base?: Date): string {
   return displayDate(relativeDate(offset, base))
-}
-
-/**
- * Walk backwards from today skipping weekends, returning the nth business day.
- * `businessDaysAgo(0)` → today (or the previous business day if today is a weekend).
- */
-export function businessDaysAgo(n: number, base: Date = new Date()): Date {
-  let cursor = atMidnight(base)
-  let stepsRemaining = n
-  // First, if we're starting on a weekend, snap back to Friday.
-  while (isWeekend(cursor)) cursor = new Date(cursor.getTime() - MS_PER_DAY)
-  while (stepsRemaining > 0) {
-    cursor = new Date(cursor.getTime() - MS_PER_DAY)
-    if (!isWeekend(cursor)) stepsRemaining--
-  }
-  return cursor
-}
-
-/**
- * Walk forward from today skipping weekends.
- */
-export function businessDaysFromNow(n: number, base: Date = new Date()): Date {
-  let cursor = atMidnight(base)
-  let stepsRemaining = n
-  while (isWeekend(cursor)) cursor = new Date(cursor.getTime() + MS_PER_DAY)
-  while (stepsRemaining > 0) {
-    cursor = new Date(cursor.getTime() + MS_PER_DAY)
-    if (!isWeekend(cursor)) stepsRemaining--
-  }
-  return cursor
-}
-
-/**
- * Produce `count` dates scattered deterministically across the last `days` days.
- * The spread is even-ish (quantised) so records don't cluster on one day.
- *
- * Example: `scatterPastDates(10, 30)` → 10 dates evenly spread over the last month.
- */
-export function scatterPastDates(count: number, days: number, base: Date = new Date()): Date[] {
-  if (count <= 0) return []
-  const step = days / count
-  const out: Date[] = []
-  for (let i = 0; i < count; i++) {
-    const offset = -Math.round((i + 0.5) * step)
-    out.push(relativeDate(offset, base))
-  }
-  return out
-}
-
-/**
- * Same as scatterPastDates but centred around today, half in the past and half in the future.
- */
-export function scatterAroundToday(count: number, spanDays: number, base: Date = new Date()): Date[] {
-  if (count <= 0) return []
-  const step = spanDays / count
-  const out: Date[] = []
-  for (let i = 0; i < count; i++) {
-    const offset = Math.round((i + 0.5) * step - spanDays / 2)
-    out.push(relativeDate(offset, base))
-  }
-  return out
 }
 
 // ---------------------------------------------------------------------------

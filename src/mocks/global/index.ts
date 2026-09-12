@@ -20,7 +20,6 @@ export {
   findMembership,
   addMembership,
   setMembershipActive,
-  resetMemberships,
 } from './memberships/store'
 export type { Membership } from './memberships/store'
 export { activeTenantCode } from './active-tenant'

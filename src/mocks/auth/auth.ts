@@ -28,25 +28,6 @@ function delay(ms: number): Promise<void> {
  */
 const MOCK_PASSWORD = 'admin'
 
-/**
- * Listed on the sign-in screen so each role can be tried.
- *
- * Only accounts that can actually be signed into. A provisioned student or
- * parent is `disabled` until the services filter by scope, and offering one as
- * a hint would be offering a login that refuses.
- */
-export function mockAccountHints() {
-  return listUsers()
-    .filter(user => user.status === 'active')
-    .map(user => ({
-      // Whichever the account can actually be signed in with. A hint that
-      // shows a blank where the address would be is worse than one that shows
-      // the number the person would have typed anyway.
-      email: user.email ?? user.phone ?? '',
-      name: user.fullName,
-    }))
-}
-
 export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   await delay(MOCK_DELAY)
 

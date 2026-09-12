@@ -18,6 +18,5 @@ export {
   linkParent,
   unlinkParent,
   reconcileGuardians,
-  resetParents,
 } from './store'
 export type { Parent, StudentParent, GuardianSlot } from './store'
