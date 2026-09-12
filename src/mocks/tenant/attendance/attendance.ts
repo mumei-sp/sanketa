@@ -150,8 +150,11 @@ export function generateMockAttendanceData(days: number = 10): AttendanceRecord[
 }
 
 /**
- * Mock attendance data for development and testing
- * TODO: Replace with real API calls when backend is ready
+ * Twenty-one days of it, built once at module load.
+ *
+ * The service swaps to HTTP on an env flag like every other — there is no
+ * work outstanding here, which is what the TODO that used to sit on this line
+ * claimed for longer than it was true.
  */
 export const attendanceData: AttendanceRecord[] = generateMockAttendanceData(21)
 

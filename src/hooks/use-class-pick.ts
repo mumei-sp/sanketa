@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { authUtils } from '@/api/utils/auth'
 
 interface UseClassPickOptions {
   /** localStorage key suffix — stored as `sanketa:class-pick:{storageKey}` */
@@ -25,6 +26,23 @@ interface UseClassPickResult {
 const STORAGE_PREFIX = 'sanketa:class-pick:'
 
 /**
+ * The key a picker's selection is remembered under.
+ *
+ * Scoped to the school, because a class is. Shared, a teacher who picked 9B at
+ * one school carried that choice to the next — where 9B is different children,
+ * or does not exist at all. The stored labels are filtered against the
+ * school's own list on read, so nothing crashed; the selection just collapsed
+ * to empty and the charts came up blank with no way to tell why.
+ *
+ * Read off the session rather than the mock's tenant context: which school a
+ * person is looking at is a fact about their session, and this is a UI hook.
+ */
+function keyFor(storageKey: string): string {
+  const tenant = authUtils.getUser()?.activeTenant ?? 'none'
+  return `${STORAGE_PREFIX}${tenant}:${storageKey}`
+}
+
+/**
  * Manages per-widget class/grade selection with localStorage persistence.
  *
  * Works for both grade-level and section-level selections — the items are
@@ -46,7 +64,7 @@ export function useClassPick(
   options: UseClassPickOptions,
 ): UseClassPickResult {
   const { storageKey, max } = options
-  const fullKey = STORAGE_PREFIX + storageKey
+  const fullKey = keyFor(storageKey)
 
   const [selected, setSelected] = React.useState<string[]>(() => {
     try {

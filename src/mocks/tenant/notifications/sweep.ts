@@ -48,7 +48,7 @@ function dayKey(now: Date): string {
 }
 
 /**
- * Parse the display dates the fee mock stores ('Mar 2, 2035').
+ * Parse the display dates the fee ledger stores ('Sep 19, 2026').
  *
  * Returns null rather than an Invalid Date, so an unparseable row is skipped
  * instead of being reported as overdue since 1970.
