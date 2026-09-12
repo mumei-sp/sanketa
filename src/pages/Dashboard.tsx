@@ -8,6 +8,7 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { getTimeOfDayGreeting, formatFriendlyDate } from '@/utils/date'
 import { Card } from '@/components/ui/card'
+import { SortableList, SortableItem } from '@/components/ui/sortable-list'
 import { colors } from '@/theme/colors'
 import { useTileSelection } from '@/hooks/use-tile-selection'
 import {
@@ -157,18 +158,13 @@ function SchoolDashboard() {
     selectedIds,
     toggle: toggleTile,
     reset: resetTiles,
-    reorder: reorderTiles,
+    setOrder: setTileOrder,
   } = useTileSelection(tiles, {
     storageKey: 'sanketa:dashboard-tiles',
     defaults,
     maxSelections: MAX_TILE_SELECTIONS,
   })
   const [customizeOpen, setCustomizeOpen] = React.useState(false)
-
-  // Drag-to-reorder for the KPI row (native HTML5 drag — persists via
-  // useTileSelection's reorder). dragIndex rides in a ref so dragover stays cheap.
-  const dragIndex = React.useRef<number | null>(null)
-  const [dropTarget, setDropTarget] = React.useState<number | null>(null)
 
   const [performance, setPerformance] = React.useState<PerformanceDataset[]>([])
   const [earnings, setEarnings] = React.useState<EarningsDataset[]>([])
@@ -294,42 +290,41 @@ function SchoolDashboard() {
               Customize
             </button>
           </div>
-          <TileWrapper columns={{ default: 2, md: 4 }} gap={12}>
-            {selectedTiles.map((stat, index) => (
-              <div
+          {/*
+            Reordering is dnd-kit, not HTML5 drag.
+
+            `draggable` + `onDragStart` is a mouse-only API: it does not fire on
+            touch at all, and it has no keyboard path whatsoever, so on a phone
+            the row could not be reordered and with a keyboard it could not be
+            reached. `SortableList` already ships with a `KeyboardSensor` and a
+            `PointerSensor` — the settings sections have used it all along — and
+            `asHandle` puts dnd-kit's `role`/`tabIndex`/`aria-roledescription`
+            on the card itself, so a card is picked up with Space, moved with
+            the arrow keys and dropped with Space.
+
+            `grid` rather than the default list strategy: this row is two
+            columns on a phone and four from `md`, and the vertical strategy
+            assumes a single column and picks the wrong drop target once a row
+            wraps.
+          */}
+          <SortableList
+            items={selectedTiles}
+            onReorder={next => setTileOrder(next.map(tile => tile.id))}
+            keyExtractor={tile => tile.id}
+            layout="grid"
+            className="grid grid-cols-2 md:grid-cols-4 gap-3"
+          >
+            {stat => (
+              <SortableItem
                 key={stat.id}
-                draggable
-                onDragStart={e => {
-                  dragIndex.current = index
-                  e.dataTransfer.effectAllowed = 'move'
-                }}
-                onDragOver={e => {
-                  e.preventDefault()
-                  e.dataTransfer.dropEffect = 'move'
-                  if (dropTarget !== index) setDropTarget(index)
-                }}
-                onDragLeave={() => setDropTarget(current => (current === index ? null : current))}
-                onDrop={e => {
-                  e.preventDefault()
-                  if (dragIndex.current !== null && dragIndex.current !== index) {
-                    reorderTiles(dragIndex.current, index)
-                  }
-                  dragIndex.current = null
-                  setDropTarget(null)
-                }}
-                onDragEnd={() => {
-                  dragIndex.current = null
-                  setDropTarget(null)
-                }}
-                className="cursor-grab active:cursor-grabbing transition-transform duration-200"
-                style={
-                  dropTarget === index ? { transform: 'scale(0.97)', opacity: 0.85 } : undefined
-                }
+                id={stat.id}
+                asHandle
+                className="cursor-grab touch-none active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <DashboardStatCard stat={stat} />
-              </div>
-            ))}
-          </TileWrapper>
+              </SortableItem>
+            )}
+          </SortableList>
         </Tile>
 
         {/* Tile customize modal */}

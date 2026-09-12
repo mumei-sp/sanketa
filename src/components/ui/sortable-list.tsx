@@ -36,6 +36,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  rectSortingStrategy,
   useSortable,
   arrayMove,
 } from '@dnd-kit/sortable'
@@ -60,6 +61,15 @@ interface SortableListProps<T> {
   className?: string
   /** Optional style for the list container */
   style?: React.CSSProperties
+  /**
+   * How items are laid out, which decides where a drag can drop.
+   *
+   * `list` is a single column — the settings sections. `grid` is for anything
+   * that wraps, like the dashboard's KPI row (two columns on a phone, four
+   * from `md`); the vertical strategy assumes one column and mis-measures the
+   * drop target the moment a row wraps.
+   */
+  layout?: 'list' | 'grid'
 }
 
 export function SortableList<T>({
@@ -69,6 +79,7 @@ export function SortableList<T>({
   children,
   className,
   style,
+  layout = 'list',
 }: SortableListProps<T>) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -101,7 +112,10 @@ export function SortableList<T>({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={ids}
+        strategy={layout === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}
+      >
         <div className={className} style={style}>
           {items.map((item, index) => children(item, index))}
         </div>
@@ -123,9 +137,18 @@ interface SortableItemProps {
   className?: string
   /** Optional inline style */
   style?: React.CSSProperties
+  /**
+   * Make the whole item the drag handle instead of nesting a grip inside it.
+   *
+   * A settings row has a grip because the row also holds inputs to click. A
+   * card that does nothing else is its own handle, and this is what puts
+   * dnd-kit's `attributes` on it — the `role`, `tabIndex` and
+   * `aria-roledescription` that let somebody pick it up with a keyboard.
+   */
+  asHandle?: boolean
 }
 
-export function SortableItem({ id, children, className, style }: SortableItemProps) {
+export function SortableItem({ id, children, className, style, asHandle }: SortableItemProps) {
   const {
     attributes,
     listeners,
@@ -146,7 +169,13 @@ export function SortableItem({ id, children, className, style }: SortableItemPro
 
   return (
     <SortableItemContext.Provider value={{ attributes, listeners }}>
-      <div ref={setNodeRef} className={className} style={combinedStyle}>
+      <div
+        ref={setNodeRef}
+        className={className}
+        style={combinedStyle}
+        {...(asHandle ? attributes : {})}
+        {...(asHandle ? listeners : {})}
+      >
         {children}
       </div>
     </SortableItemContext.Provider>

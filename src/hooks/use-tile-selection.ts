@@ -20,6 +20,14 @@ interface UseTileSelectionResult<T extends { id: string }> {
   toggle: (id: string) => void
   /** Reorder selected tiles by moving item at fromIndex to toIndex */
   reorder: (fromIndex: number, toIndex: number) => void
+  /**
+   * Replace the order outright.
+   *
+   * For drag libraries that hand back the finished array rather than the pair
+   * of indices that produced it. Ids not currently selected are ignored, so a
+   * stale drop cannot smuggle a tile back in.
+   */
+  setOrder: (ids: string[]) => void
   /** Reset selections to defaults */
   reset: () => void
   /** Whether the maximum number of selections has been reached */
@@ -100,6 +108,13 @@ export function useTileSelection<T extends { id: string }>(
     })
   }, [])
 
+  const setOrder = React.useCallback((ids: string[]) => {
+    setSelectedIds(prev => {
+      const kept = ids.filter(id => prev.includes(id))
+      return kept.length === prev.length ? kept : prev
+    })
+  }, [])
+
   const reset = React.useCallback(() => {
     setSelectedIds([...defaults].slice(0, maxSelections))
   }, [defaults, maxSelections])
@@ -119,6 +134,7 @@ export function useTileSelection<T extends { id: string }>(
     selectedIds,
     toggle,
     reorder,
+    setOrder,
     reset,
     isMaxed,
   }
