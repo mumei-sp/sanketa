@@ -117,10 +117,10 @@ a family mobile cannot both hold it, and the second needs an address.
 |---|---|---|---|
 | `user_profiles` | One row per person **at this school**, carrying the replicated person columns | exists (MySQL) | yes |
 | `students` | `profile_id` PK → `user_profiles(id)`. Admission and roll numbers, grade, section | exists (MySQL) | yes |
-| `teachers` | `profile_id` PK → `user_profiles(id)`. Employee id, qualification, department | exists (MySQL) | yes |
+| `teachers` | `profile_id` PK → **`staff(profile_id)`**. Only what is true of teaching | exists (MySQL) | yes |
 | `guardians` | `profile_id` PK → `user_profiles(id)`. Was `parents` | exists (MySQL) | yes |
 | `student_guardians` | Who a child's guardians are, and what each is to them. Was `student_parents` | exists (MySQL) | yes |
-| `staff` | `profile_id` PK — the employment record. `designation_id` → `staff_designations` | this frontend | yes |
+| `staff` | `profile_id` PK — the employment record, **teachers included**. `designation_id` → `staff_designations` | this frontend | yes |
 | `roles` | School-defined. `scope_axis` is new — see below | designed (Postgres) | yes |
 | `permissions` | The catalogue. Codes are code constants | designed (Postgres) | code constants |
 | `role_permissions` | `role_id`, `permission_id`, `granted` | designed (Postgres) | an array on the role |
@@ -143,11 +143,18 @@ the same claim in every school at once. **It is going, from GlobalDB and from
 the tenant replica**, replaced by two ideas that were tangled inside it:
 
 **A capacity is a record shape.** `students` has an admission number and a roll
-number; `teachers` has a qualification; `staff` has an employee id. The set is
+number; `staff` has an employee id; `teachers` has a qualification. The set is
 closed, and a new one is a developer adding a table — because "create a
 Librarian capacity" cannot be answered without somebody saying what fields a
 librarian record has. Capacities are plural per profile and **not stored**: what
 someone is here is which capacity tables reference them.
+
+They are not all siblings. `teachers` extends `staff` rather than sitting
+beside it — a teacher is staff who teach — so the chain is
+`user_profiles → staff → teachers` and a teacher comes back
+`['staff', 'teacher']`. That is why a Visiting Faculty member has somewhere to
+carry a job title, and why `employee_id` is written once instead of in two
+tables with nothing keeping them in step.
 
 **A job title is a label, and only staff have one.** "Bus Driver", "Visiting
 Faculty", "Lab Assistant". A student is a student and a guardian is a guardian;

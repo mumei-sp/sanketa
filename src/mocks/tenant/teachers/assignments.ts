@@ -24,29 +24,9 @@
 import { teachersData } from './teachers'
 import { findSectionByLabel } from '@/mocks/tenant/academic'
 import { DEFAULT_SUBJECTS } from '@/config/school-config'
+import { departmentOf } from './department'
 
-/**
- * Which department a teacher's subject belongs to.
- *
- * The faculty list is specific — 'Science - Biology', 'English Literature',
- * 'Arts - Music' — and the school's subject list is not: 'Science', 'English',
- * 'Music'. So a teacher is placed in the configured subject their own subject
- * mentions, longest match first, because 'Arts - Music' mentions both Art and
- * Music and the music teacher belongs to Music.
- *
- * A subject the school does not configure — Kannada, Urdu — is its own
- * department, which is the truth about a school of this size: one teacher, one
- * language, no department above them.
- */
-export function departmentOf(subject: string): string {
-  const matches = DEFAULT_SUBJECTS.map(entry => entry.name).filter(name =>
-    subject.toLowerCase().includes(name.toLowerCase()),
-  )
-  if (matches.length > 0) {
-    return matches.reduce((longest, name) => (name.length > longest.length ? name : longest))
-  }
-  return subject.split(' - ')[0].trim()
-}
+export { departmentOf } from './department'
 
 const nameOf = (index: number) => {
   const teacher = teachersData[index % teachersData.length]

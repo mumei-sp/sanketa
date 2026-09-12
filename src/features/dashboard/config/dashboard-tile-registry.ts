@@ -29,6 +29,7 @@ import type { DashboardStat } from '../types'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
 import { listStudents, studentCount } from '@/mocks/tenant/students'
 import { teachersData } from '@/mocks/tenant/teachers/teachers'
+import { listStaff } from '@/mocks/tenant/profiles/store'
 
 // Counts come from the tables. They used to be the seed size times a
 // multiplier — 40 × 30 for students, 18 × 5 for faculty — which put "1,200
@@ -174,7 +175,14 @@ export const dashboardTileRegistry: DashboardStat[] = [
   {
     id: 'support-staff',
     label: 'Support Staff',
-    value: 34,
+    // Counted, not typed. It said 34 — which was fiction until `teachers`
+    // started extending `staff`, and then became a number that happened to
+    // match the staff table while meaning something else: 31 teachers plus 3
+    // in the office. "Non-teaching staff" is an employment record with no
+    // `teachers` row.
+    value: listStaff().filter(
+      record => !teachersData.some(teacher => String(teacher.id) === record.profileId),
+    ).length,
     description: 'Non-teaching staff',
     icon: UserCog,
     iconBg: 'var(--primary)',

@@ -14,6 +14,7 @@ import { tenantFixtures } from '@/mocks/schools'
 import { feeTrendData } from '@/mocks/tenant/fees/fees'
 import { expenseTrendData } from '@/mocks/tenant/expenses/expenses'
 import { teachersData } from '@/mocks/tenant/teachers/teachers'
+import { listStaff } from '@/mocks/tenant/profiles/store'
 import { SCHOOL_SCALE } from '@/mocks/_shared/constants'
 import { loadSchoolConfig } from '@/api/services/school-config-service'
 import { MONTH_SHORT_LABELS } from '@/config/school-config'
@@ -48,7 +49,15 @@ export const dashboardStats: DashboardStat[] = [
   {
     id: 'support-staff',
     label: 'Support Staff',
-    value: 34,
+    // Staff who do not teach — an employment record with no `teachers` row.
+    //
+    // Typed as 34 until now, which was fiction, and became a trap the moment
+    // `teachers` started extending `staff`: the staff table holds 34 rows at
+    // Kendriya, and they are 31 teachers plus 3 in the office. The tile would
+    // have read correct and meant something else entirely.
+    value: listStaff().filter(
+      record => !teachersData.some(teacher => String(teacher.id) === record.profileId),
+    ).length,
     icon: UserCog,
     iconBg: 'var(--primary)',
     iconColor: 'var(--primary-foreground)',

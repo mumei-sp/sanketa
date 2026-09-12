@@ -53,6 +53,7 @@ import { updateGlobalProfile, REPLICATED_COLUMNS } from '@/mocks/global/profiles
 import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 import { deriveFamilies, familiesSignature, digitsOf } from '@/mocks/tenant/guardians/derive'
+import { departmentOf } from '@/mocks/tenant/teachers/department'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { tenantFixtures } from '@/mocks/schools'
 
@@ -376,6 +377,25 @@ function seed(): Database {
     return `SD-${code}`
   }
 
+  // ── Every teacher is staff ──
+  //
+  // `teachers` extends `staff`, it does not sit beside it: a teacher is staff
+  // who teach, and their employee number, department and joining date are
+  // employment facts that every employee has. `teachers` keeps what is true
+  // only of teaching — the qualification, the subject.
+  //
+  // Written here and before the `access` block, so a member of the office
+  // staff who also teaches gets one row rather than two: `staff.profile_id` is
+  // the primary key, and the upsert below finds this one.
+  school.teachers.forEach(teacher => {
+    staff.push({
+      profileId: String(teacher.id),
+      employeeId: teacher.teacherId,
+      department: departmentOf(teacher.subject),
+      designationId: designationFor('Teacher'),
+    })
+  })
+
   if (fixtures) {
     // A fixture entry refers to itself by `key`, because half of them do not
     // know their own profile id until this runs.
@@ -403,14 +423,20 @@ function seed(): Database {
       idByKey.set(entry.key, id)
 
       if (entry.staff) {
-        staff.push({
+        // Upsert: `staff.profile_id` is the primary key, so the teacher who is
+        // also named in the access block is one employment record with the
+        // fixture's details written over the derived ones.
+        const existing = staff.find(row => row.profileId === id)
+        const record: StaffRecord = {
           profileId: id,
           employeeId: entry.staff.employeeId,
           designationId: entry.staff.designation
             ? designationFor(entry.staff.designation)
-            : undefined,
-          department: entry.staff.department,
-        })
+            : existing?.designationId,
+          department: entry.staff.department ?? existing?.department,
+        }
+        if (existing) Object.assign(existing, record)
+        else staff.push(record)
       }
     })
 

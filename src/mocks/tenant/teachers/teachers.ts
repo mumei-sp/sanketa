@@ -23,21 +23,30 @@
 
 import type { Teacher } from '@/features/teachers/types'
 import { tenantFixtures } from '@/mocks/schools'
-import { splitPerson, personOf } from '@/mocks/tenant/profiles/store'
+import { splitPerson, personOf, staffOf } from '@/mocks/tenant/profiles/store'
 
 /**
- * Faculty rows, with the person columns read off `user_profiles`.
+ * Faculty rows, joined to the two tables a teacher extends.
  *
- * The fixture is authored as whole people — a name and a qualification
- * together — and split here into the half `teachers` keeps and the half the
- * profile owns, then handed back joined. Which looks like a no-op over a
- * fixture and is not: rename a teacher on the People screen and the profile is
- * what changed, so the profile is what this has to read.
+ * `user_profiles` owns who she is — name, date of birth, the number she
+ * answers. `staff` owns how she is employed — the employee number, the
+ * department. `teachers` owns only what is true of teaching. The fixture is
+ * authored as one whole person, because that is the readable way to write a
+ * seed, and split on the way in.
+ *
+ * Which looks like a no-op over a fixture and is not: rename her on the People
+ * screen and the profile is what changed; her employee number is a `staff`
+ * column, so `teacherId` reads it back rather than keeping a second copy that
+ * could drift.
  */
-export const teachersData: Teacher[] = tenantFixtures().teachers.map(
-  teacher =>
-    ({ ...personOf(String(teacher.id)), ...splitPerson(teacher).row }) as Teacher,
-)
+export const teachersData: Teacher[] = tenantFixtures().teachers.map(teacher => {
+  const id = String(teacher.id)
+  return {
+    ...personOf(id),
+    ...splitPerson(teacher).row,
+    teacherId: staffOf(id)?.employeeId ?? teacher.teacherId,
+  } as Teacher
+})
 
 /**
  * One teacher by their profile id — `user_profiles.id` at this school.
