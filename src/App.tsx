@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { SchoolConfigProvider } from '@/config/SchoolConfigContext'
 import { Toaster } from './components/ui/sonner'
+import { useApiErrorToasts } from './hooks/use-api-error-toasts'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AppLayout } from './components/layout'
 import { AuthRouteFallback } from './components/layout/RouteFallback'
@@ -145,6 +146,11 @@ const router = createBrowserRouter([
 ])
 
 function App() {
+  // The one subscriber to `errorEmitter`. Mounted here because it is above the
+  // router — a failure during a route transition still has somebody listening —
+  // and because `Toaster` is right below it.
+  useApiErrorToasts()
+
   return (
     <ErrorBoundary>
       <SchoolConfigProvider>

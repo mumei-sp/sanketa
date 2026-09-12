@@ -22,6 +22,13 @@ interface AppToastOptions {
   description?: string
   /** Duration in ms (default: 3000) */
   duration?: number
+  /**
+   * A stable id, so repeats REPLACE rather than stack.
+   *
+   * Six panels failing the same way is one piece of news. Without an id each
+   * gets its own toast and the screen is buried in six copies of it.
+   */
+  id?: string | number
 }
 
 export function useAppToast() {
@@ -29,6 +36,7 @@ export function useAppToast() {
     toast.success(message, {
       description: options?.description,
       duration: options?.duration ?? 3000,
+      id: options?.id,
     })
   }, [])
 
@@ -36,6 +44,7 @@ export function useAppToast() {
     toast.error(message, {
       description: options?.description,
       duration: options?.duration ?? 5000,
+      id: options?.id,
     })
   }, [])
 
@@ -43,6 +52,7 @@ export function useAppToast() {
     toast.info(message, {
       description: options?.description,
       duration: options?.duration ?? 3000,
+      id: options?.id,
     })
   }, [])
 
@@ -50,6 +60,7 @@ export function useAppToast() {
     toast.warning(message, {
       description: options?.description,
       duration: options?.duration ?? 4000,
+      id: options?.id,
     })
   }, [])
 
