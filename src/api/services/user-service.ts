@@ -82,6 +82,14 @@ export interface Person {
   assignedClasses: string[]
   /** Which records they have here — teacher, parent, staff, student. */
   capacities: string[]
+  /**
+   * Each role held, with how it got there — who granted it and when it ends.
+   *
+   * On the person rather than fetched per row: a People screen shows every
+   * grant at once, and asking once per person would be a round trip per card
+   * for something the same query already has in hand.
+   */
+  grants: RoleGrant[]
 }
 
 export async function fetchPeople(): Promise<Person[]> {
@@ -96,6 +104,7 @@ export async function fetchPeople(): Promise<Person[]> {
           roleIds: access.roleIds,
           assignedClasses: access.assignedClasses,
           capacities: access.capacities,
+          grants: access.profileId ? grantsWithNames(access.profileId) : [],
         }
       })
     },
@@ -314,12 +323,7 @@ export async function fetchRoleGrants(profileId: string): Promise<RoleGrant[]> {
     async () => {
       await withLatency()
       if (!callerMay('read', 'User')) return []
-      return roleGrantsOf(profileId).map(grant => ({
-        roleId: grant.roleId,
-        assignedAt: grant.assignedAt,
-        expiresAt: grant.expiresAt,
-        grantedBy: grant.assignedBy ? (profileNameOf(grant.assignedBy) ?? null) : null,
-      }))
+      return grantsWithNames(profileId)
     },
     async () => {
       const { data } = await apiClient.get<RoleGrant[]>(`/profiles/${profileId}/roles`)
@@ -336,6 +340,16 @@ export interface RoleGrant {
   expiresAt?: string
   /** Null when nobody can be named — the seed grants have no author. */
   grantedBy: string | null
+}
+
+/** The grants on one profile, with the granter resolved to a name. */
+function grantsWithNames(profileId: string): RoleGrant[] {
+  return roleGrantsOf(profileId).map(grant => ({
+    roleId: grant.roleId,
+    assignedAt: grant.assignedAt,
+    expiresAt: grant.expiresAt,
+    grantedBy: grant.assignedBy ? (profileNameOf(grant.assignedBy) ?? null) : null,
+  }))
 }
 
 /** A granter's name, for display. Null rather than an id nobody can read. */

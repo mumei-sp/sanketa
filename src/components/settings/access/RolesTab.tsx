@@ -86,6 +86,8 @@ import {
   type PermissionDefinition,
   type Role,
   type ScopeAxis,
+  sideOfRole,
+  type ContextSide,
 } from '@/config/permissions'
 import type { Person } from '@/api/services/user-service'
 import type { RecordAccessEvent } from './AccessSettingsSection'
@@ -286,6 +288,22 @@ interface RolesTabProps {
   canManagePeople: boolean
   record: RecordAccessEvent
 }
+
+/**
+ * The two kinds of role, and why they are drawn apart.
+ *
+ * They differ in more than what they grant. A family role's narrowing comes
+ * from `student_guardians` — your children are your children — so it is not
+ * something a school configures, and only the two built-ins may hold that
+ * axis. Everything else is staff, and a school invents as many as it likes.
+ *
+ * Listing them in one grid made that look like a preference rather than a
+ * rule, and left an admin wondering why Duplicate refuses on two of the six.
+ */
+const ROLE_GROUPS: { side: ContextSide; label: string; hint: string }[] = [
+  { side: 'staff', label: 'Staff', hint: 'Yours to invent' },
+  { side: 'family', label: 'Family', hint: 'Built in — scope comes from the records' },
+]
 
 export function RolesTab({
   people,
@@ -684,8 +702,28 @@ export function RolesTab({
               two things worth knowing before you edit one — how many
               permissions it carries and how many people hold it — do not fit
               on a chip. */}
-          <div className="grid gap-2 sm:grid-cols-2">
-            {roles.map(role => {
+          {ROLE_GROUPS.map(group => {
+            const inGroup = roles.filter(role => sideOfRole(role) === group.side)
+            if (inGroup.length === 0) return null
+            return (
+              <div key={group.side} className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-caption font-semibold uppercase tracking-wide"
+                    style={{ color: text.muted }}
+                  >
+                    {group.label}
+                  </span>
+                  <span className="text-caption tabular-nums" style={{ color: text.muted }}>
+                    {inGroup.length}
+                  </span>
+                  <span className="h-px flex-1" style={{ backgroundColor: border.subtle }} />
+                  <span className="text-caption" style={{ color: text.muted }}>
+                    {group.hint}
+                  </span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {inGroup.map(role => {
               const isSelected = selected?.id === role.id
               const holders = membersOf(role.id)
               return (
@@ -741,10 +779,17 @@ export function RolesTab({
                         {role.scopeBy === 'classes' ? 'Class-scoped' : 'Own records'}
                       </Badge>
                     )}
-                    {role.builtin && (
+                    {role.builtin ? (
                       <Badge variant="outline" className="gap-1 text-[10px]">
                         <Lock className="size-2.5" />
                         Built-in
+                      </Badge>
+                    ) : (
+                      // Named rather than left as the absence of "Built-in".
+                      // A school that made a role should see that it did, and
+                      // the two labels together say which ones it may delete.
+                      <Badge variant="secondary" className="text-[10px]">
+                        Custom
                       </Badge>
                     )}
                     {myRole?.id === role.id && (
@@ -754,9 +799,12 @@ export function RolesTab({
                     )}
                   </span>
                 </button>
-              )
-            })}
-          </div>
+                  )
+                  })}
+                </div>
+              </div>
+            )
+          })}
 
           {selected && (
             <div

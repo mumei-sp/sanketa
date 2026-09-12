@@ -59,6 +59,9 @@ import {
 import type { Capacity } from '@/mocks/tenant/profiles'
 import type { AccountStatus } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
+import type { Role } from '@/config/permissions'
+import { RoleGrantRow, AddRoleRow, shortDate } from './RoleGrantRow'
+import { GrantRoleDialog } from './GrantRoleDialog'
 import { SearchField } from './parts'
 import { ProvisionDialog } from './ProvisionDialog'
 import { describeClassChange, stillHasAnAdmin } from './helpers'
@@ -123,7 +126,12 @@ interface PeopleTabProps {
   /** Identity and whether they may sign in — global, so no profile needed. */
   onPatch: (id: string, patch: { status?: AccountStatus }) => Promise<boolean>
   /** One chip, one change. See `setPersonRole`. */
-  onSetRole: (profileId: string, roleId: string, held: boolean) => Promise<boolean>
+  onSetRole: (
+    profileId: string,
+    roleId: string,
+    held: boolean,
+    options?: { expiresAt?: string },
+  ) => Promise<boolean>
   onSetClasses: (profileId: string, classSections: string[]) => Promise<boolean>
   /** Re-read the joined list, after a change that reshapes a row. */
   onRefreshPeople: () => Promise<void>
@@ -222,6 +230,81 @@ export function PeopleTab({
    * holding it — checked against what they would hold *afterwards*, because
    * removing one of somebody's three roles is not the same as removing them.
    */
+  /**
+   * Which role is being given, and to whom.
+   *
+   * One dialog for the whole list rather than one per row: only one can be
+   * open, and mounting a dialog per person per role would be forty of them
+   * behind a screen that shows five.
+   */
+  const [granting, setGranting] = React.useState<{
+    person: Person
+    role: Role
+    currentExpiry?: string
+  } | null>(null)
+
+  const openGrant = (person: Person, role: Role, currentExpiry?: string) =>
+    setGranting({ person, role, currentExpiry })
+
+  /**
+   * The roles this person could be given, which is not all of them.
+   *
+   * A family role needs a `guardians` or `students` row to narrow to: granted
+   * to somebody without one it scopes to nobody and reads as a permissions bug
+   * rather than as missing data. The store refuses it; this stops offering it,
+   * because a control that is always refused is worse than one that was never
+   * there.
+   */
+  const grantableRoles = (person: Person): Role[] => {
+    // Family roles narrow to the same axis — a student's own record, a
+    // guardian's children — so a second one adds nothing and reads as a
+    // choice where there is none. Somebody already on that axis is offered no
+    // more of it.
+    const onFamilyAxis = person.roleIds.some(
+      id => roles.find(role => role.id === id)?.scopeBy === 'students',
+    )
+    return roles.filter(role => {
+      if (person.roleIds.includes(role.id)) return false
+      if (role.scopeBy !== 'students') return true
+      if (onFamilyAxis) return false
+      return person.capacities.some(capacity => capacity === 'guardian' || capacity === 'student')
+    })
+  }
+
+  /** Give a role, or change how long an existing one lasts. */
+  const commitGrant = async (expiresAt: string | undefined) => {
+    if (!granting) return
+    const { person, role, currentExpiry } = granting
+    if (person.profileId === null) return
+    const changing = currentExpiry !== undefined || person.roleIds.includes(role.id)
+
+    if (await onSetRole(person.profileId, role.id, true, { expiresAt })) {
+      const ends = expiresAt ? ` until ${shortDate(expiresAt)}` : ''
+      record({
+        kind: 'user.role',
+        target: person.user.fullName,
+        summary: changing
+          ? `Set ${person.user.fullName}'s ${role.name}${ends || ' to permanent'}`
+          : `Made ${person.user.fullName} ${role.name}${ends}`,
+        detail: identifierOf(person.user),
+        change: {
+          entity: 'profile-role',
+          id: `${person.profileId}:${role.id}`,
+          before: changing ? { held: true } : null,
+          after: { held: true },
+        },
+      })
+      showSuccess(
+        expiresAt
+          ? `${person.user.fullName} is ${role.name} until ${shortDate(expiresAt)}`
+          : `${person.user.fullName} is now ${role.name}`,
+        expiresAt
+          ? { description: 'It stops working on its own — nobody has to take it back.' }
+          : undefined,
+      )
+    }
+  }
+
   const toggleRole = async (person: Person, roleId: string) => {
     if (person.profileId === null) return
     const held = person.roleIds.includes(roleId)
@@ -673,32 +756,36 @@ export function PeopleTab({
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {roles.map(candidate => {
-                      const on = person.roleIds.includes(candidate.id)
+                  <div className="flex flex-col gap-1.5">
+                    {/* Held roles, each carrying where it came from. A row
+                        rather than a lit chip, because the question a reader
+                        actually has is historical — who gave this, and does it
+                        end — and a chip has nowhere to say so. */}
+                    {person.grants.map(grant => {
+                      const role = roles.find(candidate => candidate.id === grant.roleId)
+                      if (!role) return null
                       return (
-                        <button
-                          key={candidate.id}
-                          type="button"
-                          disabled={busy || !canAssignRole}
-                          onClick={() => void toggleRole(person, candidate.id)}
-                          aria-pressed={on}
-                          className={cn(
-                            'tap-target rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-                            on
-                              ? 'border-transparent'
-                              : 'hover:bg-muted disabled:opacity-50',
-                          )}
-                          style={
-                            on
-                              ? { backgroundColor: 'var(--heading)', color: 'var(--card)' }
-                              : { borderColor: border.default }
-                          }
-                        >
-                          {candidate.name}
-                        </button>
+                        <RoleGrantRow
+                          key={grant.roleId}
+                          role={role}
+                          grant={grant}
+                          editable={canAssignRole}
+                          busy={busy}
+                          onChangeExpiry={() => openGrant(person, role, grant.expiresAt)}
+                          onRemove={() => void toggleRole(person, grant.roleId)}
+                        />
                       )
                     })}
+                    {canAssignRole && (
+                      <AddRoleRow
+                        roles={grantableRoles(person)}
+                        busy={busy}
+                        onAdd={roleId => {
+                          const role = roles.find(candidate => candidate.id === roleId)
+                          if (role) openGrant(person, role)
+                        }}
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -851,6 +938,27 @@ export function PeopleTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Giving a role asks one more question than a toggle can. Mounted once
+          for the whole list — only one can be open, and a dialog per row would
+          be forty of them behind a screen showing five. */}
+      <GrantRoleDialog
+        open={granting !== null}
+        onOpenChange={open => {
+          if (!open) setGranting(null)
+        }}
+        role={granting?.role ?? null}
+        personName={granting?.person.user.fullName ?? ''}
+        alsoHolds={
+          granting
+            ? granting.person.roleIds
+                .filter(id => id !== granting.role.id)
+                .map(id => roles.find(role => role.id === id)?.name ?? id)
+            : []
+        }
+        currentExpiry={granting?.currentExpiry}
+        onConfirm={expiresAt => void commitGrant(expiresAt)}
+      />
     </div>
   )
 }

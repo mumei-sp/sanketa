@@ -225,10 +225,15 @@ export function AccessSettingsSection() {
    * guessing at the new shape from the old one is how the two drift.
    */
   const setRole = React.useCallback(
-    async (profileId: string, roleId: string, held: boolean) => {
+    async (
+      profileId: string,
+      roleId: string,
+      held: boolean,
+      options: { expiresAt?: string } = {},
+    ) => {
       setSavingId(profileId)
       try {
-        await setPersonRole(profileId, roleId, held)
+        await setPersonRole(profileId, roleId, held, options)
         await refreshPeople()
         return true
       } catch (error) {
