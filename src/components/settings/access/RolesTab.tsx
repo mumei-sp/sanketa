@@ -622,7 +622,13 @@ export function RolesTab({
     .filter(({ permissions }) => permissions.length > 0)
 
   return (
-    <div className="flex flex-col gap-4">
+    // `@container`, not a viewport breakpoint. This screen lives inside the
+    // settings panel, whose width is its own business — a sheet inside a
+    // sidebar layout — and is nothing like the window's. Asking the window how
+    // wide it is gets the wrong answer twice: a roomy window with a narrow
+    // panel splits a layout that has no room, and the reverse hides one that
+    // would have fitted.
+    <div className="@container flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         {/* Two questions, two views — see the file header. */}
         <div
@@ -698,419 +704,454 @@ export function RolesTab({
             Pick a role, then choose what it can see and do. Changes save as you make them.
           </p>
 
-          {/* The roster of roles. A card each rather than a chip, because the
-              two things worth knowing before you edit one — how many
-              permissions it carries and how many people hold it — do not fit
-              on a chip. */}
-          {ROLE_GROUPS.map(group => {
-            const inGroup = roles.filter(role => sideOfRole(role) === group.side)
-            if (inGroup.length === 0) return null
-            return (
-              <div key={group.side} className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-caption font-semibold uppercase tracking-wide"
-                    style={{ color: text.muted }}
-                  >
-                    {group.label}
-                  </span>
-                  <span className="text-caption tabular-nums" style={{ color: text.muted }}>
-                    {inGroup.length}
-                  </span>
-                  <span className="h-px flex-1" style={{ backgroundColor: border.subtle }} />
-                  <span className="text-caption" style={{ color: text.muted }}>
-                    {group.hint}
-                  </span>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {inGroup.map(role => {
-              const isSelected = selected?.id === role.id
-              const holders = membersOf(role.id)
-              return (
-                <button
-                  key={role.id}
-                  type="button"
-                  onClick={() => setSelectedId(role.id)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    'group flex flex-col gap-2 rounded-xl border p-3 text-left transition-all',
-                    isSelected ? 'shadow-sm' : 'hover:bg-muted/40',
-                  )}
-                  style={{
-                    borderColor: isSelected ? 'var(--heading)' : border.default,
-                    boxShadow: isSelected ? '0 0 0 1px var(--heading)' : undefined,
-                    backgroundColor: 'var(--card)',
-                  }}
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      aria-hidden
-                      className="flex size-8 shrink-0 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: isSelected ? 'var(--heading)' : 'var(--muted)' }}
-                    >
-                      <ShieldCheck
-                        className="size-4"
-                        style={{ color: isSelected ? 'var(--card)' : 'var(--heading)' }}
-                      />
-                    </span>
-                    <span className="min-w-0 flex-1">
+          {/* Master and detail beside each other, not stacked.
+
+              The roster used to sit above the editor, so picking a role
+              scrolled the thing you picked out of view — and the question
+              this screen exists for, "how does this role differ from that
+              one?", was asked by scrolling up and remembering. A rail
+              keeps the answer on screen while the editor is open.
+
+              Only where there is room for it. 600px is where a 200px rail
+              still leaves the editor about 380 — measured against a permission
+              row, which is the narrowest thing that has to stay readable: a
+              label, a badge, a line of description and a switch. Narrower than
+              that the roster goes back to a two-column grid with the editor
+              underneath, which is the layout a narrow panel actually has room
+              for; a rail beside a 300px editor would be worse than what it
+              replaced. */}
+          <div className="flex flex-col gap-4 @[600px]:grid @[600px]:grid-cols-[200px_minmax(0,1fr)] @[600px]:items-start @[600px]:gap-4">
+            {/* The roster of roles. A card each rather than a chip, because
+                the two things worth knowing before you edit one — how many
+                permissions it carries and how many people hold it — do not fit
+                on a chip.
+
+                Pinned, so it is still there once you have scrolled into the
+                permission list, which is the whole point of a rail. A school
+                that invents enough roles can make it taller than the window,
+                and a sticky element taller than its viewport has its bottom
+                cut off with no way to reach it — so past that height it
+                scrolls on its own. */}
+            <div className="flex flex-col gap-4 @[600px]:sticky @[600px]:top-0 @[600px]:max-h-dvh @[600px]:overflow-y-auto">
+              {ROLE_GROUPS.map(group => {
+                const inGroup = roles.filter(role => sideOfRole(role) === group.side)
+                if (inGroup.length === 0) return null
+                return (
+                  <div key={group.side} className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
                       <span
-                        className="block truncate text-body font-semibold"
-                        style={{ color: 'var(--heading)' }}
-                      >
-                        {role.name}
-                      </span>
-                      <span
-                        className="block text-caption tabular-nums"
+                        className="text-caption font-semibold uppercase tracking-wide"
                         style={{ color: text.muted }}
                       >
-                        {role.permissions.length} of {ALL_PERMISSIONS.length} permissions
+                        {group.label}
                       </span>
-                    </span>
-                  </span>
-
-                  <CoverageBar value={role.permissions.length} total={ALL_PERMISSIONS.length} />
-
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    <AvatarStack names={holders} max={3} />
-                    <span className="flex-1" />
-                    {role.scopeBy && (
-                      <Badge variant="outline" className="text-[10px]">
-                        {role.scopeBy === 'classes' ? 'Class-scoped' : 'Own records'}
-                      </Badge>
-                    )}
-                    {role.builtin ? (
-                      <Badge variant="outline" className="gap-1 text-[10px]">
-                        <Lock className="size-2.5" />
-                        Built-in
-                      </Badge>
-                    ) : (
-                      // Named rather than left as the absence of "Built-in".
-                      // A school that made a role should see that it did, and
-                      // the two labels together say which ones it may delete.
-                      <Badge variant="secondary" className="text-[10px]">
-                        Custom
-                      </Badge>
-                    )}
-                    {myRole?.id === role.id && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        You
-                      </Badge>
-                    )}
-                  </span>
-                </button>
-                  )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-
-          {selected && (
-            <div
-              className="flex flex-col gap-4 rounded-xl border p-4"
-              style={{ borderColor: border.default, backgroundColor: 'var(--card)' }}
-            >
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="min-w-0 flex-1">
-                  <Label htmlFor="role-name">Role name</Label>
-                  <Input
-                    id="role-name"
-                    value={nameDraft ?? selected.name}
-                    disabled={selected.builtin}
-                    onChange={event => setNameDraft(event.target.value)}
-                    onBlur={commitName}
-                    onKeyDown={event => {
-                      if (event.key === 'Enter') event.currentTarget.blur()
-                      if (event.key === 'Escape') setNameDraft(null)
-                    }}
-                    className="mt-1.5"
-                  />
-                </div>
-                {!selected.builtin && (
-                  <Button
-                    variant="outline"
-                    className="shrink-0 gap-1.5 text-destructive"
-                    onClick={() => setPendingDelete(selected)}
-                  >
-                    <Trash2 className="size-4" />
-                    Delete
-                  </Button>
-                )}
-              </div>
-
-              {/* A built-in role's description ships with the app; a custom
-                  one has nowhere else to say what it is for. */}
-              {selected.builtin ? (
-                selected.description && (
-                  <p className="text-caption text-muted-foreground">{selected.description}</p>
-                )
-              ) : (
-                <div>
-                  <Label htmlFor="role-description">What it is for</Label>
-                  <Textarea
-                    id="role-description"
-                    rows={2}
-                    placeholder="Who should hold this role, and why."
-                    value={descriptionDraft ?? selected.description ?? ''}
-                    onChange={event => setDescriptionDraft(event.target.value)}
-                    onBlur={commitDescription}
-                    onKeyDown={event => {
-                      if (event.key === 'Escape') setDescriptionDraft(null)
-                    }}
-                    className="mt-1.5"
-                  />
-                </div>
-              )}
-
-              {/* Who holds it. The bridge between the two tabs: a permission
-                  change is abstract until you can see the four people it lands
-                  on. */}
-              <div
-                className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5"
-                style={{ borderColor: border.default }}
-              >
-                <AvatarStack names={members} />
-                <span className="min-w-0 flex-1 text-caption" style={{ color: text.muted }}>
-                  {people === null
-                    ? 'Counting people…'
-                    : members.length === 0
-                      ? 'No one holds this role yet.'
-                      : `${members.length} ${members.length === 1 ? 'person holds' : 'people hold'} this role.`}
-                </span>
-                {canManagePeople && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="shrink-0 gap-1"
-                    onClick={() => onManagePeople(selected.id)}
-                  >
-                    Manage people
-                    <ArrowRight className="size-3.5" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Look at the app the way this role does.
-                  Every class rather than none, because a scoped role with
-                  nothing assigned can write nothing, and previewing that would
-                  hide the behaviour being previewed. The panel closes because
-                  the point is to see the app, not this screen. */}
-              <Button
-                variant="outline"
-                className="gap-1.5"
-                // Disabled rather than allowed-and-wrong: starting a preview
-                // before the representative ids land captures an empty axis,
-                // and the snapshot never catches up.
-                disabled={!scopeReady}
-                onClick={() => {
-                  startPreview({ roleId: selected.id, scope: previewScope })
-                  setSettingsOpen(false)
-                }}
-              >
-                <Eye className="size-4" />
-                {scopeReady ? `View the app as ${selected.name}` : 'Working out what it reaches…'}
-              </Button>
-
-              {/* Class scoping. Its own control rather than a permission,
-                  because it does not grant anything — it narrows what the
-                  permissions below already grant to the holder's own classes. */}
-              {/* How this role is narrowed. A select rather than a switch
-                  because there are now three answers, and the third one —
-                  "their own records" — is what a student or parent account
-                  will hold. It is not a permission: it does not grant
-                  anything, it narrows what the permissions below already
-                  grant. */}
-              <div
-                className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5"
-                style={{ borderColor: border.default }}
-              >
-                <div className="min-w-0 flex-1">
-                  <Label htmlFor="role-scope" className="text-body font-medium">
-                    Limit what this role reaches
-                  </Label>
-                  <p className="text-caption text-muted-foreground">
-                    {selected.scopeBy === 'classes'
-                      ? 'Holders read every class but add and edit only the ones assigned to them.'
-                      : selected.scopeBy === 'students'
-                        ? "Holders read only their own records — a student's, or a parent's children's. Built in, and fixed: this limit comes from who a child's guardians are, not from a setting."
-                        : 'Holders reach everything their permissions allow, everywhere.'}
-                  </p>
-                </div>
-                <Select
-                  value={selected.scopeBy ?? 'none'}
-                  // A family role cannot move off its axis either. A Parent
-                  // that reached every child is the one mistake in this editor
-                  // with no visible symptom — the screens look identical, and
-                  // the rows are somebody else's.
-                  disabled={isSaving || selected.scopeBy === 'students'}
-                  onValueChange={value => setScopeAxis(value as ScopeAxis | 'none')}
-                >
-                  <SelectTrigger id="role-scope" className="h-control w-[210px] max-md:w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Not limited</SelectItem>
-                    <SelectItem value="classes">To assigned classes</SelectItem>
-                    {/* Offered only to the roles that already hold it. A
-                        family role's scope is not configurable — it comes from
-                        `student_guardians` — so Student and Parent are the two
-                        that have it and nothing a school makes can. Hiding it
-                        rather than disabling it: a control that is always
-                        refused is worse than one that was never there. */}
-                    {selected.scopeBy === 'students' && (
-                      <SelectItem value="students">To their own records</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* What the switches below add up to. Derived from the same
-                  ability the app itself runs, so it is a preview and not a
-                  promise. */}
-              <div className="rounded-lg border p-3" style={{ borderColor: border.default }}>
-                <div className="mb-2 flex items-center gap-1.5">
-                  <Compass className="size-3.5" style={{ color: text.muted }} aria-hidden />
-                  <span className="text-caption font-semibold" style={{ color: 'var(--heading)' }}>
-                    Where this role can go
-                  </span>
-                </div>
-                {!scopeReady ? (
-                  <p className="text-caption text-muted-foreground">Working it out…</p>
-                ) : destinations.length === 0 ? (
-                  <p className="text-caption text-muted-foreground">
-                    Nothing yet — a holder would sign in to an empty app.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {destinations.map(destination => (
+                      <span className="text-caption tabular-nums" style={{ color: text.muted }}>
+                        {inGroup.length}
+                      </span>
+                      <span className="h-px flex-1" style={{ backgroundColor: border.subtle }} />
+                      {/* Dropped once the roster is a rail: "Built in — scope
+                          comes from the records" beside a 200px column is
+                          three lines of caption explaining a heading. The
+                          per-role badges say the same thing where it applies,
+                          which is the place it is actually asked. */}
                       <span
-                        key={destination}
-                        className="rounded-full px-2 py-0.5 text-[11px] font-medium"
-                        style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
+                        className="text-caption @[600px]:hidden"
+                        style={{ color: text.muted }}
                       >
-                        {destination}
+                        {group.hint}
                       </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {selected.id === myRole?.id && (
-                <p className="text-caption" style={{ color: 'var(--heading)' }}>
-                  This is your own role — changes here take effect for you immediately.
-                </p>
-              )}
-
-              {/* Twenty-four switches is a scroll. Search first, then the list. */}
-              <div className="flex flex-wrap items-center gap-2">
-                <SearchField
-                  value={query}
-                  onChange={setQuery}
-                  placeholder="Search permissions…"
-                  label="Search permissions"
-                />
-                <span
-                  className="shrink-0 rounded-full px-2.5 py-1 text-caption font-medium tabular-nums"
-                  style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
-                >
-                  {selected.permissions.length}/{ALL_PERMISSIONS.length} granted
-                </span>
-              </div>
-
-              {visibleGroups.length === 0 && (
-                <p className="text-caption text-muted-foreground">
-                  No permission matches “{query}”.
-                </p>
-              )}
-
-              {visibleGroups.map(({ group, permissions }) => {
-                const granted = permissions.filter(definition =>
-                  selected.permissions.includes(definition.id as Permission),
-                ).length
-                const all = granted === permissions.length
-
-                return (
-                  <div key={group}>
-                    <div className="mb-2 flex items-center gap-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {group}
-                      </p>
-                      <span className="text-[11px] tabular-nums" style={{ color: text.muted }}>
-                        {granted}/{permissions.length}
-                      </span>
-                      <span className="flex-1" />
-                      <button
-                        type="button"
-                        disabled={isSaving}
-                        onClick={() => setGroup(permissions, !all)}
-                        className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
-                        style={{ color: 'var(--heading)' }}
-                      >
-                        <SlidersHorizontal className="size-3" aria-hidden />
-                        {all ? 'Clear all' : 'Grant all'}
-                      </button>
                     </div>
-                    <div
-                      className="flex flex-col rounded-lg border"
-                      style={{ borderColor: border.default }}
+                    <div className="grid gap-2 sm:grid-cols-2 @[600px]:grid-cols-1">
+                      {inGroup.map(role => {
+                  const isSelected = selected?.id === role.id
+                  const holders = membersOf(role.id)
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => setSelectedId(role.id)}
+                      aria-pressed={isSelected}
+                      className={cn(
+                        'group flex flex-col gap-2 rounded-xl border p-3 text-left transition-all',
+                        isSelected ? 'shadow-sm' : 'hover:bg-muted/40',
+                      )}
+                      style={{
+                        borderColor: isSelected ? 'var(--heading)' : border.default,
+                        boxShadow: isSelected ? '0 0 0 1px var(--heading)' : undefined,
+                        backgroundColor: 'var(--card)',
+                      }}
                     >
-                      {permissions.map((definition, index) => {
-                        const held = selected.permissions.includes(definition.id as Permission)
-                        // Reading is included in managing, so show it on and
-                        // locked rather than offering a switch that cannot
-                        // take effect.
-                        const covered = impliedBy(definition.id as Permission, selected.permissions)
-                        const switchId = `perm-${selected.id}-${definition.id}`
-                        return (
-                          <div
-                            key={definition.id}
-                            className="flex items-center gap-3 px-3 py-2.5"
-                            style={
-                              index > 0 ? { borderTop: `1px solid ${border.default}` } : undefined
-                            }
+                      <span className="flex items-center gap-2">
+                        <span
+                          aria-hidden
+                          className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+                          style={{ backgroundColor: isSelected ? 'var(--heading)' : 'var(--muted)' }}
+                        >
+                          <ShieldCheck
+                            className="size-4"
+                            style={{ color: isSelected ? 'var(--card)' : 'var(--heading)' }}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className="block truncate text-body font-semibold"
+                            style={{ color: 'var(--heading)' }}
                           >
-                            <div className="min-w-0 flex-1">
-                              <Label
-                                htmlFor={switchId}
-                                className="cursor-pointer text-body font-medium"
-                              >
-                                {definition.label}
-                                {definition.scopableBy?.includes('classes') && (
-                                  <Badge variant="outline" className="ml-2 text-[10px] font-normal">
-                                    By class
-                                  </Badge>
-                                )}
-                                {definition.scopableBy?.includes('students') && (
-                                  <Badge variant="outline" className="ml-2 text-[10px] font-normal">
-                                    Own records
-                                  </Badge>
-                                )}
-                              </Label>
-                              <p className="text-caption text-muted-foreground">
-                                {covered
-                                  ? `Included by “${covered.label}”.`
-                                  : definition.description}
-                              </p>
-                            </div>
-                            <Switch
-                              id={switchId}
-                              checked={held || Boolean(covered)}
-                              disabled={isSaving || Boolean(covered)}
-                              onCheckedChange={value =>
-                                togglePermission(definition.id as Permission, value)
-                              }
-                              aria-label={definition.label}
-                            />
-                          </div>
-                        )
+                            {role.name}
+                          </span>
+                          <span
+                            className="block text-caption tabular-nums"
+                            style={{ color: text.muted }}
+                          >
+                            {role.permissions.length} of {ALL_PERMISSIONS.length} permissions
+                          </span>
+                        </span>
+                      </span>
+
+                      <CoverageBar value={role.permissions.length} total={ALL_PERMISSIONS.length} />
+
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <AvatarStack names={holders} max={3} />
+                        <span className="flex-1" />
+                        {role.scopeBy && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {role.scopeBy === 'classes' ? 'Class-scoped' : 'Own records'}
+                          </Badge>
+                        )}
+                        {role.builtin ? (
+                          <Badge variant="outline" className="gap-1 text-[10px]">
+                            <Lock className="size-2.5" />
+                            Built-in
+                          </Badge>
+                        ) : (
+                          // Named rather than left as the absence of "Built-in".
+                          // A school that made a role should see that it did, and
+                          // the two labels together say which ones it may delete.
+                          <Badge variant="secondary" className="text-[10px]">
+                            Custom
+                          </Badge>
+                        )}
+                        {myRole?.id === role.id && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            You
+                          </Badge>
+                        )}
+                      </span>
+                    </button>
+                      )
                       })}
                     </div>
                   </div>
                 )
               })}
             </div>
-          )}
+
+            {selected && (
+              <div
+                className="flex flex-col gap-4 rounded-xl border p-4"
+                style={{ borderColor: border.default, backgroundColor: 'var(--card)' }}
+              >
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="min-w-0 flex-1">
+                    <Label htmlFor="role-name">Role name</Label>
+                    <Input
+                      id="role-name"
+                      value={nameDraft ?? selected.name}
+                      disabled={selected.builtin}
+                      onChange={event => setNameDraft(event.target.value)}
+                      onBlur={commitName}
+                      onKeyDown={event => {
+                        if (event.key === 'Enter') event.currentTarget.blur()
+                        if (event.key === 'Escape') setNameDraft(null)
+                      }}
+                      className="mt-1.5"
+                    />
+                  </div>
+                  {!selected.builtin && (
+                    <Button
+                      variant="outline"
+                      className="shrink-0 gap-1.5 text-destructive"
+                      onClick={() => setPendingDelete(selected)}
+                    >
+                      <Trash2 className="size-4" />
+                      Delete
+                    </Button>
+                  )}
+                </div>
+
+                {/* A built-in role's description ships with the app; a custom
+                    one has nowhere else to say what it is for. */}
+                {selected.builtin ? (
+                  selected.description && (
+                    <p className="text-caption text-muted-foreground">{selected.description}</p>
+                  )
+                ) : (
+                  <div>
+                    <Label htmlFor="role-description">What it is for</Label>
+                    <Textarea
+                      id="role-description"
+                      rows={2}
+                      placeholder="Who should hold this role, and why."
+                      value={descriptionDraft ?? selected.description ?? ''}
+                      onChange={event => setDescriptionDraft(event.target.value)}
+                      onBlur={commitDescription}
+                      onKeyDown={event => {
+                        if (event.key === 'Escape') setDescriptionDraft(null)
+                      }}
+                      className="mt-1.5"
+                    />
+                  </div>
+                )}
+
+                {/* Who holds it. The bridge between the two tabs: a permission
+                    change is abstract until you can see the four people it lands
+                    on. */}
+                <div
+                  className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5"
+                  style={{ borderColor: border.default }}
+                >
+                  <AvatarStack names={members} />
+                  <span className="min-w-0 flex-1 text-caption" style={{ color: text.muted }}>
+                    {people === null
+                      ? 'Counting people…'
+                      : members.length === 0
+                        ? 'No one holds this role yet.'
+                        : `${members.length} ${members.length === 1 ? 'person holds' : 'people hold'} this role.`}
+                  </span>
+                  {canManagePeople && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 gap-1"
+                      onClick={() => onManagePeople(selected.id)}
+                    >
+                      Manage people
+                      <ArrowRight className="size-3.5" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Look at the app the way this role does.
+                    Every class rather than none, because a scoped role with
+                    nothing assigned can write nothing, and previewing that would
+                    hide the behaviour being previewed. The panel closes because
+                    the point is to see the app, not this screen. */}
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  // Disabled rather than allowed-and-wrong: starting a preview
+                  // before the representative ids land captures an empty axis,
+                  // and the snapshot never catches up.
+                  disabled={!scopeReady}
+                  onClick={() => {
+                    startPreview({ roleId: selected.id, scope: previewScope })
+                    setSettingsOpen(false)
+                  }}
+                >
+                  <Eye className="size-4" />
+                  {scopeReady ? `View the app as ${selected.name}` : 'Working out what it reaches…'}
+                </Button>
+
+                {/* Class scoping. Its own control rather than a permission,
+                    because it does not grant anything — it narrows what the
+                    permissions below already grant to the holder's own classes. */}
+                {/* How this role is narrowed. A select rather than a switch
+                    because there are now three answers, and the third one —
+                    "their own records" — is what a student or parent account
+                    will hold. It is not a permission: it does not grant
+                    anything, it narrows what the permissions below already
+                    grant. */}
+                <div
+                  className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5"
+                  style={{ borderColor: border.default }}
+                >
+                  <div className="min-w-0 flex-1">
+                    <Label htmlFor="role-scope" className="text-body font-medium">
+                      Limit what this role reaches
+                    </Label>
+                    <p className="text-caption text-muted-foreground">
+                      {selected.scopeBy === 'classes'
+                        ? 'Holders read every class but add and edit only the ones assigned to them.'
+                        : selected.scopeBy === 'students'
+                          ? "Holders read only their own records — a student's, or a parent's children's. Built in, and fixed: this limit comes from who a child's guardians are, not from a setting."
+                          : 'Holders reach everything their permissions allow, everywhere.'}
+                    </p>
+                  </div>
+                  <Select
+                    value={selected.scopeBy ?? 'none'}
+                    // A family role cannot move off its axis either. A Parent
+                    // that reached every child is the one mistake in this editor
+                    // with no visible symptom — the screens look identical, and
+                    // the rows are somebody else's.
+                    disabled={isSaving || selected.scopeBy === 'students'}
+                    onValueChange={value => setScopeAxis(value as ScopeAxis | 'none')}
+                  >
+                    <SelectTrigger id="role-scope" className="h-control w-[210px] max-md:w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not limited</SelectItem>
+                      <SelectItem value="classes">To assigned classes</SelectItem>
+                      {/* Offered only to the roles that already hold it. A
+                          family role's scope is not configurable — it comes from
+                          `student_guardians` — so Student and Parent are the two
+                          that have it and nothing a school makes can. Hiding it
+                          rather than disabling it: a control that is always
+                          refused is worse than one that was never there. */}
+                      {selected.scopeBy === 'students' && (
+                        <SelectItem value="students">To their own records</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* What the switches below add up to. Derived from the same
+                    ability the app itself runs, so it is a preview and not a
+                    promise. */}
+                <div className="rounded-lg border p-3" style={{ borderColor: border.default }}>
+                  <div className="mb-2 flex items-center gap-1.5">
+                    <Compass className="size-3.5" style={{ color: text.muted }} aria-hidden />
+                    <span className="text-caption font-semibold" style={{ color: 'var(--heading)' }}>
+                      Where this role can go
+                    </span>
+                  </div>
+                  {!scopeReady ? (
+                    <p className="text-caption text-muted-foreground">Working it out…</p>
+                  ) : destinations.length === 0 ? (
+                    <p className="text-caption text-muted-foreground">
+                      Nothing yet — a holder would sign in to an empty app.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {destinations.map(destination => (
+                        <span
+                          key={destination}
+                          className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                          style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
+                        >
+                          {destination}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {selected.id === myRole?.id && (
+                  <p className="text-caption" style={{ color: 'var(--heading)' }}>
+                    This is your own role — changes here take effect for you immediately.
+                  </p>
+                )}
+
+                {/* Twenty-four switches is a scroll. Search first, then the list. */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <SearchField
+                    value={query}
+                    onChange={setQuery}
+                    placeholder="Search permissions…"
+                    label="Search permissions"
+                  />
+                  <span
+                    className="shrink-0 rounded-full px-2.5 py-1 text-caption font-medium tabular-nums"
+                    style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
+                  >
+                    {selected.permissions.length}/{ALL_PERMISSIONS.length} granted
+                  </span>
+                </div>
+
+                {visibleGroups.length === 0 && (
+                  <p className="text-caption text-muted-foreground">
+                    No permission matches “{query}”.
+                  </p>
+                )}
+
+                {visibleGroups.map(({ group, permissions }) => {
+                  const granted = permissions.filter(definition =>
+                    selected.permissions.includes(definition.id as Permission),
+                  ).length
+                  const all = granted === permissions.length
+
+                  return (
+                    <div key={group}>
+                      <div className="mb-2 flex items-center gap-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {group}
+                        </p>
+                        <span className="text-[11px] tabular-nums" style={{ color: text.muted }}>
+                          {granted}/{permissions.length}
+                        </span>
+                        <span className="flex-1" />
+                        <button
+                          type="button"
+                          disabled={isSaving}
+                          onClick={() => setGroup(permissions, !all)}
+                          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                          style={{ color: 'var(--heading)' }}
+                        >
+                          <SlidersHorizontal className="size-3" aria-hidden />
+                          {all ? 'Clear all' : 'Grant all'}
+                        </button>
+                      </div>
+                      <div
+                        className="flex flex-col rounded-lg border"
+                        style={{ borderColor: border.default }}
+                      >
+                        {permissions.map((definition, index) => {
+                          const held = selected.permissions.includes(definition.id as Permission)
+                          // Reading is included in managing, so show it on and
+                          // locked rather than offering a switch that cannot
+                          // take effect.
+                          const covered = impliedBy(definition.id as Permission, selected.permissions)
+                          const switchId = `perm-${selected.id}-${definition.id}`
+                          return (
+                            <div
+                              key={definition.id}
+                              className="flex items-center gap-3 px-3 py-2.5"
+                              style={
+                                index > 0 ? { borderTop: `1px solid ${border.default}` } : undefined
+                              }
+                            >
+                              <div className="min-w-0 flex-1">
+                                <Label
+                                  htmlFor={switchId}
+                                  className="cursor-pointer text-body font-medium"
+                                >
+                                  {definition.label}
+                                  {definition.scopableBy?.includes('classes') && (
+                                    <Badge variant="outline" className="ml-2 text-[10px] font-normal">
+                                      By class
+                                    </Badge>
+                                  )}
+                                  {definition.scopableBy?.includes('students') && (
+                                    <Badge variant="outline" className="ml-2 text-[10px] font-normal">
+                                      Own records
+                                    </Badge>
+                                  )}
+                                </Label>
+                                <p className="text-caption text-muted-foreground">
+                                  {covered
+                                    ? `Included by “${covered.label}”.`
+                                    : definition.description}
+                                </p>
+                              </div>
+                              <Switch
+                                id={switchId}
+                                checked={held || Boolean(covered)}
+                                disabled={isSaving || Boolean(covered)}
+                                onCheckedChange={value =>
+                                  togglePermission(definition.id as Permission, value)
+                                }
+                                aria-label={definition.label}
+                              />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </>
       )}
 
