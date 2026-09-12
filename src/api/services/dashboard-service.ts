@@ -6,6 +6,7 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId } from '@/mocks/_shared'
+import { callerSeesEveryRow } from '@/mocks/_shared/caller'
 import {
   dashboardStats,
   buildPerformanceDatasets,
@@ -29,6 +30,11 @@ import type {
 export async function fetchDashboardStats(): Promise<DashboardStat[]> {
   return mockOrHttp(
     async () => {
+      // A school-wide figure, so there is nothing to filter — only a caller
+      // who may see every student may have it summed. See `callerSeesEveryRow`,
+      // which exists because the first version of this rule let a Teacher
+      // holding no finance permission receive the school's fee totals.
+      if (!callerSeesEveryRow('read', 'Student')) return []
       await withLatency({ min: 150, max: 350 })
       return [...dashboardStats]
     },
@@ -43,6 +49,7 @@ export async function fetchDashboardStats(): Promise<DashboardStat[]> {
 export async function fetchStudentPerformance(): Promise<PerformanceDataset[]> {
   return mockOrHttp(
     async () => {
+      if (!callerSeesEveryRow('read', 'Student')) return []
       await withLatency({ min: 150, max: 350 })
       // Rebuild each call so admin-configured grades appear live.
       return buildPerformanceDatasets().map(d => ({ ...d, data: [...d.data] }))
@@ -58,6 +65,8 @@ export async function fetchStudentPerformance(): Promise<PerformanceDataset[]> {
 export async function fetchEarnings(): Promise<EarningsDataset[]> {
   return mockOrHttp(
     async () => {
+      // Money, so the gate is Finance rather than Student.
+      if (!callerSeesEveryRow('read', 'Finance')) return []
       await withLatency({ min: 150, max: 350 })
       return earningsDatasets.map(d => ({ ...d, data: [...d.data] }))
     },
@@ -72,6 +81,7 @@ export async function fetchEarnings(): Promise<EarningsDataset[]> {
 export async function fetchGenderDistribution(): Promise<GenderDataset[]> {
   return mockOrHttp(
     async () => {
+      if (!callerSeesEveryRow('read', 'Student')) return []
       await withLatency({ min: 150, max: 350 })
       return buildGenderDatasets().map(d => ({ ...d, data: [...d.data] }))
     },
@@ -86,6 +96,7 @@ export async function fetchGenderDistribution(): Promise<GenderDataset[]> {
 export async function fetchStudentAttendance(): Promise<AttendanceDataset[]> {
   return mockOrHttp(
     async () => {
+      if (!callerSeesEveryRow('read', 'Student')) return []
       await withLatency({ min: 150, max: 350 })
       return attendanceDatasets.map(d => ({ ...d, data: [...d.data] }))
     },

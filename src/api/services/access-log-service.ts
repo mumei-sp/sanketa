@@ -13,6 +13,7 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
+import { callerMay } from '@/mocks/_shared/caller'
 import * as mockServer from '@/mocks/tenant/access-log'
 import type { AccessEvent, AccessEventKind, AccessChange, AccessEntity } from '@/mocks/tenant/access-log'
 
@@ -26,6 +27,13 @@ export type { AccessEvent, AccessEventKind, AccessChange, AccessEntity }
 export async function fetchAccessEvents(limit = 100): Promise<AccessEvent[]> {
   return mockOrHttp(
     async () => {
+      // Who changed whose access, and when. Gated on `users.read` because that
+      // is the permission the screen showing it sits behind, and because a log
+      // of administrative actions read by the people it records is a different
+      // thing from a record. `callerMay` rather than `callerSeesEveryRow`: the
+      // rows are about staff actions, not about a student, so there is nothing
+      // for an axis to narrow.
+      if (!callerMay('read', 'User')) return []
       await withLatency({ min: 80, max: 200 })
       return mockServer.listEvents(limit)
     },

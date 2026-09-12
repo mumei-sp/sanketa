@@ -13,6 +13,7 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
+import { callerMay } from '@/mocks/_shared/caller'
 import * as mockServer from '@/mocks/tenant/transport/store'
 import type {
   StudentTransportAssignment,
@@ -228,6 +229,16 @@ export async function fetchAssignments(): Promise<StudentTransportAssignment[]> 
   return mockOrHttp(
     async () => {
       await withLatency()
+      // Every child's bus, stop and pickup time. `transport.read` declares no
+      // axis, so this is all-or-nothing by design — but "nothing" has to mean
+      // nothing, and it did not: a parent holding no transport permission at
+      // all received all 74 rows.
+      //
+      // A family should eventually see *their* child's bus, which means
+      // `transport.read` growing `scopableBy: ['students']` and this becoming
+      // a `visibleToCaller`. Noted rather than done: it changes what the role
+      // editor offers, and no family account can sign in yet.
+      if (!callerMay('read', 'Transport')) return []
       return mockServer.listAssignments()
     },
     async () => {

@@ -89,6 +89,48 @@ export type Action =
  */
 export type ScopeAxis = 'classes' | 'students'
 
+/**
+ * Which of a person's two lives at a school a session is being lived in.
+ *
+ * The member of staff whose child attends is one account holding roles that
+ * answer different questions: as a teacher she reaches her own sections, as a
+ * parent she reaches her own son, and he is in a class she does not teach.
+ * Unioning both is correct for *what she may see across the day* and wrong for
+ * *what she is doing right now* — it is what let a principal sign off her own
+ * child's marks, and what made the access log unable to say which of the two
+ * she was acting as.
+ *
+ * So a session picks one. The sides are the app's, not a school's: a school
+ * invents roles, and each role lands on the side its axis already implies.
+ *
+ * ── Why this is derived and not a column ───────────────────────────────
+ * The axis says it already. `classes` narrows to sections a person is assigned
+ * to teach, which only staff are; `students` narrows to a person's own record
+ * or their children's, which is what a family is. See `ScopeAxis` above, which
+ * has said so since before this type existed. Storing the side separately
+ * would let the two disagree, and a role whose axis is `students` but whose
+ * side is `staff` grants a parent's narrowing with a teacher's reach.
+ *
+ * The day a third axis is added — a counsellor's caseload, a head of year's
+ * cohort — this stops being derivable, because such a role is staff narrowed
+ * on students. That is the same change `ScopeAxis` already calls a developer's
+ * change, and `sideOfRole` is the second place it has to be made.
+ */
+export type ContextSide = 'staff' | 'family'
+
+/** Every side, in the order a chooser should offer them. Work before family. */
+export const CONTEXT_SIDES: readonly ContextSide[] = ['staff', 'family']
+
+/**
+ * Which side a role belongs to.
+ *
+ * An unnarrowed role is staff: a Principal or an Admin reaches the whole
+ * school, and nothing about that is a family's view of it.
+ */
+export function sideOfRole(role: Pick<Role, 'scopeBy'>): ContextSide {
+  return role.scopeBy === 'students' ? 'family' : 'staff'
+}
+
 /** One capability. Grouped by the area of the app it belongs to. */
 export interface PermissionDefinition {
   id: string
@@ -120,18 +162,17 @@ export interface PermissionDefinition {
    * while every account belonged to staff — could not survive families
    * arriving.
    *
-   * ── The `students` axis is declared ahead of its enforcement ───────────
-   * Nothing in the app passes a `studentId` to a permission check yet, so
-   * every `['students']` entry below currently narrows nothing: an unscoped
-   * check asks "anywhere?", and a conditional rule answers yes. That is
-   * correct for a toolbar button and wrong for a family, and it is safe only
-   * because no account can hold a family role.
+   * ── Where the `students` axis is enforced ─────────────────────────────
+   * In the services, not the components: a read that filtered in the browser
+   * would still have sent the rows. `students.read`, `attendance.read`,
+   * `grades.read` and `finance.read` are all filtered at the service against
+   * the caller's own scope — see `_shared/caller.ts`, which reads the session
+   * the way a backend reads a token rather than taking a scope from the call
+   * site.
    *
-   * Two things have to land before it is real, both in the accounts project:
-   * the reads have to be asked *about a student* at the call site, and the
-   * services have to filter rows before returning them. Until then, treat a
-   * `['students']` entry as a statement of intent — not a guarantee — and do
-   * not build a family-facing page on the strength of it.
+   * `assignments.read` is the one entry that still narrows nothing, because
+   * the feature behind it does not exist. It becomes real the day there is a
+   * service to enforce it in.
    */
   scopableBy?: readonly ScopeAxis[]
 }
@@ -231,6 +272,19 @@ export interface Role {
   /** Stable key. Stored on the user, so it must never be renamed in place. */
   id: string
   name: string
+  /**
+   * What holding this role means, in the school's own words.
+   *
+   * **Read by people who hold the role**, not only by the administrator
+   * editing it: the profile chooser prints it on the tile somebody presses to
+   * enter, because a choice that narrows what you may do has to say so before
+   * it is made. So it is product copy — a sentence addressed to the holder —
+   * and not a note to whoever is maintaining the seed.
+   *
+   * Two of these used to end "No accounts hold this yet", which was a remark
+   * about the fixtures, was shown to the first parent who signed in, and had
+   * stopped being true by then anyway.
+   */
   description?: string
   permissions: Permission[]
   /**
@@ -321,7 +375,7 @@ export const BUILTIN_ROLES: Role[] = [
   {
     id: 'student',
     name: 'Student',
-    description: 'Reads their own records. No accounts hold this yet.',
+    description: 'Reads their own records, and nothing else at the school.',
     scopeBy: 'students',
     permissions: [
       ...EVERYONE,
@@ -336,7 +390,7 @@ export const BUILTIN_ROLES: Role[] = [
   {
     id: 'parent',
     name: 'Parent',
-    description: "Reads their children's records, fees included. No accounts hold this yet.",
+    description: "Reads their children's records, fees included — and nothing else.",
     scopeBy: 'students',
     permissions: [
       ...EVERYONE,

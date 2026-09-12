@@ -7,6 +7,7 @@ import type { DepartmentData, Teacher, TeacherStatistics } from '@/features/teac
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
+import { callerMay } from '@/mocks/_shared/caller'
 import { teachersData } from '@/mocks/tenant/teachers/teachers'
 import {
   teacherStatisticsData,
@@ -22,6 +23,11 @@ import { teacherWorkloadData } from '@/mocks/tenant/teachers/workload'
 export async function fetchTeachers(): Promise<Teacher[]> {
   return mockOrHttp(
     async () => {
+      // The staff list: names, numbers, school addresses. `teachers.read`
+      // declares no axis, so nobody is ever narrowed on it and the only
+      // question is whether the caller holds it — which a parent does not, and
+      // used to receive all 22 rows anyway.
+      if (!callerMay('read', 'Teacher')) return []
       await withLatency()
       return [...teachersData]
     },
@@ -40,6 +46,7 @@ export async function fetchTeachers(): Promise<Teacher[]> {
 export async function fetchTeacherById(id: string): Promise<Teacher | undefined> {
   return mockOrHttp(
     async () => {
+      if (!callerMay('read', 'Teacher')) return undefined
       await withLatency({ min: 150, max: 400 })
       return teachersData.find(t => t.id === id)
     },
@@ -63,6 +70,7 @@ export async function fetchTeacherById(id: string): Promise<Teacher | undefined>
 export async function fetchTeacherStatistics(): Promise<TeacherStatistics> {
   return mockOrHttp(
     async () => {
+      if (!callerMay('read', 'Teacher')) return { total: 0, fullTime: 0, partTime: 0, substitute: 0 }
       await withLatency()
       return { ...teacherStatisticsData }
     },
@@ -81,6 +89,7 @@ export async function fetchTeacherStatistics(): Promise<TeacherStatistics> {
 export async function fetchDepartmentDistribution(): Promise<DepartmentData[]> {
   return mockOrHttp(
     async () => {
+      if (!callerMay('read', 'Teacher')) return []
       await withLatency({ min: 150, max: 400 })
       return [...departmentDistributionData]
     },
@@ -163,6 +172,7 @@ export async function deleteTeacher(id: string): Promise<void> {
 export async function fetchTeacherWorkload(): Promise<typeof teacherWorkloadData> {
   return mockOrHttp(
     async () => {
+      if (!callerMay('read', 'Teacher')) return {}
       await withLatency()
       return { ...teacherWorkloadData }
     },

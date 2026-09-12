@@ -15,6 +15,7 @@ import { mockOrHttp } from './_adapter'
 import * as reimbursementServer from '@/mocks/tenant/reimbursements'
 import { emitDomainEvent } from './notification-service'
 import { withLatency } from '@/mocks/_shared'
+import { callerSeesEveryRow } from '@/mocks/_shared/caller'
 import {
   expenseTrendData,
   expenseBreakdownData,
@@ -29,6 +30,11 @@ import {
 export async function fetchExpenseTrend(): Promise<ExpenseTrendData[]> {
   return mockOrHttp(
     async () => {
+      // A school's outgoings, summed. Only a caller who may see every fee
+      // row may see them totalled — `finance.read` narrows by student, so a
+      // family holds it for their own bills and has no business knowing what
+      // the school spent.
+      if (!callerSeesEveryRow('read', 'Finance')) return []
       await withLatency()
       return [...expenseTrendData]
     },
@@ -51,6 +57,9 @@ export async function fetchExpenseBreakdown(): Promise<{
   return mockOrHttp(
     async () => {
       await withLatency()
+      // Same gate as the trend above: a figure, and one only a caller who sees
+      // every fee row may have.
+      if (!callerSeesEveryRow('read', 'Finance')) return { total: 0, breakdown: [] }
       // Summed, not typed. `total: 1250000` was a constant sitting beside a
       // breakdown that added to something else entirely, so the donut's
       // centre and its own slices disagreed — ₹12,50,000 over segments
@@ -77,6 +86,8 @@ export async function fetchExpenseBreakdown(): Promise<{
 export async function fetchReimbursements(): Promise<Reimbursement[]> {
   return mockOrHttp(
     async () => {
+      // Staff claims, with names and amounts.
+      if (!callerSeesEveryRow('read', 'Finance')) return []
       await withLatency()
       return reimbursementServer.listReimbursements()
     },
@@ -144,6 +155,8 @@ export async function decideReimbursement(
 export async function fetchExpenses(): Promise<Expense[]> {
   return mockOrHttp(
     async () => {
+      // The ledger itself.
+      if (!callerSeesEveryRow('read', 'Finance')) return []
       await withLatency()
       return [...expensesData]
     },

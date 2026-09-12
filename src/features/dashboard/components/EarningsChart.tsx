@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Tile } from '@/components/tile'
 import { colors } from '@/theme/colors'
 import { useBrandColors } from '@/hooks/use-brand-colors'
@@ -109,6 +110,26 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
   )
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 400
+
+  // Loading and empty are different answers and used to render the same
+  // skeleton, so a dataset that arrived empty spun forever. It can arrive empty
+  // now for a good reason: the service withholds a figure from a caller who
+  // may not see every row, and a teacher has no business with the school's
+  // earnings. Say so once rather than pretending to still be fetching.
+  if (!isLoading && !activeDataset) {
+    return (
+      <Tile id="earnings-empty" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+        <Card className="w-full h-full pt-4 pb-0 flex flex-col gap-0">
+          <CardHeader className="flex-shrink-0 pb-0">
+            <h3 className="text-section-title">Earnings</h3>
+          </CardHeader>
+          <CardContent className="px-4 pt-2 pb-4 flex-1 flex items-center justify-center">
+            <EmptyState title="Nothing to show" description="You do not have access to this." className="py-8" />
+          </CardContent>
+        </Card>
+      </Tile>
+    )
+  }
 
   if (isLoading || !activeDataset) {
     return (

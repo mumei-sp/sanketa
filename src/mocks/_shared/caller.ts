@@ -23,7 +23,7 @@
 
 import { authUtils } from '@/api/utils/auth'
 import { listRoles } from '@/mocks/tenant/roles/store'
-import { resolveTenantAccess } from '@/mocks/tenant/profiles'
+import { resolveActiveAccess } from '@/mocks/tenant/profiles'
 import { defineAbilityFor, subjectFor, type AppAbility, type SubjectFields } from '@/config/ability'
 import { findRole, type Action, type Subject } from '@/config/permissions'
 
@@ -42,7 +42,10 @@ function abilityForCurrentSession(): AppAbility {
   const session = authUtils.getUser()
   if (!session) return defineAbilityFor(null, { classSections: [], studentIds: [] })
 
-  const access = resolveTenantAccess(session.id)
+  // The *session's* access, not the person's. Somebody acting as a parent
+  // holds a parent's rules here even when they also teach — which is what
+  // stops a principal reaching her own child's marks through her day job.
+  const access = resolveActiveAccess(session.id)
   const table = listRoles()
   // Unknown ids are dropped rather than treated as unrestricted: a profile can
   // name a role a school has since deleted.
@@ -156,4 +159,28 @@ export function visibleRecordToCaller<T>(
 export function callerSeesEveryRow(action: Action, subject: Subject): boolean {
   if (!authUtils.getUser()) return false
   return seesEveryRow(abilityForCurrentSession(), action, subject)
+}
+
+/**
+ * May this caller touch this subject at all, anywhere?
+ *
+ * The plain permission question, for reads that hold nothing to filter and
+ * nothing to sum: the faculty list, the routes, the access log. There is no
+ * student or class in those rows, so `visibleToCaller` has no key to ask about
+ * and `callerSeesEveryRow` is a stricter question than the data deserves.
+ *
+ * ── When *not* to use it ───────────────────────────────────────────────
+ * On a subject that declares a `scopableBy`. This asks CASL with a bare
+ * subject name, which means "anywhere?" — and a narrowed caller answers yes,
+ * because the rule matches the type and there is no record to test the
+ * condition against. That is right for a toolbar button and wrong for a list:
+ * a parent narrowed to one child would pass a `callerMay('read', 'Student')`
+ * gate and receive the roster.
+ *
+ * So: `visibleToCaller` where the rows are about somebody, `callerSeesEveryRow`
+ * where the answer is a figure, and this only where neither applies.
+ */
+export function callerMay(action: Action, subject: Subject): boolean {
+  if (!authUtils.getUser()) return false
+  return abilityForCurrentSession().can(action, subject)
 }

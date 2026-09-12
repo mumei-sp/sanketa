@@ -22,9 +22,13 @@
  * That was an acceptable trade while every account belonged to staff, who are
  * trusted with the data either way. It stops being one the moment a family can
  * sign in: "the client filtered the rows" then means another child's marks
- * reached this browser and were merely not drawn. The `students` axis exists
- * so the same rules can do the filtering at the service — see the note on
- * `scopableBy` for what is still missing.
+ * reached this browser and were merely not drawn.
+ *
+ * So the same rules run again in `_shared/caller.ts`, where the mock's reads
+ * drop the rows a caller may not have before returning them. That is the
+ * shape a backend would take, and it is what the `students` axis is for. It is
+ * still the same process — nothing here is a boundary until one of the two
+ * copies runs somewhere the client cannot reach.
  */
 
 import {
