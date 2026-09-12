@@ -57,7 +57,7 @@ import { getDisplayName } from '@/features/students/utils/formatting'
 import { tenantFixtures } from '@/mocks/schools'
 
 /** A record shape. Closed: a new one is a developer adding a table. */
-export type Capacity = 'student' | 'staff' | 'teacher' | 'guardian' | 'none'
+export type Capacity = 'student' | 'staff' | 'teacher' | 'guardian'
 
 export interface Profile {
   /** `user_profiles.id`, unique within this school, shared with their records. */
@@ -176,36 +176,52 @@ export interface StaffRecord {
   /** → `user_profiles.id`. Primary key. */
   profileId: string
   employeeId: string
-  /**
-   * The job title on the letterhead — "Senior Accountant", "Head of Science".
-   *
-   * ── Not a classification, and the difference matters ──────────────────
-   * What *kinds* of person somebody is lives in `profile_type_assignments`, which
-   * is plural. This is one string, so it can never answer that question: the
-   * member of staff who is both Bus Driver and Librarian has two type links
-   * and one designation, and a school writing "Bus Driver" here would be
-   * choosing which half of the truth to keep.
-   *
-   * It was being written with the profile type's own name, which made the two
-   * columns say overlapping things and gave them room to disagree — the same
-   * mistake `profile_type` made, one table down. A title is free text a school
-   * types; a classification is a row it picks. Optional, because most schools
-   * have no title for most people.
-   */
-  designation?: string
   department?: string
   joiningDate?: string
+  /**
+   * → `staff_designations.id`. One, because a job title is one thing.
+   *
+   * The member of staff who drives the bus *and* runs the library is one
+   * designation and two **roles** — and roles are where plurality belongs,
+   * because they carry permissions. A title is what the letterhead says.
+   */
+  designationId?: string
 }
 
-export interface ProfileType {
+/**
+ * A job title a school employs people under — `staff_designations`.
+ *
+ * ── What this replaced, and why ────────────────────────────────────────
+ * There used to be `profile_types` and `profile_type_assignments`: a
+ * school-extensible catalogue of "kinds of person", each naming a `capacity`
+ * that told you which table carried the record, joined many-to-many to
+ * profiles. It was an elaborate way of saying *job title*.
+ *
+ * Two facts were tangled in it. What records somebody has is structural, and
+ * already answered by which capacity tables hold their id — `capacitiesOf`
+ * derives it and cannot disagree with itself. What somebody's job is called is
+ * a label, and only staff have one: a student is a student, a guardian is a
+ * guardian, and neither needs naming. Untangling them deletes both tables and
+ * the `capacity` column, and with them the seam where a type could name a
+ * table SQL had no way to foreign-key.
+ *
+ * ── Why a catalogue and not free text ─────────────────────────────────
+ * A title typed per person gives you "Bus Driver", "bus driver" and
+ * "Driver (Bus)" across an estate of schools, which makes headcount-by-title a
+ * fuzzy-match problem and renaming one a spelling exercise. A row has an id:
+ * reporting groups by it, a restructure edits one row, and retiring a title is
+ * `isActive = false` rather than a delete that strands whoever held it.
+ *
+ * There is no `isBuiltin`. Job titles are the school's, all of them —
+ * `ON DELETE RESTRICT` already stops one being removed while somebody holds
+ * it, which is the only protection that was ever needed.
+ */
+export interface StaffDesignation {
   id: string
   /** School-owned and open — `bus-driver`, `visiting-faculty`. */
   code: string
   name: string
-  /** Which record shape. Closed, because a capacity is columns, not a label. */
-  capacity: Capacity
-  /** Seeded by the app; a school may not delete what the app relies on. */
-  isBuiltin: boolean
+  /** Retired rather than deleted, so rows that point at it still resolve. */
   isActive: boolean
 }
 
@@ -222,29 +238,13 @@ export interface ProfileRole {
   expiresAt?: string
 }
 
-/**
- * One row of `profile_type_assignments` — this person is that kind, here.
- *
- * Named for what a row *is* rather than by the `<tableA>_<tableB>` convention,
- * which would have produced `profile_profile_types`: table B is already called
- * `profile_types`, so the plain form stutters and nobody reads it at a glance.
- * `assigned_at` is on the row in the schema, so "assignment" is the true word
- * and not a decoration chosen to break the repeat.
- */
-export interface ProfileTypeAssignment {
-  profileId: string
-  profileTypeId: string
-  isPrimary: boolean
-}
-
 const TABLE = 'profiles'
 
 interface Database {
   profiles: Profile[]
   staff: StaffRecord[]
-  types: ProfileType[]
+  designations: StaffDesignation[]
   roles: ProfileRole[]
-  typeAssignments: ProfileTypeAssignment[]
   /** Which `access` fixture these rows came from — see `seedSignature`. */
   seed?: string
 }
@@ -257,19 +257,15 @@ onTenantSwitch(() => {
 })
 
 /**
- * The classifications every school starts with.
+ * Turn a job title into a stable code — "Bus Driver" → `bus-driver`.
  *
- * `librarian`, `counselor` and `coordinator` are deliberately absent: they are
- * *roles*, describing what somebody may do rather than what record they have,
- * and the backend's own seed already has them that way.
+ * The catalogue is seeded from the titles a school's own fixture uses, so the
+ * list it starts with is the list it actually employs people under rather than
+ * a guess shipped by the product. Anything else it wants, it adds.
  */
-const BUILTIN_TYPES: Omit<ProfileType, 'id'>[] = [
-  { code: 'student', name: 'Student', capacity: 'student', isBuiltin: true, isActive: true },
-  { code: 'teacher', name: 'Teacher', capacity: 'teacher', isBuiltin: true, isActive: true },
-  { code: 'staff', name: 'Staff', capacity: 'staff', isBuiltin: true, isActive: true },
-  { code: 'admin', name: 'Administrator', capacity: 'staff', isBuiltin: true, isActive: true },
-  { code: 'parent', name: 'Parent', capacity: 'guardian', isBuiltin: true, isActive: true },
-]
+function designationCode(name: string): string {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
 
 const now = () => new Date().toISOString()
 
@@ -292,9 +288,6 @@ function signatureOf(): string {
   const fixtures = tenantFixtures()
   return seedSignature([
     fixtures.access ?? null,
-    // The built-in types are seeded rows, so a release that adds, drops or
-    // re-points one has to reach a browser that already holds the old set.
-    BUILTIN_TYPES,
     familiesSignature(),
     fixtures.students.map(student => [String(student.id), splitPerson(student).person]),
     fixtures.teachers.map(teacher => [String(teacher.id), splitPerson(teacher).person]),
@@ -328,8 +321,6 @@ function signatureOf(): string {
  * records are loaded and whose staff have not been invited.
  */
 function seed(): Database {
-  const types: ProfileType[] = BUILTIN_TYPES.map(type => ({ ...type, id: `PT-${type.code}` }))
-  const typeId = (code: string) => `PT-${code}`
   const school = tenantFixtures()
   const fixtures = school.access
   const families = deriveFamilies()
@@ -372,7 +363,18 @@ function seed(): Database {
   // ── The employment records, and the logins ──
   const staff: StaffRecord[] = []
   const roles: ProfileRole[] = []
-  const typeAssignments: ProfileTypeAssignment[] = []
+
+  // The catalogue, built from the titles this school's own seed names. A `Map`
+  // so two people sharing a title share the row, which is the point of it
+  // being a row at all.
+  const designations = new Map<string, StaffDesignation>()
+  const designationFor = (name: string): string => {
+    const code = designationCode(name)
+    if (!designations.has(code)) {
+      designations.set(code, { id: `SD-${code}`, code, name: name.trim(), isActive: true })
+    }
+    return `SD-${code}`
+  }
 
   if (fixtures) {
     // A fixture entry refers to itself by `key`, because half of them do not
@@ -404,7 +406,9 @@ function seed(): Database {
         staff.push({
           profileId: id,
           employeeId: entry.staff.employeeId,
-          designation: entry.staff.designation,
+          designationId: entry.staff.designation
+            ? designationFor(entry.staff.designation)
+            : undefined,
           department: entry.staff.department,
         })
       }
@@ -422,19 +426,15 @@ function seed(): Database {
       roles.push({ profileId, roleId: row.roleId, assignedAt: now(), expiresAt: row.expiresAt })
     })
 
-    fixtures.typeCodes.forEach(row => {
-      const profileId = idByKey.get(row.key)
-      if (!profileId) return
-      if (row.code === 'parent' && !hasGuardianRecord(profileId)) return
-      typeAssignments.push({
-        profileId,
-        profileTypeId: typeId(row.code),
-        isPrimary: row.isPrimary === true,
-      })
-    })
   }
 
-  return { profiles, staff, types, roles, typeAssignments, seed: signatureOf() }
+  return {
+    profiles,
+    staff,
+    designations: [...designations.values()],
+    roles,
+    seed: signatureOf(),
+  }
 }
 
 function load(): Database {
@@ -449,9 +449,8 @@ function load(): Database {
       if (
         Array.isArray(parsed.profiles) &&
         Array.isArray(parsed.staff) &&
-        Array.isArray(parsed.types) &&
+        Array.isArray(parsed.designations) &&
         Array.isArray(parsed.roles) &&
-        Array.isArray(parsed.typeAssignments) &&
         parsed.seed === signatureOf()
       ) {
         db = parsed
@@ -586,20 +585,24 @@ export function listStaff(): StaffRecord[] {
   return load().staff.map(row => ({ ...row }))
 }
 
-export function listProfileTypes(): ProfileType[] {
-  return load().types.map(row => ({ ...row }))
+/**
+ * The job title this person is employed under, if they are staff at all.
+ *
+ * Singular where `typesOf` was plural, and that is the change: what somebody
+ * *is* here is which capacity tables hold their id, which `capacitiesOf`
+ * derives. This answers only what their job is called.
+ */
+export function designationOf(profileId: string): StaffDesignation | undefined {
+  const database = load()
+  const record = database.staff.find(row => row.profileId === profileId)
+  if (!record?.designationId) return undefined
+  const found = database.designations.find(row => row.id === record.designationId)
+  return found ? { ...found } : undefined
 }
 
-/** The classifications this person carries here, primary first. */
-export function typesOf(profileId: string): ProfileType[] {
-  const database = load()
-  return database.typeAssignments
-    .filter(assignment => assignment.profileId === profileId)
-    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
-    .flatMap(assignment => {
-      const type = database.types.find(row => row.id === assignment.profileTypeId)
-      return type ? [{ ...type }] : []
-    })
+/** The catalogue — what a picker offers, and what reporting groups by. */
+export function listDesignations(): StaffDesignation[] {
+  return load().designations.map(row => ({ ...row }))
 }
 
 /**
@@ -681,61 +684,58 @@ export function revokeRole(profileId: string, roleId: string): void {
   persist()
 }
 
-/** A classification a school invented. Refuses a capacity it does not know. */
-export function createProfileType(input: {
-  code: string
-  name: string
-  capacity: Capacity
-}): ProfileType | null {
+/**
+ * Add a job title to this school's catalogue.
+ *
+ * Refuses a duplicate code rather than minting a second row for the same
+ * title, which is what a free-text field could not do and the reason this is a
+ * table: "Bus Driver" typed twice has to be one thing or reporting by it means
+ * nothing.
+ */
+export function createDesignation(input: { code: string; name: string }): StaffDesignation | null {
   const database = load()
-  const code = input.code.trim().toLowerCase()
-  if (!code || database.types.some(row => row.code === code)) return null
+  const code = designationCode(input.code)
+  if (!code || database.designations.some(row => row.code === code)) return null
 
-  const type: ProfileType = {
-    id: newId('PT'),
+  const designation: StaffDesignation = {
+    id: newId('SD'),
     code,
     name: input.name.trim() || code,
-    capacity: input.capacity,
-    isBuiltin: false,
     isActive: true,
   }
-  database.types.push(type)
+  database.designations.push(designation)
   persist()
-  return { ...type }
+  return { ...designation }
 }
 
 /**
- * Retire a school's own classification. Built-ins refuse.
+ * Retire a title.
  *
- * Deactivated rather than deleted, because profiles point at it and a dangling
- * link reads as a person with no kind rather than as a removed option.
+ * Deactivated rather than deleted, because staff rows point at it: a school
+ * that outsources its transport stops offering "Bus Driver" to new starters
+ * while everyone who held it keeps a job title. That is what `ON DELETE
+ * RESTRICT` buys in the schema, expressed as a flag a school can set.
  */
-export function deactivateProfileType(id: string): boolean {
+export function deactivateDesignation(id: string): boolean {
   const database = load()
-  const type = database.types.find(row => row.id === id)
-  if (!type || type.isBuiltin) return false
-  type.isActive = false
+  const designation = database.designations.find(row => row.id === id)
+  if (!designation) return false
+  designation.isActive = false
   persist()
   return true
 }
 
-export function assignProfileType(profileId: string, profileTypeId: string, isPrimary = false): void {
+/** Set — or clear — the title on somebody's employment record. */
+export function setDesignation(profileId: string, designationId: string | null): boolean {
   const database = load()
-  const existing = database.typeAssignments.find(
-    assignment =>
-      assignment.profileId === profileId && assignment.profileTypeId === profileTypeId,
-  )
-  if (isPrimary) {
-    // At most one primary, so promoting one demotes the rest.
-    database.typeAssignments
-      .filter(assignment => assignment.profileId === profileId)
-      .forEach(assignment => {
-        assignment.isPrimary = false
-      })
+  const record = database.staff.find(row => row.profileId === profileId)
+  if (!record) return false
+  if (designationId !== null && !database.designations.some(row => row.id === designationId)) {
+    return false
   }
-  if (existing) existing.isPrimary = isPrimary
-  else database.typeAssignments.push({ profileId, profileTypeId, isPrimary })
+  record.designationId = designationId ?? undefined
   persist()
+  return true
 }
 
 /**
@@ -755,9 +755,6 @@ export function deleteProfile(profileId: string): boolean {
   if (index === -1) return false
   database.profiles.splice(index, 1)
   database.roles = database.roles.filter(row => row.profileId !== profileId)
-  database.typeAssignments = database.typeAssignments.filter(
-    assignment => assignment.profileId !== profileId,
-  )
   database.staff = database.staff.filter(row => row.profileId !== profileId)
   persist()
   return true
@@ -777,9 +774,8 @@ export function detachLogin(profileId: string): boolean {
   if (!profile) return false
   delete profile.userId
   database.roles = database.roles.filter(row => row.profileId !== profileId)
-  database.typeAssignments = database.typeAssignments.filter(
-    assignment => assignment.profileId !== profileId,
-  )
+  // The employment record stays. A title is a fact about the person's job, not
+  // about their account — taking the login away does not un-employ them.
   persist()
   return true
 }

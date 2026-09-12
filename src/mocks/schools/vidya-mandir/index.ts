@@ -56,7 +56,6 @@ export const vidyaMandir: TenantFixtures = {
       },
     ],
     roles: [{ key: 'rohan', roleId: 'parent' }],
-    typeCodes: [{ key: 'rohan', code: 'parent', isPrimary: true }],
   },
   extraRoles: [
     {

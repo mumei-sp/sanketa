@@ -47,7 +47,7 @@ import type { Role } from '@/config/permissions'
  * entries do not know their own id until seed time.
  */
 export interface ProfileFixture {
-  /** Fixture-local handle, used by `roles` and `typeCodes` below. */
+  /** Fixture-local handle, used by `roles` below. */
   key: string
   /** → the global `users.id`. */
   userId: string
@@ -99,13 +99,11 @@ export interface StaffGuardianFixture {
   profileId: string
 }
 
-/** Who is at this school, what they may do, and what kind of person they are. */
+/** Who is at this school, and what they may do. */
 export interface TenantAccessFixtures {
   profiles: ProfileFixture[]
   /** Many per profile — that is the whole point. */
   roles: { key: string; roleId: string; expiresAt?: string }[]
-  /** Classifications, by built-in code. */
-  typeCodes: { key: string; code: string; isPrimary?: boolean }[]
   /** Guardians who are already a profile here. See above. */
   staffGuardians?: StaffGuardianFixture[]
 }

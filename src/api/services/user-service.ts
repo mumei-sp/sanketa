@@ -16,20 +16,21 @@ import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/global/users'
 import { addMembership, activeTenantCode } from '@/mocks/global'
 import {
-  assignProfileType,
+  setDesignation,
   attachLogin,
   capacitiesOf,
   createProfile,
   deleteProfile,
   detachLogin,
   grantRole,
-  listProfileTypes,
+  listDesignations,
   profileOf,
   resolveTenantAccess,
   revokeRole,
   updateProfile,
 } from '@/mocks/tenant/profiles'
 import type { SchoolUser } from '@/mocks/global/users'
+import type { Capacity } from '@/mocks/tenant/profiles'
 import type { AccountStatus } from '@/features/auth/types'
 
 export type { SchoolUser }
@@ -120,7 +121,7 @@ export async function fetchPeople(): Promise<Person[]> {
  */
 export async function enrolPersonHere(
   userId: string,
-  profileTypeCode: string,
+  capacity: Capacity,
 ): Promise<string | null> {
   return mockOrHttp(
     async () => {
@@ -130,32 +131,28 @@ export async function enrolPersonHere(
       // Idempotent, so somebody already routable here is not disturbed.
       addMembership({ userId, tenantCode: activeTenantCode() })
 
-      const type = listProfileTypes().find(candidate => candidate.code === profileTypeCode)
-      if (!type) return null
-
-      // A staff kind needs an employment record — that *is* the capacity, and
-      // without one they would be a profile with no record of any sort. An
-      // employee number from the login id, which is what a school with no HR
-      // system would do anyway.
+      // A capacity, not a "profile type". The question this answers is
+      // structural — which table carries their record — and it used to be
+      // asked as a school-defined label that named a capacity indirectly. The
+      // label is now a job title on the employment record, which only staff
+      // have, and is set separately.
       //
-      // The family and teaching kinds get no record here on purpose. A parent
-      // with no children linked is not yet a parent of anybody, and linking
-      // them is the student form's job.
+      // Staff get their employment record here because nothing else would
+      // create one. Students, teachers and guardians are enrolled through
+      // their own screens, which own those tables.
       const profile = createProfile(
-        { userId, fullName: mockServer.listUsers().find(row => row.id === userId)?.fullName ?? userId },
-        // No `designation`: that is the title on the letterhead, which nobody
-        // has typed. It used to be filled with the profile type's name, which
-        // put the same fact in two columns and let them drift — see
-        // `StaffRecord`.
-        type.capacity === 'staff' ? { employeeId: `E-${userId}` } : undefined,
+        {
+          userId,
+          fullName: mockServer.listUsers().find(row => row.id === userId)?.fullName ?? userId,
+        },
+        capacity === 'staff' ? { employeeId: `E-${userId}` } : undefined,
       )
-      assignProfileType(profile.id, type.id, true)
       return profile.id
     },
     async () => {
       const { data } = await apiClient.post<{ profileId: string }>(
         `/tenants/${activeTenantCode()}/profiles`,
-        { userId, profileType: profileTypeCode },
+        { userId, capacity },
       )
       return data.profileId
     },
@@ -289,16 +286,14 @@ export async function createUser(input: {
   roleId: string
   teacherId?: string
   /**
-   * The `profile_types.code` this person is here — `teacher`, `parent`, or a
-   * code the school invented. Defaults to `staff`.
+   * Which record this person gets here. Defaults to `staff`.
    *
-   * A code rather than one of six hard-coded names, because the table is
-   * school-extensible and this used to accept only what the app shipped with:
-   * the id was built as `PT-${code}`, which is the format of a *built-in* row
-   * and nothing else, so a school's own "Bus Driver" could not be assigned at
-   * all. It is resolved below, exactly as `enrolPersonHere` resolves it.
+   * Structural, and a closed set — a capacity is a table. What a school calls
+   * them is `designationId` below, which is open and only staff have one.
    */
-  profileTypeCode?: string
+  capacity?: Capacity
+  /** → `staff_designations.id`. Staff only, and optional even then. */
+  designationId?: string
   status?: AccountStatus
   studentId?: string
   guardianId?: string
@@ -308,12 +303,16 @@ export async function createUser(input: {
     async () => {
       await withLatency()
 
-      // Resolved before anything is written: an unknown code would otherwise
-      // create a login and a membership and then fail to say what the person
-      // is, leaving an account nobody can classify.
-      const code = input.profileTypeCode ?? 'staff'
-      const type = listProfileTypes().find(candidate => candidate.code === code)
-      if (!type) return null
+      // Checked before anything is written: an unknown title would otherwise
+      // create a login and a membership and then fail to record what the
+      // person is employed as.
+      const capacity: Capacity = input.capacity ?? 'staff'
+      if (
+        input.designationId !== undefined &&
+        !listDesignations().some(row => row.id === input.designationId)
+      ) {
+        return null
+      }
 
       const user = mockServer.createUser(input)
       if (!user) return null
@@ -340,19 +339,17 @@ export async function createUser(input: {
               fullName: user.fullName,
               assignedClasses: input.assignedClasses,
             },
-            // The capacity decides the record, not the code. A school-defined
-            // type reuses one of the shapes the app has tables for, which is
-            // the whole reason `capacity` is closed while `code` is open — so
-            // "Bus Driver" gets an employment record without anybody adding a
-            // branch for it. This used to test the code against a list of two
-            // names, so every custom type produced a profile with no record.
-            type.capacity === 'staff' ? { employeeId: `E-${user.id}` } : undefined,
+            capacity === 'staff'
+              ? { employeeId: `E-${user.id}`, designationId: input.designationId }
+              : undefined,
           )
       if (input.assignedClasses && existing) {
         updateProfile(profile.id, { assignedClasses: input.assignedClasses })
       }
       grantRole(profile.id, input.roleId)
-      assignProfileType(profile.id, type.id, true)
+      if (capacity === 'staff' && input.designationId) {
+        setDesignation(profile.id, input.designationId)
+      }
 
       return user
     },

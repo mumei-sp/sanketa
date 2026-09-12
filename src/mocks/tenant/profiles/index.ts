@@ -2,7 +2,7 @@
  * A person's identity and access *at one school*.
  *
  * Only a service and the auth mock should import this — it stands in for the
- * tenant schema's `user_profiles`, `staff`, `profile_types` and
+ * tenant schema's `user_profiles`, `staff`, `staff_designations` and
  * `profile_roles`.
  */
 
@@ -15,8 +15,8 @@ export {
   listStaff,
   attachLogin,
   detachLogin,
-  listProfileTypes,
-  typesOf,
+  listDesignations,
+  designationOf,
   roleIdsOf,
   profilesWithRole,
   createProfile,
@@ -24,17 +24,16 @@ export {
   updateProfile,
   grantRole,
   revokeRole,
-  createProfileType,
-  deactivateProfileType,
-  assignProfileType,
+  createDesignation,
+  deactivateDesignation,
+  setDesignation,
 } from './store'
 export { capacitiesOf } from './capacities'
 export type {
   Profile,
   StaffRecord,
-  ProfileType,
+  StaffDesignation,
   ProfileRole,
-  ProfileTypeAssignment,
   Capacity,
 } from './store'
 /**

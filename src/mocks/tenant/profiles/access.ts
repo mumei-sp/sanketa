@@ -12,7 +12,7 @@
  * the server resolves what-you-are-here from the active one on each request.
  */
 
-import { profileOf, roleIdsOf, typesOf } from './store'
+import { profileOf, roleIdsOf, designationOf } from './store'
 import { capacitiesOf } from './capacities'
 import { findStudent } from '@/mocks/tenant/students/store'
 import { studentsOfGuardian } from '@/mocks/tenant/guardians/store'
@@ -34,8 +34,8 @@ export interface TenantAccess {
   roleIds: string[]
   /** Which record shapes they have here — which capacity tables hold them. */
   capacities: Capacity[]
-  /** Their classifications, primary first. Display and filtering only. */
-  typeCodes: string[]
+  /** Their job title here, if they are staff. Display only. */
+  designation: string | null
   /** `teacher_classes` — the class axis. Empty for anyone not class-scoped. */
   assignedClasses: string[]
   /** The student axis: their own record, or their children's, at this school. */
@@ -46,7 +46,7 @@ const EMPTY: TenantAccess = {
   profileId: null,
   roleIds: [],
   capacities: [],
-  typeCodes: [],
+  designation: null,
   assignedClasses: [],
   studentIds: [],
 }
@@ -81,7 +81,7 @@ export function resolveTenantAccess(userId: string | undefined): TenantAccess {
     profileId: profile.id,
     roleIds: roleIdsOf(profile.id),
     capacities,
-    typeCodes: typesOf(profile.id).map(type => type.code),
+    designation: designationOf(profile.id)?.name ?? null,
     assignedClasses: profile.assignedClasses ?? [],
     // Deduplicated: a person who is both a student and their sibling's
     // guardian would otherwise name the same child twice.
@@ -127,7 +127,7 @@ export function sidesAvailable(access: TenantAccess): ContextSide[] {
  * The same access, as one side of it.
  *
  * Everything that says *what this session may do* is filtered; everything that
- * says *who this person is* is left alone. So `profileId` and `typeCodes`
+ * says *who this person is* is left alone. So `profileId` and `designation`
  * survive — she is still the same person, and still classified a teacher and a
  * parent — while the roles, the capacities and both scope axes are reduced to
  * the half being acted in.

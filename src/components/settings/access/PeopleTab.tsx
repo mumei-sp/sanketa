@@ -56,7 +56,7 @@ import {
   type Person,
   type SchoolUser,
 } from '@/api/services/user-service'
-import { listProfileTypes } from '@/mocks/tenant/profiles'
+import type { Capacity } from '@/mocks/tenant/profiles'
 import type { AccountStatus } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'
@@ -201,17 +201,19 @@ export function PeopleTab({
   const [enrolKind, setEnrolKind] = React.useState<Record<string, string>>({})
 
   /**
-   * The kinds of person this school recognises, its own additions included.
+   * What record this person gets at this school.
    *
-   * Read straight from the store rather than through a service, which is the
-   * one place this screen reaches past the API boundary — the list is
-   * reference data a school edits elsewhere, and a route for it is worth
-   * adding the day something else needs it.
+   * A capacity, not a school-defined label: enrolling somebody creates a row
+   * in one of four tables, and that is a closed structural question. What the
+   * school *calls* them is a job title on the employment record, which only
+   * staff have — set on their record rather than chosen here.
    */
-  const profileTypes = React.useMemo(
-    () => listProfileTypes().filter(type => type.isActive),
-    [],
-  )
+  const capacities: { value: Capacity; label: string }[] = [
+    { value: 'staff', label: 'Staff' },
+    { value: 'teacher', label: 'Teacher' },
+    { value: 'student', label: 'Student' },
+    { value: 'guardian', label: 'Parent or guardian' },
+  ]
 
   /**
    * Give or take one role. Several may be held at once.
@@ -284,15 +286,15 @@ export function PeopleTab({
    * worth being explicit that it is not a small one.
    */
   const enrol = async (person: Person) => {
-    const code = enrolKind[person.user.id] ?? 'staff'
+    const capacity = (enrolKind[person.user.id] ?? 'staff') as Capacity
     setSavingId(person.user.id)
     try {
-      const profileId = await enrolPersonHere(person.user.id, code)
+      const profileId = await enrolPersonHere(person.user.id, capacity)
       if (!profileId) {
         showError('Could not add them to this school')
         return
       }
-      const kind = profileTypes.find(type => type.code === code)?.name ?? code
+      const kind = capacities.find(row => row.value === capacity)?.label ?? capacity
       record({
         kind: 'user.create',
         target: person.user.fullName,
@@ -651,9 +653,9 @@ export function PeopleTab({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {profileTypes.map(type => (
-                              <SelectItem key={type.id} value={type.code}>
-                                {type.name}
+                            {capacities.map(row => (
+                              <SelectItem key={row.value} value={row.value}>
+                                {row.label}
                               </SelectItem>
                             ))}
                           </SelectContent>

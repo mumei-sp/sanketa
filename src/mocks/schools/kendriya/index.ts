@@ -88,14 +88,6 @@ export const kendriya: TenantFixtures = {
       { key: 'accountant', roleId: 'accountant' },
       { key: 'rohan', roleId: 'parent' },
     ],
-    typeCodes: [
-      { key: 'admin', code: 'admin', isPrimary: true },
-      { key: 'principal', code: 'staff', isPrimary: true },
-      { key: 'meera', code: 'teacher', isPrimary: true },
-      { key: 'meera', code: 'parent' },
-      { key: 'accountant', code: 'staff', isPrimary: true },
-      { key: 'rohan', code: 'parent', isPrimary: true },
-    ],
     // Meera Iyengar is on the faculty list and on her own son's record as his
     // mother. One person, so one profile: the guardian row the guardians table
     // would otherwise mint for her becomes her teacher profile instead.

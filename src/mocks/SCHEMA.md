@@ -120,13 +120,12 @@ a family mobile cannot both hold it, and the second needs an address.
 | `teachers` | `profile_id` PK → `user_profiles(id)`. Employee id, qualification, department | exists (MySQL) | yes |
 | `guardians` | `profile_id` PK → `user_profiles(id)`. Was `parents` | exists (MySQL) | yes |
 | `student_guardians` | Who a child's guardians are, and what each is to them. Was `student_parents` | exists (MySQL) | yes |
-| `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends. `designation` is a job title, not a classification | this frontend | yes |
+| `staff` | `profile_id` PK — the employment record. `designation_id` → `staff_designations` | this frontend | yes |
 | `roles` | School-defined. `scope_axis` is new — see below | designed (Postgres) | yes |
 | `permissions` | The catalogue. Codes are code constants | designed (Postgres) | code constants |
 | `role_permissions` | `role_id`, `permission_id`, `granted` | designed (Postgres) | an array on the role |
 | `profile_roles` | **The multi-role join.** Was `user_roles` | this frontend | yes |
-| `profile_types` | School-extensible classifications, with built-ins | this frontend | yes |
-| `profile_type_assignments` | A person may be more than one kind | this frontend | yes |
+| `staff_designations` | Job titles this school employs people under. All the school's own | this frontend | yes |
 | `teacher_classes` | `profile_id`, `class_section` | this frontend | flattened onto the profile |
 
 ### Capacities and profile types — two different things
@@ -150,18 +149,25 @@ Librarian capacity" cannot be answered without somebody saying what fields a
 librarian record has. Capacities are plural per profile and **not stored**: what
 someone is here is which capacity tables reference them.
 
-**A profile type is a classification, and a school may invent them.** "Bus
-Driver", "Visiting Faculty", "Alumni", "Lab Assistant". Tenant-scoped, because
-one school's vocabulary is not another's. Each one declares which capacity it
-uses — so a custom type gets a sane record shape without inventing columns —
-and `none` covers a classification with no record of its own. Built-in types
-are seeded per tenant and flagged so a school cannot delete what the app relies
-on.
+**A job title is a label, and only staff have one.** "Bus Driver", "Visiting
+Faculty", "Lab Assistant". A student is a student and a guardian is a guardian;
+neither needs naming, because the capacity already says it. `staff_designations`
+is the school's own list in full — the product ships none, because it has no
+opinion about whether a school employs a Lab Assistant.
 
-Profile types are plural per profile, with `is_primary` for anywhere a UI needs
-one answer. Every single-valued field in this model has broken on the same
-person — the member of staff whose child attends the school — and a scalar
-profile type would break in exactly the way the scalar role did.
+A catalogue rather than a string on the staff row. A title typed per person
+gives you "Bus Driver", "bus driver" and "Driver (Bus)" across an estate, which
+makes headcount-by-title a fuzzy match and a restructure a spelling exercise. A
+row has an id: reporting groups by it, renaming edits one row, and retiring a
+title is `is_active = false` rather than a delete that strands whoever held it.
+
+**One title, many roles.** The member of staff who drives the bus *and* runs the
+library is one designation and two entries in `profile_roles`. That is where the
+plurality belongs, because roles carry permissions and a title carries none.
+This replaced a `profile_types` catalogue joined many-to-many to profiles, each
+type naming a `capacity` — an elaborate way of saying *job title*, and one that
+left a seam: `capacity` held the string `staff` meaning *the `staff` table*, a
+reference SQL has no way to enforce. Both tables and the column are gone.
 
 ### `profile_roles` — the merge
 
@@ -241,7 +247,7 @@ Each is a code path nothing has run:
 - `tenants.is_active` — both schools are live.
 - `users.status` — no account is invited or suspended.
 - `profile_roles.expires_at` — nothing expires.
-- A school-created `profile_types` row — all six are built-in at both schools.
+- A retired `staff_designations` row — every title at both schools is in use.
 - `is_deleted` — the field is on the profile and nothing sets it.
 
 ## What is mirrored but not implemented
