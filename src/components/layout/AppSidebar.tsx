@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { useState, useEffect } from 'react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
+import { leaveSession } from '@/features/auth/session-navigation'
 import { LogOut, X } from 'lucide-react'
 import { logout } from '@/api/services/auth-service'
 import {
@@ -262,9 +263,9 @@ export function AppSidebar({ logoPath }: AppSidebarProps) {
               tooltip="Logout"
               size="lg"
               onClick={() => {
-                // See UserMenu: revoke the session, do not merely forget it.
-                void logout()
-                navigate('/login', { replace: true })
+                // See UserMenu: revoke the session, do not merely forget it,
+                // and leave by a page load rather than a route change.
+                void logout().finally(leaveSession)
               }}
             >
               <LogOut />

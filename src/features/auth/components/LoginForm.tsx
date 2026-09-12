@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { enterSession } from '@/features/auth/session-navigation'
 import { LoginSchema, type LoginFormValues } from '../schemas/auth-schema'
 import { login } from '@/api/services/auth-service'
 import { TextField } from '@/components/form/fields'
@@ -15,7 +16,6 @@ const MAX_ATTEMPTS = 5
 const LOCKOUT_DURATION_MS = 30_000 // 30 seconds
 
 export function LoginForm() {
-  const navigate = useNavigate()
   const [serverError, setServerError] = useState<string | null>(null)
   const [lockoutEnd, setLockoutEnd] = useState<number | null>(null)
   const [lockoutRemaining, setLockoutRemaining] = useState(0)
@@ -64,7 +64,10 @@ export function LoginForm() {
         rememberMe: data.rememberMe,
       })
       failedAttempts.current = 0
-      navigate('/', { replace: true })
+      // A page load, not a route change: every tenant-resolved fixture is a
+      // module constant and has to be built against the school this session
+      // just chose. See `session-navigation.ts`.
+      enterSession()
     } catch (error: unknown) {
       const err = error as { message?: string; status?: number }
       failedAttempts.current += 1

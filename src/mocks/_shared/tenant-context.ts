@@ -153,14 +153,22 @@ export function onTenantSwitch(forget: () => void): void {
  * `assertTenantAccess` in the token mock.
  */
 export function setActiveTenant(tenantCode: string): void {
-  if (tenantCode === current()) return
+  // Written whatever happens, and the forgetters run only on a real change.
+  //
+  // The early return this used to open with skipped both, which let the stored
+  // preference and the module's answer drift apart: signing out removes the
+  // key and leaves the memo at the default, so the next sign-in to that same
+  // default was a no-op and nothing was written back. Storage then said
+  // nothing while the app was serving a school — harmless until something read
+  // the key expecting it to mean something.
+  const changed = tenantCode !== current()
   active = tenantCode
   try {
     localStorage.setItem(ACTIVE_KEY, tenantCode)
   } catch {
     // Private mode; the switch still holds for this session.
   }
-  forgetters.forEach(forget => forget())
+  if (changed) forgetters.forEach(forget => forget())
 }
 
 /** Back to the default school. Used when a session ends. */

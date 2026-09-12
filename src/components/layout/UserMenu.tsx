@@ -14,7 +14,7 @@
 
 import * as React from 'react'
 import { LogOut, Settings } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { leaveSession } from '@/features/auth/session-navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +57,6 @@ function useRoleLabel(): string {
 export function UserMenu() {
   const roleLabel = useRoleLabel()
   const currentUser = useCurrentUser()
-  const navigate = useNavigate()
   const { setSettingsOpen } = useSchoolConfig()
   const { canAny } = usePermissions()
 
@@ -66,11 +65,12 @@ export function UserMenu() {
   const handleSignOut = () => {
     // Revoke, not just forget: clearing storage alone leaves a refresh token
     // that still buys a new session, which matters on a shared machine.
-    // Navigation does not wait on it — `logout` clears local state in its own
-    // `finally`, so a failed revoke cannot strand someone on a page they meant
-    // to leave.
-    void logout()
-    navigate('/login', { replace: true })
+    //
+    // `leaveSession` is a page load rather than a route change — see the file
+    // it lives in. Hung off `finally` so a failed revoke cannot strand someone
+    // on a page they meant to leave; the local token is already gone, since
+    // `logout` clears it before its first `await`.
+    void logout().finally(leaveSession)
   }
 
   return (
