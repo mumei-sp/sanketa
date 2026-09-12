@@ -957,6 +957,7 @@ export function PeopleTab({
             : []
         }
         currentExpiry={granting?.currentExpiry}
+        alreadyHeld={granting ? granting.person.roleIds.includes(granting.role.id) : false}
         onConfirm={expiresAt => void commitGrant(expiresAt)}
       />
     </div>

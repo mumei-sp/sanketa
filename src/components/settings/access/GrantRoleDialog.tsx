@@ -88,6 +88,7 @@ export function GrantRoleDialog({
   personName,
   alsoHolds,
   currentExpiry,
+  alreadyHeld = false,
   onConfirm,
 }: {
   open: boolean
@@ -98,6 +99,15 @@ export function GrantRoleDialog({
   alsoHolds: string[]
   /** Set when changing an existing grant rather than making a new one. */
   currentExpiry?: string
+  /**
+   * Whether they hold this role already.
+   *
+   * Not `currentExpiry !== undefined`, which was the first version and read
+   * wrong on the commonest case: a permanent role has no expiry, so clicking
+   * its chip to add one greeted the admin with "Make Meera Iyengar Teacher"
+   * about somebody who has taught there for a year.
+   */
+  alreadyHeld?: boolean
   onConfirm: (expiresAt: string | undefined) => void
 }) {
   const now = React.useMemo(() => new Date(), [open])
@@ -116,7 +126,7 @@ export function GrantRoleDialog({
 
   if (!role) return null
 
-  const changing = currentExpiry !== undefined
+  const changing = alreadyHeld
   const days = date ? daysUntil(new Date(date).toISOString(), now) : 0
   const valid = !temporary || (date !== '' && days >= 0)
 
