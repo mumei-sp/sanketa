@@ -29,13 +29,13 @@ Identity, and nothing that belongs to a school. The rule from
 data only. Do not model domain FK relationships across GlobalDB and
 SchoolDBs."*
 
-| Table | Purpose | Status |
-|---|---|---|
-| `users` | Login identity: `email?`, `phone?`, `status`, `keycloak_user_id` | exists (MySQL) |
-| `tenants` | The schools: `tenant_code`, `name`, `is_active` | exists (MySQL) |
-| `user_tenant_mapping` | This person is at this school. `UNIQUE(user_id, tenant_id)` | exists (MySQL) |
-| `tenant_database_mapping` | Which schema a tenant lives in | exists (MySQL) |
-| `fabric_sessions` | Issued token hashes, for revocation | exists (MySQL) |
+| Table | Purpose | Status | Mocked |
+|---|---|---|---|
+| `users` | Login identity: `email?`, `phone?`, `status`, `keycloak_user_id` | exists (MySQL) | yes |
+| `tenants` | The schools: `tenant_code`, `name`, `is_active` | exists (MySQL) | yes |
+| `user_tenant_mapping` | This person is at this school. `UNIQUE(user_id, tenant_id)` | exists (MySQL) | yes |
+| `tenant_database_mapping` | Which schema a tenant lives in | exists (MySQL) | folded into `tenants.schema` |
+| `fabric_sessions` | Issued token hashes, for revocation | exists (MySQL) | yes |
 
 ### Changes this frontend requires of `users`
 
@@ -52,21 +52,21 @@ a family mobile cannot both hold it, and the second needs an address.
 
 ## Tenant schema — one per school
 
-| Table | Purpose | Status |
-|---|---|---|
-| `user_profiles` | One row per person **at this school** | exists (MySQL) |
-| `students` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) |
-| `teachers` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) |
-| `parents` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) |
-| `student_parents` | Who a child's guardians are | exists (MySQL) |
-| `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends | this frontend |
-| `roles` | School-defined. `scope_axis` is new — see below | designed (Postgres) |
-| `permissions` | The catalogue. Codes are code constants | designed (Postgres) |
-| `role_permissions` | `role_id`, `permission_id`, `granted` | designed (Postgres) |
-| `profile_roles` | **The multi-role join.** Was `user_roles` | this frontend |
-| `profile_types` | School-extensible classifications, with built-ins | this frontend |
-| `profile_profile_types` | A person may be more than one kind | this frontend |
-| `teacher_classes` | `profile_id`, `class_section` | this frontend |
+| Table | Purpose | Status | Mocked |
+|---|---|---|---|
+| `user_profiles` | One row per person **at this school** | exists (MySQL) | yes |
+| `students` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) | yes |
+| `teachers` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) | yes |
+| `parents` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) | yes |
+| `student_parents` | Who a child's guardians are | exists (MySQL) | yes |
+| `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends | this frontend | yes |
+| `roles` | School-defined. `scope_axis` is new — see below | designed (Postgres) | yes |
+| `permissions` | The catalogue. Codes are code constants | designed (Postgres) | code constants |
+| `role_permissions` | `role_id`, `permission_id`, `granted` | designed (Postgres) | an array on the role |
+| `profile_roles` | **The multi-role join.** Was `user_roles` | this frontend | yes |
+| `profile_types` | School-extensible classifications, with built-ins | this frontend | yes |
+| `profile_profile_types` | A person may be more than one kind | this frontend | yes |
+| `teacher_classes` | `profile_id`, `class_section` | this frontend | flattened onto the profile |
 
 ### Capacities and profile types — two different things
 
@@ -135,6 +135,45 @@ narrowed and reaches everything its permissions allow.
 Scope axes are a closed set on purpose — each one needs a matching field on the
 subject and a branch in the condition builder, so adding "by subject" or "by
 campus" is a developer's change, not a school's.
+
+## What "mocked" means, and what it does not
+
+A `yes` in the column above means `src/mocks/` holds that table under its own
+name, with that key, and the app reads and writes it through functions rather
+than reaching for an array. It is a working reference for the shape — not
+evidence that any of it exists in a database. Everything in
+[SCHEMA-FIXES.md](./SCHEMA-FIXES.md) is still to do.
+
+Three rows say something other than `yes`, and the difference is the point:
+`tenant_database_mapping` is a column on the tenant row rather than a table,
+`role_permissions` is an array on the role, and `teacher_classes` is a field on
+the profile. Each is a join table collapsed because nothing yet needs the third
+column, and each is a place the mock will have to grow one.
+
+### The demonstration worth having
+
+`user_profiles` is one row per person and not one per login, which is the
+thing easiest to get wrong and hardest to notice. At Kendriya the mock seeds
+**1,129 profiles for 1,127 people** — 441 students, 31 staff, 655 parents, plus
+three office staff, less one person counted twice — against **five logins**.
+That one person counted twice is the whole case: the teacher whose child
+attends is a single profile with a `teachers` row and a `parents` row under one
+id, and she reads her own classes and her own son from it.
+
+`user_id` is null on 1,124 of those rows, which is why SCHEMA-FIXES puts making
+the column nullable first.
+
+## States the mock carries and has never exercised
+
+Columns and paths that exist in the shape and have no seeded data behind them.
+Each is a code path nothing has run:
+
+- `user_tenant_mapping.is_active` — no membership is revoked.
+- `tenants.is_active` — both schools are live.
+- `users.status` — no account is invited or suspended.
+- `profile_roles.expires_at` — nothing expires.
+- A school-created `profile_types` row — all six are built-in at both schools.
+- `is_deleted` — the field is on the profile and nothing sets it.
 
 ## What is mirrored but not implemented
 
