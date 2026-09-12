@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { FamilyHome } from '@/features/family/pages/FamilyHome'
 import { useFamilyScope } from '@/features/family/FamilyScopeContext'
-import { useContexts } from '@/features/tenancy/ContextsProvider'
 import { Settings } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import { TileWrapper, Tile, TileCustomizeModal, MAX_TILE_SELECTIONS } from '@/components/tile'
@@ -13,7 +12,7 @@ import { SortableList, SortableItem } from '@/components/ui/sortable-list'
 import { colors } from '@/theme/colors'
 import { useTileSelection } from '@/hooks/use-tile-selection'
 import {
-  buildDashboardTileRegistry,
+  dashboardTileRegistry,
   visibleTiles,
   DEFAULT_DASHBOARD_TILE_IDS,
   toTileOptions,
@@ -79,23 +78,11 @@ function SchoolDashboard() {
   const firstName = currentUser?.fullName.split(' ')[0]
 
   // Only the tiles this caller may see, and the same list feeds the customize
-  // modal — a menu should not offer a dish that is off. Memoised rather than
-  // recomputed per render, because `useTileSelection` treats a new array as a
-  // new registry.
-  //
-  // Rebuilt when the SCHOOL changes as well as when the permissions do. The
-  // registry counts the student and staff tables, which are per-school and drop
-  // their rows on a switch; built once at module load it kept serving the
-  // enrolment of whichever school was active when the bundle first loaded.
+  // modal — a menu should not offer a dish that is off. Memoised on `can`
+  // rather than recomputed per render, because `useTileSelection` treats a new
+  // array as a new registry.
   const { can, canSeeEveryRow } = usePermissions()
-  const { active } = useContexts()
-  const tenantKey = active?.tenantSchema ?? null
-  const tiles = React.useMemo(
-    () => visibleTiles(buildDashboardTileRegistry(), can),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- tenantKey is the
-    // signal that the underlying tables have changed; it is not read in here.
-    [can, tenantKey],
-  )
+  const tiles = React.useMemo(() => visibleTiles(dashboardTileRegistry, can), [can])
 
   /**
    * Which panels this caller can actually be shown something in.
