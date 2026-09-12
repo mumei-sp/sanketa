@@ -179,6 +179,10 @@ export interface ConsentTallyRow {
  * follow. "No answer yet" is a row rather than an absence, because the whole
  * point of this list is the children nobody has heard about.
  *
+ * Minus the pupil themselves, as above. This is the list a trip organiser
+ * reads, and the one person on it who should not be reading it is the child
+ * whose guardian answered.
+ *
  * @apiRoute GET /api/v1/consent/events/{eventId}/responses
  */
 export async function fetchConsentTally(eventId: string): Promise<ConsentTallyRow[]> {
@@ -211,7 +215,16 @@ export async function fetchConsentTally(eventId: string): Promise<ConsentTallyRo
           },
         ]
       })
-      return visibleToCaller(rows, 'read', 'Student', row => scopeOf(row.studentId))
+      // The subject is excluded here for the same reason as in the two above,
+      // and this is the one that is reachable: `ConsentTally` renders on the
+      // calendar, which is behind `calendar.read` — a permission the Student
+      // role holds. An event addressed to families reaches a pupil, so without
+      // this they open the calendar and read their own line: the answer their
+      // guardian gave, the guardian's name, and when. Whether a parent has said
+      // no to the trip is the parent's to tell them.
+      return visibleToCaller(rows, 'read', 'Student', row => scopeOf(row.studentId)).filter(
+        row => !callerIsTheSubject(row.studentId),
+      )
     },
     async () => {
       const { data } = await apiClient.get<ConsentTallyRow[]>(
