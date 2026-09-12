@@ -49,7 +49,12 @@ export const fontWeights: Record<FontWeight, number> = {
 export const fontSizes: Record<FontSize, string> = {
   xs: '0.857rem', // 12px (12/14)
   sm: '0.929rem', // 13px (13/14) - for tableHeader/bodyMuted
-  base: '0.875rem', // 14px (14/14) - NEW BASE
+  // 14/14 is 1rem. This was the one token left at Tailwind's default
+  // 0.875rem, which assumes a 16px root — against this app's 14px root it
+  // rendered 12.25px, making `base` SMALLER than `sm`'s 13px and all but
+  // identical to `xs`'s 12px. Body copy and captions became one size, and
+  // every page lost the middle of its type ladder.
+  base: '1rem', // 14px (14/14) - NEW BASE
   lg: '1.143rem', // 16px (16/14)
   xl: '1.429rem', // 20px (20/14)
   '2xl': '1.714rem', // 24px (24/14)

@@ -190,7 +190,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
         <Card className="pt-4 pb-4 flex flex-col gap-0 h-full">
           <CardHeader className="flex-shrink-0 pb-2">
             <h3 className="text-section-title">To Do List</h3>
-            <CardAction><Skeleton className="h-6 w-6" /></CardAction>
+            <CardAction data-compact><Skeleton className="h-6 w-6" /></CardAction>
           </CardHeader>
           <CardContent className="px-4 pt-0 pb-0 space-y-3">
             {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
@@ -206,7 +206,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
       <Card className="pt-4 pb-4 flex flex-col gap-0 h-full">
         <CardHeader className="flex-shrink-0 pb-2">
           <h3 className="text-section-title">To Do List</h3>
-          <CardAction>
+          <CardAction data-compact>
             <button
               className="tap-area p-1 rounded-md hover:bg-accent transition-colors"
               onClick={() => setIsAdding(true)}

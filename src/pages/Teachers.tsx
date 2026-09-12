@@ -411,7 +411,7 @@ export default function Teachers() {
 
       {/* Teachers Grid */}
       {isLoading ? (
-        <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
+        <TileWrapper columns={{ default: 1, md: 2, lg: 3, xl: 4 }} gap={12}>
           {Array.from({ length: pageSize }).map((_, i) => (
             <TeacherCardSkeleton key={i} />
           ))}
@@ -424,7 +424,11 @@ export default function Teachers() {
         </div>
       ) : (
         <>
-          <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
+          {/* Three across until there is room for four. At `lg` on a 1118px window
+              the sidebar leaves ~894px, so four cards are ~214px each — and after
+              a 48px avatar and the padding that is ~122px of name, which truncates
+              "Rajalakshmi Natarajan" and every subject longer than "Hindi". */}
+          <TileWrapper columns={{ default: 1, md: 2, lg: 3, xl: 4 }} gap={12}>
             {paginatedTeachers.map(teacher => (
               <TeacherCard
                 key={teacher.id}

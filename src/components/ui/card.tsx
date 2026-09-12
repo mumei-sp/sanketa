@@ -20,7 +20,19 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-header"
       className={cn(
-        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto] [.border-b]:pb-6',
+        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 [.border-b]:pb-6',
+        // A header with controls in it puts them BESIDE the title only when
+        // there is room, and underneath it when there is not.
+        //
+        // The title column was `minmax(0,1fr)` against an `auto` action, so the
+        // controls held their width and the title took whatever was left —
+        // which on a 281px card carrying two 110px selects was *ten pixels*,
+        // and "Workload Distribution" rendered as a broken stack of one letter
+        // per line. Every two-word heading beside a select wrapped for the same
+        // reason. Stacking below 24rem of container costs one row and is the
+        // only arrangement that always fits.
+        'has-data-[slot=card-action]:grid-cols-1 has-data-[slot=card-action]:@[24rem]/card-header:grid-cols-[minmax(0,1fr)_auto]',
+        'has-data-[compact]:grid-cols-[minmax(0,1fr)_auto]',
         className,
       )}
       {...props}
@@ -48,11 +60,26 @@ function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
   )
 }
 
+/**
+ * Controls that belong to a card's header.
+ *
+ * Sits beside the title when the header has room and underneath it when it has
+ * not — see `CardHeader`. An action that is only an icon button always has
+ * room, so those opt out with `data-compact`, which pins it beside the title at
+ * every width rather than spending a whole row on a 24px target.
+ */
 function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-action"
-      className={cn('col-start-2 row-span-2 row-start-1 self-start justify-self-end', className)}
+      className={cn(
+        // Column 1 row 2 when the header has stacked, column 2 row 1 when it
+        // has not — matching the grid `CardHeader` switches to at 24rem.
+        'col-start-1 row-start-2 self-start justify-self-start',
+        '@[24rem]/card-header:col-start-2 @[24rem]/card-header:row-span-2 @[24rem]/card-header:row-start-1 @[24rem]/card-header:justify-self-end',
+        'data-[compact]:col-start-2 data-[compact]:row-span-2 data-[compact]:row-start-1 data-[compact]:justify-self-end',
+        className,
+      )}
       {...props}
     />
   )

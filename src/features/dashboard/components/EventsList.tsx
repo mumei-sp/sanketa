@@ -29,7 +29,16 @@ function EventsContent({ events }: { events: CalendarEvent[] }) {
               {event.startTime} - {event.endTime}
             </span>
           </div>
-          <p className="text-body font-medium truncate" style={{ color: 'var(--heading)' }}>
+          {/* Two lines rather than an ellipsis. This rail is three columns wide
+              on a desktop dashboard, and "English Literature Exam" is exactly the
+              length that loses its last word — which is the word that says what
+              the event is. A title is the row's whole point; the time and the
+              audience below it can be the things that clip. */}
+          <p
+            className="text-body font-medium leading-snug line-clamp-2"
+            style={{ color: 'var(--heading)' }}
+            title={event.title}
+          >
             {event.title}
           </p>
           <div className="flex items-center gap-1 mt-0.5">
