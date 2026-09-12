@@ -3,7 +3,7 @@ import { FamilyHome } from '@/features/family/pages/FamilyHome'
 import { useFamilyScope } from '@/features/family/FamilyScopeContext'
 import { Settings } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
-import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
+import { TileWrapper, Tile, TileCustomizeModal, MAX_TILE_SELECTIONS } from '@/components/tile'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { getTimeOfDayGreeting, formatFriendlyDate } from '@/utils/date'
@@ -47,6 +47,30 @@ import type {
   TodoItem,
 } from '@/features/dashboard/types'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
+
+/**
+ * Module scope, not the render body.
+ *
+ * A fresh array every render is a new identity every render, which is exactly
+ * the kind of value a `useMemo` below cannot list in its dependencies without
+ * defeating itself — so it was silently omitted instead. Constant data that
+ * never depends on props or state belongs out here, where the omission is
+ * correct rather than a lint rule being dodged.
+ */
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
 
 export default function Dashboard() {
   // Families get their own home page; see the note in FamilyHome. The school
@@ -124,7 +148,7 @@ function SchoolDashboard() {
    */
   const defaults = React.useMemo(() => {
     const kept = DEFAULT_DASHBOARD_TILE_IDS.filter(id => tiles.some(tile => tile.id === id))
-    return kept.length > 0 ? kept : tiles.slice(0, 4).map(tile => tile.id)
+    return kept.length > 0 ? kept : tiles.slice(0, MAX_TILE_SELECTIONS).map(tile => tile.id)
   }, [tiles])
 
   // Configurable tile selection (persisted to localStorage)
@@ -137,7 +161,7 @@ function SchoolDashboard() {
   } = useTileSelection(tiles, {
     storageKey: 'sanketa:dashboard-tiles',
     defaults,
-    maxSelections: 4,
+    maxSelections: MAX_TILE_SELECTIONS,
   })
   const [customizeOpen, setCustomizeOpen] = React.useState(false)
 
@@ -189,21 +213,6 @@ function SchoolDashboard() {
     loadData()
   }, [panels])
 
-  const MONTH_NAMES = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ]
-
   const filteredEvents = React.useMemo(() => {
     const monthName = MONTH_NAMES[calendarDate.getMonth()]
     return events.filter(e => e.date.startsWith(monthName))
@@ -248,11 +257,26 @@ function SchoolDashboard() {
         Mobile: single column, stat cards 2×2
       */}
       <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
+        {/*
+          From `lg` this is two columns, not one grid: the nine-column main area
+          and the three-column rail each own their own rows.
+
+          It was a single twelve-column grid with the rail spanning three rows,
+          which meant the rail's CONTENT set the main area's row heights — add
+          four events and the bottom row of charts stretched to a height nothing
+          in it filled. A panel must never be able to resize a panel beside it.
+
+          Below `lg` both wrappers are `display: contents`, so they dissolve and
+          every tile is a direct child of this grid exactly as before — which is
+          what keeps the phone and tablet arrangements, and the `order-*` classes
+          that express them, working untouched.
+        */}
+        <div className="contents lg:col-span-9 lg:grid lg:grid-cols-9 lg:gap-3 lg:self-start">
         {/* Stat Cards — Desktop: 9 cols nested grid | Tablet: full width */}
         <Tile
           id="stats-container"
           width={{ default: 1, md: 12, lg: 9 }}
-          className="md:order-1 lg:order-1"
+          className="order-1 md:order-1 lg:order-1"
         >
           <div className="flex items-center gap-2 mb-1">
             <div className="flex-1" />
@@ -316,17 +340,89 @@ function SchoolDashboard() {
           selectedIds={selectedIds}
           onToggle={toggleTile}
           onReset={resetTiles}
-          maxSelections={4}
+          maxSelections={MAX_TILE_SELECTIONS}
           title="Customize Dashboard Tiles"
         />
 
+        {/* Student Performance — Desktop: row2 col1-4 | Tablet: row2 col1-7 */}
+        {panels.performance && (
+  <Tile
+            id="perf-grid"
+            width={{ default: 1, md: 7, lg: 4 }}
+            className="order-3 md:order-2 lg:order-3"
+          >
+            <StudentPerformanceChart datasets={performance} isLoading={isLoading} />
+          </Tile>
+        )}
+
+        {/* Earnings — Desktop: row2 col5-9 | Tablet: row3 col1-6 */}
+        {panels.earnings && (
+  <Tile
+            id="earnings-grid"
+            width={{ default: 1, md: 6, lg: 5 }}
+            className="order-4 md:order-4 lg:order-4"
+          >
+            <EarningsChart datasets={earnings} isLoading={isLoading} />
+          </Tile>
+        )}
+
+        {/* Students by Gender — Desktop: row3 col1-3 | Tablet: row2 col8-12 */}
+        {panels.gender && (
+  <Tile
+            id="gender-grid"
+            width={{ default: 1, md: 5, lg: 3 }}
+            className="order-5 md:order-3 lg:order-5"
+          >
+            <StudentsByGenderChart datasets={gender} isLoading={isLoading} />
+          </Tile>
+        )}
+
+        {/* Student Attendance — Desktop: row3 col4-6 | Tablet: row3 col7-12 */}
+        {panels.attendance && (
+  <Tile
+            id="attendance-grid"
+            width={{ default: 1, md: 6, lg: 3 }}
+            className="order-6 md:order-5 lg:order-6"
+          >
+            <StudentAttendanceChart datasets={attendance} isLoading={isLoading} />
+          </Tile>
+        )}
+
+        {/* Events — tablet only, beside the calendar: row4 col6-12 */}
+        {panels.calendar && (
+  <Tile
+            id="events-tablet-grid"
+            width={{ default: 1, md: 7 }}
+            // `md:self-start` so it keeps its own height instead of being
+            // stretched to the calendar card beside it — measured at 253px of
+            // dead card. Per-tile rather than `align="start"` on the wrapper:
+            // wrapper-wide, the same change left the performance and gender
+            // charts 35px out of step for no gain.
+            className="order-7 hidden md:order-7 md:block md:self-start lg:hidden"
+          >
+            <EventsList events={filteredEvents} isLoading={isLoading} />
+          </Tile>
+        )}
+
+        {/* To Do List — Desktop: row3 col7-9 | Tablet: row5, full width */}
+        <Tile
+          id="todo-grid"
+          width={{ default: 1, md: 12, lg: 3 }}
+          className="order-8 md:order-8 lg:order-7"
+        >
+          <DashboardTodoList items={todos} isLoading={isLoading} />
+        </Tile>
+        </div>
+
+        {/* The rail. `lg:self-start` so a long events list grows downward rather
+            than stretching the row it shares with the main area. */}
+        <div className="contents lg:col-span-3 lg:block lg:self-start">
         {/* Calendar + Events — Desktop: row1-3 col10-12 | Tablet: row4 col1-5 */}
         {panels.calendar && (
   <Tile
             id="calendar-events-grid"
             width={{ default: 1, md: 5, lg: 3 }}
-            height={{ default: 1, lg: 3 }}
-            className="md:order-6 lg:order-2"
+            className="order-2 md:order-6 lg:order-2"
           >
             <Card
               className="pt-4 pb-2 flex flex-col gap-3 h-full"
@@ -350,70 +446,7 @@ function SchoolDashboard() {
             </Card>
           </Tile>
         )}
-
-        {/* Student Performance — Desktop: row2 col1-4 | Tablet: row2 col1-7 */}
-        {panels.performance && (
-  <Tile
-            id="perf-grid"
-            width={{ default: 1, md: 7, lg: 4 }}
-            className="md:order-2 lg:order-3"
-          >
-            <StudentPerformanceChart datasets={performance} isLoading={isLoading} />
-          </Tile>
-        )}
-
-        {/* Earnings — Desktop: row2 col5-9 | Tablet: row3 col1-6 */}
-        {panels.earnings && (
-  <Tile
-            id="earnings-grid"
-            width={{ default: 1, md: 6, lg: 5 }}
-            className="md:order-4 lg:order-4"
-          >
-            <EarningsChart datasets={earnings} isLoading={isLoading} />
-          </Tile>
-        )}
-
-        {/* Students by Gender — Desktop: row3 col1-3 | Tablet: row2 col8-12 */}
-        {panels.gender && (
-  <Tile
-            id="gender-grid"
-            width={{ default: 1, md: 5, lg: 3 }}
-            className="md:order-3 lg:order-5"
-          >
-            <StudentsByGenderChart datasets={gender} isLoading={isLoading} />
-          </Tile>
-        )}
-
-        {/* Student Attendance — Desktop: row3 col4-6 | Tablet: row3 col7-12 */}
-        {panels.attendance && (
-  <Tile
-            id="attendance-grid"
-            width={{ default: 1, md: 6, lg: 3 }}
-            className="md:order-5 lg:order-6"
-          >
-            <StudentAttendanceChart datasets={attendance} isLoading={isLoading} />
-          </Tile>
-        )}
-
-        {/* Events — tablet only, beside the calendar: row4 col6-12 */}
-        {panels.calendar && (
-  <Tile
-            id="events-tablet-grid"
-            width={{ default: 1, md: 7 }}
-            className="hidden md:order-7 md:block lg:hidden"
-          >
-            <EventsList events={filteredEvents} isLoading={isLoading} />
-          </Tile>
-        )}
-
-        {/* To Do List — Desktop: row3 col7-9 | Tablet: row5, full width */}
-        <Tile
-          id="todo-grid"
-          width={{ default: 1, md: 12, lg: 3 }}
-          className="md:order-8 lg:order-7"
-        >
-          <DashboardTodoList items={todos} isLoading={isLoading} />
-        </Tile>
+        </div>
       </TileWrapper>
 
       {/* ───── Row 3: Notice Board + Recent Activity ───── */}

@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { colors } from '@/theme/colors'
 import { fontWeights } from '@/config/typography'
-import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
+import { TileWrapper, Tile, TileCustomizeModal, MAX_TILE_SELECTIONS } from '@/components/tile'
 import { CountUp } from '@/components/shared/CountUp'
 import { useTileSelection } from '@/hooks/use-tile-selection'
 import type { TeacherStatistics } from '@/features/teachers/types'
@@ -31,7 +31,10 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
     <Tile
       id={id}
       background="card"
-      borderRadius="lg"
+      // `xl` is 18px — the card radius. These are the same object as the
+      // dashboard's KPI tiles, which get 18px from `Card`; at `lg` they were
+      // 14px, so the two KPI rows disagreed about their own corner.
+      borderRadius="xl"
       shadowed
       padding={12}
       className="card-hover group flex items-center justify-between"
@@ -47,11 +50,13 @@ function StatCard({ id, label, value, icon: Icon, iconBg, iconColor }: StatCardP
           <CountUp value={value} />
         </span>
       </div>
+      {/* Flat, for the reason given in `DashboardStatCard` — the gradient and
+          glow this used to carry are not in the design language, and the mix
+          toward a literal `white` broke in dark mode. */}
       <div
-        className="flex items-center justify-center rounded-[14px] shrink-0"
+        className="flex items-center justify-center rounded-lg shrink-0"
         style={{
-          background: `linear-gradient(135deg, ${iconBg}, color-mix(in srgb, ${iconBg} 45%, white))`,
-          boxShadow: `0 8px 18px -8px ${iconBg}`,
+          backgroundColor: iconBg,
           width: 46,
           height: 46,
           minWidth: 46,
@@ -78,7 +83,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
   } = useTileSelection(teacherTileRegistry, {
     storageKey: 'sanketa:teacher-tiles',
     defaults: DEFAULT_TEACHER_TILE_IDS,
-    maxSelections: 4,
+    maxSelections: MAX_TILE_SELECTIONS,
   })
 
   const [customizeOpen, setCustomizeOpen] = React.useState(false)
@@ -122,7 +127,7 @@ export function TeachersDashboard({ statistics }: TeachersDashboardProps) {
         selectedIds={selectedIds}
         onToggle={toggle}
         onReset={reset}
-        maxSelections={4}
+        maxSelections={MAX_TILE_SELECTIONS}
         title="Customize Teacher Tiles"
       />
     </>

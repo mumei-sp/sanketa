@@ -18,8 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Tile } from '@/components/tile'
+import { PanelTile, PANEL_SELECT_TRIGGER } from '@/components/tile'
 import { colors } from '@/theme/colors'
 import { useBrandColors } from '@/hooks/use-brand-colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
@@ -51,7 +52,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--heading)' }}>{label}</p>
+        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--heading)' }}>
+          {label}
+        </p>
         {payload.map((entry: any) => (
           <div
             key={entry.name}
@@ -79,10 +82,7 @@ const CustomLegend = ({ payload }: any) => {
     <div className="flex items-center gap-4 ml-8">
       {payload.map((entry: any) => (
         <div key={entry.value} className="flex items-center gap-1.5">
-          <div
-            className="w-4 h-0.5 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
+          <div className="w-4 h-0.5 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-caption text-muted-foreground">{entry.value}</span>
         </div>
       ))}
@@ -118,46 +118,56 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
   // earnings. Say so once rather than pretending to still be fetching.
   if (!isLoading && !activeDataset) {
     return (
-      <Tile id="earnings-empty" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+      <PanelTile id="earnings-empty">
         <Card className="w-full h-full pt-4 pb-0 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Earnings</h3>
           </CardHeader>
           <CardContent className="px-4 pt-2 pb-4 flex-1 flex items-center justify-center">
-            <EmptyState title="Nothing to show" description="You do not have access to this." className="py-8" />
+            <EmptyState
+              title="Nothing to show"
+              description="You do not have access to this."
+              className="py-8"
+            />
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   if (isLoading || !activeDataset) {
     return (
-      <Tile id="earnings-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+      <PanelTile id="earnings-tile">
         <Card className="w-full h-full pt-4 pb-0 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Earnings</h3>
-            <CardAction><Skeleton className="h-9 w-[120px]" /></CardAction>
+            <CardAction data-compact>
+              <Skeleton className="h-8 w-[120px]" />
+            </CardAction>
           </CardHeader>
-          <CardContent className="px-4 pt-2 pb-4 flex-1"><Skeleton className="h-[220px] w-full" /></CardContent>
+          <CardContent className="px-4 pt-2 pb-4 flex-1">
+            <Skeleton className="h-[220px] w-full" />
+          </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile id="earnings-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+    <PanelTile id="earnings-tile">
       <Card className="w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Earnings</h3>
-          <CardAction>
+          <CardAction data-compact>
             <Select value={selected} onValueChange={setSelected}>
-              <SelectTrigger className="w-[120px] bg-accent">
+              <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[120px]')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {datasets.map(ds => (
-                  <SelectItem key={ds.value} value={ds.value}>{ds.label}</SelectItem>
+                  <SelectItem key={ds.value} value={ds.value}>
+                    {ds.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -165,7 +175,10 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
         </CardHeader>
         <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0">
           <div className={`h-full ${needsScroll ? 'overflow-x-auto' : ''}`}>
-            <div className="chart-scale h-full" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
+            <div
+              className="chart-scale h-full"
+              style={needsScroll ? { minWidth: chartMinWidth } : undefined}
+            >
               <ResponsiveContainer width="100%" height="100%" minHeight={180}>
                 <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
@@ -178,8 +191,19 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
                       <stop offset="100%" stopColor={brand.primary} stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={colors.border.default} opacity={0.3} vertical={false} />
-                  <XAxis dataKey="month" stroke={colors.text.muted} fontSize={12} tickLine={false} axisLine={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={colors.border.default}
+                    opacity={0.3}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    stroke={colors.text.muted}
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
                   <YAxis
                     width={44}
                     stroke={colors.text.muted}
@@ -191,7 +215,12 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
                     tickCount={5}
                   />
                   <Tooltip content={<CustomTooltip />} cursor={false} />
-                  <Legend content={<CustomLegend />} verticalAlign="top" align="left" wrapperStyle={{ paddingBottom: 8 }} />
+                  <Legend
+                    content={<CustomLegend />}
+                    verticalAlign="top"
+                    align="left"
+                    wrapperStyle={{ paddingBottom: 8 }}
+                  />
                   <Area
                     type="monotone"
                     dataKey="earnings"
@@ -218,6 +247,6 @@ export function EarningsChart({ datasets, isLoading = false }: EarningsChartProp
           </div>
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

@@ -261,9 +261,20 @@ export function StudentsPage() {
           width={{ default: 12, lg: 4 }}
           padding={0}
         >
+          {/*
+            The chart keeps its own height and the feed takes what is left.
+            Worth saying explicitly now that both panels fill what they are
+            given: left to themselves two `h-full` children simply halve the
+            column between them, which cut the activity feed from six rows to
+            three to make room for bars that did not need it.
+          */}
           <div className="flex flex-col gap-4 h-full">
-            <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
-            <RecentActivity />
+            <div className="shrink-0">
+              <AttendanceOverviewChart data={attendanceData} isLoading={isLoadingCharts} />
+            </div>
+            <div className="flex-1 min-h-0">
+              <RecentActivity />
+            </div>
           </div>
         </Tile>
 

@@ -17,6 +17,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PanelTile, PANEL_SELECT_TRIGGER } from '@/components/tile'
+import { cn } from '@/lib/utils'
 import { text, border, withOpacity } from '@/theme/colors'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { AcademicPerformanceEntry } from '@/features/students/types'
@@ -157,24 +160,50 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 300
 
+  // This panel had no tile wrapper at all, so its card was sized by its own
+  // content while the grid item around it was sized by the row — it lined up
+  // only because it happened to be the tallest thing in that row. `PanelTile`
+  // makes it fill, the way every other panel now does.
+  if (!isLoading && data.length === 0) {
+    return (
+      <PanelTile id="academic-performance-tile">
+        <Card className="pt-4 pb-2 gap-2 h-full flex flex-col">
+          <CardHeader>
+            <h3 className="text-section-title">Academic Performance</h3>
+          </CardHeader>
+          <CardContent className="pt-2 pb-4 flex-1 flex items-center justify-center">
+            <EmptyState
+              title="No results yet"
+              description="Marks appear here once grades are entered."
+              className="py-8"
+            />
+          </CardContent>
+        </Card>
+      </PanelTile>
+    )
+  }
+
   if (isLoading) {
     return (
-      <Card className="pt-4 pb-2 gap-2">
-        <CardHeader>
-          <h3 className="text-section-title">Academic Performance</h3>
-          <CardAction>
-            <Skeleton className="h-9 w-[140px]" />
-          </CardAction>
-        </CardHeader>
-        <CardContent className="pt-2 pb-4">
-          <Skeleton className="h-[170px] w-full" />
-        </CardContent>
-      </Card>
+      <PanelTile id="academic-performance-tile">
+        <Card className="pt-4 pb-2 gap-2 h-full flex flex-col">
+          <CardHeader>
+            <h3 className="text-section-title">Academic Performance</h3>
+            <CardAction>
+              <Skeleton className="h-8 w-[140px]" />
+            </CardAction>
+          </CardHeader>
+          <CardContent className="pt-2 pb-4 flex-1">
+            <Skeleton className="h-[170px] w-full" />
+          </CardContent>
+        </Card>
+      </PanelTile>
     )
   }
 
   return (
-    <Card className="group/chart pt-4 pb-0 gap-2">
+    <PanelTile id="academic-performance-tile">
+      <Card className="group/chart pt-4 pb-0 gap-2 h-full flex flex-col">
       <CardHeader>
         <div className="flex flex-col gap-2">
           <h3 className="text-section-title">Academic Performance</h3>
@@ -199,7 +228,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
               />
             </div>
             <Select value={period} onValueChange={(v: string) => setPeriod(v as Period)}>
-              <SelectTrigger className="w-[140px] bg-accent">
+              <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[140px]')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -252,6 +281,7 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
           </div>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </PanelTile>
   )
 }

@@ -9,7 +9,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tile } from '@/components/tile'
+import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PanelTile, PANEL_SELECT_TRIGGER } from '@/components/tile'
 import { useBrandColors } from '@/hooks/use-brand-colors'
 import { ClassPicker } from '@/components/shared/ClassPicker'
 import type { GenderDataset } from '../types'
@@ -28,9 +30,7 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
   // full admin-configured list — otherwise the grade dropdown shows every
   // grade 1–10, which is noisy for what's meant to be a single-grade donut.
   const filteredDatasets = React.useMemo(() => {
-    const filtered = datasets.filter(ds =>
-      pickedGrades.some(g => ds.value === `grade-${g}`),
-    )
+    const filtered = datasets.filter(ds => pickedGrades.some(g => ds.value === `grade-${g}`))
     if (filtered.length > 0) return filtered
     return datasets.slice(0, 3)
   }, [datasets, pickedGrades])
@@ -53,27 +53,52 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
   )
   const total = React.useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])
 
-  if (isLoading || !activeDataset) {
+  // Loading and empty are different answers, and rendering the skeleton for
+  // both meant a dataset that arrived empty span forever. Say so once instead.
+  if (!isLoading && !activeDataset) {
     return (
-      <Tile id="gender-chart-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+      <PanelTile id="gender-chart-tile-empty">
         <Card className="w-full h-full pt-4 pb-4 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Students by Gender</h3>
-            <CardAction><Skeleton className="h-9 w-[100px]" /></CardAction>
           </CardHeader>
-          <CardContent className="px-4 pt-2 pb-4 flex-1"><Skeleton className="h-[180px] w-full" /></CardContent>
+          <CardContent className="px-4 pt-2 pb-4 flex-1 flex items-center justify-center">
+            <EmptyState
+              title="No students yet"
+              description="The split appears once students are enrolled."
+              className="py-8"
+            />
+          </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
+    )
+  }
+
+  if (isLoading || !activeDataset) {
+    return (
+      <PanelTile id="gender-chart-tile">
+        <Card className="w-full h-full pt-4 pb-4 flex flex-col gap-0">
+          <CardHeader className="flex-shrink-0 pb-0">
+            <h3 className="text-section-title">Students by Gender</h3>
+            <CardAction data-compact>
+              <Skeleton className="h-8 w-[86px]" />
+            </CardAction>
+          </CardHeader>
+          <CardContent className="px-4 pt-2 pb-4 flex-1">
+            <Skeleton className="h-[180px] w-full" />
+          </CardContent>
+        </Card>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile id="gender-chart-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+    <PanelTile id="gender-chart-tile">
       <Card className="group/chart w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Students by Gender</h3>
-          <CardAction>
-            <div className="flex items-center gap-2">
+          <CardAction data-compact>
+            <div className="flex items-center gap-1.5">
               <div className="opacity-100 lg:opacity-0 lg:group-hover/chart:opacity-100 transition-opacity duration-200">
                 <ClassPicker
                   storageKey="dash-gender"
@@ -83,12 +108,14 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
                 />
               </div>
               <Select value={selected} onValueChange={setSelected}>
-                <SelectTrigger className="w-[100px] bg-accent">
+                <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[86px]')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredDatasets.map(ds => (
-                    <SelectItem key={ds.value} value={ds.value}>{ds.label}</SelectItem>
+                    <SelectItem key={ds.value} value={ds.value}>
+                      {ds.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -96,16 +123,25 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
           </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0">
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative w-[160px] h-[160px]">
-              <ResponsiveContainer width="100%" height="100%">
+          {/*
+            The donut takes the height it is given rather than a fixed 160px
+            square. Locked to 160 it left 62px of void under the legend
+            whenever the row was taller than this panel needed — which is most
+            of the time, since the row is sized by whichever panel in it is
+            tallest. Radii are percentages for the same reason: recharts reads
+            them against min(width, height), so the ring grows with the card
+            instead of sitting in the middle of it.
+          */}
+          <div className="flex h-full flex-col items-center justify-center gap-3">
+            <div className="relative w-full min-h-0 flex-1">
+              <ResponsiveContainer width="100%" height="100%" minHeight={130}>
                 <PieChart>
                   <Pie
                     data={data as any[]}
                     cx="50%"
                     cy="50%"
-                    innerRadius={52}
-                    outerRadius={75}
+                    innerRadius="58%"
+                    outerRadius="84%"
                     dataKey="value"
                     strokeWidth={2}
                     stroke="#fff"
@@ -118,10 +154,7 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span
-                  className="text-2xl font-bold"
-                  style={{ color: 'var(--heading)' }}
-                >
+                <span className="text-2xl font-bold" style={{ color: 'var(--heading)' }}>
                   {total.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -142,6 +175,6 @@ export function StudentsByGenderChart({ datasets, isLoading = false }: StudentsB
           </div>
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

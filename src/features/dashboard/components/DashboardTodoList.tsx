@@ -1,9 +1,10 @@
 import * as React from 'react'
 import { Calendar, Ellipsis, Plus, Pencil, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
-import { Tile } from '@/components/tile'
+import { PanelTile } from '@/components/tile'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
@@ -27,7 +28,11 @@ import type { TodoItem } from '../types'
 
 function formatTodoDate(isoDate: string): string {
   if (!isoDate) {
-    return new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    return new Date().toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
   }
   const d = new Date(isoDate + 'T00:00:00')
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -121,11 +126,13 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
     setAddText('')
     setAddDate('')
 
-    createTodoItem({ text, date }).then(created => {
-      setTodos(prev => prev.map(t => (t.id === tempId ? created : t)))
-    }).catch(() => {
-      setTodos(prev => prev.filter(t => t.id !== tempId))
-    })
+    createTodoItem({ text, date })
+      .then(created => {
+        setTodos(prev => prev.map(t => (t.id === tempId ? created : t)))
+      })
+      .catch(() => {
+        setTodos(prev => prev.filter(t => t.id !== tempId))
+      })
   }
 
   const handleCancelAdd = () => {
@@ -186,183 +193,217 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
 
   if (isLoading) {
     return (
-      <Tile id="todo-list-tile" layoutMode="block" background="transparent" padding={0} shadowed={false} className="h-full">
+      <PanelTile id="todo-list-tile">
         <Card className="pt-4 pb-4 flex flex-col gap-0 h-full">
           <CardHeader className="flex-shrink-0 pb-2">
             <h3 className="text-section-title">To Do List</h3>
-            <CardAction data-compact><Skeleton className="h-6 w-6" /></CardAction>
+            <CardAction data-compact>
+              <Skeleton className="h-6 w-6" />
+            </CardAction>
           </CardHeader>
           <CardContent className="px-4 pt-0 pb-0 space-y-3">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile id="todo-list-tile" layoutMode="block" background="transparent" padding={0} shadowed={false} className="h-full">
-      <div ref={cardRef} className="h-full" style={lockedHeight ? { maxHeight: lockedHeight } : undefined}>
-      <Card className="pt-4 pb-4 flex flex-col gap-0 h-full">
-        <CardHeader className="flex-shrink-0 pb-2">
-          <h3 className="text-section-title">To Do List</h3>
-          <CardAction data-compact>
-            <button
-              className="tap-area p-1 rounded-md hover:bg-accent transition-colors"
-              onClick={() => setIsAdding(true)}
-            >
-              <Plus className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0 overflow-y-auto">
-          <div className="divide-y divide-border">
-            {todos.map(todo =>
-              editingId === todo.id ? (
-                /* ── Edit Mode Row ── */
-                <div key={todo.id} className="flex items-center gap-3 py-3 first:pt-0">
+    <PanelTile id="todo-list-tile">
+      <div
+        ref={cardRef}
+        className="h-full"
+        style={lockedHeight ? { maxHeight: lockedHeight } : undefined}
+      >
+        <Card className="pt-4 pb-4 flex flex-col gap-0 h-full">
+          <CardHeader className="flex-shrink-0 pb-2">
+            <h3 className="text-section-title">To Do List</h3>
+            <CardAction data-compact>
+              <button
+                className="tap-area p-1 rounded-md hover:bg-accent transition-colors"
+                onClick={() => setIsAdding(true)}
+              >
+                <Plus className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </CardAction>
+          </CardHeader>
+          {/*
+            A smaller list budget than the 320px default, because this panel
+            shares a row with two charts that need ~255-280px. A grid row is as
+            tall as the tallest thing in it, so at the default the FOURTH to-do
+            was setting the height of Students by Gender and Student Attendance
+            beside it — the charts were stretched 54px and 80px past anything
+            they had to draw, which is what read as three airy, half-empty
+            cards. Capped here the row settles at what the charts need and the
+            list scrolls, which is the whole point of `.tile-list`.
+          */}
+          <CardContent
+            className="px-4 pt-0 pb-0 flex-1 min-h-0 tile-list"
+            style={{ '--tile-list-max-h': '215px' } as React.CSSProperties}
+          >
+            {/* Not while a new row is open — the add form IS the answer then. */}
+            {todos.length === 0 && !isAdding && (
+              <EmptyState
+                title="Nothing to do"
+                description="Add a task with the + above."
+                className="py-8"
+              />
+            )}
+            <div className="divide-y divide-border">
+              {todos.map(todo =>
+                editingId === todo.id ? (
+                  /* ── Edit Mode Row ── */
+                  <div key={todo.id} className="flex items-center gap-3 py-3 first:pt-0">
+                    <div className="w-4 shrink-0" />
+                    <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                      <Input
+                        ref={editInputRef}
+                        value={editText}
+                        onChange={e => setEditText(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleSaveEdit()
+                          if (e.key === 'Escape') handleCancelEdit()
+                        }}
+                        className="h-8 text-sm flex-1"
+                      />
+                      <input
+                        ref={editDateRef}
+                        type="date"
+                        value={editDate}
+                        onChange={e => {
+                          setEditDate(e.target.value)
+                          editInputRef.current?.focus()
+                        }}
+                        className="sr-only"
+                        tabIndex={-1}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => editDateRef.current?.showPicker()}
+                        className={cn(
+                          'p-1.5 rounded-md hover:bg-accent transition-colors shrink-0',
+                          editDate ? 'text-foreground' : 'text-muted-foreground',
+                        )}
+                        title={editDate ? formatTodoDate(editDate) : 'Pick a date'}
+                      >
+                        <Calendar className="w-4 h-4" style={{ color: 'var(--heading)' }} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Normal Mode Row ── */
+                  <div key={todo.id} className="flex items-start gap-3 group py-3 first:pt-0">
+                    <Checkbox
+                      checked={todo.completed}
+                      onCheckedChange={() => toggleTodo(todo.id)}
+                      className="mt-0.5 cursor-pointer"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={cn(
+                          'text-body font-medium leading-tight',
+                          todo.completed && 'line-through text-muted-foreground',
+                        )}
+                        style={!todo.completed ? { color: 'var(--heading)' } : undefined}
+                      >
+                        {todo.text}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Calendar className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
+                        <span className="text-caption" style={{ color: 'var(--heading)' }}>
+                          {todo.date}
+                        </span>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="p-1 rounded-md opacity-0 touch:opacity-100 group-hover:opacity-100 focus:opacity-100 hover:bg-accent transition-all shrink-0"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <Ellipsis className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleStartEdit(todo)}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => setDeleteTarget(todo)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ),
+              )}
+
+              {/* ── Add Row ── */}
+              {isAdding && (
+                <div ref={addRowRef} className="flex items-center gap-3 py-3">
                   <div className="w-4 shrink-0" />
                   <div className="flex-1 min-w-0 flex items-center gap-1.5">
                     <Input
-                      ref={editInputRef}
-                      value={editText}
-                      onChange={e => setEditText(e.target.value)}
+                      ref={addInputRef}
+                      placeholder="What needs to be done?"
+                      value={addText}
+                      onChange={e => setAddText(e.target.value)}
                       onKeyDown={e => {
-                        if (e.key === 'Enter') handleSaveEdit()
-                        if (e.key === 'Escape') handleCancelEdit()
+                        if (e.key === 'Enter') handleAdd()
+                        if (e.key === 'Escape') handleCancelAdd()
                       }}
                       className="h-8 text-sm flex-1"
                     />
                     <input
-                      ref={editDateRef}
+                      ref={addDateRef}
                       type="date"
-                      value={editDate}
+                      value={addDate}
                       onChange={e => {
-                        setEditDate(e.target.value)
-                        editInputRef.current?.focus()
+                        setAddDate(e.target.value)
+                        addInputRef.current?.focus()
                       }}
                       className="sr-only"
                       tabIndex={-1}
                     />
                     <button
                       type="button"
-                      onClick={() => editDateRef.current?.showPicker()}
+                      onClick={() => addDateRef.current?.showPicker()}
                       className={cn(
                         'p-1.5 rounded-md hover:bg-accent transition-colors shrink-0',
-                        editDate ? 'text-foreground' : 'text-muted-foreground',
+                        addDate ? 'text-foreground' : 'text-muted-foreground',
                       )}
-                      title={editDate ? formatTodoDate(editDate) : 'Pick a date'}
+                      title={addDate ? formatTodoDate(addDate) : 'Pick a date'}
                     >
                       <Calendar className="w-4 h-4" style={{ color: 'var(--heading)' }} />
                     </button>
                   </div>
                 </div>
-              ) : (
-                /* ── Normal Mode Row ── */
-                <div
-                  key={todo.id}
-                  className="flex items-start gap-3 group py-3 first:pt-0"
-                >
-                  <Checkbox
-                    checked={todo.completed}
-                    onCheckedChange={() => toggleTodo(todo.id)}
-                    className="mt-0.5 cursor-pointer"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={cn(
-                        'text-body font-medium leading-tight',
-                        todo.completed && 'line-through text-muted-foreground',
-                      )}
-                      style={!todo.completed ? { color: 'var(--heading)' } : undefined}
-                    >
-                      {todo.text}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Calendar className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
-                      <span className="text-caption" style={{ color: 'var(--heading)' }}>{todo.date}</span>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="p-1 rounded-md opacity-0 touch:opacity-100 group-hover:opacity-100 focus:opacity-100 hover:bg-accent transition-all shrink-0"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <Ellipsis className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleStartEdit(todo)}>
-                        <Pencil className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => setDeleteTarget(todo)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ),
-            )}
-
-            {/* ── Add Row ── */}
-            {isAdding && (
-              <div ref={addRowRef} className="flex items-center gap-3 py-3">
-                <div className="w-4 shrink-0" />
-                <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                  <Input
-                    ref={addInputRef}
-                    placeholder="What needs to be done?"
-                    value={addText}
-                    onChange={e => setAddText(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleAdd()
-                      if (e.key === 'Escape') handleCancelAdd()
-                    }}
-                    className="h-8 text-sm flex-1"
-                  />
-                  <input
-                    ref={addDateRef}
-                    type="date"
-                    value={addDate}
-                    onChange={e => {
-                      setAddDate(e.target.value)
-                      addInputRef.current?.focus()
-                    }}
-                    className="sr-only"
-                    tabIndex={-1}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => addDateRef.current?.showPicker()}
-                    className={cn(
-                      'p-1.5 rounded-md hover:bg-accent transition-colors shrink-0',
-                      addDate ? 'text-foreground' : 'text-muted-foreground',
-                    )}
-                    title={addDate ? formatTodoDate(addDate) : 'Pick a date'}
-                  >
-                    <Calendar className="w-4 h-4" style={{ color: 'var(--heading)' }} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* ── Delete Confirmation ── */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={open => { if (!open) setDeleteTarget(null) }}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={open => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Todo</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.text}&rdquo;? This action cannot be undone.
+              Are you sure you want to delete &ldquo;{deleteTarget?.text}&rdquo;? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -370,7 +411,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
             <AlertDialogAction
               variant="destructive"
               disabled={isDeleting}
-              onClick={async (e) => {
+              onClick={async e => {
                 e.preventDefault()
                 await handleDelete()
               }}
@@ -380,6 +421,6 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Tile>
+    </PanelTile>
   )
 }

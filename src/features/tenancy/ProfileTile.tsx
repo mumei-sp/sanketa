@@ -133,17 +133,18 @@ export function ProfileTile({
       // person's name on a family tile, which on its own tells a screen-reader
       // user nothing about where it leads.
       aria-label={`Continue as ${contextAriaLabel(context)}`}
+      // Every state this tile has — the lift, the shadow that follows it, the
+      // hairline and the focus ring — is `.tile-lift`, and the surface and
+      // border are utilities rather than inline styles ON PURPOSE. An inline
+      // declaration beats any class, so the `box-shadow: var(--shadow-card)`
+      // that used to sit here silently swallowed the focus ring, and a
+      // `border-color` here would do the same to the hover edge. A tile you
+      // cannot see yourself tabbing onto is the one state that has to work.
       className={cn(
-        'group flex w-full flex-col gap-4 rounded-2xl border p-6 text-left',
-        'transition-[transform,box-shadow,border-color] duration-200 ease-out',
-        'hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring',
-        'active:translate-y-0',
+        'group flex w-full flex-col gap-4 rounded-2xl p-6 text-left',
+        'border border-card-border bg-card',
+        'tile-lift',
       )}
-      style={{
-        backgroundColor: 'var(--card)',
-        borderColor: 'var(--card-border)',
-        boxShadow: 'var(--shadow-card)',
-      }}
     >
       <span className="flex items-start justify-between gap-3">
         <Avatar context={context} />
@@ -175,7 +176,7 @@ export function ProfileTile({
       >
         Continue
         <ArrowRight
-          className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
+          className="size-4 transition-transform duration-200 group-hover:translate-x-1"
           aria-hidden
         />
       </span>

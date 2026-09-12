@@ -18,8 +18,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
+import { cn } from '@/lib/utils'
 import { fontWeights } from '@/config/typography'
-import { Tile } from '@/components/tile'
+import { PanelTile, PANEL_SELECT_TRIGGER } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
 
@@ -197,46 +199,52 @@ export function TeacherAttendanceChart({
     return calculateRoundMax(maxAttendance)
   }, [filteredData])
 
+  // Loading and empty are different answers — an empty week drew bare axes.
+  if (!isLoading && filteredData.length === 0) {
+    return (
+      <PanelTile id="teacher-attendance-chart-tile">
+        <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
+          <CardHeader className="flex-shrink-0 pb-0">
+            <h3 className="text-section-title">Attendance Overview</h3>
+          </CardHeader>
+          <CardContent className="px-4 pt-0 pb-2 flex-1 min-h-0 flex items-center justify-center">
+            <EmptyState
+              title="No attendance yet"
+              description="Figures appear once registers are marked."
+              className="py-8"
+            />
+          </CardContent>
+        </Card>
+      </PanelTile>
+    )
+  }
+
   if (isLoading) {
     return (
-      <Tile
-        id="teacher-attendance-chart-tile"
-        layoutMode="block"
-        style={{ flex: '1 1 0%', minWidth: 0 }}
-        background="transparent"
-        padding={0}
-        shadowed={false}
-      >
-        <Card className="h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
+      <PanelTile id="teacher-attendance-chart-tile">
+        <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Attendance Overview</h3>
             <CardAction>
-              <Skeleton className="h-9 w-[110px]" />
+              <Skeleton className="h-8 w-[110px]" />
             </CardAction>
           </CardHeader>
           <CardContent className="px-4 pt-0 pb-2 flex-1 min-h-0">
             <Skeleton className="h-full w-full" />
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile
-      id="teacher-attendance-chart-tile"
-      layoutMode="block"
-      style={{ flex: '1 1 0%', minWidth: 0 }}
-      background="transparent"
-      padding={0}
-      shadowed={false}
-    >
-      <Card className="h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
+    <PanelTile id="teacher-attendance-chart-tile">
+      <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Attendance Overview</h3>
           <CardAction>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[110px] bg-accent">
+              <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[110px]')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -296,6 +304,6 @@ export function TeacherAttendanceChart({
           </div>
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

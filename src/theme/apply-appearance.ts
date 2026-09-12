@@ -147,6 +147,8 @@ export function applyAppearance(
   //                user's chosen color around for accent surfaces that want it.
   if (isDark) {
     clear('--heading')
+    // `.dark` already pairs a near-white heading with a dark foreground.
+    clear('--heading-foreground')
     clear('--foreground')
     clear('--card-foreground')
     clear('--popover-foreground')
@@ -164,6 +166,9 @@ export function applyAppearance(
     set('--sidebar-accent-foreground', primaryFg)
   } else {
     set('--heading', heading)
+    // Anything filled with `--heading` — the primary button, a checked box,
+    // the active page in a pager — reads its label off this.
+    set('--heading-foreground', pickForegroundFor(heading))
     set('--foreground', heading)
     set('--card-foreground', heading)
     set('--popover-foreground', heading)

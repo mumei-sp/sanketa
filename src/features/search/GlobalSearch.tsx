@@ -69,12 +69,66 @@ import {
  * mounted yet.
  */
 const ACTIONS: (SearchItem & { permission: Permission })[] = [
-  { id: 'act:add-student', label: 'Add student', detail: 'Enrol a new student', route: '/students/add', group: 'Actions', icon: UserPlus, weight: 40, permission: 'students.create' },
-  { id: 'act:add-teacher', label: 'Add teacher', detail: 'Add a staff member', route: '/teachers/add', group: 'Actions', icon: UserPlus, weight: 40, permission: 'teachers.manage' },
-  { id: 'act:mark-attendance', label: 'Mark attendance', detail: "Today's register", route: '/attendance/daily', group: 'Actions', icon: CheckSquare, weight: 40, permission: 'attendance.mark' },
-  { id: 'act:enter-grades', label: 'Enter grades', detail: 'Record exam marks', route: '/grades/entry', group: 'Actions', icon: FilePlus2, weight: 40, permission: 'grades.create' },
-  { id: 'act:new-notice', label: 'Create notice', detail: 'Post to the notice board', route: '/notice-board', group: 'Actions', icon: Megaphone, weight: 40, permission: 'notices.manage' },
-  { id: 'act:new-event', label: 'Add calendar event', detail: 'Schedule something', route: '/calendar', group: 'Actions', icon: CalendarPlus, weight: 40, permission: 'calendar.manage' },
+  {
+    id: 'act:add-student',
+    label: 'Add student',
+    detail: 'Enrol a new student',
+    route: '/students/add',
+    group: 'Actions',
+    icon: UserPlus,
+    weight: 40,
+    permission: 'students.create',
+  },
+  {
+    id: 'act:add-teacher',
+    label: 'Add teacher',
+    detail: 'Add a staff member',
+    route: '/teachers/add',
+    group: 'Actions',
+    icon: UserPlus,
+    weight: 40,
+    permission: 'teachers.manage',
+  },
+  {
+    id: 'act:mark-attendance',
+    label: 'Mark attendance',
+    detail: "Today's register",
+    route: '/attendance/daily',
+    group: 'Actions',
+    icon: CheckSquare,
+    weight: 40,
+    permission: 'attendance.mark',
+  },
+  {
+    id: 'act:enter-grades',
+    label: 'Enter grades',
+    detail: 'Record exam marks',
+    route: '/grades/entry',
+    group: 'Actions',
+    icon: FilePlus2,
+    weight: 40,
+    permission: 'grades.create',
+  },
+  {
+    id: 'act:new-notice',
+    label: 'Create notice',
+    detail: 'Post to the notice board',
+    route: '/notice-board',
+    group: 'Actions',
+    icon: Megaphone,
+    weight: 40,
+    permission: 'notices.manage',
+  },
+  {
+    id: 'act:new-event',
+    label: 'Add calendar event',
+    detail: 'Schedule something',
+    route: '/calendar',
+    group: 'Actions',
+    icon: CalendarPlus,
+    weight: 40,
+    permission: 'calendar.manage',
+  },
 ]
 
 /**
@@ -268,7 +322,10 @@ function ResultRow({
               <mark
                 key={index}
                 className="rounded-[3px] bg-transparent px-0 font-semibold"
-                style={{ color: 'var(--heading)', backgroundColor: withOpacity('var(--primary)', 0.45) }}
+                style={{
+                  color: 'var(--heading)',
+                  backgroundColor: withOpacity('var(--primary)', 0.45),
+                }}
               >
                 {part.text}
               </mark>
@@ -324,10 +381,7 @@ export function GlobalSearch({
   const records = useSearchIndex(open, can)
   const { isFamily, isStaff } = useFamilyScope()
   const destinations = React.useMemo(() => destinationsFor(can, isFamily && !isStaff), [can, isFamily, isStaff])
-  const actions = React.useMemo(
-    () => ACTIONS.filter(action => can(action.permission)),
-    [can],
-  )
+  const actions = React.useMemo(() => ACTIONS.filter(action => can(action.permission)), [can])
   const modifier = useModifierSymbol()
   const listRef = React.useRef<HTMLDivElement>(null)
 
@@ -397,9 +451,7 @@ export function GlobalSearch({
 
   // Keep the highlighted row on screen when arrowing past the fold.
   React.useEffect(() => {
-    listRef.current
-      ?.querySelector('[data-active]')
-      ?.scrollIntoView({ block: 'nearest' })
+    listRef.current?.querySelector('[data-active]')?.scrollIntoView({ block: 'nearest' })
   }, [activeIndex])
 
   const select = React.useCallback(
@@ -491,34 +543,34 @@ export function GlobalSearch({
             ref={listRef}
             className="scrollbar-thin max-h-[min(26rem,58vh)] overflow-y-auto overscroll-contain p-2"
           >
-          {isIndexing ? (
-            <div className="space-y-1 p-1">
-              {[0, 1, 2, 3].map(row => (
-                <Skeleton key={row} className="h-12 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : rows.length === 0 ? (
-            <EmptyState
-              icon={<Search />}
-              title="Nothing found"
-              description={`No students, teachers, notices or pages match "${query.trim()}".`}
-              className="py-10"
-            />
-          ) : (
-            rows.map(({ item, index, heading }) => (
-              <React.Fragment key={item.id}>
-                {heading && (
-                  <p className="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {heading}
-                  </p>
-                )}
-                <ResultRow
-                  item={item}
-                  active={index === activeIndex}
-                  onSelect={() => select(item)}
-                  onHover={() => setActiveIndex(index)}
-                />
-              </React.Fragment>
+            {isIndexing ? (
+              <div className="space-y-1 p-1">
+                {[0, 1, 2, 3].map(row => (
+                  <Skeleton key={row} className="h-12 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : rows.length === 0 ? (
+              <EmptyState
+                icon={<Search />}
+                title="Nothing found"
+                description={`No students, teachers, notices or pages match "${query.trim()}".`}
+                className="py-10"
+              />
+            ) : (
+              rows.map(({ item, index, heading }) => (
+                <React.Fragment key={item.id}>
+                  {heading && (
+                    <p className="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {heading}
+                    </p>
+                  )}
+                  <ResultRow
+                    item={item}
+                    active={index === activeIndex}
+                    onSelect={() => select(item)}
+                    onHover={() => setActiveIndex(index)}
+                  />
+                </React.Fragment>
               ))
             )}
           </div>

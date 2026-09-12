@@ -18,7 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tile } from '@/components/tile'
+import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PanelTile, PANEL_SELECT_TRIGGER } from '@/components/tile'
 import { colors } from '@/theme/colors'
 import { useBrandColors } from '@/hooks/use-brand-colors'
 import { useAcademicDates } from '@/hooks/use-academic-dates'
@@ -67,10 +69,7 @@ const CustomLegend = ({ payload }: any) => {
     <div className="flex items-center gap-4 ml-8">
       {payload.map((entry: any) => (
         <div key={entry.value} className="flex items-center gap-1.5">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-caption text-muted-foreground">{entry.value}</span>
         </div>
       ))}
@@ -78,7 +77,10 @@ const CustomLegend = ({ payload }: any) => {
   )
 }
 
-export function StudentPerformanceChart({ datasets, isLoading = false }: StudentPerformanceChartProps) {
+export function StudentPerformanceChart({
+  datasets,
+  isLoading = false,
+}: StudentPerformanceChartProps) {
   const [selected, setSelected] = React.useState('')
   const [pickedGrades, setPickedGrades] = React.useState<string[]>([])
   /**
@@ -136,9 +138,10 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
     // The set of grades the chart should consider. `pickedGrades` is the
     // primary signal — empty pick falls back to first 3 grades so the
     // chart always has something to draw.
-    const activeGrades = pickedGrades.length > 0
-      ? allGrades.filter(g => pickedGrades.some(p => g.key === `grade${p}`))
-      : allGrades.slice(0, 3)
+    const activeGrades =
+      pickedGrades.length > 0
+        ? allGrades.filter(g => pickedGrades.some(p => g.key === `grade${p}`))
+        : allGrades.slice(0, 3)
 
     const out: typeof allGrades = []
     activeGrades.forEach(gradeDef => {
@@ -154,8 +157,7 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
       //      so the remaining subset is clearly an intentional drill.
       const gradeKey = gradeDef.key.replace(/^grade/, '')
       const compareMode = compareSet.has(gradeKey)
-      const partialSelection =
-        pickedInGrade.length > 0 && pickedInGrade.length < sections.length
+      const partialSelection = pickedInGrade.length > 0 && pickedInGrade.length < sections.length
       if (compareMode || partialSelection) {
         // Render each picked section as its own series so the bars sit
         // side-by-side for easy comparison.
@@ -181,26 +183,51 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
   const chartMinWidth = data.length * MIN_WIDTH_PER_ITEM
   const needsScroll = chartMinWidth > 300
 
+  // Loading and empty are different answers, and rendering the skeleton for
+  // both meant a dataset that arrived empty span forever. Say so once instead.
+  if (!isLoading && !activeDataset) {
+    return (
+      <PanelTile id="student-performance-tile-empty">
+        <Card className="w-full h-full pt-4 pb-4 flex flex-col gap-0">
+          <CardHeader className="flex-shrink-0 pb-0">
+            <h3 className="text-section-title">Student Performance</h3>
+          </CardHeader>
+          <CardContent className="px-4 pt-2 pb-4 flex-1 flex items-center justify-center">
+            <EmptyState
+              title="No results yet"
+              description="Marks appear here once grades are entered."
+              className="py-8"
+            />
+          </CardContent>
+        </Card>
+      </PanelTile>
+    )
+  }
+
   if (isLoading || !activeDataset) {
     return (
-      <Tile id="student-performance-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+      <PanelTile id="student-performance-tile">
         <Card className="w-full h-full pt-4 pb-0 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Student Performance</h3>
-            <CardAction><Skeleton className="h-9 w-[140px]" /></CardAction>
+            <CardAction data-compact>
+              <Skeleton className="h-8 w-[140px]" />
+            </CardAction>
           </CardHeader>
-          <CardContent className="px-4 pt-2 pb-4 flex-1"><Skeleton className="h-[220px] w-full" /></CardContent>
+          <CardContent className="px-4 pt-2 pb-4 flex-1">
+            <Skeleton className="h-[220px] w-full" />
+          </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile id="student-performance-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+    <PanelTile id="student-performance-tile">
       <Card className="group/chart w-full h-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Student Performance</h3>
-          <CardAction>
+          <CardAction data-compact>
             <div className="flex items-center gap-2">
               <div className="opacity-100 lg:opacity-0 lg:group-hover/chart:opacity-100 transition-opacity duration-200">
                 <ClassPicker
@@ -213,12 +240,14 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
                 />
               </div>
               <Select value={selected} onValueChange={setSelected}>
-                <SelectTrigger className="w-[140px] bg-accent">
+                <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[140px]')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {datasets.map(ds => (
-                    <SelectItem key={ds.value} value={ds.value}>{ds.label}</SelectItem>
+                    <SelectItem key={ds.value} value={ds.value}>
+                      {ds.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -227,11 +256,25 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
         </CardHeader>
         <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0">
           <div className={`h-full ${needsScroll ? 'overflow-x-auto' : ''}`}>
-            <div className="chart-scale h-full" style={needsScroll ? { minWidth: chartMinWidth } : undefined}>
+            <div
+              className="chart-scale h-full"
+              style={needsScroll ? { minWidth: chartMinWidth } : undefined}
+            >
               <ResponsiveContainer width="100%" height="100%" minHeight={180}>
                 <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={colors.border.default} opacity={0.3} vertical={false} />
-                  <XAxis dataKey="month" stroke={colors.text.muted} fontSize={12} tickLine={false} axisLine={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={colors.border.default}
+                    opacity={0.3}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    stroke={colors.text.muted}
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
                   <YAxis
                     width={44}
                     stroke={colors.text.muted}
@@ -243,9 +286,21 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
                     tickCount={6}
                   />
                   <Tooltip content={<CustomTooltip />} cursor={false} />
-                  <Legend content={<CustomLegend />} verticalAlign="top" align="left" wrapperStyle={{ paddingBottom: 8 }} />
+                  <Legend
+                    content={<CustomLegend />}
+                    verticalAlign="top"
+                    align="left"
+                    wrapperStyle={{ paddingBottom: 8 }}
+                  />
                   {grades.map(g => (
-                    <Bar key={g.key} dataKey={g.key} name={g.label} fill={g.color} barSize={18} radius={[3, 3, 0, 0]} />
+                    <Bar
+                      key={g.key}
+                      dataKey={g.key}
+                      name={g.label}
+                      fill={g.color}
+                      barSize={18}
+                      radius={[3, 3, 0, 0]}
+                    />
                   ))}
                 </BarChart>
               </ResponsiveContainer>
@@ -253,6 +308,6 @@ export function StudentPerformanceChart({ datasets, isLoading = false }: Student
           </div>
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

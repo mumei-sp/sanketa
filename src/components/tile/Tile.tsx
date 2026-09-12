@@ -64,7 +64,7 @@ export interface TileProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'i
   background?: string
   /** Theme token or CSS value */
   borderRadius?: string
-  /** Applies shadow styles */
+  /** Applies the design system's card chrome — `--shadow-card` plus its hairline */
   shadowed?: boolean
   /** Overflow behavior */
   overflow?: OverflowMode
@@ -119,20 +119,35 @@ function getBorderRadiusClass(borderRadius?: string): string {
   return ''
 }
 
-function getPaddingClass(padding?: number | string): string {
-  if (!padding) return ''
-  if (typeof padding === 'number') {
-    return ''
-  }
-  return padding
+/**
+ * A `padding` string is one of two different things, and only one is a class.
+ *
+ * A spacing key — `"3"` — is a token, resolved to a length by `getPaddingStyle`
+ * below. Anything else is Tailwind (`"p-6"`, `"px-4 py-2"`) and belongs in the
+ * class list. Returning the string unconditionally meant a spacing key was
+ * emitted BOTH ways: the right padding as a style, and a junk `3` class beside
+ * it. Harmless today only because every caller happens to pass a number or
+ * Tailwind; a single `padding="3"` would have shipped the stray class.
+ */
+function getPaddingClass(padding?: number | SpacingKey | string): string {
+  if (padding === undefined || typeof padding === 'number') return ''
+  return padding in spacing ? '' : padding
 }
 
+/**
+ * `padding === undefined`, not `!padding`: zero is a value.
+ *
+ * `padding={0}` used to fall into the falsy branch and set nothing at all — it
+ * worked only because no ancestor gave a tile padding to cancel. The moment one
+ * did, every `padding={0}` call site (the stat cards, the fee cards) would have
+ * silently stopped meaning what it says.
+ */
 function getPaddingStyle(padding?: number | SpacingKey | string): React.CSSProperties {
-  if (!padding) return {}
+  if (padding === undefined) return {}
   if (typeof padding === 'number') {
     return { padding: `${padding}px` }
   }
-  if (typeof padding === 'string' && padding in spacing) {
+  if (padding in spacing) {
     return { padding: spacing[padding as SpacingKey] }
   }
   return {}
@@ -205,7 +220,19 @@ export function Tile({
   const paddingClass = getPaddingClass(padding)
   const paddingStyle = getPaddingStyle(padding)
 
-  const shadowClass = shadowed ? 'shadow-xs' : ''
+  // The design system's card chrome, not Tailwind's `shadow-xs` — which is a
+  // flat *grey* `0 1px 2px rgb(0 0 0 / 0.05)` and reads dingy on this app's
+  // cool canvas, leaving every tile sitting flat where the artboards have it
+  // floating. `--shadow-card` is the two-layer navy-tinted lift they specify,
+  // and `ui/card.tsx` already pairs it with the hairline `--card-border`.
+  //
+  // The border is not decoration: dark mode switches the shadow off entirely
+  // (`--shadow-card: none`, because a shadow reads as mud on a dark surface),
+  // so the hairline is the only thing left defining the card's edge.
+  //
+  // `className` merges last through `cn`/tailwind-merge, so a caller that
+  // wants a different border or no shadow still wins.
+  const shadowClass = shadowed ? 'shadow-card border border-card-border' : ''
   const overflowClass = overflow ? overflowMap[overflow] : ''
 
   const pointerEventsDisabled = disabled || !interactable
@@ -230,10 +257,14 @@ export function Tile({
         ...computedStyle,
         ...paddingStyle,
       }}
+      {...props}
+      // After the spread, not before. These are the attributes the tile system
+      // itself keys off — `data-tile-id` is how a tile is found in the DOM —
+      // and with `props` spread last a caller passing one of them by hand could
+      // overwrite the identity the component just established.
       data-tile-id={id}
       data-tile-layout={layoutMode}
       data-tile-nested={nested}
-      {...props}
     >
       {children}
     </div>

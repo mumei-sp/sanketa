@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Ellipsis } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
-import { Tile } from '@/components/tile'
+import { PanelTile } from '@/components/tile'
 import {
   Select,
   SelectContent,
@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 
 interface NoticeBoardProps {
@@ -22,28 +23,32 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
 
   const sorted = React.useMemo(() => {
     if (sortBy === 'recent') {
-      return [...items].sort((a, b) => new Date(b.postDate).getTime() - new Date(a.postDate).getTime())
+      return [...items].sort(
+        (a, b) => new Date(b.postDate).getTime() - new Date(a.postDate).getTime(),
+      )
     }
     return [...items].sort((a, b) => b.views - a.views)
   }, [items, sortBy])
 
   if (isLoading) {
     return (
-      <Tile id="notice-board-tile" layoutMode="block" background="transparent" padding={0} shadowed={false} className="h-full">
+      <PanelTile id="notice-board-tile">
         <Card className="pt-4 pb-4 flex flex-col gap-0 h-full">
           <CardHeader className="flex-shrink-0 pb-2">
             <h3 className="text-section-title">Notice Board</h3>
           </CardHeader>
           <CardContent className="px-4 pt-0 pb-0 space-y-3">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile id="notice-board-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+    <PanelTile id="notice-board-tile">
       <Card className="pt-4 pb-4 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-2">
           <h3 className="text-section-title">Notice Board</h3>
@@ -63,68 +68,87 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
           </CardAction>
         </CardHeader>
         <CardContent className="px-4 pt-0 pb-0">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium" />
-                <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium whitespace-nowrap">Audience</th>
-                <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium whitespace-nowrap">Date</th>
-                <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium whitespace-nowrap">Created By</th>
-                <th className="pb-2" />
-              </tr>
-            </thead>
-          </table>
-          <div className="max-h-[320px] overflow-y-auto">
-            <table className="w-full">
-              <tbody>
-                {sorted.map(item => (
-                  <tr key={item.id} className="border-b last:border-0">
-                    <td className="py-3 pr-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={item.thumbnail}
-                          alt=""
-                          className="size-[36px] min-w-[36px] rounded-md object-cover"
-                        />
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="text-body font-medium truncate" style={{ color: 'var(--heading)' }}>
-                            {item.title}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {item.tags.map(tag => (
-                              <span
-                                key={tag.label}
-                                className="text-badge px-2 py-0.5 rounded-full whitespace-nowrap"
-                                style={{ backgroundColor: tag.color, color: 'var(--heading)' }}
-                              >
-                                {tag.label}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-3 text-body-muted text-muted-foreground whitespace-nowrap align-middle">
-                      {item.audience}
-                    </td>
-                    <td className="py-3 pr-3 text-body-muted text-muted-foreground whitespace-nowrap align-middle">
-                      {item.postDate}
-                    </td>
-                    <td className="py-3 pr-3 text-body-muted text-muted-foreground whitespace-nowrap align-middle">
-                      {item.createdBy}
-                    </td>
-                    <td className="py-3 align-middle">
-                      <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
-                        <Ellipsis className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    </td>
+          {sorted.length === 0 ? (
+            <EmptyState
+              title="No notices"
+              description="Notices posted to the school appear here."
+              className="py-8"
+            />
+          ) : (
+            <>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium" />
+                    <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium whitespace-nowrap">
+                      Audience
+                    </th>
+                    <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium whitespace-nowrap">
+                      Date
+                    </th>
+                    <th className="text-left text-table-header text-muted-foreground pb-2 pr-3 font-medium whitespace-nowrap">
+                      Created By
+                    </th>
+                    <th className="pb-2" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+              </table>
+              <div className="tile-list">
+                <table className="w-full">
+                  <tbody>
+                    {sorted.map(item => (
+                      <tr key={item.id} className="border-b last:border-0">
+                        <td className="py-3 pr-3">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={item.thumbnail}
+                              alt=""
+                              className="size-[36px] min-w-[36px] rounded-md object-cover"
+                            />
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span
+                                className="text-body font-medium truncate"
+                                style={{ color: 'var(--heading)' }}
+                              >
+                                {item.title}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {item.tags.map(tag => (
+                                  <span
+                                    key={tag.label}
+                                    className="text-badge px-2 py-0.5 rounded-full whitespace-nowrap"
+                                    style={{ backgroundColor: tag.color, color: 'var(--heading)' }}
+                                  >
+                                    {tag.label}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 pr-3 text-body-muted text-muted-foreground whitespace-nowrap align-middle">
+                          {item.audience}
+                        </td>
+                        <td className="py-3 pr-3 text-body-muted text-muted-foreground whitespace-nowrap align-middle">
+                          {item.postDate}
+                        </td>
+                        <td className="py-3 pr-3 text-body-muted text-muted-foreground whitespace-nowrap align-middle">
+                          {item.createdBy}
+                        </td>
+                        <td className="py-3 align-middle">
+                          <button className="tap-area p-1 rounded-md hover:bg-accent transition-colors">
+                            <Ellipsis className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

@@ -17,7 +17,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tile } from '@/components/tile'
+import { EmptyState } from '@/components/ui/empty-state'
+import { cn } from '@/lib/utils'
+import { PanelTile, PANEL_SELECT_TRIGGER } from '@/components/tile'
 import { colors } from '@/theme/colors'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { fetchTeacherWorkload } from '@/api/services/teacher-service'
@@ -207,23 +209,38 @@ export function WorkloadDistributionChart({
     return calculateRoundMax(maxTotal)
   }, [filteredData])
 
+  // Loading and empty are different answers — an empty subject drew bare axes.
+  if (!isLoading && filteredData.length === 0) {
+    return (
+      <PanelTile id="workload-distribution-tile">
+        <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
+          <CardHeader className="flex-shrink-0 pb-0">
+            <h3 className="text-section-title">Workload Distribution</h3>
+          </CardHeader>
+          <CardContent className="px-4 pt-0 pb-2 flex-1 min-h-0 flex items-center justify-center">
+            <EmptyState
+              title="No workload recorded"
+              description="Hours appear once a timetable is published."
+              className="py-8"
+            />
+          </CardContent>
+        </Card>
+      </PanelTile>
+    )
+  }
+
   if (isLoading) {
     return (
-      <Tile
-        id="workload-distribution-tile"
-        layoutMode="block"
-        style={{ flex: '1.33 1 0%', minWidth: 0 }}
-        background="transparent"
-        padding={0}
-        shadowed={false}
-      >
-        <Card className="h-[320px] w-full pt-4 pb-2 flex flex-col gap-0">
+      <PanelTile id="workload-distribution-tile">
+        {/* Was `h-[320px]` here against `h-[260px]` below — the card jumped 60px
+            the moment the data landed. Both are the same card now. */}
+        <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Workload Distribution</h3>
             <CardAction>
               <div className="flex gap-2">
-                <Skeleton className="h-9 w-[110px]" />
-                <Skeleton className="h-9 w-[110px]" />
+                <Skeleton className="h-8 w-[110px]" />
+                <Skeleton className="h-8 w-[110px]" />
               </div>
             </CardAction>
           </CardHeader>
@@ -233,26 +250,19 @@ export function WorkloadDistributionChart({
             </div>
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile
-      id="workload-distribution-tile"
-      layoutMode="block"
-      style={{ flex: '1.33 1 0%', minWidth: 0 }}
-      background="transparent"
-      padding={0}
-      shadowed={false}
-    >
-      <Card className="h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
+    <PanelTile id="workload-distribution-tile">
+      <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Workload Distribution</h3>
           <CardAction>
             <div className="flex gap-2">
               <Select value={subject} onValueChange={setSubject}>
-                <SelectTrigger className="w-[110px] bg-accent">
+                <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[110px]')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,7 +272,7 @@ export function WorkloadDistributionChart({
                 </SelectContent>
               </Select>
               <Select value={timePeriod} onValueChange={setTimePeriod}>
-                <SelectTrigger className="w-[110px] bg-accent">
+                <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[110px]')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -362,6 +372,6 @@ export function WorkloadDistributionChart({
           </div>
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

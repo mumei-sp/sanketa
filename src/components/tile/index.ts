@@ -8,5 +8,6 @@ export {
   type BorderRadiusToken,
 } from "./Tile"
 export { type ResponsiveValue, type Breakpoint } from "./tile-class-maps"
-export { TileCustomizeModal, type TileOption } from "./TileCustomizeModal"
-
+export { TileCustomizeModal, MAX_TILE_SELECTIONS, type TileOption } from "./TileCustomizeModal"
+export { PanelTile } from './PanelTile'
+export { PANEL_SELECT_TRIGGER } from './panel-chrome'

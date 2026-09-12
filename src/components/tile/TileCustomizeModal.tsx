@@ -12,6 +12,20 @@ import { Button } from '@/components/ui/button'
 import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 
+/**
+ * How many KPI tiles a page may show at once.
+ *
+ * Four because the strip is laid out for exactly four — 2×2 on a phone, 1×4
+ * from `md` — so a fifth does not overflow, it reflows the row into a shape
+ * nothing was designed at.
+ *
+ * It is a constant rather than a number typed at each call site because every
+ * page states it TWICE: once to cap `useTileSelection` and once to tell this
+ * modal what to display. Typed twice, the two can disagree, and the disagreement
+ * is silent — the counter reads "4/5 selected" while the fifth pick is refused.
+ */
+export const MAX_TILE_SELECTIONS = 4
+
 export interface TileOption {
   /** Unique identifier */
   id: string

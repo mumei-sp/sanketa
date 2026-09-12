@@ -18,7 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tile, type ResponsiveValue } from '@/components/tile'
+import { EmptyState } from '@/components/ui/empty-state'
+import { cn } from '@/lib/utils'
+import { PanelTile, PANEL_SELECT_TRIGGER, type ResponsiveValue } from '@/components/tile'
 import type { EnrollmentData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
@@ -151,48 +153,53 @@ export function EnrollmentTrendsChart({
     return Math.floor(minEnrollment / magnitude) * magnitude
   }, [filteredData])
 
+  // Loading and empty are different answers — see the same split on the
+  // dashboard's charts. An empty series used to draw an axis with nothing on it.
+  if (!isLoading && filteredData.length === 0) {
+    return (
+      <PanelTile id="enrollment-trends-tile" width={tileWidth} layoutMode={tileLayoutMode}>
+        <Card className="pt-4 pb-2 h-full gap-2 flex flex-col">
+          <CardHeader>
+            <h3 className="text-section-title">Enrollment Trends</h3>
+          </CardHeader>
+          <CardContent className="px-4 pt-0 pb-0 flex-1 flex items-center justify-center">
+            <EmptyState
+              title="No enrolment history"
+              description="Trends appear once a year of admissions is on record."
+              className="py-8"
+            />
+          </CardContent>
+        </Card>
+      </PanelTile>
+    )
+  }
+
   if (isLoading) {
     return (
-      <Tile
-        id="enrollment-trends-tile"
-        layoutMode={tileLayoutMode}
-        width={tileWidth}
-        background="transparent"
-        padding={0}
-        shadowed={false}
-        style={{ height: '100%' }}
-      >
-        <Card className="pt-4 pb-2 h-full gap-2">
+      <PanelTile id="enrollment-trends-tile" width={tileWidth} layoutMode={tileLayoutMode}>
+        <Card className="pt-4 pb-2 h-full gap-2 flex flex-col">
           <CardHeader>
             <h3 className="text-section-title">Enrollment Trends</h3>
             <CardAction>
-              <Skeleton className="h-9 w-[110px]" />
+              <Skeleton className="h-8 w-[110px]" />
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-2 pb-0">
+          <CardContent className="pt-2 pb-0 flex-1">
             <Skeleton className="h-[170px] w-full" />
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile
-      id="enrollment-trends-tile"
-      layoutMode={tileLayoutMode}
-      width={tileWidth}
-      background="transparent"
-      padding={0}
-      shadowed={false}
-      style={{ height: '100%' }}
-    >
-      <Card className="pt-4 pb-2 h-full gap-2">
+    <PanelTile id="enrollment-trends-tile" width={tileWidth} layoutMode={tileLayoutMode}>
+      <Card className="pt-4 pb-2 h-full gap-2 flex flex-col">
         <CardHeader>
           <h3 className="text-section-title">Enrollment Trends</h3>
           <CardAction>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[110px] bg-accent">
+              <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[110px]')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -203,9 +210,9 @@ export function EnrollmentTrendsChart({
             </Select>
           </CardAction>
         </CardHeader>
-        <CardContent className="px-4 pt-0 pb-0">
-          <div className="chart-scale">
-            <ResponsiveContainer width="100%" height={170}>
+        <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0">
+          <div className="chart-scale h-full">
+            <ResponsiveContainer width="100%" height="100%" minHeight={170}>
               <AreaChart data={filteredData} margin={{ top: 10, right: 0, left: 4, bottom: 0 }}>
                 <defs>
                   <ChartGradient id="enrollmentGradient" />
@@ -254,6 +261,6 @@ export function EnrollmentTrendsChart({
           </div>
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

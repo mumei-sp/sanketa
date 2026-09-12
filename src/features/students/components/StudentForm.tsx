@@ -85,7 +85,7 @@ export function StudentForm({
 
   return (
     <form className={cn('w-full', className)} onSubmit={handleFormSubmit}>
-      <TileWrapper columns={12} gap={16} mode="grid">
+      <TileWrapper columns={12} gap={16}>
         {/* Section 1: Left Column - Personal, Contact, Guardian Info (60%) */}
         <div className="col-span-12 lg:col-span-7 space-y-4">
           <PersonalInfoSection control={control} width={sectionWidth} />

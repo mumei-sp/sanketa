@@ -14,8 +14,13 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px); /* bento tiles — ~24px at default radius */
+  --radius-xl: calc(var(--radius) + 4px); /* cards — 18px, the design's card radius */
+  /* Large interactive tiles — the profile chooser's, the "today" strip — 20px.
+     It was `+ 8px`, and the comment beside it claimed ~24px on the assumption
+     of a 16px root. This app's root is 14px (`html { font-size: 0.875rem }`),
+     so it was really 22px: two pixels rounder than drawn, on a token whose
+     whole job is to match one specific shape in the design. */
+  --radius-2xl: calc(var(--radius) + 6px);
 
   /* Typography: Font Family
    * NOTE: These values must match src/config/typography.ts fontFamily configuration
@@ -182,6 +187,13 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-card-border: var(--card-border);
+
+  /* `--heading` is the brand anchor a school picks; `--heading-foreground` is
+     what stays legible on top of it. The checked switch and checkbox fill with
+     the first and draw their thumb/tick in the second, so a pale pick cannot
+     leave a white tick on a white box. Kept in step by `applyAppearance`. */
+  --color-heading: var(--heading);
+  --color-heading-foreground: var(--heading-foreground);
 }
 
 :root {
@@ -194,6 +206,7 @@
   /* Text colors */
   --foreground: #15446e; /* text.heading - converted to oklch: oklch(0.30 0.10 240) */
   --heading: #15446e; /* user-tunable heading anchor — runtime-overridable */
+  --heading-foreground: #ffffff; /* legible on --heading; recomputed per palette */
   --card-foreground: #15446e; /* text.heading */
   --popover-foreground: #15446e; /* text.heading */
   --text-body: #33415c; /* body copy — navy-leaning slate */
@@ -268,6 +281,7 @@
   --background: oklch(0.155 0.004 265);        /* app shell — deepest layer */
   --foreground: oklch(0.96 0.002 265);          /* primary text */
   --heading: oklch(0.96 0.002 265);
+  --heading-foreground: oklch(0.205 0.004 265);
   --card: oklch(0.205 0.004 265);               /* tiles / sheets */
   --card-foreground: oklch(0.96 0.002 265);
   --popover: oklch(0.235 0.004 265);            /* elevated surfaces */
@@ -664,6 +678,34 @@ html[data-density="compact"] [data-slot="card"] {
   padding-bottom: 0.214rem;
 }
 
+/* ── Tile list regions ──────────────────────────────────────────────────
+ *
+ * A list inside a tile must not be able to size the tile.
+ *
+ * Height flows content → card → tile → grid row, and a grid row is sized by
+ * its tallest item while every other item in that row is stretched to match.
+ * So the amount of DATA in one tile was a layout input for the tile beside
+ * it: adding eight events to the calendar card at tablet width grew its
+ * row-mate from 783px to 1432px, with 253px of that dead space, though its
+ * own content had not changed at all.
+ *
+ * The scroll regions to absorb that growth were already written — the tiles
+ * carry `flex-1 min-h-0 overflow-y-auto` — but they never engaged. `flex-1`
+ * needs a DEFINITE height somewhere above it to resolve against, and nothing
+ * in the chain had one, so the box grew rather than scrolled. Measured across
+ * the dashboard, five of six scroll regions had scrollHeight === clientHeight:
+ * they were decorative. The only one that worked was the notice board, which
+ * is the only one that had capped itself.
+ *
+ * This is that cap, named once. Content past it scrolls, a tile's height stops
+ * depending on how much data arrived, and neighbours stop being moved by it.
+ * Override for a single tile by setting --tile-list-max-h on it.
+ */
+.tile-list {
+  max-height: var(--tile-list-max-h, 320px);
+  overflow-y: auto;
+}
+
 /* Thin scrollbar utility for compact scroll areas */
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -904,6 +946,63 @@ html[data-density="compact"] [data-slot="card"] {
 }
 .dark .card-interactive:hover {
   box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.5);
+}
+
+/* Full-tile press target — the profile chooser's cards, and anything else that
+   is one large button rather than a card with controls in it.
+ *
+ * Separate from `.card-interactive` because the lift is bigger and, crucially,
+ * the SHADOW FOLLOWS IT. A tile that rises while its shadow stays put reads as
+ * sliding rather than lifting, which is what the chooser was doing.
+ *
+ * The state values are the artboards' own. Dark mode does not deepen a shadow —
+ * on a dark surface that reads as mud, which is why `--shadow-card` is `none`
+ * there — so it steps the surface up to `--popover` and brightens the hairline
+ * instead, which is the design's answer for the same gesture.
+ *
+ * Focus-visible must be a CLASS rather than an inline style: an inline
+ * `box-shadow` beats any utility, and that is exactly how the ring on these
+ * tiles was being silently swallowed. Both themes ring in the brand accent,
+ * so it is pinned here rather than read from `--ring`, which dark mode
+ * neutralises to grey. */
+.tile-lift {
+  /* accent.base — the focus colour in both themes, per the artboards */
+  --tile-focus: #cdeaf0;
+  box-shadow: var(--shadow-card);
+  /* Not `--motion-ease`; the artboards specify their own curve for this lift. */
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+.tile-lift:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 2px 4px rgb(21 68 110 / 0.04),
+    0 28px 52px -24px rgb(21 68 110 / 0.34);
+  border-color: var(--input);
+}
+.tile-lift:active {
+  transform: translateY(-1px);
+}
+.tile-lift:focus-visible {
+  outline: none;
+  border-color: var(--tile-focus);
+  box-shadow:
+    0 0 0 3px var(--tile-focus),
+    0 16px 36px -22px rgb(21 68 110 / 0.24);
+}
+.dark .tile-lift {
+  box-shadow: none;
+}
+.dark .tile-lift:hover {
+  background-color: var(--popover);
+  border-color: oklch(1 0 0 / 14%);
+  box-shadow: none;
+}
+.dark .tile-lift:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tile-focus) 55%, transparent);
 }
 
 /* Appearance studio — slow-panning brand band across the hero card. The

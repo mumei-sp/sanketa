@@ -31,19 +31,26 @@ import { DepartmentChart } from '@/components/charts/DepartmentChart'
 import { fetchAttendanceOverview } from '@/api/services/student-service'
 import type { AttendanceData } from '@/data/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TileWrapper, Tile } from '@/components/tile'
+import { TileWrapper, Tile, MAX_TILE_SELECTIONS } from '@/components/tile'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { toast } from 'sonner'
 
 type SortOption = 'latest' | 'name-asc' | 'name-desc'
 
-/** Skeleton for the 4 stat cards */
+/**
+ * Skeleton for the stat cards.
+ *
+ * Both the count and the radius track the real `StatCard` this stands in for —
+ * a placeholder that changes shape or number when the data lands is a flicker,
+ * not a placeholder. The count is the shared cap rather than a typed 4, so the
+ * skeleton cannot drift from the row it is imitating.
+ */
 function StatsSkeleton() {
   return (
     <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Tile key={i} id={`stat-skeleton-${i}`} background="card" borderRadius="lg" shadowed padding={12} className="flex items-center justify-between">
+      {Array.from({ length: MAX_TILE_SELECTIONS }).map((_, i) => (
+        <Tile key={i} id={`stat-skeleton-${i}`} background="card" borderRadius="xl" shadowed padding={12} className="flex items-center justify-between">
           <div className="flex flex-col gap-2">
             <Skeleton className="h-3.5 w-24 rounded" />
             <Skeleton className="h-6 w-12 rounded" />

@@ -2,12 +2,26 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
+/**
+ * Opaque, and 18px at the corner.
+ *
+ * It was `glass-card` — 72% card colour over a 16px backdrop blur — which put
+ * the aurora wash *through* the content instead of behind it. The canvas is
+ * meant to show around cards, not inside them; every card in the design is a
+ * solid surface. `glass-card` still belongs to the two things that genuinely
+ * float over arbitrary page content: the mobile top bar and the search palette.
+ *
+ * `rounded-xl` resolves to `--radius + 4px` = 18px, which is the card radius
+ * the design specifies. `rounded-2xl` was 22px — the token is named for bento
+ * tiles and its comment assumed a 16px root, but this app's root is 14px, so
+ * every card had been running four pixels rounder than drawn.
+ */
 function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card"
       className={cn(
-        'glass-card text-card-foreground flex flex-col gap-6 rounded-2xl border border-card-border py-6 shadow-card',
+        'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border border-card-border py-6 shadow-card',
         className,
       )}
       {...props}
@@ -32,7 +46,32 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
         // reason. Stacking below 24rem of container costs one row and is the
         // only arrangement that always fits.
         'has-data-[slot=card-action]:grid-cols-1 has-data-[slot=card-action]:@[24rem]/card-header:grid-cols-[minmax(0,1fr)_auto]',
-        'has-data-[compact]:grid-cols-[minmax(0,1fr)_auto]',
+        // `!` because this has to BEAT the `grid-cols-1` above, and both set
+        // the same property on the same element. Tailwind emits them in its own
+        // order, and it emits that one second — which is why `data-compact` did
+        // nothing at all before this: every header carrying a `CardAction`
+        // matched the stacking rule too, and the stacking rule landed last.
+        'has-data-[compact]:grid-cols-[minmax(0,1fr)_auto]!',
+        // ── Compact headers trim the title, they do not break it ──────────
+        //
+        // `data-compact` is the opt out of the stacking above: keep the
+        // controls on the title's line whatever the width. That used to be
+        // unsafe at small widths for the reason given above — the title takes
+        // what the controls leave, and what they leave can be ten pixels.
+        //
+        // It is safe now because the title ELLIPSES instead of wrapping.
+        // "Students by Gender" becoming "Students by G…" is a title you can
+        // still place and a header one row tall; the same title wrapping is a
+        // stack of single letters, and that is the only thing stacking was
+        // ever protecting against. The full text stays in the DOM, so it is
+        // what a screen reader announces — it is drawn short, not cut. A
+        // sighted reader gets no tooltip, though, so `data-compact` is for
+        // headings that survive being shortened: reach for it where the width
+        // is genuinely tight, not everywhere.
+        //
+        // Scoped to the title cell (the first child) so the controls beside it
+        // keep their natural width — a truncated control is a broken one.
+        'has-data-[compact]:[&>:first-child]:min-w-0 has-data-[compact]:[&>:first-child]:truncate',
         className,
       )}
       {...props}
@@ -77,7 +116,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
         // has not — matching the grid `CardHeader` switches to at 24rem.
         'col-start-1 row-start-2 self-start justify-self-start',
         '@[24rem]/card-header:col-start-2 @[24rem]/card-header:row-span-2 @[24rem]/card-header:row-start-1 @[24rem]/card-header:justify-self-end',
-        'data-[compact]:col-start-2 data-[compact]:row-span-2 data-[compact]:row-start-1 data-[compact]:justify-self-end',
+        'data-[compact]:col-start-2! data-[compact]:row-span-2! data-[compact]:row-start-1! data-[compact]:justify-self-end!',
         className,
       )}
       {...props}

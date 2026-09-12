@@ -19,8 +19,9 @@
 
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Tile } from '@/components/tile'
+import { PanelTile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { useNotifications } from '@/features/notifications/NotificationContext'
 import {
   formatAbsoluteTime,
@@ -55,27 +56,22 @@ export function RecentActivity() {
   const items = activity.slice(0, VISIBLE_COUNT)
 
   return (
-    <Tile
-      id="recent-activity-tile"
-      layoutMode="block"
-      background="transparent"
-      padding={0}
-      shadowed={false}
-      className="h-full"
-    >
+    <PanelTile id="recent-activity-tile">
       <Card className="pt-4 pb-4 flex flex-col gap-0 h-full border-0 shadow-none bg-transparent">
         <CardHeader className="flex-shrink-0 pb-2">
           {/* The ⋯ that used to sit here opened nothing. A control that looks
               like a menu and isn't is worse than no control. */}
           <h3 className="text-section-title">Recent Activity</h3>
         </CardHeader>
-        <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0 overflow-y-auto space-y-5">
+        <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0 tile-list space-y-5">
           {isLoading ? (
             <ActivitySkeleton />
           ) : items.length === 0 ? (
-            <p className="text-body-muted text-muted-foreground py-4">
-              Nothing has happened yet today.
-            </p>
+            <EmptyState
+              title="Nothing yet today"
+              description="Activity across the school appears here."
+              className="py-8"
+            />
           ) : (
             items.map(item => {
               const Icon = getCategoryIcon(item.category)
@@ -130,6 +126,6 @@ export function RecentActivity() {
           )}
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

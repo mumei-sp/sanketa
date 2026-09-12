@@ -53,18 +53,21 @@ import type { FeeCollectionRecord } from '@/features/fees-collection/types'
 import type { PeriodDefinition } from '@/config/school-config'
 
 /**
- * The lift every other card in the app has, and `SectionCard` does not.
+ * The design system's card chrome, for the plain elements on this page.
  *
- * `Tile`'s `shadowed` prop resolves to Tailwind's `shadow-xs` — a flat, *grey*
- * `0 1px 2px rgb(0 0 0 / 0.05)`. The design system's own card shadow is
- * `--shadow-card`: `0 1px 2px rgb(21 68 110 / 0.03), 0 16px 36px -22px rgb(21
- * 68 110 / 0.24)`, deep and wide and navy-tinted. On this page's cool canvas
- * the grey one reads dingy and the cards sit flat instead of floating, which
- * is most of what "it doesn't look like the design" turned out to mean.
+ * `--shadow-card` — `0 1px 2px rgb(21 68 110 / 0.03), 0 16px 36px -22px rgb(21
+ * 68 110 / 0.24)`, deep and wide and navy-tinted — paired with the hairline
+ * `--card-border` that defines a corner where white meets white, and that
+ * carries the edge alone in dark mode, where the shadow is switched off.
  *
- * `ui/card.tsx` already pairs `shadow-card` with `border-card-border` — the
- * faint edge that defines a corner where white meets white. This is that
- * pairing, and `Tile` puts `className` last so it wins over `shadow-xs`.
+ * `Tile`'s `shadowed` prop emits exactly this, so the `SectionCard`s below
+ * already have it and pass it only for symmetry (tailwind-merge dedupes).
+ * The status strip and the "needs you" rows are plain divs rather than tiles,
+ * and this is how they stay in step with the cards around them.
+ *
+ * It used to exist because `shadowed` resolved to Tailwind's `shadow-xs` — a
+ * flat *grey* `0 1px 2px rgb(0 0 0 / 0.05)` that read dingy on this cool
+ * canvas and left the cards sitting flat instead of floating.
  */
 const CARD = 'border border-card-border shadow-card'
 

@@ -18,8 +18,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
+import { cn } from '@/lib/utils'
 import { fontWeights } from '@/config/typography'
-import { Tile, type ResponsiveValue } from '@/components/tile'
+import { PanelTile, PANEL_SELECT_TRIGGER, type ResponsiveValue } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
@@ -193,46 +195,53 @@ export function AttendanceOverviewChart({
     return calculateRoundMax(maxAttendance)
   }, [filteredData])
 
+  // Loading and empty are different answers — see the same split on the
+  // dashboard's charts. An empty week used to draw bare axes.
+  if (!isLoading && filteredData.length === 0) {
+    return (
+      <PanelTile id="attendance-overview-tile" width={tileWidth} layoutMode={tileLayoutMode}>
+        <Card className="pt-4 pb-2 h-full flex flex-col">
+          <CardHeader>
+            <h3 className="text-section-title">Attendance Overview</h3>
+          </CardHeader>
+          <CardContent className="px-4 pt-0 pb-1 flex-1 flex items-center justify-center">
+            <EmptyState
+              title="No attendance yet"
+              description="Figures appear once registers are marked."
+              className="py-8"
+            />
+          </CardContent>
+        </Card>
+      </PanelTile>
+    )
+  }
+
   if (isLoading) {
     return (
-      <Tile
-        id="attendance-overview-tile"
-        layoutMode={tileLayoutMode}
-        width={tileWidth}
-        background="transparent"
-        padding={0}
-        shadowed={false}
-      >
-        <Card className="pt-4 pb-2">
+      <PanelTile id="attendance-overview-tile" width={tileWidth} layoutMode={tileLayoutMode}>
+        <Card className="pt-4 pb-2 h-full flex flex-col">
           <CardHeader>
             <h3 className="text-section-title">Attendance Overview</h3>
             <CardAction>
-              <Skeleton className="h-9 w-[110px]" />
+              <Skeleton className="h-8 w-[110px]" />
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-2 pb-1">
+          <CardContent className="pt-2 pb-1 flex-1">
             <Skeleton className="h-[204px] w-full" />
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
   return (
-    <Tile
-      id="attendance-overview-tile"
-      layoutMode={tileLayoutMode}
-      width={tileWidth}
-      background="transparent"
-      padding={0}
-      shadowed={false}
-    >
-      <Card className="pt-4 pb-2">
+    <PanelTile id="attendance-overview-tile" width={tileWidth} layoutMode={tileLayoutMode}>
+      <Card className="pt-4 pb-2 h-full flex flex-col">
         <CardHeader>
           <h3 className="text-section-title">Attendance Overview</h3>
           <CardAction>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[110px] bg-accent">
+              <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[110px]')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -242,9 +251,9 @@ export function AttendanceOverviewChart({
             </Select>
           </CardAction>
         </CardHeader>
-        <CardContent className="px-4 pt-0 pb-1">
-          <div className="chart-scale">
-            <ResponsiveContainer width="100%" height={204}>
+        <CardContent className="px-4 pt-0 pb-1 flex-1 min-h-0">
+          <div className="chart-scale h-full">
+            <ResponsiveContainer width="100%" height="100%" minHeight={204}>
               <BarChart data={filteredData} margin={{ top: 10, right: 0, left: 4, bottom: 0 }}>
                 <defs>
                   <ChartGradient id="attendanceGradient" />
@@ -289,6 +298,6 @@ export function AttendanceOverviewChart({
           </div>
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }

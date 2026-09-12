@@ -1,7 +1,8 @@
 import { Ellipsis, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardAction } from '@/components/ui/card'
-import { Tile } from '@/components/tile'
+import { PanelTile } from '@/components/tile'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { CalendarEvent } from '../types'
 
 interface EventsListProps {
@@ -11,6 +12,18 @@ interface EventsListProps {
 }
 
 function EventsContent({ events }: { events: CalendarEvent[] }) {
+  // Both callers — the rail's embedded list and the tablet tile — come through
+  // here, so the empty month is answered once.
+  if (events.length === 0) {
+    return (
+      <EmptyState
+        title="Nothing scheduled"
+        description="Events for this month appear here."
+        className="py-8"
+      />
+    )
+  }
+
   return (
     <div className="divide-y divide-border">
       {events.map(event => (
@@ -55,23 +68,27 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
   if (isLoading && embedded) {
     return (
       <div className="px-4 pt-2 pb-0 space-y-3">
-        {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+        {[1, 2, 3].map(i => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <Tile id="events-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+      <PanelTile id="events-tile">
         <Card className="pt-4 pb-4 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-2">
             <h3 className="text-section-title">Events</h3>
           </CardHeader>
           <CardContent className="px-4 pt-0 pb-0 space-y-3">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
           </CardContent>
         </Card>
-      </Tile>
+      </PanelTile>
     )
   }
 
@@ -84,7 +101,7 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
             <Ellipsis className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
-        <div className="px-4 overflow-y-auto flex-1 min-h-0">
+        <div className="px-4 flex-1 min-h-0 tile-list">
           <EventsContent events={events} />
         </div>
       </div>
@@ -92,7 +109,7 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
   }
 
   return (
-    <Tile id="events-tile" layoutMode="block" background="transparent" padding={0} shadowed={false}>
+    <PanelTile id="events-tile">
       <Card className="pt-4 pb-4 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-2">
           <h3 className="text-section-title">Events</h3>
@@ -102,10 +119,10 @@ export function EventsList({ events, isLoading = false, embedded = false }: Even
             </button>
           </CardAction>
         </CardHeader>
-        <CardContent className="px-4 pt-0 pb-0">
+        <CardContent className="px-4 pt-0 pb-0 tile-list">
           <EventsContent events={events} />
         </CardContent>
       </Card>
-    </Tile>
+    </PanelTile>
   )
 }
