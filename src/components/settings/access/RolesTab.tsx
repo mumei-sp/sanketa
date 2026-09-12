@@ -31,7 +31,7 @@ import {
   Lock,
   Pencil,
   Info,
-  ArrowRight,
+  Users,
   SlidersHorizontal,
   Copy,
   Eye,
@@ -39,6 +39,12 @@ import {
   Columns3,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -941,29 +947,53 @@ export function RolesTab({
                     </span>
                   </Button>
 
-                  {!selected.builtin && !renaming && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      title={`Rename ${selected.name}`}
-                      onClick={() => setRenaming(true)}
-                    >
-                      <Pencil className="size-4" />
-                      <span className="sr-only">Rename</span>
-                    </Button>
-                  )}
-                  {!selected.builtin && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0 text-destructive"
-                      title={`Delete ${selected.name}`}
-                      onClick={() => setPendingDelete(selected)}
-                    >
-                      <Trash2 className="size-4" />
-                      <span className="sr-only">Delete role</span>
-                    </Button>
+                  {/*
+                    One menu for the things you do TO a role, rather than a
+                    button each.
+
+                    "Manage people" had a bordered row of its own carrying an
+                    arrow — a whole band of the card spent on a link to the next
+                    tab. It belongs with rename and delete: all three leave this
+                    card, none of them change what the role can do, and the card
+                    is otherwise about exactly that.
+                  */}
+                  {!renaming && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          title={`Manage ${selected.name}`}
+                        >
+                          <Pencil className="size-4" />
+                          <span className="sr-only">Manage {selected.name}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {!selected.builtin && (
+                          <DropdownMenuItem onSelect={() => setRenaming(true)}>
+                            <Pencil className="size-3.5" />
+                            Rename
+                          </DropdownMenuItem>
+                        )}
+                        {canManagePeople && (
+                          <DropdownMenuItem onSelect={() => onManagePeople(selected.id)}>
+                            <Users className="size-3.5" />
+                            Manage people
+                          </DropdownMenuItem>
+                        )}
+                        {!selected.builtin && (
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onSelect={() => setPendingDelete(selected)}
+                          >
+                            <Trash2 className="size-3.5" />
+                            Delete role
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                 </div>
 
@@ -1006,17 +1036,6 @@ export function RolesTab({
                         ? 'No one holds this role yet.'
                         : `${members.length} ${members.length === 1 ? 'person holds' : 'people hold'} this role.`}
                   </span>
-                  {canManagePeople && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="shrink-0 gap-1"
-                      onClick={() => onManagePeople(selected.id)}
-                    >
-                      Manage people
-                      <ArrowRight className="size-3.5" />
-                    </Button>
-                  )}
                 </div>
 
                 {/* Class scoping. Its own control rather than a permission,
