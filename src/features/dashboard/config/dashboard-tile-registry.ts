@@ -26,6 +26,7 @@ import {
   ClipboardList,
 } from 'lucide-react'
 import type { DashboardStat } from '../types'
+import type { Permission } from '@/config/permissions'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
 import { listStudents, studentCount } from '@/mocks/tenant/students'
 import { teachersData } from '@/mocks/tenant/teachers/teachers'
@@ -67,6 +68,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   // ── Students ──
   {
     id: 'enrolled-students',
+    permission: 'students.read',
     label: 'Enrolled Students',
     value: studentCount(),
     description: 'Total active students',
@@ -76,6 +78,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'new-admissions',
+    permission: 'students.read',
     label: 'New Admissions',
     value: newAdmissions,
     description: 'This academic year',
@@ -85,6 +88,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'students-on-leave',
+    permission: 'students.read',
     label: 'Students on Leave',
     value: onLeave,
     description: 'Currently on leave',
@@ -96,6 +100,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   // ── Teachers ──
   {
     id: 'active-teachers',
+    permission: 'teachers.read',
     label: 'Active Teachers',
     value: teachersData.length,
     description: 'Full & part-time',
@@ -105,6 +110,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'full-time-teachers',
+    permission: 'teachers.read',
     label: 'Full-Time Teachers',
     value: 62,
     description: 'Permanent staff',
@@ -114,6 +120,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'substitute-teachers',
+    permission: 'teachers.read',
     label: 'Substitute Teachers',
     value: 6,
     description: 'Temporary staff',
@@ -125,6 +132,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   // ── Finance ──
   {
     id: 'fees-collected',
+    permission: 'finance.read',
     label: 'Fees Collected',
     value: 245000,
     description: 'This month',
@@ -134,6 +142,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'pending-fees',
+    permission: 'finance.read',
     label: 'Pending Fees',
     value: 38500,
     description: 'Outstanding amount',
@@ -143,6 +152,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'monthly-expenses',
+    permission: 'finance.read',
     label: 'Monthly Expenses',
     value: 125000,
     description: 'This month',
@@ -154,6 +164,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   // ── Attendance ──
   {
     id: 'today-attendance',
+    permission: 'attendance.read',
     label: "Today's Attendance",
     value: 94,
     description: 'Percentage present',
@@ -163,6 +174,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'absent-today',
+    permission: 'attendance.read',
     label: 'Absent Today',
     value: 18,
     description: 'Students absent',
@@ -174,6 +186,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   // ── General ──
   {
     id: 'support-staff',
+    permission: 'teachers.read',
     label: 'Support Staff',
     // Counted, not typed. It said 34 — which was fiction until `teachers`
     // started extending `staff`, and then became a number that happened to
@@ -190,6 +203,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'total-awards',
+    permission: 'dashboard.read',
     label: 'Total Awards',
     value: 152,
     description: 'All-time awards',
@@ -199,6 +213,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'upcoming-events',
+    permission: 'calendar.read',
     label: 'Upcoming Events',
     value: 5,
     description: 'Next 7 days',
@@ -208,6 +223,7 @@ export const dashboardTileRegistry: DashboardStat[] = [
   },
   {
     id: 'assignments-due',
+    permission: 'assignments.read',
     label: 'Assignments Due',
     value: 12,
     description: 'This week',
@@ -224,6 +240,41 @@ export const DEFAULT_DASHBOARD_TILE_IDS = [
   'support-staff',
   'total-awards',
 ]
+
+/**
+ * The tiles this caller may be shown.
+ *
+ * A tile is a number about something, and a number is a read. A Librarian
+ * holding four read permissions was still offered "Fees Collected" and
+ * "Enrolled Students" — and the registry computes its values off the stores
+ * directly, so those were the school's real figures rather than the zeroes the
+ * services would have returned.
+ *
+ * Filtered the same way navigation is, by `can`, so a role invented tomorrow
+ * gets a dashboard of the tiles it can fill without anybody listing them. The
+ * customize modal is filtered with it too: offering a tile that would be
+ * refused is a menu with dishes that are off.
+ *
+ * `useTileSelection` drops stored ids that are not in the registry it is given,
+ * so a person whose permission is taken away loses the tile on their next load
+ * rather than keeping a stale pick.
+ *
+ * ── What this is not ──────────────────────────────────────────────────
+ * A boundary. `can` with a bare permission asks "anywhere?", which a caller
+ * narrowed to their own records answers yes to — and the values above are
+ * computed off the stores rather than through the services, so they are the
+ * school's real figures and not the zeroes `callerSeesEveryRow` would return.
+ * A family never reaches this page (`Dashboard` sends them to `FamilyHome`,
+ * and the active side decides which), so the two together hold. If a family
+ * role ever did land here, the fix is to read these through the services, not
+ * to tighten the filter.
+ */
+export function visibleTiles(
+  registry: DashboardStat[],
+  can: (permission: Permission) => boolean,
+): DashboardStat[] {
+  return registry.filter(tile => !tile.permission || can(tile.permission))
+}
 
 /** Convert DashboardStat items to TileOption for the customize modal */
 export function toTileOptions(registry: DashboardStat[]): TileOption[] {

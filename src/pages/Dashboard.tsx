@@ -5,12 +5,14 @@ import { Settings } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import { TileWrapper, Tile, TileCustomizeModal } from '@/components/tile'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { usePermissions } from '@/features/auth/PermissionContext'
 import { getTimeOfDayGreeting, formatFriendlyDate } from '@/utils/date'
 import { Card } from '@/components/ui/card'
 import { colors } from '@/theme/colors'
 import { useTileSelection } from '@/hooks/use-tile-selection'
 import {
   dashboardTileRegistry,
+  visibleTiles,
   DEFAULT_DASHBOARD_TILE_IDS,
   toTileOptions,
 } from '@/features/dashboard/config/dashboard-tile-registry'
@@ -64,6 +66,27 @@ function SchoolDashboard() {
   const greeting = getTimeOfDayGreeting()
   const firstName = currentUser?.fullName.split(' ')[0]
 
+  // Only the tiles this caller may see, and the same list feeds the customize
+  // modal — a menu should not offer a dish that is off. Memoised on `can`
+  // rather than recomputed per render, because `useTileSelection` treats a new
+  // array as a new registry.
+  const { can } = usePermissions()
+  const tiles = React.useMemo(() => visibleTiles(dashboardTileRegistry, can), [can])
+
+  /**
+   * The four to start with, from the tiles this caller actually has.
+   *
+   * The shipped defaults are a staff dashboard's — enrolment, faculty, staff,
+   * awards — and a role that holds none of them would have opened on an empty
+   * strip where four cards belong. Falling back to the first of whatever they
+   * *can* see means every role gets a filled row on first load, and the picker
+   * is there for the rest.
+   */
+  const defaults = React.useMemo(() => {
+    const kept = DEFAULT_DASHBOARD_TILE_IDS.filter(id => tiles.some(tile => tile.id === id))
+    return kept.length > 0 ? kept : tiles.slice(0, 4).map(tile => tile.id)
+  }, [tiles])
+
   // Configurable tile selection (persisted to localStorage)
   const {
     selectedTiles,
@@ -71,9 +94,9 @@ function SchoolDashboard() {
     toggle: toggleTile,
     reset: resetTiles,
     reorder: reorderTiles,
-  } = useTileSelection(dashboardTileRegistry, {
+  } = useTileSelection(tiles, {
     storageKey: 'sanketa:dashboard-tiles',
-    defaults: DEFAULT_DASHBOARD_TILE_IDS,
+    defaults,
     maxSelections: 4,
   })
   const [customizeOpen, setCustomizeOpen] = React.useState(false)
@@ -97,23 +120,16 @@ function SchoolDashboard() {
     async function loadData() {
       try {
         setIsLoading(true)
-        const [
-          perfData,
-          earnData,
-          genderData,
-          attendData,
-          eventsData,
-          todosData,
-          noticesData,
-        ] = await Promise.all([
-          fetchStudentPerformance(),
-          fetchEarnings(),
-          fetchGenderDistribution(),
-          fetchStudentAttendance(),
-          fetchCalendarEvents(),
-          fetchTodoItems(),
-          fetchNoticeBoardEntries(),
-        ])
+        const [perfData, earnData, genderData, attendData, eventsData, todosData, noticesData] =
+          await Promise.all([
+            fetchStudentPerformance(),
+            fetchEarnings(),
+            fetchGenderDistribution(),
+            fetchStudentAttendance(),
+            fetchCalendarEvents(),
+            fetchTodoItems(),
+            fetchNoticeBoardEntries(),
+          ])
         setPerformance(perfData)
         setEarnings(earnData)
         setGender(genderData)
@@ -132,8 +148,18 @@ function SchoolDashboard() {
   }, [])
 
   const MONTH_NAMES = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ]
 
   const filteredEvents = React.useMemo(() => {
@@ -142,11 +168,13 @@ function SchoolDashboard() {
   }, [events, calendarDate])
 
   const highlightedDates: HighlightedDate[] = React.useMemo(() => {
-    return filteredEvents.map(e => {
-      const match = e.date.match(/\d+/)
-      const day = match ? parseInt(match[0], 10) : 0
-      return { day, color: e.bgColor }
-    }).filter(h => h.day > 0)
+    return filteredEvents
+      .map(e => {
+        const match = e.date.match(/\d+/)
+        const day = match ? parseInt(match[0], 10) : 0
+        return { day, color: e.bgColor }
+      })
+      .filter(h => h.day > 0)
   }, [filteredEvents])
 
   return (
@@ -172,7 +200,11 @@ function SchoolDashboard() {
       */}
       <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
         {/* Stat Cards — Desktop: 9 cols nested grid | Tablet: full width */}
-        <Tile id="stats-container" width={{ default: 1, md: 12, lg: 9 }} className="md:order-1 lg:col-start-1 lg:row-start-1">
+        <Tile
+          id="stats-container"
+          width={{ default: 1, md: 12, lg: 9 }}
+          className="md:order-1 lg:col-start-1 lg:row-start-1"
+        >
           <div className="flex items-center gap-2 mb-1">
             <div className="flex-1" />
             <button
@@ -217,7 +249,9 @@ function SchoolDashboard() {
                   setDropTarget(null)
                 }}
                 className="cursor-grab active:cursor-grabbing transition-transform duration-200"
-                style={dropTarget === index ? { transform: 'scale(0.97)', opacity: 0.85 } : undefined}
+                style={
+                  dropTarget === index ? { transform: 'scale(0.97)', opacity: 0.85 } : undefined
+                }
               >
                 <DashboardStatCard stat={stat} />
               </div>
@@ -229,7 +263,7 @@ function SchoolDashboard() {
         <TileCustomizeModal
           open={customizeOpen}
           onOpenChange={setCustomizeOpen}
-          options={toTileOptions(dashboardTileRegistry)}
+          options={toTileOptions(tiles)}
           selectedIds={selectedIds}
           onToggle={toggleTile}
           onReset={resetTiles}
@@ -267,32 +301,56 @@ function SchoolDashboard() {
         </Tile>
 
         {/* Student Performance — Desktop: row2 col1-4 | Tablet: row2 col1-7 */}
-        <Tile id="perf-grid" width={{ default: 1, md: 7, lg: 4 }} className="md:order-2 lg:col-start-1 lg:row-start-2">
+        <Tile
+          id="perf-grid"
+          width={{ default: 1, md: 7, lg: 4 }}
+          className="md:order-2 lg:col-start-1 lg:row-start-2"
+        >
           <StudentPerformanceChart datasets={performance} isLoading={isLoading} />
         </Tile>
 
         {/* Earnings — Desktop: row2 col5-9 | Tablet: row3 col1-6 */}
-        <Tile id="earnings-grid" width={{ default: 1, md: 6, lg: 5 }} className="md:order-4 lg:col-start-5 lg:row-start-2">
+        <Tile
+          id="earnings-grid"
+          width={{ default: 1, md: 6, lg: 5 }}
+          className="md:order-4 lg:col-start-5 lg:row-start-2"
+        >
           <EarningsChart datasets={earnings} isLoading={isLoading} />
         </Tile>
 
         {/* Students by Gender — Desktop: row3 col1-3 | Tablet: row2 col8-12 */}
-        <Tile id="gender-grid" width={{ default: 1, md: 5, lg: 3 }} className="md:order-3 lg:col-start-1 lg:row-start-3">
+        <Tile
+          id="gender-grid"
+          width={{ default: 1, md: 5, lg: 3 }}
+          className="md:order-3 lg:col-start-1 lg:row-start-3"
+        >
           <StudentsByGenderChart datasets={gender} isLoading={isLoading} />
         </Tile>
 
         {/* Student Attendance — Desktop: row3 col4-6 | Tablet: row3 col7-12 */}
-        <Tile id="attendance-grid" width={{ default: 1, md: 6, lg: 3 }} className="md:order-5 lg:col-start-4 lg:row-start-3">
+        <Tile
+          id="attendance-grid"
+          width={{ default: 1, md: 6, lg: 3 }}
+          className="md:order-5 lg:col-start-4 lg:row-start-3"
+        >
           <StudentAttendanceChart datasets={attendance} isLoading={isLoading} />
         </Tile>
 
         {/* Events — tablet only, beside the calendar: row4 col6-12 */}
-        <Tile id="events-tablet-grid" width={{ default: 1, md: 7 }} className="hidden md:order-7 md:block lg:hidden">
+        <Tile
+          id="events-tablet-grid"
+          width={{ default: 1, md: 7 }}
+          className="hidden md:order-7 md:block lg:hidden"
+        >
           <EventsList events={filteredEvents} isLoading={isLoading} />
         </Tile>
 
         {/* To Do List — Desktop: row3 col7-9 | Tablet: row5, full width */}
-        <Tile id="todo-grid" width={{ default: 1, md: 12, lg: 3 }} className="md:order-8 lg:col-start-7 lg:row-start-3">
+        <Tile
+          id="todo-grid"
+          width={{ default: 1, md: 12, lg: 3 }}
+          className="md:order-8 lg:col-start-7 lg:row-start-3"
+        >
           <DashboardTodoList items={todos} isLoading={isLoading} />
         </Tile>
       </TileWrapper>

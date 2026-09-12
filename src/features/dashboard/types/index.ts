@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import type { Permission } from '@/config/permissions'
 
 export interface DashboardStat {
   /** Unique identifier for the stat tile */
@@ -10,6 +11,14 @@ export interface DashboardStat {
   iconColor: string
   /** Short description for the customize modal */
   description?: string
+  /**
+   * What a caller must hold to be shown this number.
+   *
+   * A tile is a read, and gating it here rather than at each dashboard means a
+   * new tile arrives with its own answer to "who may see this" instead of
+   * inheriting whatever the page around it assumed.
+   */
+  permission?: Permission
 }
 
 export interface GradeConfig {
