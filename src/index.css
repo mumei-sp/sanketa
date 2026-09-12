@@ -58,22 +58,39 @@
    * NOTE: These values must match src/config/typography.ts fontSizes and lineHeights configuration
    * Source: @/config/typography fontSizes and lineHeights
    */
-  --font-size-xs: 0.857rem; /* 12px - fontSizes.xs */
-  --font-size-xs--line-height: 1.029rem; /* 12px * 1.2 = 14.4px - lineHeights.xs */
-  --font-size-sm: 0.929rem; /* 13px - fontSizes.sm */
-  --font-size-sm--line-height: 1.207rem; /* 13px * 1.3 = 16.9px - lineHeights.sm */
-  --font-size-base: 1rem; /* 14px - fontSizes.base. 14/14 = 1rem: the root is 14px, not 16px. */
-  --font-size-base--line-height: 1.45rem; /* 14px * 1.45 = 20.3px - lineHeights.base */
-  --font-size-lg: 1.143rem; /* 16px - fontSizes.lg */
-  --font-size-lg--line-height: 1.3rem; /* 16px * 1.3 = 20.8px - lineHeights.lg */
-  --font-size-xl: 1.429rem; /* 20px - fontSizes.xl */
-  --font-size-xl--line-height: 1.543rem; /* 20px * 1.35 = 27px - lineHeights.xl */
-  --font-size-2xl: 1.714rem; /* 24px - fontSizes['2xl'] */
-  --font-size-2xl--line-height: 1.857rem; /* 24px * 1.3 = 31.2px - lineHeights['2xl'] */
-  --font-size-3xl: 2.143rem; /* 30px - fontSizes['3xl'] */
-  --font-size-3xl--line-height: 2.143rem; /* 30px * 1.2 = 36px - lineHeights['3xl'] */
-  --font-size-4xl: 2.571rem; /* 36px - fontSizes['4xl'] */
-  --font-size-4xl--line-height: 2.571rem; /* 36px * 1.11 = 40px - lineHeights['4xl'] */
+  /*
+   * Font sizes live under --text-*, not --font-size-*.
+   *
+   * Tailwind v4 builds `text-sm`, `text-lg` and the rest from `--text-<name>`;
+   * it never looks at `--font-size-<name>`. Published under the old name the
+   * whole scale was invisible to the framework, so every bare `text-xs` /
+   * `text-sm` in the app — 528 of them — silently used Tailwind's own defaults
+   * while the semantic utilities below (.text-caption, .text-body,
+   * .text-section-title) read these variables directly and got the right ones.
+   *
+   * Two scales, side by side, is what that looked like: 12.25px next to 13px,
+   * 15.75px next to 16px, 10.5px next to 12px, in the same card.
+   *
+   * The colour variables named --text-body and --text-muted are a different
+   * thing and live in `:root` below, outside `@theme`, so Tailwind does not
+   * mistake them for sizes.
+   */
+  --text-xs: 0.857rem; /* 12px - fontSizes.xs */
+  --text-xs--line-height: 1.029rem; /* 12px * 1.2 = 14.4px - lineHeights.xs */
+  --text-sm: 0.929rem; /* 13px - fontSizes.sm */
+  --text-sm--line-height: 1.207rem; /* 13px * 1.3 = 16.9px - lineHeights.sm */
+  --text-base: 1rem; /* 14px - fontSizes.base. 14/14 = 1rem: the root is 14px, not 16px. */
+  --text-base--line-height: 1.45rem; /* 14px * 1.45 = 20.3px - lineHeights.base */
+  --text-lg: 1.143rem; /* 16px - fontSizes.lg */
+  --text-lg--line-height: 1.3rem; /* 16px * 1.3 = 20.8px - lineHeights.lg */
+  --text-xl: 1.429rem; /* 20px - fontSizes.xl */
+  --text-xl--line-height: 1.543rem; /* 20px * 1.35 = 27px - lineHeights.xl */
+  --text-2xl: 1.714rem; /* 24px - fontSizes['2xl'] */
+  --text-2xl--line-height: 1.857rem; /* 24px * 1.3 = 31.2px - lineHeights['2xl'] */
+  --text-3xl: 2.143rem; /* 30px - fontSizes['3xl'] */
+  --text-3xl--line-height: 2.143rem; /* 30px * 1.2 = 36px - lineHeights['3xl'] */
+  --text-4xl: 2.571rem; /* 36px - fontSizes['4xl'] */
+  --text-4xl--line-height: 2.571rem; /* 36px * 1.11 = 40px - lineHeights['4xl'] */
 
   /* ===================================================================
    * COMPACT SPACING SCALE - UNIFORM SPACING CONFIGURATION
@@ -418,7 +435,7 @@ html[data-density="compact"] [data-slot="card"] {
   }
   body {
     @apply bg-background text-foreground font-sans;
-    font-size: var(--font-size-base); /* 14px (0.875rem) */
+    font-size: var(--text-base); /* 14px (0.875rem) */
     line-height: 1.45; /* Compact line height for body text */
   }
 
@@ -462,7 +479,7 @@ html[data-density="compact"] [data-slot="card"] {
    * Schola titles are set heavy — Plus Jakarta bold carries the look. */
   /* Usage: <h1 className="text-page-title">Dashboard</h1> */
   .text-page-title {
-    font-size: var(--font-size-xl); /* 20px (1.429rem) */
+    font-size: var(--text-xl); /* 20px (1.429rem) */
     font-weight: var(--font-weight-bold); /* 700 */
     line-height: 1.3; /* 20px * 1.3 = 26px */
     letter-spacing: -0.01em;
@@ -471,7 +488,7 @@ html[data-density="compact"] [data-slot="card"] {
   /* sectionTitle - Card and section headers: 16px, weight 700, line-height 1.35 */
   /* Usage: <h2 className="text-section-title">Student Information</h2> */
   .text-section-title {
-    font-size: var(--font-size-lg); /* 16px (1.143rem) */
+    font-size: var(--text-lg); /* 16px (1.143rem) */
     font-weight: var(--font-weight-bold); /* 700 */
     line-height: 1.35; /* 16px * 1.35 = 21.6px */
     letter-spacing: -0.005em;
@@ -480,7 +497,7 @@ html[data-density="compact"] [data-slot="card"] {
   /* tableHeader - Table column headers: 13px, weight 500, line-height 1.3 */
   /* Usage: <th className="text-table-header">Name</th> */
   .text-table-header {
-    font-size: var(--font-size-sm); /* 13px (0.929rem) */
+    font-size: var(--text-sm); /* 13px (0.929rem) */
     font-weight: var(--font-weight-medium); /* 500 */
     line-height: 1.3; /* 13px * 1.3 = 16.9px */
   }
@@ -488,7 +505,7 @@ html[data-density="compact"] [data-slot="card"] {
   /* body - Default body text: 14px, weight 400, line-height 1.45 */
   /* Usage: <p className="text-body">This is body text</p> */
   .text-body {
-    font-size: var(--font-size-base); /* 14px (0.875rem) */
+    font-size: var(--text-base); /* 14px (0.875rem) */
     font-weight: var(--font-weight-regular); /* 400 */
     line-height: 1.45; /* 14px * 1.45 = 20.3px */
   }
@@ -496,7 +513,7 @@ html[data-density="compact"] [data-slot="card"] {
   /* bodyMuted - Secondary/muted text: 13px, weight 400, line-height 1.45 */
   /* Usage: <p className="text-body-muted text-muted-foreground">Helper text</p> */
   .text-body-muted {
-    font-size: var(--font-size-sm); /* 13px (0.929rem) */
+    font-size: var(--text-sm); /* 13px (0.929rem) */
     font-weight: var(--font-weight-regular); /* 400 */
     line-height: 1.45; /* 13px * 1.45 = 18.85px */
   }
@@ -504,7 +521,7 @@ html[data-density="compact"] [data-slot="card"] {
   /* badge - Pills and status labels: 12px, weight 500, line-height 1.2 */
   /* Usage: <span className="text-badge">Active</span> */
   .text-badge {
-    font-size: var(--font-size-xs); /* 12px (0.857rem) */
+    font-size: var(--text-xs); /* 12px (0.857rem) */
     font-weight: var(--font-weight-medium); /* 500 */
     line-height: 1.2; /* 12px * 1.2 = 14.4px */
   }
@@ -512,7 +529,7 @@ html[data-density="compact"] [data-slot="card"] {
   /* caption - Small helper text: 12px, weight 400, line-height 1.3 */
   /* Usage: <span className="text-caption">Last updated 2 hours ago</span> */
   .text-caption {
-    font-size: var(--font-size-xs); /* 12px (0.857rem) */
+    font-size: var(--text-xs); /* 12px (0.857rem) */
     font-weight: var(--font-weight-regular); /* 400 */
     line-height: 1.3; /* 12px * 1.3 = 15.6px */
   }
@@ -520,7 +537,7 @@ html[data-density="compact"] [data-slot="card"] {
   /* numeric - KPIs and metrics: 14px, weight 600, line-height 1.3 */
   /* Usage: <span className="text-numeric">1,234</span> */
   .text-numeric {
-    font-size: var(--font-size-base); /* 14px (0.875rem) */
+    font-size: var(--text-base); /* 14px (0.875rem) */
     font-weight: var(--font-weight-semibold); /* 600 */
     line-height: 1.3; /* 14px * 1.3 = 18.2px */
     font-variant-numeric: tabular-nums;
@@ -963,6 +980,27 @@ html[data-density="compact"] [data-slot="card"] {
 }
 .dark .card-hover:hover {
   box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.4);
+}
+
+/* Settings — the quiet well a managed list's rows sit in.
+
+   `--muted` is the artboards' #f3f6fa. Hover warms the row toward the brand
+   accent rather than darkening it, so a list of subjects reads as a list of
+   things rather than a table with a grey rollover.
+
+   Dark mode cannot use the same mix: `--accent` and `--muted` resolve to the
+   same neutral surface there, so mixing one into the other moves nothing.
+   It lifts with white instead — the same "step the surface up" move
+   `.tile-lift` makes in dark, where the shadow is switched off. */
+.settings-row {
+  background-color: var(--muted);
+  transition: background-color var(--motion-duration-fast) var(--motion-ease);
+}
+.settings-row:hover {
+  background-color: color-mix(in srgb, var(--accent) 45%, var(--muted));
+}
+.dark .settings-row:hover {
+  background-color: color-mix(in srgb, oklch(1 0 0) 6%, var(--muted));
 }
 
 /* Clickable cards: elevation + lift, settles back down on press */
