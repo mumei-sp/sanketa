@@ -9,6 +9,7 @@ import { emitDomainEvent } from './notification-service'
 import { withLatency, newId, displayDate } from '@/mocks/_shared'
 import { noticeBoardEntries } from '@/mocks/tenant/notices'
 import { callerAudience } from '@/mocks/_shared/audience'
+import { callerMay } from '@/mocks/_shared/caller'
 import { audienceReaches } from '@/config/audience'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
@@ -53,6 +54,20 @@ export async function fetchNoticeBoardEntries(): Promise<NoticeBoardEntry[]> {
 }
 
 /**
+ * Whoever may put something on the board may take it down and change it.
+ *
+ * `notices.manage` is not narrowed by anything, so the bare question is the
+ * whole question. It was not being asked at all: a parent could compose a
+ * notice, pin it and delete somebody else's, because the only thing standing
+ * between them and the write was a screen they were not shown.
+ */
+function assertMayManageNotices(action: string): void {
+  if (!callerMay('manage', 'Notice')) {
+    throw new Error(`Not allowed to ${action} a notice.`)
+  }
+}
+
+/**
  * Create a new notice.
  *
  * @apiRoute POST /api/v1/notices
@@ -61,6 +76,7 @@ export async function createNoticeBoardEntry(data: NoticeFormValues): Promise<No
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageNotices('create')
       const newEntry: NoticeBoardEntry = {
         id: newId('nb'),
         title: data.title,
@@ -112,6 +128,7 @@ export async function updateNoticeBoardEntry(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageNotices('edit')
       const entry = noticeBoardEntries.find(n => n.id === id)
       if (!entry) throw new Error('Notice not found')
       // Title is intentionally immutable on edit.
@@ -143,7 +160,9 @@ export async function incrementNoticeViews(id: string): Promise<number> {
   return mockOrHttp(
     () => {
       const entry = noticeBoardEntries.find(n => n.id === id)
-      if (entry) {
+      // Unreachable is indistinguishable from absent on purpose: a count that
+      // came back for a notice addressed to somebody else would confirm the id.
+      if (entry && audienceReaches(entry.reach, callerAudience('Notice'))) {
         entry.views += 1
         return entry.views
       }
@@ -165,6 +184,7 @@ export async function toggleNoticePin(id: string): Promise<NoticeBoardEntry> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 350 })
+      assertMayManageNotices('pin')
       const entry = noticeBoardEntries.find(n => n.id === id)
       if (!entry) throw new Error('Notice not found')
       entry.pinned = !entry.pinned
@@ -193,6 +213,7 @@ export async function deleteNoticeBoardEntry(id: string): Promise<void> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 150, max: 400 })
+      assertMayManageNotices('delete')
       const index = noticeBoardEntries.findIndex(n => n.id === id)
       if (index !== -1) {
         // Read the title before the splice — afterwards there is nothing left

@@ -10,6 +10,7 @@ import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency } from '@/mocks/_shared'
 import { callerAudience } from '@/mocks/_shared/audience'
+import { callerMay } from '@/mocks/_shared/caller'
 import { audienceReaches } from '@/config/audience'
 import { mockCalendarEvents } from '@/mocks/tenant/calendar'
 import { categoryConfig } from '@/features/calendar/utils/category-config'
@@ -104,6 +105,20 @@ export async function fetchCalendarEventsByRange(
 // ---------------------------------------------------------------------------
 
 /**
+ * Whoever may put something on the calendar may move it and take it off.
+ *
+ * `calendar.manage` is unnarrowed, so the bare question is the whole question —
+ * and nothing was asking it. A parent could add an occasion to the school
+ * calendar, edit one and delete one, held back only by a screen they were not
+ * offered.
+ */
+function assertMayManageCalendar(action: string): void {
+  if (!callerMay('manage', 'CalendarEvent')) {
+    throw new Error(`Not allowed to ${action} a calendar event.`)
+  }
+}
+
+/**
  * Create a new calendar event from form values.
  *
  * @apiRoute POST /api/v1/calendar/events
@@ -112,6 +127,7 @@ export async function createCalendarEvent(data: EventFormValues): Promise<Calend
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageCalendar('create')
       const created = formValuesToCalendarEvent(data)
       emitDomainEvent({
         type: 'calendar.event_created',
@@ -143,6 +159,7 @@ export async function updateCalendarEvent(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageCalendar('edit')
       return formValuesToCalendarEvent(data, id)
     },
     async () => {
@@ -161,6 +178,7 @@ export async function deleteCalendarEvent(id: string): Promise<void> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageCalendar('delete')
     },
     async () => {
       await apiClient.delete(`/calendar/events/${id}`)
