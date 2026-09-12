@@ -23,8 +23,8 @@
 
 import { classRosters } from '@/mocks/tenant/attendance/daily'
 import { findStudent } from '@/mocks/tenant/students/store'
-import { GRADEABLE_SUBJECT_IDS, EXAMS } from '@/features/grades/constants'
-import { tenantSections } from '@/mocks/schools'
+import { gradeableSubjectIds, EXAMS } from '@/features/grades/constants'
+import { sectionsAsConfig } from '@/mocks/tenant/academic'
 import { relativeDate } from '@/mocks/_shared/date-helpers'
 import { subjectTeacherOf } from '@/mocks/tenant/teachers/assignments'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
@@ -127,9 +127,9 @@ function makeSubmission(
   }
 }
 
-const seededSubmissions: GradeSubmission[] = tenantSections().flatMap(section =>
+const seededSubmissions: GradeSubmission[] = sectionsAsConfig().flatMap(section =>
   PUBLISHED_EXAM_IDS.flatMap(examId =>
-    GRADEABLE_SUBJECT_IDS.map(subjectId =>
+    gradeableSubjectIds().map(subjectId =>
       makeSubmission(section.label, examId, subjectId, { published: true }),
     ),
   ),

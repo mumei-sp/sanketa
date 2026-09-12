@@ -13,16 +13,16 @@
  * reads them, so the name on a register is a member of staff, and the name on
  * a mark sheet is somebody who teaches that subject to that class.
  *
- * ── The gap it papers over ─────────────────────────────────────────────
- * The school has nineteen sections and eighteen teachers holding two classes
- * each, and no table says which of a class's teachers is *its* class teacher —
- * `teacher_classes` has no role column, and there is no `class_sections` table
- * to hang one off (SCHEMA-FIXES §5.1). So the class teacher here is a choice
- * this file makes, deterministically, rather than a fact it looks up. When the
- * academic-management tables land, this becomes a join and the guessing goes.
+ * ── The gap that has now closed ────────────────────────────────────────
+ * There used to be no table saying which of a class's teachers is *its* class
+ * teacher, so this file chose one by hashing the section label. `class_sections`
+ * exists now and carries `class_teacher_id`, so the question has somewhere to
+ * be answered and this is a join. The hash survives only as a backstop for a
+ * section nobody holds.
  */
 
 import { teachersData } from './teachers'
+import { findSectionByLabel } from '@/mocks/tenant/academic'
 import { DEFAULT_SUBJECTS } from '@/config/school-config'
 
 /**
@@ -71,6 +71,18 @@ function hash(text: string): number {
  * signed.
  */
 export function classTeacherOf(classLabel: string): string {
+  // What the section itself says, first. `class_sections.class_teacher_id` is
+  // a column a school sets, and a school that has set it has answered the
+  // question — teaching a class is not the same as being responsible for it.
+  const stated = findSectionByLabel(classLabel)?.classTeacherId
+  if (stated) {
+    const teacher = teachersData.find(row => String(row.id) === stated)
+    if (teacher) return teacher.fullName ?? teacher.displayName ?? teacher.teacherId
+  }
+
+  // Otherwise whoever the faculty list assigns to it. Nineteen sections
+  // against thirty-six assignments means every class has one; the hash below
+  // is a backstop for a section nobody holds, not the usual answer.
   const assigned = teachersData.findIndex(teacher =>
     teacher.assignedClasses?.includes(classLabel),
   )

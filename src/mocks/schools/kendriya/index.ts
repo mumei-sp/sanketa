@@ -15,6 +15,8 @@ import { studentFixtures } from './students'
 import { teacherFixtures } from './teachers'
 import { transportFixtures } from './transport'
 import { expenseFixtures } from './expenses'
+import { academicFixtures } from './academic'
+import { withClassTeachers } from '../_generate/academic'
 import { configFixture } from './config'
 import { noticeFixtures } from './notices'
 import { calendarFixtures } from './calendar'
@@ -26,6 +28,9 @@ export const kendriya: TenantFixtures = {
   teachers: teacherFixtures,
   transport: transportFixtures,
   expenses: expenseFixtures,
+  // Who takes each class, from the faculty's own assignments — the one
+  // place that knows both sides.
+  academic: withClassTeachers(academicFixtures, teacherFixtures),
   config: configFixture,
   notices: noticeFixtures,
   calendar: calendarFixtures,

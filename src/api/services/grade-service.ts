@@ -15,7 +15,7 @@ import {
 } from '@/mocks/_shared/caller'
 import { classRosters } from '@/mocks/tenant/attendance/daily'
 import { gradeSubmissions, findSubmission, upsertSubmission } from '@/mocks/tenant/grades/grades'
-import { EXAMS, GRADEABLE_SUBJECT_IDS } from '@/features/grades/constants'
+import { EXAMS, gradeableSubjectIds } from '@/features/grades/constants'
 import { subjects } from '@/mocks/tenant/timetable/timetable'
 import type { Exam, GradeEntry, GradeSubmission, GradeSheetRow, GradeSheetSummary } from '@/features/grades/types'
 
@@ -59,7 +59,7 @@ export async function fetchGradeableSubjects(): Promise<
     async () => {
       await withLatency({ min: 100, max: 200 })
       return subjects
-        .filter(s => (GRADEABLE_SUBJECT_IDS as readonly string[]).includes(s.id))
+        .filter(s => gradeableSubjectIds().includes(s.id))
         .map(s => ({ id: s.id, name: s.name, shortName: s.shortName }))
     },
     async () => {
@@ -283,7 +283,7 @@ export async function fetchGradeSheet(
       }
 
       const subs = gradeSubmissions.filter(s => s.classId === classId && s.examId === examId)
-      const gradeableIds = GRADEABLE_SUBJECT_IDS as readonly string[]
+      const gradeableIds = gradeableSubjectIds()
 
       const rows: GradeSheetRow[] = roster.map(student => {
         const subjectGrades: Record<string, { marks: number | null; grade: string }> = {}
@@ -430,7 +430,7 @@ export async function fetchStudentReportCard(
       }
 
       const subjectList = subjects
-        .filter(s => (GRADEABLE_SUBJECT_IDS as readonly string[]).includes(s.id))
+        .filter(s => gradeableSubjectIds().includes(s.id))
         .map(s => ({ id: s.id, name: s.name, shortName: s.shortName }))
 
       const exam = EXAMS.find(e => e.id === examId)

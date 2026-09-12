@@ -189,11 +189,52 @@ so the shape matches, but nothing reads them yet. They are marked in the code.
   semantic — with multi-role and hierarchy both in play, precedence is a design
   problem in its own right, and nothing needs it yet.
 
+## Tenant schema — `academic-mgmt`
+
+Ported from the Postgres branch rather than invented. Postgres enums become
+string unions and UUIDs become strings; nothing else is reshaped.
+
+| Table | Purpose | Status | Mocked |
+|---|---|---|---|
+| `academic_years` | The year, its working days, its grade scale | designed (Postgres) | yes |
+| `terms` | Three per year, each with an exam window | designed (Postgres) | yes |
+| `grade_levels` | Class 1 to 10, with `level_order` | designed (Postgres) | yes |
+| `class_sections` | `capacity`, `current_enrollment`, **`class_teacher_id`** | designed (Postgres) | yes |
+| `subjects` | The school's own, with a `department` | designed (Postgres) | yes |
+
+### What its absence was costing
+
+A class section was a bare string — `'8B'` on a student, on a teacher's
+assignment, on a register, in a timetable, with nothing to point at. The only
+list of them was `SchoolConfig.classSections`, a UI settings blob, which made
+a school's academic structure a *preference*. Three consequences the app
+actually carried:
+
+**No class teacher.** `classTeacherOf` picked one by hashing the section label.
+`class_sections.class_teacher_id` is the column that was missing; a school sets
+it, because teaching a class is not the same as being responsible for it.
+
+**No capacity.** "Is 8B full?" had no answer. `current_enrollment` is counted
+off the roster rather than typed, so the two cannot drift.
+
+**Subjects were the app's, not a school's.** Vidya Mandir employs Kannada
+teachers — Karnataka requires the state language — and there was no slot in the
+grid for a subject the app had not heard of. They had a department, a payroll
+line, and no lesson to teach. `subjects` being tenant data is what fixes that.
+
+### The one thing here that is not a ported table
+
+`CurriculumEntry` — how many periods a week each subject gets, by band. The
+schema it wants to be is
+`grade_level_subjects(grade_level_id, subject_id, periods_per_week)`, which
+neither branch designs. It is kept apart from the five above so nobody mistakes
+it for a port. It has to live somewhere: the period counts were two constants
+inside the timetable generator, which made a curriculum the app's opinion.
+
 ## Modules with a designed schema and no mock table yet
 
-`academic-mgmt` (`academic_years`, `terms`, `grade_levels`, `class_sections`,
-`subjects`), `time-table` (`time_slots`, `rooms`, `calendar_categories`,
-`calendar_events`, `timetable`, `event_attendees`) and `communication`
+`time-table` (`time_slots`, `rooms`, `calendar_categories`, `calendar_events`,
+`timetable`, `event_attendees`) and `communication`
 (`user_communication_preferences`) are designed on the Postgres branch. The
 mocks for those features predate the schema and do not match it yet.
 

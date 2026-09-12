@@ -3,6 +3,7 @@
  */
 
 import type { Exam } from './types'
+import { listSubjects } from '@/mocks/tenant/academic'
 
 // ============================================================================
 // Exam Definitions
@@ -49,8 +50,22 @@ export const EXAMS_BY_TERM = TERM_IDS.map(termId => ({
 // Subject Filtering
 // ============================================================================
 
-/** Academic subject IDs that receive grades (excludes PE, Art, Music, Library) */
-export const GRADEABLE_SUBJECT_IDS = ['math', 'eng', 'sci', 'sst', 'hindi', 'cs'] as const
+/**
+ * Which subjects are examined — the school's `core` ones.
+ *
+ * `subjects.subject_type` already says this: a core subject is sat and marked,
+ * an elective or an extracurricular is not. Reading it means a school that
+ * teaches Kannada marks Kannada, which a hardcoded list of six could not —
+ * it named the app's six, so a third language was taught and never examined.
+ *
+ * A function rather than a constant because the answer is per school, and a
+ * constant evaluated at import would be the first school's answer for both.
+ */
+export function gradeableSubjectIds(): string[] {
+  return listSubjects()
+    .filter(subject => subject.subjectType === 'core')
+    .map(subject => subject.code)
+}
 
 // ============================================================================
 // UI Labels & Messages

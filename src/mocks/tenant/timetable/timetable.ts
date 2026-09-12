@@ -25,7 +25,7 @@ import type {
   ClassTimetable,
   TimetableException,
 } from '@/features/timetable/types'
-import { tenantSections } from '@/mocks/schools'
+import { sectionsAsConfig } from '@/mocks/tenant/academic'
 import { generateTimetables, generateExceptions } from './generate'
 
 // ============================================================================
@@ -65,7 +65,7 @@ export const subjects: Subject[] = [
  * picker silently omitted three sections that have students in them, and the
  * only symptom was a class you could not select.
  */
-export const classSections: ClassSection[] = tenantSections().map(section => ({
+export const classSections: ClassSection[] = sectionsAsConfig().map(section => ({
   ...section,
 }))
 

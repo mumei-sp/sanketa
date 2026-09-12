@@ -11,7 +11,7 @@ import type {
   ClassRosterStudent,
   MarkableAttendanceStatus,
 } from '@/features/attendance/types'
-import { tenantSections } from '@/mocks/schools'
+import { sectionsAsConfig } from '@/mocks/tenant/academic'
 import { listStudents } from '@/mocks/tenant/students'
 import { classSectionOf, rollNumberOf } from '@/utils/class-section-helpers'
 import { getDisplayName } from '@/features/students/utils/formatting'
@@ -74,7 +74,7 @@ function rosterFromDirectory(classLabel: string): ClassRosterStudent[] {
 }
 
 export const classRosters: Record<string, ClassRosterStudent[]> = Object.fromEntries(
-  tenantSections().map(section => {
+  sectionsAsConfig().map(section => {
     return [section.label, rosterFromDirectory(section.label)]
   }),
 )
@@ -168,7 +168,7 @@ function generateClassSubmissions(classId: string, roster: ClassRosterStudent[])
  * attendance screen was empty for most of the school and the attendance
  * percentages on the dashboard described 1/6th of it.
  */
-export const attendanceSubmissions: AttendanceSubmission[] = tenantSections().flatMap(
+export const attendanceSubmissions: AttendanceSubmission[] = sectionsAsConfig().flatMap(
   section => generateClassSubmissions(section.label, classRosters[section.label] ?? []),
 )
 

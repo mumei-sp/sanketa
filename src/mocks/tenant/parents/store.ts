@@ -31,7 +31,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
-import { listStudents } from '@/mocks/tenant/students'
+import { listStudents } from '@/mocks/tenant/students/store'
 import { tenantFixtures } from '@/mocks/schools'
 import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'

@@ -28,6 +28,8 @@ src/mocks/
 │   └── sessions/
 │
 ├── tenant/          the PER-SCHOOL database — shared tables, per-school rows
+│   ├── academic/        academic_years · terms · grade_levels ·
+│   │                    class_sections · subjects  ← what the rest hangs off
 │   ├── profiles/        user_profiles · staff · profile_types · profile_roles
 │   ├── students/ teachers/ parents/         the capacity tables
 │   ├── roles/ access-log/
@@ -39,9 +41,9 @@ src/mocks/
 │   ├── types.ts         TenantFixtures: the contract a school folder fills
 │   ├── _generate/       random · names · roster · faculty · transport ·
 │   │                    expenses · calendar
-│   ├── kendriya/        students teachers transport expenses config
-│   │                    notices calendar todos index
-│   └── vidya-mandir/    ← the same nine files
+│   ├── kendriya/        academic students teachers transport expenses
+│   │                    config notices calendar todos index
+│   └── vidya-mandir/    ← the same ten files
 │
 └── auth/            sign-in, and the PASETO tenant-context token
 ```
@@ -62,9 +64,17 @@ into individual files.
 
 ### Adding a school
 
-A folder under `schools/` with the nine files, a line in `BY_CODE` in
+A folder under `schools/` with the ten files, a line in `BY_CODE` in
 `schools/index.ts`, and a row in the global `tenants` store. Nothing else: the
 tables already exist.
+
+### One rule about imports
+
+A store imports another **store**, never its barrel. A barrel re-exports the
+derived modules beside the table — the dashboard series, the academic
+performance chart — and those do work as they initialise, which comes back
+round before the importing store's own `db` exists. It reads as `Cannot access
+'db' before initialization` from a file that never mentions the table.
 
 ---
 
@@ -137,9 +147,12 @@ rather than being shadowed by the copy already in `localStorage`.
 - **A school's notices, calendar or to-dos** — edit the lists in
   `schools/<school>/{notices,calendar,todos}.ts`. These are written out,
   because a notice is the most local thing a school produces.
-- **A school's class sections or name** — `schools/<school>/config.ts`.
-  Everything downstream follows: the roster fills those sections, the
-  timetable covers them, the faculty is sized for them.
+- **A school's class sections, subjects or curriculum** —
+  `schools/<school>/academic.ts`. Everything downstream follows: the roster
+  fills those sections, the timetable covers them and teaches those subjects
+  for those many periods, and the faculty is sized for the result.
+- **A school's name** — `schools/<school>/config.ts`, which is now only what
+  is genuinely a setting.
 - **Who can sign in** — the `access` block in `schools/<school>/index.ts`
   attaches a login to a profile that already exists. The logins themselves are
   global: `global/users/store.ts`.
@@ -185,6 +198,15 @@ student you were looking at is somebody else after a refresh.
 | `int` · `pick` · `chance` | an integer, an item, a coin |
 | `weighted(source, items)` | respects a `weight` field |
 | `bell(source, min, max)` | clustered, not flat — marks and class sizes bunch |
+
+### The school's structure (`tenant/academic`)
+
+| Helper | Use |
+|---|---|
+| `currentYear()` · `currentTerm()` | the year and term today falls in |
+| `listSections()` · `findSectionByLabel('8B')` | the sections, with capacity and class teacher |
+| `sectionsAsConfig()` | the flat `{ id, grade, section, label }` the UI speaks |
+| `listSubjects()` · `curriculumFor('junior')` | what the school teaches, and how much |
 
 ### Tenancy (`_shared/tenant-context.ts`)
 

@@ -24,7 +24,8 @@
  */
 
 import type { Teacher } from '@/features/teachers/types'
-import { classSections } from './config'
+import { academicFixtures } from './academic'
+import { sectionLabels } from '../_generate/academic'
 import { generateFaculty, dealSections } from '../_generate/faculty'
 
 /** Vidya Mandir's own domain — a school's staff are on the school's mail. */
@@ -58,8 +59,10 @@ export const teacherFixtures: Teacher[] = dealSections(
       // Karnataka's own language, taught here as it is everywhere in the
       // state. Outside the timetable grid for now — the subject list the
       // timetable draws on is the app's ten, not a school's.
-      { subject: 'Kannada', count: 1 },
+      // Forty-two periods a week between them — one teacher cannot, a week
+      // being thirty.
+      { subject: 'Kannada', count: 2 },
     ],
   }),
-  classSections.map(section => section.label),
+  sectionLabels(academicFixtures).map(section => section.label),
 )

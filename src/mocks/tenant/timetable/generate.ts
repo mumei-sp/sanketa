@@ -35,13 +35,9 @@
  */
 
 import type { ClassTimetable, TimetableSlot, TimetableException } from '@/features/timetable/types'
-import {
-  DEFAULT_PERIODS,
-  DEFAULT_SCHOOL_DAYS,
-  DEFAULT_SUBJECTS,
-} from '@/config/school-config'
+import { DEFAULT_PERIODS, DEFAULT_SCHOOL_DAYS } from '@/config/school-config'
 import { teachersData } from '@/mocks/tenant/teachers/teachers'
-import { tenantSections } from '@/mocks/schools'
+import { sectionsAsConfig, curriculumFor, listSubjects } from '@/mocks/tenant/academic'
 import { departmentOf } from '@/mocks/tenant/teachers/assignments'
 import { currentAcademicYear, academicYearStart, isoDate, relativeIso } from '@/mocks/_shared/date-helpers'
 import { rng, int, pick } from '@/mocks/schools/_generate/random'
@@ -56,23 +52,20 @@ const DAYS = [...DEFAULT_SCHOOL_DAYS]
 // ── Curriculum ────────────────────────────────────────────────────────
 
 /**
- * Periods a week, per subject.
+ * Periods a week, per subject, as the school states them.
  *
- * Both add to thirty, which is what six periods over a five-day week gives —
- * a quota that does not add up leaves either empty cells or subjects that
- * cannot be placed. Juniors get more art, music and games and less of the
- * board subjects; seniors pick up Computer Science and drop Art. That is the
- * ordinary shape of an Indian school week.
+ * These were two constants in this file — the app deciding what a school
+ * teaches and how much of it. Which was survivable while both schools taught
+ * the same ten subjects and fatal the moment one taught eleven: Vidya Mandir's
+ * Kannada teachers had a department, a payroll line and no lesson, because
+ * there was no slot in the grid for a subject the app had not heard of.
+ *
+ * Both bands still have to add to thirty — six periods over a five-day week.
+ * A quota that does not is a week that cannot be built, and the placement pass
+ * would leave holes rather than say so.
  */
-const JUNIOR_QUOTA: Readonly<Record<string, number>> = {
-  math: 6, eng: 6, hindi: 4, sci: 4, sst: 2, art: 2, music: 2, pe: 3, library: 1,
-}
-
-const SENIOR_QUOTA: Readonly<Record<string, number>> = {
-  math: 6, eng: 5, sci: 5, sst: 4, hindi: 4, cs: 2, pe: 2, music: 1, library: 1,
-}
-
-const quotaFor = (grade: string) => (Number(grade) <= 5 ? JUNIOR_QUOTA : SENIOR_QUOTA)
+const quotaFor = (grade: string) =>
+  Number(grade) <= 5 ? curriculumFor('junior') : curriculumFor('senior')
 
 // ── Rooms ─────────────────────────────────────────────────────────────
 
@@ -111,9 +104,11 @@ interface Placement {
 
 /** Which teachers can take a subject, by the department their subject names. */
 function facultyFor(subjectId: string) {
-  const subject = DEFAULT_SUBJECTS.find(entry => entry.id === subjectId)
+  const subject = listSubjects().find(entry => entry.code === subjectId)
   if (!subject) return []
-  return teachersData.filter(teacher => departmentOf(teacher.subject) === subject.name)
+  // The subject's own department, which the school states — so Kannada finds
+  // the Kannada teachers without the app needing to know the language exists.
+  return teachersData.filter(teacher => departmentOf(teacher.subject) === subject.department)
 }
 
 export function generateTimetables(): ClassTimetable[] {
@@ -136,7 +131,7 @@ export function generateTimetables(): ClassTimetable[] {
     teacherBusy.get(teacherId)?.delete(key(day, period))
   }
 
-  const classes = tenantSections().map(section => ({
+  const classes = sectionsAsConfig().map(section => ({
     ...section,
     quota: quotaFor(section.grade),
   }))
@@ -255,7 +250,7 @@ export function generateTimetables(): ClassTimetable[] {
         })
         if (!chosen?.teacher) continue
 
-        const subject = DEFAULT_SUBJECTS.find(one => one.id === chosen.subjectId)
+        const subject = listSubjects().find(one => one.code === chosen.subjectId)
         grid.slots[dayIndex][p] = {
           dayOfWeek: DAYS[dayIndex],
           periodId: period,
@@ -276,7 +271,7 @@ export function generateTimetables(): ClassTimetable[] {
       // costs the one-teacher-per-subject property for that single cell, so it
       // is the last thing tried rather than the first.
       for (const candidate of candidates) {
-        const subject = DEFAULT_SUBJECTS.find(one => one.id === candidate.subjectId)
+        const subject = listSubjects().find(one => one.code === candidate.subjectId)
         const cover = facultyFor(candidate.subjectId).find(teacher =>
           isFree(teacher.teacherId, DAYS[dayIndex], period),
         )
@@ -323,7 +318,7 @@ export function generateTimetables(): ClassTimetable[] {
         const stillOwed = [...remaining.entries()].filter(([, left]) => left > 0)
         for (const [subjectId] of stillOwed) {
           const teacher = assigned.get(`${entry.label}|${subjectId}`)
-          const subject = DEFAULT_SUBJECTS.find(one => one.id === subjectId)
+          const subject = listSubjects().find(one => one.code === subjectId)
           if (!teacher || !subject) continue
 
           for (let d2 = 0; d2 < DAYS.length; d2 += 1) {

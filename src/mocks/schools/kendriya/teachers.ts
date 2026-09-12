@@ -20,7 +20,8 @@
 
 import type { Teacher } from '@/features/teachers/types'
 import { SCHOOL_DOMAIN, PHONE_COUNTRY_CODE } from '@/mocks/_shared/constants'
-import { classSections } from './config'
+import { academicFixtures } from './academic'
+import { sectionLabels } from '../_generate/academic'
 import { generateFaculty, dealSections } from '../_generate/faculty'
 
 const namedFaculty: Teacher[] = [
@@ -379,7 +380,7 @@ const namedFaculty: Teacher[] = [
     profilePictureUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima',
     teacherId: 'T-1018',
     assignedClasses: ['9B', '10B'],
-    subject: 'Urdu',
+    subject: 'Kannada',
     employmentType: 'Substitute',
     email: `fatima.siddiqui@${SCHOOL_DOMAIN}`,
     avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima',
@@ -417,5 +418,5 @@ const teacherFixturesGenerated = generateFaculty({
 /** Kendriya's faculty, both halves of it. */
 export const teacherFixtures: Teacher[] = dealSections(
   [...namedFaculty, ...teacherFixturesGenerated],
-  classSections.map(section => section.label),
+  sectionLabels(academicFixtures).map(section => section.label),
 )

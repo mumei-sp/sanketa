@@ -15,6 +15,7 @@ import type { Teacher } from '@/features/teachers/types'
 import type { FleetFixtures } from './_generate/transport'
 import type { ExpenseFixtures } from './_generate/expenses'
 import type { SchoolConfig } from '@/config/school-config'
+import type { AcademicFixtures } from '@/mocks/tenant/academic/types'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 import type { CalendarEvent } from '@/features/calendar/types'
 import type { TodoItem } from '@/features/dashboard/types'
@@ -145,6 +146,16 @@ export interface TenantFixtures {
    * 317 ran the nineteen sections of a school of 441 because it had no way to
    * say otherwise. A partial, so a school states only what is its own.
    */
+  /**
+   * `academic-mgmt` — the year, its terms, the grades, the sections and the
+   * subjects.
+   *
+   * The table the rest of the school hangs off. A section used to be a bare
+   * string with nothing to point at, and the only list of them was a UI
+   * settings blob — which made a school's academic structure a preference
+   * rather than a table.
+   */
+  academic: AcademicFixtures
   config: Partial<SchoolConfig>
   /**
    * What the school has put on its board.

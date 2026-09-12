@@ -16,10 +16,20 @@
 import {
   type SchoolConfig,
   DEFAULT_SCHOOL_CONFIG,
+  DEFAULT_SUBJECTS,
   SCHOOL_CONFIG_STORAGE_KEY,
 } from '@/config/school-config'
 import { DEFAULT_APPEARANCE, getPreset } from '@/theme/appearance'
 import { tenantFixtures } from '@/mocks/schools'
+import {
+  sectionsAsConfig,
+  subjectsAsConfig,
+  replaceSections,
+  replaceSubjects,
+  findSection,
+  listSubjects,
+  currentYear,
+} from '@/mocks/tenant/academic'
 import { tenantKey } from '@/mocks/_shared/tenant-context'
 
 /**
@@ -29,29 +39,6 @@ import { tenantKey } from '@/mocks/_shared/tenant-context'
  * The `appearance` key is deep-merged so adding new appearance fields later
  * never strands older stored configs without defaults for the new fields.
  */
-/**
- * One-time migration for older configs that stored the original pink/cyan
- * hexes directly in subject.color. Users who never reset their config would
- * otherwise be stuck seeing the old brand palette on timetable tiles even
- * after switching appearance preset. Only old Sanketa-Classic hexes are
- * rewritten; custom user colors are preserved.
- */
-const LEGACY_BRAND_MIGRATIONS: Record<string, string> = {
-  '#FECCFD': 'var(--primary)',
-  '#feccfd': 'var(--primary)',
-  '#CDEAF0': 'var(--accent)',
-  '#cdeaf0': 'var(--accent)',
-  '#15446E': 'var(--heading)',
-  '#15446e': 'var(--heading)',
-}
-
-function migrateSubjectColors(subjects: SchoolConfig['subjects'] | undefined) {
-  if (!subjects) return undefined
-  return subjects.map(s => ({
-    ...s,
-    color: LEGACY_BRAND_MIGRATIONS[s.color] ?? s.color,
-  }))
-}
 
 /**
  * Appearance migration for the Schola refresh:
@@ -105,7 +92,34 @@ function migrateAppearance(
  * 441 because it had no way to say otherwise.
  */
 function baseConfig(): SchoolConfig {
-  return { ...DEFAULT_SCHOOL_CONFIG, ...tenantFixtures().config }
+  return {
+    ...DEFAULT_SCHOOL_CONFIG,
+    ...tenantFixtures().config,
+    // Projected from `academic-mgmt`, not stored in the settings blob. A
+    // school's sections and subjects are tables; this screen is a view of
+    // them. They used to live in the config, which made a school's academic
+    // structure a preference — and left a class section as a bare string with
+    // nothing to point at.
+    classSections: sectionsAsConfig(),
+    subjects: subjectsWithColours(),
+  }
+}
+
+/**
+ * The school's subjects, wearing the app's colours.
+ *
+ * The subject list is the school's; which colour a subject tile is, is the
+ * app's — it comes from the active theme preset, and a school that invented
+ * "Kannada" has no opinion about its hue. So the names come from the table and
+ * the colours are dealt from the palette, by code where the app knows one.
+ */
+function subjectsWithColours(): SchoolConfig['subjects'] {
+  const known = new Map(DEFAULT_SUBJECTS.map(subject => [subject.id, subject.color]))
+  const spare = DEFAULT_SUBJECTS.map(subject => subject.color)
+  return subjectsAsConfig().map((subject, index) => ({
+    ...subject,
+    color: known.get(subject.id) ?? spare[index % spare.length],
+  }))
 }
 
 /**
@@ -126,12 +140,16 @@ export function loadSchoolConfig(): SchoolConfig {
     if (!raw) return { ...base }
 
     const parsed = JSON.parse(raw) as Partial<SchoolConfig>
-    const migratedSubjects = migrateSubjectColors(parsed.subjects)
 
     return {
       ...base,
       ...parsed,
-      ...(migratedSubjects ? { subjects: migratedSubjects } : {}),
+      // After the stored blob, not before. Sections and subjects are tables;
+      // the settings key also holds a copy because the panel saves the whole
+      // config, and letting that copy win would be the two-sources problem
+      // the tables exist to end. The table is the answer, always.
+      classSections: base.classSections,
+      subjects: base.subjects,
       // Deep-merged like `appearance`, so a config stored before a category
       // existed still gets a default for it rather than treating it as muted.
       notifications: {
@@ -152,6 +170,42 @@ export function loadSchoolConfig(): SchoolConfig {
  * Save school config to localStorage.
  */
 export function saveSchoolConfig(config: SchoolConfig): void {
+  // Sections and subjects are tables, so they go to the table. Everything
+  // else is a setting and goes to the settings key. Writing the whole blob to
+  // one place is what made them a preference in the first place.
+  replaceSections(
+    config.classSections.map(section => {
+      const existing = findSection(section.id)
+      return {
+        id: section.id,
+        gradeLevelId: existing?.gradeLevelId ?? `gl-${section.grade}`,
+        name: `Class ${section.grade} ${section.section}`,
+        code: section.section,
+        capacity: existing?.capacity ?? 30,
+        currentEnrollment: 0,
+        academicYearId: existing?.academicYearId ?? currentYear()?.id ?? '',
+        termId: existing?.termId,
+        status: existing?.status ?? 'active',
+        classTeacherId: existing?.classTeacherId,
+        isActive: true,
+      }
+    }),
+  )
+  replaceSubjects(
+    config.subjects.map(subject => {
+      const existing = listSubjects().find(row => row.code === subject.id)
+      return {
+        id: existing?.id ?? `sub-${subject.id}`,
+        name: subject.name,
+        code: subject.id,
+        subjectType: existing?.subjectType ?? 'core',
+        description: existing?.description,
+        department: existing?.department ?? subject.name,
+        isActive: true,
+      }
+    }),
+  )
+
   try {
     localStorage.setItem(configKey(), JSON.stringify(config))
   } catch (err) {

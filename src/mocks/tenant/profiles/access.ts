@@ -13,8 +13,8 @@
  */
 
 import { profileOf, roleIdsOf, typesOf, capacitiesOf } from './store'
-import { findStudent } from '@/mocks/tenant/students'
-import { studentsOfParent } from '@/mocks/tenant/parents'
+import { findStudent } from '@/mocks/tenant/students/store'
+import { studentsOfParent } from '@/mocks/tenant/parents/store'
 import type { Capacity } from './store'
 
 export interface TenantAccess {
