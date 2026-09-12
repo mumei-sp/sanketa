@@ -5,22 +5,36 @@
  *
  * ── Who may do what ───────────────────────────────────────────────────
  * Both reads and the write are guarded on the STUDENT axis rather than on a
- * permission of their own. A callback request is a fact about one child, so
- * "may you see this child" is the whole question — and it is a question every
- * role in the app can already answer: a parent is narrowed to their own
- * children, a class teacher to their classes, an admin to everyone.
+ * permission of their own: a parent is narrowed to their own children, a class
+ * teacher to their classes, an admin to everyone.
  *
  * That is deliberate rather than lazy. A `callbacks.read` would have had to be
  * granted to parents to let them raise one, and an unnarrowed permission handed
  * to families is how the transport card nearly leaked every child's pickup
  * point — see `fetchStudentRide`. The axis that already exists is the safer
  * one, and it needs no change to the role editor.
+ *
+ * ── With one subtraction: the child ───────────────────────────────────
+ * The axis asks "may you see this child", and this said that was the whole
+ * question. It is not, because a callback is not a fact ABOUT a pupil the way
+ * a mark or a register entry is — it is a note their guardian wrote to the
+ * school, and the Student role satisfies "may you see this child" by being
+ * them. So the reads subtract the subject; see `callerIsTheSubject`.
+ *
+ * Staff and the guardian, not the child. Nothing reaches it today — the only
+ * caller is on a page behind `teachers.read`, which no pupil holds — and that
+ * is exactly why it is worth stating here rather than relying on the page that
+ * currently happens to be in the way.
  */
 
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
-import { visibleToCaller, visibleRecordToCaller } from '@/mocks/_shared/caller'
+import {
+  visibleToCaller,
+  visibleRecordToCaller,
+  callerIsTheSubject,
+} from '@/mocks/_shared/caller'
 import * as callbackServer from '@/mocks/tenant/callbacks/store'
 import { findStudent } from '@/mocks/tenant/students'
 import { classSectionOf } from '@/utils/class-section-helpers'
@@ -59,6 +73,18 @@ export async function fetchCallbacks(options?: {
         'Student',
         subjectOf,
       )
+        // The axis above asks "may you see this child", and a Student role
+        // satisfies it by BEING the child. What a callback holds is not a fact
+        // about a pupil but a note their guardian wrote to the school about
+        // them — "he has been finding the morning reading slot hard going" —
+        // and the one reader a parent does not expect is the child. Staff and
+        // the guardian, not the subject.
+        //
+        // The Teachers page is behind `teachers.read`, which no pupil holds, so
+        // nothing reaches this today. It would the first time a callback list
+        // appeared on a family page, which is a screen somebody will add
+        // without ever reading this service.
+        .filter(row => !callerIsTheSubject(row.studentId))
       return options?.openOnly ? rows.filter(row => row.resolvedAt === null) : rows
     },
     async () => {
@@ -135,6 +161,9 @@ export async function resolveCallback(
       const row = callbackServer.listCallbacks().find(candidate => candidate.id === id)
       if (!row) return null
       if (!visibleRecordToCaller(row, 'read', 'Student', subjectOf)) return null
+      // Same exclusion as the read: a pupil who cannot see the request has no
+      // business closing it either, and closing is the stronger act.
+      if (callerIsTheSubject(row.studentId)) return null
       return callbackServer.resolveCallback(id, resolvedBy) ?? null
     },
     async () => {

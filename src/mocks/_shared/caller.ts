@@ -67,6 +67,28 @@ function abilityForCurrentSession(): AppAbility {
 }
 
 /**
+ * Is this caller the person the record is *about*?
+ *
+ * The scope axes answer "may you see this child". Some records are not facts
+ * about a child but messages about one, written by somebody else, and for
+ * those the child is the one reader the axis lets through and shouldn't: a
+ * Student role is narrowed by `students` to their own record, so they satisfy
+ * "may you see this child" by being them.
+ *
+ * `profileId` is the discriminator and needs no capacity check — a student's
+ * own profile id is the `studentId` on the rows about them, while a parent's
+ * never equals their child's.
+ *
+ * Returns false with no session, which keeps this a *narrowing* test: callers
+ * pair it with `visibleToCaller`, which has already returned nothing by then.
+ */
+export function callerIsTheSubject(studentId: string): boolean {
+  const session = authUtils.getUser()
+  if (!session) return false
+  return resolveActiveAccess(session.id).profileId === studentId
+}
+
+/**
  * Drop the rows this caller may not read.
  *
  * `key` says which record each row is about. A row whose key cannot be
