@@ -91,26 +91,48 @@ export function classSectionOf(student: {
 /**
  * May this holder write to this student's record?
  *
- * The reason this exists rather than each call site composing it: passing an
- * undefined `classSection` to `can()` does not ask "may I edit this student",
- * it asks "may I edit a student somewhere", and a scoped teacher answers yes.
- * So a record whose class cannot be determined has to fail closed here, where
- * it is one decision, rather than at four call sites where it was silently
- * failing open.
+ * The reason this exists rather than each call site composing it: `subjectFor`
+ * hands `can()` a bare subject name when every field is undefined, and a bare
+ * name asks "may I edit a student *somewhere*", which a narrowed holder
+ * answers yes to. So a record that can be identified on neither axis has to
+ * fail closed here, where it is one decision, rather than at four call sites
+ * where it was silently failing open.
+ *
+ * ── Why both axes, and not just the class ──────────────────────────────
+ * Because a student write can now be narrowed either way. `students.update`
+ * names `classes` *and* `students`, so the rule a holder gets is conditioned
+ * on whichever their role is scoped by — a teacher on their sections, a
+ * family on their children — and a check that only ever offered the class
+ * would deny a family holder a record that is theirs.
+ *
+ * Offering both is safe in the other direction too: a subject carrying a
+ * `studentId` the class-scoped rule does not mention still has to match that
+ * rule's `classSection`, so naming the student widens nothing for a teacher.
+ *
+ * `id` is the profile id — the one `student_guardians` links and the scope
+ * carries — not the `studentId` *code* on the record, which is the school's
+ * own numbering and matches nothing.
  */
 export function canWriteStudent(
-  student: { gradeLevel?: string; section?: string; class?: string } | null | undefined,
-  can: (scope: { classSection: string }) => boolean,
+  student:
+    | { id?: string | number; gradeLevel?: string; section?: string; class?: string }
+    | null
+    | undefined,
+  can: (scope: { classSection?: string; studentId?: string }) => boolean,
   isScoped: boolean,
 ): boolean {
   if (!student) return true
   const classSection = classSectionOf(student)
-  if (classSection === undefined) {
-    // Unscoped holders are unaffected by a missing class; scoped ones cannot
-    // be given the benefit of the doubt about which class they are touching.
+  const studentId = student.id === undefined ? undefined : String(student.id)
+  if (classSection === undefined && studentId === undefined) {
+    // Unscoped holders are unaffected by a record that names neither; narrowed
+    // ones cannot be given the benefit of the doubt about what they are
+    // touching. A record identified on one axis needs no such rule — it is
+    // tested against the condition, and a rule on the other axis fails to
+    // match it, which is the same fail-closed answer arrived at honestly.
     return !isScoped
   }
-  return can({ classSection })
+  return can({ classSection, studentId })
 }
 
 /**

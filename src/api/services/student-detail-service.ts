@@ -19,53 +19,7 @@ import type { DocumentItem } from '@/components/ui/documents-list'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId } from '@/mocks/_shared'
-import { visibleRecordToCaller } from '@/mocks/_shared/caller'
-import { findStudent } from '@/mocks/tenant/students'
-import { classSectionOf } from '@/utils/class-section-helpers'
-
-// ---------------------------------------------------------------------------
-// The one gate
-// ---------------------------------------------------------------------------
-
-/**
- * May this caller write to this student's record?
- *
- * Every function below takes a `studentId` straight from whoever called it and
- * changed something under it — a health record, a behaviour note, a document.
- * `StudentDetails` already asks `canWriteStudent` before it offers a pencil,
- * but that decides what is *drawn*; nothing decided what was *allowed*, so a
- * caller reaching past the page — another tab, a stale handler, anybody typing
- * into the console — wrote to any student in the school.
- *
- * ── Why a record check and not `callerMay` ─────────────────────────────
- * `students.update` declares `scopableBy: ['classes']`, so a class-scoped
- * teacher who holds it gets a rule conditioned on `classSection`. Asking
- * `callerMay('update', 'Student')` asks "may I edit a student *somewhere*",
- * which that teacher answers yes to for every student in the school — the trap
- * `caller.ts` documents. So the student is looked up and the rule is tested
- * against the record, exactly as `student-service` does on the way out.
- *
- * The key carries both axes because `SubjectFields` has both and the caller
- * should not have to know which one their role is written on. Today only
- * `classSection` can narrow an update; the day `students.update` also declares
- * the `students` axis, this is already asking the right question.
- *
- * A student who cannot be found, or whose record names no class, fails closed:
- * `classSectionOf` returns undefined, which matches no `$in`, and a scope that
- * cannot be determined withholds rather than waves through.
- *
- * Mock path only — the HTTP path is the server's own business, and duplicating
- * the decision in the client would be the copy that drifts.
- */
-function assertMayEditStudent(studentId: string, action: string): void {
-  const allowed = visibleRecordToCaller(findStudent(studentId), 'update', 'Student', student => ({
-    studentId: String(student.id),
-    classSection: classSectionOf(student),
-  }))
-  if (!allowed) {
-    throw new Error(`Not allowed to ${action}.`)
-  }
-}
+import { assertMayEditStudent } from '@/mocks/_shared/student-access'
 
 // ---------------------------------------------------------------------------
 // Health Records

@@ -179,6 +179,28 @@ export interface PermissionDefinition {
    * `assignments.read` is the one entry that still narrows nothing, because
    * the feature behind it does not exist. It becomes real the day there is a
    * service to enforce it in.
+   *
+   * ── An undeclared axis grants the capability *whole* ──────────────────
+   * `defineAbilityFor` writes a condition only for an axis the permission
+   * names, so a holder narrowed on some other axis gets the grant with no
+   * condition at all. That is deliberate for the reads above — a class-scoped
+   * teacher holds `students.read`, which names only `students`, and reads the
+   * whole roster, which is the job.
+   *
+   * It was a hole in the writes. `students.update` named only `classes`, so a
+   * family role granted it would have been narrowed by nothing and could edit
+   * every record in the school — the opposite of what a `students` axis is
+   * for. Every student write now names both axes, which is why `create` names
+   * `students` too: a new student is nobody's child yet, so the condition can
+   * never match and a family holder cannot enrol. That is the narrowing
+   * working, not a degenerate case.
+   *
+   * `students.promote` still names neither, because a year rollover is a
+   * school-wide operation that no class or child bounds. It is therefore the
+   * one student write a family role could still hold whole — which an axis
+   * cannot fix, because there is no axis a promotion is about. What it wants
+   * is a way to say "staff only", and that is a field this catalogue does not
+   * have yet.
    */
   scopableBy?: readonly ScopeAxis[]
 }
@@ -220,11 +242,11 @@ export const PERMISSION_DEFINITIONS = [
   { id: 'notices.manage', action: 'manage', subject: 'Notice', group: 'General', label: 'Manage notices', description: 'Publish, pin and remove notices.' },
 
   { id: 'students.read', action: 'read', subject: 'Student', group: 'People', label: 'View students', description: 'See the student roster and profiles.', scopableBy: ['students'] },
-  { id: 'students.create', action: 'create', subject: 'Student', group: 'People', label: 'Enrol students', description: 'Add a student to the roster.', scopableBy: ['classes'] },
-  { id: 'students.update', action: 'update', subject: 'Student', group: 'People', label: 'Edit student records', description: 'Change a student\'s details, documents and history.', scopableBy: ['classes'] },
-  { id: 'students.delete', action: 'delete', subject: 'Student', group: 'People', label: 'Remove students', description: 'Delete a student record permanently.', scopableBy: ['classes'] },
+  { id: 'students.create', action: 'create', subject: 'Student', group: 'People', label: 'Enrol students', description: 'Add a student to the roster.', scopableBy: ['classes', 'students'] },
+  { id: 'students.update', action: 'update', subject: 'Student', group: 'People', label: 'Edit student records', description: 'Change a student\'s details, documents and history.', scopableBy: ['classes', 'students'] },
+  { id: 'students.delete', action: 'delete', subject: 'Student', group: 'People', label: 'Remove students', description: 'Delete a student record permanently.', scopableBy: ['classes', 'students'] },
   { id: 'students.promote', action: 'promote', subject: 'Student', group: 'People', label: 'Run promotions', description: 'Move students between years.' },
-  { id: 'students.transfer', action: 'transfer', subject: 'Student', group: 'People', label: 'Transfer students', description: 'Move a student between classes or sections.', scopableBy: ['classes'] },
+  { id: 'students.transfer', action: 'transfer', subject: 'Student', group: 'People', label: 'Transfer students', description: 'Move a student between classes or sections.', scopableBy: ['classes', 'students'] },
   { id: 'teachers.read', action: 'read', subject: 'Teacher', group: 'People', label: 'View teachers', description: 'See the staff list and profiles.' },
   { id: 'teachers.manage', action: 'manage', subject: 'Teacher', group: 'People', label: 'Manage teachers', description: 'Add and edit staff records.' },
 

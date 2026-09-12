@@ -15,6 +15,11 @@ import {
   visibleRecordToCaller,
   visibleToCaller,
 } from '@/mocks/_shared/caller'
+import {
+  assertMayEditStudent,
+  assertMayEnrolStudent,
+  mayWriteStudent,
+} from '@/mocks/_shared/student-access'
 import { classSectionOf } from '@/utils/class-section-helpers'
 import { joinPhone } from '@/utils/format'
 import { reconcileGuardians, type GuardianSlot } from '@/mocks/tenant/guardians'
@@ -223,6 +228,11 @@ export async function createStudent(data: Partial<Student>): Promise<Student> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      // Asked of the draft, before an id is minted. The class a student joins
+      // is a value on the form, so it is the only thing a scoped holder can be
+      // judged on here — and a new student is nobody's child, which is what
+      // stops a family holder enrolling anyone.
+      assertMayEnrolStudent(data)
       const { guardians, ...rest } = data
       // The directory table renders and searches `name`, the older of the two
       // spellings a record carries, and the form only ever supplies the parts.
@@ -266,8 +276,16 @@ export async function updateStudent(id: string, data: Partial<Student>): Promise
       await withLatency()
       const existing = findStudent(id)
       if (!existing) throw new Error('Student not found')
+      assertMayEditStudent(id, 'edit this student')
       const { guardians, ...rest } = data
       const updated = { ...existing, ...rest }
+      // And again against the record as it will be. Holding the class a
+      // student is in does not entitle you to move them into one you do not,
+      // so the destination is its own question — the same pair of checks
+      // `EditStudent` makes before it submits.
+      if (!mayWriteStudent(updated, 'update')) {
+        throw new Error('Not allowed to move this student into that class.')
+      }
       // Dropped rather than merged: the fixture students still carry the old
       // embedded shape, and a record that keeps both would answer the same
       // question two ways the moment a guardian is edited on the detail page.

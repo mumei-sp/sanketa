@@ -29,11 +29,20 @@ export default function AddStudent() {
     // Through the helper so a form that named no class fails closed for a
     // scoped holder, rather than asking the unscoped "anywhere?" question and
     // being told yes.
-    if (!canWriteStudent(studentData, scope => can('students.create', scope), role?.scopeBy === 'classes')) {
-      showError('That class is not yours', {
-        description: classSection
-          ? `You can only enrol students into the classes assigned to you. ${classSection} is not one of them.`
-          : 'Choose a grade and section you are assigned to.',
+    if (!canWriteStudent(studentData, scope => can('students.create', scope), role?.scopeBy !== undefined)) {
+      // The refusal has to name the axis the holder is actually narrowed on.
+      // A class-scoped teacher is being told which class; a family-scoped
+      // holder is not short a class, they are short a capability — no new
+      // student is one of their children, so there is no class they could
+      // choose that would work, and "that class is not yours" would send them
+      // round the form looking for one.
+      const byClass = role?.scopeBy === 'classes'
+      showError(byClass ? 'That class is not yours' : 'You cannot enrol students', {
+        description: byClass
+          ? classSection
+            ? `You can only enrol students into the classes assigned to you. ${classSection} is not one of them.`
+            : 'Choose a grade and section you are assigned to.'
+          : 'Your role only reaches your own children, and a new student is not one of them yet.',
       })
       return
     }

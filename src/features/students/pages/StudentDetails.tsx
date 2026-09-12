@@ -207,7 +207,7 @@ export default function StudentDetails() {
    * on click.
    */
   const canEditThisStudent =
-    canWriteStudent(student, scope => can('students.update', scope), role?.scopeBy === 'classes')
+    canWriteStudent(student, scope => can('students.update', scope), role?.scopeBy !== undefined)
   const writable = <T,>(handler: T): T | undefined =>
     canEditThisStudent ? handler : undefined
 

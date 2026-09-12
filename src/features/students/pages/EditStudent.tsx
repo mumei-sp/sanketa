@@ -61,7 +61,7 @@ export default function EditStudent() {
    * one into a class that is not yours either.
    */
   const canEditThisStudent =
-    canWriteStudent(student, scope => can('students.update', scope), role?.scopeBy === 'classes')
+    canWriteStudent(student, scope => can('students.update', scope), role?.scopeBy !== undefined)
 
   const onSubmit = React.useCallback(
     async (data: StudentFormValues) => {
@@ -71,7 +71,11 @@ export default function EditStudent() {
         return
       }
       const destination = classSectionOf(formToStudent(data))
-      if (!can('students.update', { classSection: destination })) {
+      // The student travels with the destination so a holder narrowed by
+      // child is judged on the axis their rule is written on. Without it the
+      // class-only subject matches no family rule and a parent allowed to
+      // edit their own child could never save.
+      if (!can('students.update', { classSection: destination, studentId: id })) {
         showError('That class is not yours', {
           description: `You cannot move a student into ${destination ?? 'that class'}.`,
         })
@@ -128,8 +132,9 @@ export default function EditStudent() {
             >
               <Lock className="mt-0.5 size-4 shrink-0" style={{ color: 'var(--heading)' }} />
               <p className="text-caption text-muted-foreground">
-                This student is not in one of your assigned classes, so you can read their
-                record but not change it.
+                {role?.scopeBy === 'students'
+                  ? 'This student is not one of your children, so you can read their record but not change it.'
+                  : 'This student is not in one of your assigned classes, so you can read their record but not change it.'}
               </p>
             </div>
           )}
