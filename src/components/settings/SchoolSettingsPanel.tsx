@@ -457,7 +457,7 @@ function ClassSectionsCard({ draft, setDraft }: SectionProps) {
                   <span
                     key={section.id}
                     className="inline-flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1.5"
-                    style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
+                    style={{ backgroundColor: 'var(--accent)', color: 'var(--heading-accent, var(--heading))' }}
                   >
                     {section.label}
                     <button
@@ -816,7 +816,32 @@ export function SchoolSettingsPanel() {
         // Full-bleed below `lg`, where 16rem of sidebar does not exist to sit
         // beside: the inline width this replaced left a 119px column on a
         // phone, which no amount of responsive markup inside could rescue.
-        className="flex flex-col p-0 gap-0 w-full lg:w-[calc(100vw-16rem)] lg:max-w-[900px]"
+        // 900px capped the whole panel, and the 220px nav is inside it — so a
+        // section got ~610px once padding was taken. That is fine for a column
+        // of form fields and wrong for Access, which is a master-detail screen
+        // drawn against 940px: its role rail and editor sat side by side in
+        // half the room, so "Limit what this role reaches" broke over three
+        // lines and the permission chips stacked three deep.
+        // A PROPORTION of the space beside the sidebar, not a fixed cap.
+        //
+        // `calc(100vw - 16rem)` is that space exactly — the sidebar measures
+        // 224px and 16rem is 224px at this app's 14px root. A max-width on top
+        // of it only ever bites on a large monitor: on a 1440 laptop the space
+        // is 1216px, so caps of 1220, 1500 and no cap at all produced the same
+        // 1216px panel and three successive "make it narrower" changes moved
+        // nothing. Sizing to 88% of the available space insets the panel by the
+        // same proportion whatever the display — 1070 on a 1440, 1492 on a 1920
+        // — so it reads the same on both instead of only on one.
+        //
+        // 0.88 rather than a rounder number because it is what Access needs:
+        // its content is the panel less the 204px nav and 49px of padding,
+        // and the design lays that content out at 940px. On a 1600 screen
+        // 0.88 gives 942. Lower and the role rail and its editor start
+        // wrapping their headings again.
+        //
+        // The 1500 ceiling still stops a very large monitor from handing the
+        // permission rows a label at one end and a switch at the other.
+        className="flex flex-col p-0 gap-0 w-full lg:w-[calc((100vw-16rem)*0.88)] lg:max-w-[1500px]"
         onInteractOutside={e => {
           const target = e.target as HTMLElement
           if (target?.closest('[data-radix-popper-content-wrapper]') || target?.closest('[role="listbox"]')) {
@@ -835,7 +860,24 @@ export function SchoolSettingsPanel() {
           <nav
             className="shrink-0 overflow-y-auto hidden md:flex flex-col justify-between"
             style={{
-              width: '220px',
+              // 196, not 220. A column of seven short labels at 220 left a
+              // third of itself empty, which reads as stretched rather than
+              // roomy.
+              //
+              // 196 rather than something rounder because 192 is where
+              // "Academic Calendar" — the widest label, and the only one that
+              // is close — starts to ellipse. Measured by narrowing the live
+              // nav a step at a time and watching for the first clipped label,
+              // not derived: the label's own padding and gap put the real
+              // figure well above what the text measures at. 4px of margin on
+              // top of that, for whatever a different font stack rounds to.
+              // "Academic Calendar" sets the floor: 112px of text, plus the
+              // icon, the gap and two lots of padding on the button and on this
+              // nav, which comes to 188. Squeezing the padding to get under
+              // that bought 20px and cost the school name in the header, which
+              // started breaking over two lines — so the padding is back and
+              // this sits clear of the floor rather than on it.
+              width: '204px',
               backgroundColor: background.card,
               borderRight: `1px solid ${border.default}`,
               padding: spacing['4'],
@@ -968,7 +1010,11 @@ export function SchoolSettingsPanel() {
                     padding: `${spacing['2']} ${spacing['3']}`,
                     gap: spacing['1.5'],
                     backgroundColor: isActive ? 'var(--accent)' : 'transparent',
-                    color: isActive ? 'var(--heading)' : text.muted,
+                    // Active sits on `--accent`, a fixed brand fill, so it takes
+                    // the fixed partner; inactive is transparent over the panel
+                    // and so takes a themed one. Same split as the day chips in
+                    // `TimetableSettingsSection`.
+                    color: isActive ? 'var(--accent-foreground)' : text.muted,
                   }}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -990,7 +1036,19 @@ export function SchoolSettingsPanel() {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: spacing['5'],
-                maxWidth: '720px',
+                // A column of labelled inputs stays at 720px however wide the
+                // panel gets — a text field the width of the screen is harder
+                // to read, not easier. Access is not that shape: it is two
+                // panes beside each other, and it was the section the widening
+                // was for, so it is the one that spends the room.
+                //
+                // 1400 rather than unbounded: now that the panel has no cap of
+                // its own, an ultrawide monitor would otherwise stretch a row
+                // of permission toggles across two thousand pixels, with the
+                // label at one end and the switch at the other. 1400 covers a
+                // 1920 screen almost exactly — 76px spare — and stops short of
+                // that.
+                maxWidth: activeSection === 'access' ? '1200px' : '720px',
               }}
             >
               {renderSection()}
@@ -1023,9 +1081,25 @@ export function SchoolSettingsPanel() {
                 <Button
                   onClick={handleSave}
                   className="text-sm relative"
+                  /*
+                   * Both halves of this pair move together.
+                   *
+                   * The idle state painted `--border` behind `--card` text, and
+                   * a hairline colour behind a surface colour is two shades of
+                   * the same thing: white on pale grey in light (1.21:1), dark
+                   * on dark in dark (1.02:1). The button that saves the school's
+                   * settings was unreadable in both themes until you changed
+                   * something. `--muted` over `--muted-foreground` is the app's
+                   * own quiet-surface pair and still reads — 5.93:1 and 6.23:1.
+                   *
+                   * The active half swaps `--card` for `--heading-foreground`,
+                   * which is the auto-contrast partner `applyAppearance`
+                   * computes for a `--heading` fill. It resolved to the same
+                   * colour here by luck; now it does so by rule.
+                   */
                   style={{
-                    backgroundColor: hasChanges ? 'var(--heading)' : border.default,
-                    color: background.card,
+                    backgroundColor: hasChanges ? 'var(--heading)' : 'var(--muted)',
+                    color: hasChanges ? 'var(--heading-foreground)' : 'var(--muted-foreground)',
                   }}
                 >
                   Save Changes

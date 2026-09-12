@@ -162,6 +162,30 @@ export function RoleGrantRow({
           <span className="italic">{grant.reason}</span>
         </p>
       )}
+
+      {/*
+        Said on the row, not only where the role was given.
+
+        The grant dialog says it and a toast repeats it, but both are gone
+        moments later — and the question this answers ("does somebody have to
+        remember to take this back?") is asked weeks afterwards, by whoever
+        opens the person and finds an amber row. The amber says the grant ends;
+        it does not say that the ending takes care of itself, and an admin who
+        assumes otherwise sets a reminder nobody needs.
+
+        On the row rather than once per person because a person can hold two
+        temporary roles, and then a single note underneath is ambiguous about
+        which one it belongs to.
+      */}
+      {temporary && (
+        <p
+          className="flex w-full items-start gap-1.5 text-caption"
+          style={{ color: CAUTION.ink }}
+        >
+          <Clock className="mt-0.5 size-3 shrink-0" aria-hidden />
+          <span>It stops working on its own — nobody has to remember to take it back.</span>
+        </p>
+      )}
     </div>
   )
 }

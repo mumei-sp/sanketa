@@ -22,7 +22,8 @@
  */
 
 import * as React from 'react'
-import { Info, AlertTriangle, Layers, UserPlus, Eye, Users } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Info, AlertTriangle, Layers, UserPlus, Eye, Users, ChevronDown } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -60,7 +61,7 @@ import type { Capacity } from '@/mocks/tenant/profiles'
 import type { AccountStatus } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import type { Role } from '@/config/permissions'
-import { RoleGrantRow, AddRoleRow, shortDate } from './RoleGrantRow'
+import { RoleGrantRow, AddRoleRow, GrantSummary, shortDate } from './RoleGrantRow'
 import { GrantRoleDialog } from './GrantRoleDialog'
 import { SearchField } from './parts'
 import { ProvisionDialog } from './ProvisionDialog'
@@ -149,6 +150,12 @@ interface PeopleTabProps {
   roleFilter: string
   onRoleFilterChange: (roleId: string) => void
   record: RecordAccessEvent
+  /**
+   * Where this tab's buttons should render — a node on the tab strip's row,
+   * owned by `AccessSettingsSection`. Null on the first paint, before the node
+   * exists, so the buttons simply wait a render.
+   */
+  actionSlot?: HTMLElement | null
 }
 
 /**
@@ -176,6 +183,7 @@ export function PeopleTab({
   roleFilter,
   onRoleFilterChange,
   record,
+  actionSlot,
 }: PeopleTabProps) {
   const { roles, startPreview, can } = usePermissions()
   /**
@@ -199,6 +207,17 @@ export function PeopleTab({
   const [provisionOpen, setProvisionOpen] = React.useState(false)
   const [draft, setDraft] = React.useState({ fullName: '', email: '', phone: '', roleId: '' })
   const [isAdding, setIsAdding] = React.useState(false)
+  /**
+   * Which person is open. One at a time, and none to begin with.
+   *
+   * Every person used to render every control they have — a row per role they
+   * hold, the roles they could be given, and nineteen class chips — so a school
+   * with ten people asked you to scroll past ten open forms to reach the one
+   * you came for. Closed, a person is a name, what they hold and where it came
+   * from, which is what "who is this" actually wants; the controls arrive when
+   * you open them.
+   */
+  const [openId, setOpenId] = React.useState<string | null>(null)
   /**
    * The kind picked for somebody being given a profile, by user id.
    *
@@ -517,13 +536,23 @@ export function PeopleTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-body-muted text-muted-foreground">
-          What each person does at this school. Changes save as you make them and take
-          effect straight away.
-        </p>
-        {canAddPeople && (
-          <div className="flex shrink-0 flex-wrap gap-2">
+      {/*
+          Rendered onto the tab strip's row rather than here.
+
+          They used to sit under a sentence explaining that changes save as you
+          go — which is true of every tab on this screen, was two lines tall on
+          a narrow panel, and pushed the two buttons into the space left over.
+          The row they belong on is the one that says which tab you are looking
+          at. The state and the dialogs they open stay here, where they are
+          used; only the buttons travel.
+
+          `canAddPeople` gates them, and the portal waits for the node: on the
+          first render `actionSlot` is null and nothing is drawn.
+      */}
+      {canAddPeople &&
+        actionSlot &&
+        createPortal(
+          <>
             {/* Two different jobs. "Add person" types in someone new — a
                 member of staff joining. "Give parents accounts" works off
                 records the school already has, which is how every family
@@ -541,9 +570,9 @@ export function PeopleTab({
               <UserPlus className="size-4" />
               Add person
             </Button>
-          </div>
+          </>,
+          actionSlot,
         )}
-      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <SearchField
@@ -611,6 +640,7 @@ export function PeopleTab({
           const assigned = person.assignedClasses
           const isSelf = currentUser?.id === user.id
           const busy = savingId === user.id
+          const isOpen = openId === user.id
 
           return (
             <div
@@ -672,6 +702,10 @@ export function PeopleTab({
                     )}
                   </p>
                   <p className="text-caption text-muted-foreground">{user.email}</p>
+                  {/* What they hold and where it came from, on one line. Only
+                      while closed — open, every grant has its own row below and
+                      this would say it all twice. */}
+                  {!isOpen && <GrantSummary grants={person.grants} roles={roles} />}
                 </div>
 
                 {/* The faithful preview: this person's roles *and* their
@@ -700,8 +734,43 @@ export function PeopleTab({
                     View as
                   </Button>
                 )}
+
+                {/* Role pills stand in for the rows underneath while the card
+                    is closed, so "what is this person" is answerable without
+                    opening anything. */}
+                {!isOpen && held.length > 0 && (
+                  <span className="flex flex-wrap items-center justify-end gap-1.5">
+                    {held.map(role => (
+                      <span
+                        key={role.id}
+                        className="rounded-full px-2.5 py-1 text-xs font-medium"
+                        style={{ backgroundColor: 'var(--heading)', color: 'var(--card)' }}
+                      >
+                        {role.name}
+                      </span>
+                    ))}
+                  </span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setOpenId(isOpen ? null : user.id)}
+                  aria-expanded={isOpen}
+                  aria-label={isOpen ? `Close ${user.fullName}` : `Open ${user.fullName}`}
+                  className="tap-target shrink-0 rounded-md p-1 hover:bg-muted"
+                  style={{ color: text.muted }}
+                >
+                  <ChevronDown
+                    className={cn('size-4 transition-transform', isOpen && 'rotate-180')}
+                    aria-hidden
+                  />
+                </button>
               </div>
 
+              {/* Closed, the card stops here — the header has already said who
+                  they are and what they hold. */}
+              {isOpen && (
+                <>
               {/* ── Roles ──
                   Chips rather than a dropdown, because a person can hold
                   several and a `<select>` can say one. The same control the
@@ -853,6 +922,8 @@ export function PeopleTab({
                     </p>
                   )}
                 </div>
+              )}
+                </>
               )}
             </div>
           )

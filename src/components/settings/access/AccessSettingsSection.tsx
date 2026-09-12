@@ -328,11 +328,19 @@ export function AccessSettingsSection() {
     setTab('people')
   }
 
+  // The node a tab's actions portal into. State rather than a ref because a
+  // portal has to re-render once the node exists, and a ref mutating does not
+  // cause that.
+  const [actionSlot, setActionSlot] = React.useState<HTMLDivElement | null>(null)
+
   const customRoles = roles.filter(role => !role.builtin).length
   const scopedRoles = roles.filter(role => role.scopeBy !== undefined).length
 
   return (
-    <div className="flex flex-col gap-4">
+    // `@container` so the tab strip can size itself against the PANEL rather
+    // than the window — the settings sheet is a fixed slab beside the sidebar,
+    // and a viewport breakpoint says nothing useful about how wide it is.
+    <div className="@container flex flex-col gap-4">
       <div>
         <h3 className="text-section-title" style={{ color: 'var(--heading)' }}>
           Access
@@ -356,24 +364,51 @@ export function AccessSettingsSection() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="gap-4">
-        <TabsList className="w-full">
+        {/*
+          Sized to its three labels once there is room, stretched edge to edge
+          only when there is not.
+
+          Full width was costing the strip about 600px to say "Roles People
+          Activity" — three short words with a quarter of the panel between
+          them, which reads as three separate buttons rather than one control
+          with one of them chosen. `TabsList` is `w-fit` by default; the
+          `w-full` here was overriding it. Kept below 560px of panel, where
+          stretching is what makes the targets thumb-sized.
+        */}
+        {/*
+          The tab strip and whatever the open tab's actions are, on one line.
+
+          A tab's own buttons used to sit on a second row under a sentence of
+          explanation, which cost a row of height and read as a separate
+          toolbar. The design puts them level with the tabs, so the row says
+          "here is where you are, and here is what you can do from here".
+
+          The buttons themselves stay with the tab that owns them — their state
+          and their dialogs live there — and arrive through this node by portal.
+          `actionSlot` is null on the first render, which is why a tab has to
+          tolerate it being absent rather than assume the node is there.
+        */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+        <TabsList className="h-auto w-full @[560px]:w-fit">
           {canManageRoles && (
-            <TabsTrigger value="roles" className="gap-1.5">
+            <TabsTrigger value="roles" className="gap-1.5 px-4 py-1.5 text-sm font-semibold">
               <ShieldCheck className="size-4" />
               <span className="truncate">Roles</span>
             </TabsTrigger>
           )}
           {canManagePeople && (
-            <TabsTrigger value="people" className="gap-1.5">
+            <TabsTrigger value="people" className="gap-1.5 px-4 py-1.5 text-sm font-semibold">
               <Users className="size-4" />
               <span className="truncate">People</span>
             </TabsTrigger>
           )}
-          <TabsTrigger value="activity" className="gap-1.5">
+          <TabsTrigger value="activity" className="gap-1.5 px-4 py-1.5 text-sm font-semibold">
             <History className="size-4" />
             <span className="truncate">Activity</span>
           </TabsTrigger>
         </TabsList>
+          <div ref={setActionSlot} className="flex flex-wrap items-center gap-2" />
+        </div>
 
         {/* `forceMount` on all three: Radix unmounts a hidden tab, and this
             screen's tabs hold work in progress — the role you were editing,
@@ -390,6 +425,7 @@ export function AccessSettingsSection() {
               onManagePeople={openPeopleFor}
               canManagePeople={canManagePeople}
               record={record}
+              actionSlot={tab === 'roles' ? actionSlot : null}
             />
           </TabsContent>
         )}
@@ -410,6 +446,12 @@ export function AccessSettingsSection() {
               roleFilter={roleFilter}
               onRoleFilterChange={setRoleFilter}
               record={record}
+              // Only while People is the open tab. Every tab is `forceMount`ed
+              // so its work survives switching away, which means People's
+              // portal would otherwise keep rendering its buttons onto the tab
+              // row while you were looking at Roles. Handing it a null node is
+              // how a hidden tab stands down.
+              actionSlot={tab === 'people' ? actionSlot : null}
             />
           </TabsContent>
         )}
