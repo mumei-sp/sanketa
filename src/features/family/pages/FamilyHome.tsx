@@ -43,20 +43,9 @@ import { fetchCalendarEvents } from '@/api/services/dashboard-service'
 import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
 import { fetchFeeCollection } from '@/api/services/fees-collection-service'
 import { fetchExams, fetchGradeSheet, fetchGradeableSubjects } from '@/api/services/grade-service'
-import {
-  fetchAssignments,
-  fetchRoutes,
-  fetchVehicles,
-  fetchDrivers,
-} from '@/api/services/transport-service'
+import { fetchStudentRide } from '@/api/services/transport-service'
 import { useGradeCalculator } from '@/features/grades/hooks/use-grade-calculator'
 import type { GradeSheetRow, GradeSheetSummary } from '@/features/grades/types'
-import type {
-  StudentTransportAssignment,
-  TransportRoute,
-  Vehicle,
-  TransportDriver,
-} from '@/features/transport/types'
 import { useFamilyScope } from '../FamilyScopeContext'
 import { ChildSwitcher } from '../components/ChildSwitcher'
 import type { StudentDetailData } from '@/features/students/types'
@@ -155,12 +144,7 @@ export function FamilyHome() {
     maxMarks: number
     subjects: { id: string; name: string; shortName: string }[]
   } | null>(null)
-  const [ride, setRide] = React.useState<{
-    assignment: StudentTransportAssignment
-    route: TransportRoute | null
-    vehicle: Vehicle | null
-    driver: TransportDriver | null
-  } | null>(null)
+  const [ride, setRide] = React.useState<Awaited<ReturnType<typeof fetchStudentRide>>>(null)
 
   const studentId = selected ? String(selected.id) : null
   const classLabel = selected ? (classSectionOf(selected) ?? null) : null
@@ -263,37 +247,25 @@ export function FamilyHome() {
   /**
    * The bus, when there is one.
    *
-   * Two conditions, and one read answers both: a school without the transport
-   * module has `fetchAssignments` refused and gets an empty list, and a day
-   * pupil at a school that does run buses simply has no row in it. Either way
-   * there is nothing to draw, and the card is ABSENT rather than empty.
+   * One read, scoped to this child — see `fetchStudentRide`. It used to be four
+   * (`fetchAssignments` plus the routes, vehicles and drivers), which asked the
+   * whole fleet for one bus and left the filtering to the page; a parent does
+   * not hold `transport.read`, so all four came back empty and the card could
+   * never appear.
+   *
+   * `null` covers both of the design's conditions without distinguishing them:
+   * a school with no buses and a day pupil at a school that runs them both have
+   * nothing to draw, and the card is ABSENT rather than empty.
    */
   React.useEffect(() => {
     if (!studentId) return
     let cancelled = false
     setRide(null)
-    void (async () => {
-      try {
-        const assignments = await fetchAssignments()
-        const assignment = assignments.find(row => String(row.studentId) === studentId)
-        if (cancelled || !assignment) return
-        const [routes, vehicles, drivers] = await Promise.all([
-          fetchRoutes(),
-          fetchVehicles(),
-          fetchDrivers(),
-        ])
-        if (cancelled) return
-        const route = routes.find(candidate => candidate.id === assignment.routeId) ?? null
-        setRide({
-          assignment,
-          route,
-          vehicle: vehicles.find(candidate => candidate.id === route?.vehicleId) ?? null,
-          driver: drivers.find(candidate => candidate.id === route?.driverId) ?? null,
-        })
-      } catch (error) {
-        console.error('Failed to load the bus', error)
-      }
-    })()
+    void fetchStudentRide(studentId)
+      .then(found => {
+        if (!cancelled) setRide(found)
+      })
+      .catch(error => console.error('Failed to load the bus', error))
     return () => {
       cancelled = true
     }

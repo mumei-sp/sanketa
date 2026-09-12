@@ -13,8 +13,10 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
-import { callerMay } from '@/mocks/_shared/caller'
+import { callerMay, visibleRecordToCaller } from '@/mocks/_shared/caller'
 import * as mockServer from '@/mocks/tenant/transport/store'
+import { findStudent } from '@/mocks/tenant/students'
+import { classSectionOf } from '@/utils/class-section-helpers'
 import type {
   StudentTransportAssignment,
   TransportAlert,
@@ -275,6 +277,79 @@ export async function deleteFeeStructure(id: string): Promise<boolean> {
 }
 
 // ── Student assignments ───────────────────────────────────────────────
+
+/**
+ * One child's bus, for the family that child belongs to.
+ *
+ * The note on `fetchAssignments` below wanted `transport.read` to grow a
+ * `scopableBy: ['students']` axis so a parent could hold it. This takes the
+ * other road, and it is the shorter one: a child's bus is a fact about THAT
+ * CHILD, not about the fleet, so the question to ask is the one a family can
+ * already answer — is this your student — rather than a fleet permission
+ * narrowed after the event.
+ *
+ * Which matters, because `transport.read` declares no axis. Handing it to
+ * parents to light up one card would have handed them all 74 assignments —
+ * every family's child, stop and pickup time — plus the drivers' names, phone
+ * numbers and licence numbers. A parent needs one row and the vehicle attached
+ * to it, so that is what this returns and all it returns.
+ *
+ * The route, bus and driver come back joined rather than as three fleet reads
+ * the caller filters down: asking for the whole fleet to draw one bus is how
+ * the thing it must not leak ends up on the wire anyway.
+ *
+ * @apiRoute GET /api/v1/students/{studentId}/transport
+ */
+export async function fetchStudentRide(studentId: string): Promise<{
+  assignment: StudentTransportAssignment
+  route: TransportRoute | null
+  vehicle: Vehicle | null
+  driver: TransportDriver | null
+} | null> {
+  return mockOrHttp(
+    async () => {
+      await withLatency()
+      // Two different ids wear the same name here. `Student.id` is the
+      // profile's — what a scope and this argument both carry — while an
+      // assignment's `studentId` is the code printed on things, `S-2101`. They
+      // are not interchangeable, and matching the argument against the rows
+      // directly found nothing for anybody.
+      const student = findStudent(studentId)
+      if (!student) return null
+      const seat = mockServer
+        .listAssignments()
+        .find(row => row.studentId === student.studentId)
+      const mine = visibleRecordToCaller(seat, 'read', 'Student', () => ({
+        // Guarded on the profile id, because that is the axis a family is
+        // narrowed on — the code above is only how this table names a child.
+        studentId: String(student.id),
+        classSection: classSectionOf(student),
+      }))
+      if (!mine) return null
+
+      const route = mockServer.listRoutes().find(row => row.id === mine.routeId) ?? null
+      return {
+        assignment: mine,
+        route,
+        vehicle: route
+          ? (mockServer.listVehicles().find(row => row.id === route.vehicleId) ?? null)
+          : null,
+        driver: route
+          ? (mockServer.listDrivers().find(row => row.id === route.driverId) ?? null)
+          : null,
+      }
+    },
+    async () => {
+      const { data } = await apiClient.get<{
+        assignment: StudentTransportAssignment
+        route: TransportRoute | null
+        vehicle: Vehicle | null
+        driver: TransportDriver | null
+      } | null>(`/students/${studentId}/transport`)
+      return data
+    },
+  )
+}
 
 /** @apiRoute GET /api/v1/transport/assignments */
 export async function fetchAssignments(): Promise<StudentTransportAssignment[]> {
