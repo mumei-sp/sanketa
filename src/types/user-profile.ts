@@ -9,7 +9,7 @@ export type Gender = 0 | 1 | 2 | 3
  *
  * This was a TINYINT column on `user_profiles` — one per row, so one per
  * person, and copied into every school by the replica. It is gone. What a
- * person is at a school is now the `profile_types` / `profile_profile_types`
+ * person is at a school is now the `profile_types` / `profile_type_assignments`
  * pair in the tenant schema, which is plural and school-extensible; these six
  * are the built-in codes it seeds with, and a school may add its own.
  *

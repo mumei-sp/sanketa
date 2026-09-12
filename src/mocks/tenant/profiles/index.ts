@@ -34,7 +34,7 @@ export type {
   StaffRecord,
   ProfileType,
   ProfileRole,
-  ProfileTypeLink,
+  ProfileTypeAssignment,
   Capacity,
 } from './store'
 /**

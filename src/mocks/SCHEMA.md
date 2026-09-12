@@ -126,7 +126,7 @@ a family mobile cannot both hold it, and the second needs an address.
 | `role_permissions` | `role_id`, `permission_id`, `granted` | designed (Postgres) | an array on the role |
 | `profile_roles` | **The multi-role join.** Was `user_roles` | this frontend | yes |
 | `profile_types` | School-extensible classifications, with built-ins | this frontend | yes |
-| `profile_profile_types` | A person may be more than one kind | this frontend | yes |
+| `profile_type_assignments` | A person may be more than one kind | this frontend | yes |
 | `teacher_classes` | `profile_id`, `class_section` | this frontend | flattened onto the profile |
 
 ### Capacities and profile types — two different things

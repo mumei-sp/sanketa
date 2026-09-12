@@ -5,12 +5,13 @@
  * together: they are written together and read together, and splitting them
  * would mean four round trips to answer one question.
  *
- *   user_profiles          one row per person at this school
- *   staff                  the employment record, for people who have one
- *   profile_types          the kinds of person this school recognises
- *   profile_roles          which roles each person holds here
+ *   user_profiles              one row per person at this school
+ *   staff                      the employment record, for people who have one
+ *   profile_types              the kinds of person this school recognises
+ *   profile_type_assignments   which kinds each person is
+ *   profile_roles              which roles each person holds here
  *
- * Per school, all four. That is the whole point: the same login is a teacher
+ * Per school, all five. That is the whole point: the same login is a teacher
  * at one school and a parent at another, and `roleId` sitting on the global
  * user row could only ever hold one answer.
  *
@@ -179,7 +180,7 @@ export interface StaffRecord {
    * The job title on the letterhead — "Senior Accountant", "Head of Science".
    *
    * ── Not a classification, and the difference matters ──────────────────
-   * What *kinds* of person somebody is lives in `profile_profile_types`, which
+   * What *kinds* of person somebody is lives in `profile_type_assignments`, which
    * is plural. This is one string, so it can never answer that question: the
    * member of staff who is both Bus Driver and Librarian has two type links
    * and one designation, and a school writing "Bus Driver" here would be
@@ -221,7 +222,16 @@ export interface ProfileRole {
   expiresAt?: string
 }
 
-export interface ProfileTypeLink {
+/**
+ * One row of `profile_type_assignments` — this person is that kind, here.
+ *
+ * Named for what a row *is* rather than by the `<tableA>_<tableB>` convention,
+ * which would have produced `profile_profile_types`: table B is already called
+ * `profile_types`, so the plain form stutters and nobody reads it at a glance.
+ * `assigned_at` is on the row in the schema, so "assignment" is the true word
+ * and not a decoration chosen to break the repeat.
+ */
+export interface ProfileTypeAssignment {
   profileId: string
   profileTypeId: string
   isPrimary: boolean
@@ -234,7 +244,7 @@ interface Database {
   staff: StaffRecord[]
   types: ProfileType[]
   roles: ProfileRole[]
-  typeLinks: ProfileTypeLink[]
+  typeAssignments: ProfileTypeAssignment[]
   /** Which `access` fixture these rows came from — see `seedSignature`. */
   seed?: string
 }
@@ -362,7 +372,7 @@ function seed(): Database {
   // ── The employment records, and the logins ──
   const staff: StaffRecord[] = []
   const roles: ProfileRole[] = []
-  const typeLinks: ProfileTypeLink[] = []
+  const typeAssignments: ProfileTypeAssignment[] = []
 
   if (fixtures) {
     // A fixture entry refers to itself by `key`, because half of them do not
@@ -416,7 +426,7 @@ function seed(): Database {
       const profileId = idByKey.get(row.key)
       if (!profileId) return
       if (row.code === 'parent' && !hasGuardianRecord(profileId)) return
-      typeLinks.push({
+      typeAssignments.push({
         profileId,
         profileTypeId: typeId(row.code),
         isPrimary: row.isPrimary === true,
@@ -424,7 +434,7 @@ function seed(): Database {
     })
   }
 
-  return { profiles, staff, types, roles, typeLinks, seed: signatureOf() }
+  return { profiles, staff, types, roles, typeAssignments, seed: signatureOf() }
 }
 
 function load(): Database {
@@ -441,7 +451,7 @@ function load(): Database {
         Array.isArray(parsed.staff) &&
         Array.isArray(parsed.types) &&
         Array.isArray(parsed.roles) &&
-        Array.isArray(parsed.typeLinks) &&
+        Array.isArray(parsed.typeAssignments) &&
         parsed.seed === signatureOf()
       ) {
         db = parsed
@@ -583,11 +593,11 @@ export function listProfileTypes(): ProfileType[] {
 /** The classifications this person carries here, primary first. */
 export function typesOf(profileId: string): ProfileType[] {
   const database = load()
-  return database.typeLinks
-    .filter(link => link.profileId === profileId)
+  return database.typeAssignments
+    .filter(assignment => assignment.profileId === profileId)
     .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
-    .flatMap(link => {
-      const type = database.types.find(row => row.id === link.profileTypeId)
+    .flatMap(assignment => {
+      const type = database.types.find(row => row.id === assignment.profileTypeId)
       return type ? [{ ...type }] : []
     })
 }
@@ -711,19 +721,20 @@ export function deactivateProfileType(id: string): boolean {
 
 export function assignProfileType(profileId: string, profileTypeId: string, isPrimary = false): void {
   const database = load()
-  const existing = database.typeLinks.find(
-    link => link.profileId === profileId && link.profileTypeId === profileTypeId,
+  const existing = database.typeAssignments.find(
+    assignment =>
+      assignment.profileId === profileId && assignment.profileTypeId === profileTypeId,
   )
   if (isPrimary) {
     // At most one primary, so promoting one demotes the rest.
-    database.typeLinks
-      .filter(link => link.profileId === profileId)
-      .forEach(link => {
-        link.isPrimary = false
+    database.typeAssignments
+      .filter(assignment => assignment.profileId === profileId)
+      .forEach(assignment => {
+        assignment.isPrimary = false
       })
   }
   if (existing) existing.isPrimary = isPrimary
-  else database.typeLinks.push({ profileId, profileTypeId, isPrimary })
+  else database.typeAssignments.push({ profileId, profileTypeId, isPrimary })
   persist()
 }
 
@@ -744,7 +755,9 @@ export function deleteProfile(profileId: string): boolean {
   if (index === -1) return false
   database.profiles.splice(index, 1)
   database.roles = database.roles.filter(row => row.profileId !== profileId)
-  database.typeLinks = database.typeLinks.filter(link => link.profileId !== profileId)
+  database.typeAssignments = database.typeAssignments.filter(
+    assignment => assignment.profileId !== profileId,
+  )
   database.staff = database.staff.filter(row => row.profileId !== profileId)
   persist()
   return true
@@ -764,7 +777,9 @@ export function detachLogin(profileId: string): boolean {
   if (!profile) return false
   delete profile.userId
   database.roles = database.roles.filter(row => row.profileId !== profileId)
-  database.typeLinks = database.typeLinks.filter(link => link.profileId !== profileId)
+  database.typeAssignments = database.typeAssignments.filter(
+    assignment => assignment.profileId !== profileId,
+  )
   persist()
   return true
 }
