@@ -1,18 +1,16 @@
-import type { UserProfile, ProfileType } from '@/types/user-profile'
+import type { UserProfile } from '@/types/user-profile'
 import type { EmploymentType } from './teacher-detail'
 
 /**
  * Teacher interface based on UserProfile
  * Matches database schema structure from user_profiles and teachers tables
  * 
- * Note: Some UserProfile fields (userId, profileType) are optional for backward compatibility
- * with existing code that doesn't include these fields yet.
+ * Note: UserProfile's `userId` is optional here — a teacher who has never been
+ * given a login has no account row to point at.
  */
-export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
-  /** User ID - optional for backward compatibility */
+export interface Teacher extends Omit<UserProfile, 'userId'> {
+  /** User ID - optional: not every member of faculty has an account */
   userId?: string | number
-  /** Profile type - optional for backward compatibility, defaults to 1 (TEACHER) */
-  profileType?: ProfileType
 
   /** Teacher-specific identification */
   teacherId: string
@@ -56,7 +54,7 @@ export interface Teacher extends Omit<UserProfile, 'userId' | 'profileType'> {
 }
 
 // Re-export types for convenience
-export type { UserProfile, ProfileType } from '@/types/user-profile'
+export type { UserProfile } from '@/types/user-profile'
 
 /**
  * Aggregate counts for the teachers dashboard.

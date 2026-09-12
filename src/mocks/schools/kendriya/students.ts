@@ -36,7 +36,6 @@ const anchors: Student[] = [
   {
     id: '1',
     userId: 1001,
-    profileType: 0,
     firstName: 'Aarav',
     lastName: 'Sharma',
     fullName: 'Aarav Sharma',
@@ -81,7 +80,6 @@ const anchors: Student[] = [
   {
     id: '2',
     userId: 1002,
-    profileType: 0,
     firstName: 'Nikhil',
     lastName: 'Iyengar',
     fullName: 'Nikhil Iyengar',

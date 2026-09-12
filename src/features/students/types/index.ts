@@ -1,4 +1,4 @@
-import type { UserProfile, ProfileType } from '@/types/user-profile'
+import type { UserProfile } from '@/types/user-profile'
 
 /**
  * Student performance levels
@@ -33,14 +33,12 @@ export interface GuardiansInfo {
  * Student interface based on UserProfile
  * Matches database schema structure from user_profiles and students tables
  * 
- * Note: Some UserProfile fields (userId, profileType) are optional for backward compatibility
- * with existing code that doesn't include these fields yet.
+ * Note: UserProfile's `userId` is optional here, because most students have no
+ * login at all — see SCHEMA-FIXES on making `user_profiles.user_id` nullable.
  */
-export interface Student extends Omit<UserProfile, 'userId' | 'profileType'> {
-  /** User ID - optional for backward compatibility */
+export interface Student extends Omit<UserProfile, 'userId'> {
+  /** User ID - optional: a student row usually has no account behind it */
   userId?: string | number
-  /** Profile type - optional for backward compatibility, defaults to 0 (STUDENT) */
-  profileType?: ProfileType
 
   /** Student-specific identification */
   studentId: string
@@ -144,7 +142,7 @@ export interface StudentDetailData {
 
 // Re-export types for convenience
 export type { StudentFormValues } from '../schemas/student-schema'
-export type { UserProfile, Gender, ProfileType } from '@/types/user-profile'
+export type { UserProfile, Gender } from '@/types/user-profile'
 
 /**
  * One month of the academic-performance chart.

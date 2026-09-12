@@ -28,7 +28,6 @@ const anchors: Student[] = [
   {
     id: 'vm-1',
     userId: 5001,
-    profileType: 0,
     firstName: 'Ira',
     lastName: 'Sharma',
     fullName: 'Ira Sharma',

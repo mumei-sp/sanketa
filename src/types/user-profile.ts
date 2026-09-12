@@ -5,22 +5,16 @@
 export type Gender = 0 | 1 | 2 | 3
 
 /**
- * Profile type matching database schema
- * 0=STUDENT, 1=TEACHER, 2=PARENT, 3=ADMIN, 4=STAFF, 5=GUARDIAN
- */
-export type ProfileTypeCode = 0 | 1 | 2 | 3 | 4 | 5
-
-/**
- * The same thing, spelled out.
+ * The kinds of person a school recognises out of the box.
  *
- * The database stores a TINYINT, and a profile row read off the wire carries
- * the code. Everywhere a person reads or writes one — an account row, a filter
- * on the People screen, a comparison in a permission check — the name is what
- * belongs in the source, because `profileType === 2` is a puzzle and
- * `profileType === 'parent'` is not.
+ * This was a TINYINT column on `user_profiles` — one per row, so one per
+ * person, and copied into every school by the replica. It is gone. What a
+ * person is at a school is now the `profile_types` / `profile_profile_types`
+ * pair in the tenant schema, which is plural and school-extensible; these six
+ * are the built-in codes it seeds with, and a school may add its own.
  *
- * Two encodings of one column, so the pair is declared together with the map
- * between them rather than left for each caller to hardcode.
+ * Names rather than the TINYINT it used to be: `2` was a puzzle at every call
+ * site, and `'parent'` is not.
  */
 export type ProfileTypeName =
   | 'student'
@@ -30,33 +24,13 @@ export type ProfileTypeName =
   | 'staff'
   | 'guardian'
 
-/** Wire code to name. Index is the code, by construction. */
-export const PROFILE_TYPE_NAMES: readonly ProfileTypeName[] = [
-  'student',
-  'teacher',
-  'parent',
-  'admin',
-  'staff',
-  'guardian',
-]
-
-export function profileTypeName(code: ProfileTypeCode): ProfileTypeName {
-  return PROFILE_TYPE_NAMES[code]
-}
-
-export function profileTypeCode(name: ProfileTypeName): ProfileTypeCode {
-  return PROFILE_TYPE_NAMES.indexOf(name) as ProfileTypeCode
-}
-
-/**
- * @deprecated The numeric encoding is now `ProfileTypeCode`; use that where a
- * wire value is meant and `ProfileTypeName` where a person reads it.
- */
-export type ProfileType = ProfileTypeCode
-
 /**
  * Base UserProfile interface matching user_profiles table schema
  * This is the base type that can be extended for specific profile types (Student, Teacher, etc.)
+ *
+ * These are exactly the columns the tenant replica carries. Anything that is
+ * true of a person *at a school* — what they are, which classes they take —
+ * belongs in a table beside this one, not on the row.
  */
 export interface UserProfile {
   /** Primary key - references GlobalDB.user_profiles.id (BIGINT) */
@@ -64,9 +38,6 @@ export interface UserProfile {
 
   /** User ID - references GlobalDB.users.id (BIGINT) */
   userId: string | number
-
-  /** Profile type - 0=STUDENT, 1=TEACHER, 2=PARENT, 3=ADMIN, 4=STAFF, 5=GUARDIAN */
-  profileType: ProfileType
 
   /** Personal Information */
   /** Given name (nullable for Indian naming style) */

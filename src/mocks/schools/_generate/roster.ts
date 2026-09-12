@@ -460,7 +460,6 @@ export function generateRoster(config: RosterConfig): Student[] {
       rows.push({
         id: `${config.idPrefix}${config.codeBase + sequence}`,
         userId: config.userIdBase + sequence,
-        profileType: 0,
 
         firstName,
         lastName: household.surname,

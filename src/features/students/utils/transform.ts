@@ -170,7 +170,6 @@ export function apiToStudent(apiData: unknown): Student {
   const userProfile: Partial<Student> = {
     id: data.id as string | number,
     userId: data.userId as string | number,
-    profileType: (data.profileType as 0 | 1 | 2 | 3 | 4 | 5) ?? 0,
     firstName: data.firstName as string | undefined,
     middleName: data.middleName as string | undefined,
     lastName: data.lastName as string | undefined,
@@ -225,7 +224,6 @@ export function studentToApi(student: Student): Record<string, unknown> {
     // User profile fields
     id: student.id,
     userId: student.userId,
-    profileType: student.profileType,
     firstName: student.firstName,
     middleName: student.middleName,
     lastName: student.lastName,

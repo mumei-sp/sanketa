@@ -54,12 +54,13 @@ one. There is no round trip to save in a browser, and a second copy of every
 name could only go stale. `tenant/profiles` **is** the replica, and the sync is
 out of scope.
 
-One replicated column does not belong there: `profile_type`. `UNIQUE(user_id)`
-on the global row means a person has exactly one, copied verbatim into every
-school — so a teacher at Kendriya who is a parent at Vidya Mandir cannot be
-both. Every other replicated column is a fact about the person rather than
-about the person *at a school*, which is what makes the rest of the design
-sound. [SCHEMA-FIXES.md](./SCHEMA-FIXES.md) drops the column.
+One replicated column did not belong there: `profile_type`. `UNIQUE(user_id)`
+on the global row meant a person had exactly one, copied verbatim into every
+school — so a teacher at Kendriya who is a parent at Vidya Mandir could not be
+both. **It is being dropped from both copies**, which is the one schema change
+on this page that is settled rather than proposed. Every other replicated
+column is a fact about the person rather than about the person *at a school*,
+which is what makes the rest of the design sound.
 
 ### Changes this frontend requires of `users`
 
@@ -99,10 +100,12 @@ key, all three referencing the same `user_profiles(id)`. Nothing stops one
 profile having a `teachers` row *and* a `parents` row — so **a teacher whose
 child attends the same school is already representable**.
 
-The only thing that disagrees is `user_profiles.profile_type`, a single
-`TINYINT` claiming the person is one thing. It is correct only for people who
+The only thing that disagreed was `user_profiles.profile_type`, a single
+`TINYINT` claiming the person is one thing. It was correct only for people who
 are exactly one thing, and wrong for every member of staff with a child at the
-school. It goes, replaced by two ideas that were tangled inside it:
+school — and being replicated from a global row with `UNIQUE(user_id)`, it made
+the same claim in every school at once. **It is going, from GlobalDB and from
+the tenant replica**, replaced by two ideas that were tangled inside it:
 
 **A capacity is a record shape.** `students` has an admission number and a roll
 number; `teachers` has a qualification; `staff` has an employee id. The set is
