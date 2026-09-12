@@ -44,6 +44,7 @@ export type {
 export {
   resolveTenantAccess,
   resolveActiveAccess,
+  resolveActiveSide,
   sidesAvailable,
   narrowToSide,
 } from './access'

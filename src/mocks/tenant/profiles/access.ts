@@ -182,9 +182,33 @@ export function narrowToSide(access: TenantAccess, side: ContextSide): TenantAcc
  */
 export function resolveActiveAccess(userId: string | undefined): TenantAccess {
   const access = resolveTenantAccess(userId)
-  const available = sidesAvailable(access)
-  if (available.length === 0) return access
+  const side = sideFor(access)
+  return side === null ? access : narrowToSide(access, side)
+}
 
-  const chosen = activeSide()
-  return narrowToSide(access, chosen ?? available[0])
+/** The side `resolveActiveAccess` narrows by, given what this person holds. */
+function sideFor(access: TenantAccess): ContextSide | null {
+  const available = sidesAvailable(access)
+  if (available.length === 0) return null
+  // A stored side outside `available` is passed through rather than corrected,
+  // which narrows to nothing — see the note above.
+  return activeSide() ?? available[0]
+}
+
+/**
+ * Which half of the app this session is in, named rather than inferred.
+ *
+ * The side is the authority on that, and a capacity is not. They agree for
+ * almost everybody, because somebody with a parent's role almost always has a
+ * `guardians` row to go with it — but the two can come apart, and when they do
+ * the side is right: a role is what the school granted, and a missing capacity
+ * row is a gap in the records, not a statement that the person is something
+ * else.
+ *
+ * Reading capacities instead is what sent a profile with a parent's role and
+ * no `guardians` row to the staff dashboard, holding a parent's permissions:
+ * both capacity tests answered false, and false-and-false resolved to staff.
+ */
+export function resolveActiveSide(userId: string | undefined): ContextSide | null {
+  return sideFor(resolveTenantAccess(userId))
 }

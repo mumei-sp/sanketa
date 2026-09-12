@@ -24,20 +24,26 @@
 import * as React from 'react'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { fetchStudents } from '@/api/services/student-service'
-import { resolveActiveAccess, type Capacity } from '@/mocks/tenant/profiles'
+import { resolveActiveAccess, resolveActiveSide } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 import type { Student } from '@/features/students/types'
 
 interface FamilyScopeValue {
-  /** True when this account has a student or parent record at this school. */
+  /** True when this session is being lived as a family rather than as staff. */
   isFamily: boolean
   /**
-   * True when it *also* has an employment record here.
+   * True when it is being lived as staff.
    *
-   * The two are not exclusive, which is the whole point. A page that swaps
-   * itself for the family variant has to ask both: the teacher whose child
-   * attends still needs the staff attendance register, and gains her son's
-   * record rather than trading her job for it.
+   * The exact complement of `isFamily`, and nothing reads it today — the five
+   * call sites that used to all say `isFamily`. It stays because the pair is
+   * the vocabulary the rest of the app thinks in, and `isStaff` reads better
+   * at a call site than `!isFamily` will when one wants it.
+   *
+   * They were independent until recently, and that is worth knowing rather
+   * than inferring: capacities are plural, so the teacher whose child attends
+   * was family *and* staff at once, and every page broke the tie itself with
+   * `isFamily && !isStaff`. She picks a side at the door now, so the tie is
+   * broken once and both answers fall out of that one choice.
    */
   isStaff: boolean
   /** The students this account may see. Their own, or their children. */
@@ -50,28 +56,22 @@ interface FamilyScopeValue {
 
 const FamilyScopeContext = React.createContext<FamilyScopeValue | null>(null)
 
-/**
- * Capacities that make somebody family rather than school.
- *
- * `guardian` is not here because it is not a capacity — a guardian has a
- * `parents` record, and the distinction lives in `student_parents.relationship`
- * where it belongs.
- */
-const FAMILY_CAPACITIES: Capacity[] = ['student', 'guardian']
-
-/** Capacities that make somebody school rather than family. Not exclusive. */
-const STAFF_CAPACITIES: Capacity[] = ['teacher', 'staff']
-
 export function FamilyScopeProvider({ children }: { children: React.ReactNode }) {
   const currentUser = useCurrentUser()
   /**
-   * Whether this account has a family record at the school in view.
+   * Which half of the app this session is in.
    *
-   * Read from the profile's capacities, not from `profileType` on the session.
-   * The member of staff whose child attends the school is a teacher *and* a
-   * parent, and a single kind on the session had to pick one — which meant one
-   * of her two schools, or one of her two jobs, got the wrong app. Being a
-   * family member here is having a `students` or `parents` record here.
+   * Read from the side, not from the profile's capacities. They agree for
+   * almost everybody — somebody with a parent's role almost always has a
+   * `guardians` row too — but a role can be granted before the record exists,
+   * and then both capacity tests answer false and false-and-false resolved to
+   * staff. A profile holding a parent's role and no guardian row was handed the
+   * staff dashboard with a parent's permissions: every tile empty, and the
+   * wrong shell around them.
+   *
+   * The side is the authority. A missing capacity row is a gap in the records,
+   * not a statement that somebody is something else — and the bar at the
+   * bottom of the screen now says which gap it is.
    */
   const school = activeTenant()
   const access = React.useMemo(
@@ -83,8 +83,14 @@ export function FamilyScopeProvider({ children }: { children: React.ReactNode })
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentUser?.id, school],
   )
-  const isFamily = access.capacities.some(capacity => FAMILY_CAPACITIES.includes(capacity))
-  const isStaff = access.capacities.some(capacity => STAFF_CAPACITIES.includes(capacity))
+  const side = React.useMemo(
+    () => resolveActiveSide(currentUser?.id),
+    // Same unseen dependency as above: the resolver reads the active school.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentUser?.id, school],
+  )
+  const isFamily = side === 'family'
+  const isStaff = side === 'staff'
 
   const [students, setStudents] = React.useState<Student[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
