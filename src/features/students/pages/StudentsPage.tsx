@@ -152,9 +152,15 @@ export function StudentsPage() {
         <Tile id="stat-group" layoutMode="grid" width={{ default: 12, lg: 3 }} padding={0}>
           {isLoading
             ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-3">
+              /*
+                The same grid `StudentStatGroup` lays out, filling the tile.
+                A `gap-3` grid of fixed 84px blocks stood 179px where the real
+                group stands 245, so the whole top band lifted 66px when the
+                roster arrived.
+              */
+              <div className="grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 lg:grid-cols-2 lg:grid-rows-2 gap-4 h-full">
                 {[0, 1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-[84px] w-full rounded-xl" />
+                  <Skeleton key={i} className="h-full w-full rounded-xl" />
                 ))}
               </div>
             )

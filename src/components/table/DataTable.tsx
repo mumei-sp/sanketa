@@ -9,7 +9,9 @@ import {
   type TableOptions,
 } from "@tanstack/react-table";
 import { useState, useMemo } from "react";
-import { Table } from "@/components/ui/table";
+import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MobileCardItem } from "@/components/shared/MobileCardItem";
 import { DataTableProvider } from "./DataTableContext";
 import { DataTableHeader } from "./header/DataTableHeader";
 import { DataTableBody } from "./body/DataTableBody";
@@ -85,6 +87,28 @@ export interface DataTableProps<TData, TValue> {
   layout?: "default" | "compact" | "spacious";
   showBorder?: boolean;
   borderClassName?: string;
+  /**
+   * Whether the rows are still on their way.
+   *
+   * A table with no rows yet is not an EMPTY table, and drawing the empty state
+   * while a fetch is in flight says the wrong thing and says it at the wrong
+   * size: the students table stood 356px waiting and 784px once ten rows
+   * landed, so the whole page below it jumped 428px. While this is true the
+   * table holds a page of placeholder rows instead — the shape and the height
+   * of what is coming — and the empty state is not consulted.
+   */
+  isLoading?: boolean;
+  /**
+   * How many placeholder rows to draw. Defaults to the page size, which is what
+   * a full first page will be.
+   */
+  loadingRowCount?: number;
+  /**
+   * Height of a placeholder row. Rows whose cells hold only text size
+   * themselves correctly; pass this for tables with avatars or badges in them,
+   * where a real row is taller than a line of text.
+   */
+  loadingRowHeight?: number | string;
 }
 
 /**
@@ -155,6 +179,9 @@ export function DataTable<TData, TValue>({
   layout = "default",
   showBorder = true,
   borderClassName,
+  isLoading = false,
+  loadingRowCount,
+  loadingRowHeight,
 }: DataTableProps<TData, TValue>) {
   const [columnVisibility, setColumnVisibility] = useState(
     () => tableOptions.initialState?.columnVisibility || {},
@@ -244,6 +271,25 @@ export function DataTable<TData, TValue>({
 
   const table = useReactTable(tableConfig);
 
+  // A page of rows, at the size a page of rows takes. Column count comes from
+  // the table itself so a placeholder row always has as many cells as the
+  // header above it, whatever the caller hid or showed.
+  const skeletonRows = useMemo(() => {
+    const count =
+      loadingRowCount ?? table.getState().pagination?.pageSize ?? 10;
+    const cells = table.getVisibleLeafColumns().length || 1;
+    const style =
+      loadingRowHeight === undefined
+        ? undefined
+        : {
+            height:
+              typeof loadingRowHeight === "number"
+                ? `${loadingRowHeight}px`
+                : loadingRowHeight,
+          };
+    return { count, cells, style };
+  }, [loadingRowCount, loadingRowHeight, table]);
+
   const layoutClasses = useMemo(
     () => ({
       default: "space-y-4",
@@ -276,7 +322,35 @@ export function DataTable<TData, TValue>({
             ) : (
               <DataTableHeader<TData> {...headerProps} />
             )}
-            {renderBody ? (
+            {isLoading ? (
+              <TableBody>
+                {Array.from({ length: skeletonRows.count }).map((_, r) => (
+                  // Height goes on the ROW, and the cells give up their vertical
+                  // padding inline. A class could not win this: tables that
+                  // bring their own `renderBody` pad cells themselves, and a
+                  // padded cell sets a floor the row cannot go under — which is
+                  // how a 37px row came out 44px tall while it loaded.
+                  <TableRow
+                    key={r}
+                    className="hover:bg-transparent"
+                    style={skeletonRows.style}
+                  >
+                    {Array.from({ length: skeletonRows.cells }).map((__, c) => (
+                      <TableCell
+                        key={c}
+                        style={
+                          skeletonRows.style
+                            ? { paddingTop: 0, paddingBottom: 0 }
+                            : undefined
+                        }
+                      >
+                        <Skeleton className="h-4 w-full rounded" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            ) : renderBody ? (
               renderBody(table)
             ) : (
               <DataTableBody<TData>
@@ -294,7 +368,20 @@ export function DataTable<TData, TValue>({
         </div>
         {renderMobileCard && (
           <div className="flex flex-col gap-3 lg:hidden">
-            {table.getRowModel().rows.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: skeletonRows.count }).map((_, i) => (
+                <MobileCardItem key={i} className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-10 shrink-0 rounded-full" />
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                      <Skeleton className="h-4 w-28 rounded" />
+                      <Skeleton className="h-3 w-36 rounded" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-3 w-full rounded" />
+                </MobileCardItem>
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
               mobileEmptyMessage ? (
                 <p className="py-8 text-center text-body-muted text-muted-foreground">
                   {mobileEmptyMessage}

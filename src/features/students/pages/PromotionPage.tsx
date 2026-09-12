@@ -13,9 +13,9 @@ import { spacing } from '@/config/spacing'
 import { getAcademicYear } from '@/utils/academic-date'
 import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getSectionsForGrade } from '@/utils/class-section-helpers'
+import { Skeleton } from '@/components/ui/skeleton'
 import { PromotionTable } from '../components/promotion/PromotionTable'
 import { PromotionCards } from '../components/promotion/PromotionCards'
 import { PromotionSummaryBar } from '../components/promotion/PromotionSummaryBar'
@@ -69,6 +69,17 @@ export function PromotionPage() {
     load()
     return () => { cancelled = true }
   }, [selectedClass, passingThreshold])
+
+  /**
+   * Still loading, in the sense the screen cares about.
+   *
+   * Two fetches run in sequence: the class list, then that class's candidates.
+   * Only the second sets `isLoading`, so between them there was no class
+   * selected, no candidates, and no loading flag — and the empty state
+   * announced "No students found in Class " before the page had decided which
+   * class it was even looking at.
+   */
+  const isPending = isLoading || selectedClass === ''
 
   // ── Handlers ──
 
@@ -151,7 +162,15 @@ export function PromotionPage() {
         </div>
 
         {/* ═══ SUMMARY BANNER ═══ */}
-        {!isLoading && candidates.length > 0 && !isDone && (
+        {/*
+          Reserved while loading, for the same reason the grade sheet's footer
+          and the teachers pagination row are: it is a sibling of the table that
+          is not drawn until the data lands, so the rows can line up perfectly
+          and the page still moves by the height of this bar.
+        */}
+        {isPending && <Skeleton className="h-[43px] w-full rounded-lg" />}
+
+        {!isPending && candidates.length > 0 && !isDone && (
           <div
             className="rounded-lg border flex items-center gap-3 text-sm flex-wrap"
             style={{
@@ -201,23 +220,14 @@ export function PromotionPage() {
         )}
 
         {/* ═══ CONTENT ═══ */}
-        {isLoading ? (
-          <Tile id="promotion-loading" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
-            <div className="space-y-4">
-              {/* Toolbar skeleton */}
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-6 w-[160px]" />
-                <Skeleton className="h-8 w-[120px]" />
-              </div>
-              {/* Table header skeleton */}
-              <Skeleton className="h-10 w-full rounded" />
-              {/* Row skeletons */}
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full rounded" />
-              ))}
-            </div>
-          </Tile>
-        ) : candidates.length === 0 ? (
+        {/*
+          `!isLoading` guards the empty state, and the table draws its own
+          placeholder rows. Before, a page-scale skeleton stood in for the whole
+          card and reserved six rows where twenty-four were coming; take the
+          guard away and the empty state would claim the class is empty while
+          the fetch is still running.
+        */}
+        {!isPending && candidates.length === 0 ? (
           <Tile id="promotion-empty" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
             <div className="flex flex-col items-center justify-center py-16 gap-2">
               <ArrowUpCircle className="size-8" style={{ color: colors.text.muted }} />
@@ -240,6 +250,7 @@ export function PromotionPage() {
                 <PromotionTable
                   candidates={candidates}
                   onDecisionChange={handleDecisionChange}
+                  isLoading={isPending}
                 />
               </div>
 

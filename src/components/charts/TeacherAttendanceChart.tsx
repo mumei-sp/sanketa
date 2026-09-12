@@ -24,6 +24,8 @@ import { fontWeights } from '@/config/typography'
 import { PanelTile, PANEL_SELECT_TRIGGER } from '@/components/tile'
 import type { AttendanceData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
+import { useBrandColors } from '@/hooks/use-brand-colors'
+import { ChartGradient } from '@/theme/ChartGradient'
 
 interface TeacherAttendanceChartProps {
   data: AttendanceData[]
@@ -113,10 +115,9 @@ const CustomActiveBar = (props: any) => {
         y={y}
         width={width}
         height={height}
-        fill={'var(--primary)'}
+        fill="url(#teacherAttendanceBarGradient)"
         rx={radius}
         ry={radius}
-        opacity={0.8}
       />
       {/* Show label above bar on hover */}
       <rect
@@ -150,13 +151,17 @@ const CustomBar = (props: any) => {
 
   if (height <= 0) return <g />
 
+  // Gradient, not a flat tint — the same `ChartGradient` the dashboard's
+  // Student Attendance bars use. Single-series bar charts are drawn that way
+  // across the app; flat fills belong to multi-series charts, where a colour
+  // names a series (see Workload Distribution and Student Performance).
   return (
     <rect
       x={x}
       y={y}
       width={width}
       height={height}
-      fill={'var(--primary)'}
+      fill="url(#teacherAttendanceBarGradient)"
       rx={radius}
       ry={radius}
     />
@@ -171,6 +176,9 @@ export function TeacherAttendanceChart({
   isLoading = false,
 }: TeacherAttendanceChartProps) {
   const [timeRange, setTimeRange] = React.useState('weekly')
+  // Resolved brand colour rather than `var(--primary)`, so the gradient stops
+  // re-tint when the active preset changes — the dashboard reads it this way.
+  const brand = useBrandColors()
 
   // Filter data based on selected time range
   const filteredData = React.useMemo(() => {
@@ -258,6 +266,14 @@ export function TeacherAttendanceChart({
           <div className="chart-scale h-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: 4, bottom: 0 }}>
+                <defs>
+                  <ChartGradient
+                    id="teacherAttendanceBarGradient"
+                    color={brand.primary}
+                    topOpacity={0.9}
+                    bottomOpacity={0.4}
+                  />
+                </defs>
                 <CartesianGrid
                   stroke={colors.border.default}
                   opacity={0.3}

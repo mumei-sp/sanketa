@@ -24,7 +24,7 @@ import type { TeacherStatistics, DepartmentData } from '@/features/teachers/type
 import { TeacherCard, TeachersDashboard } from '@/features/teachers/components'
 import { getDisplayName } from '@/features/teachers/utils/formatting'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { text } from '@/theme/colors'
+
 import { TeacherAttendanceChart } from '@/components/charts/TeacherAttendanceChart'
 import { WorkloadDistributionChart } from '@/components/charts/WorkloadDistributionChart'
 import { DepartmentChart } from '@/components/charts/DepartmentChart'
@@ -48,17 +48,42 @@ type SortOption = 'latest' | 'name-asc' | 'name-desc'
  */
 function StatsSkeleton() {
   return (
-    <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
-      {Array.from({ length: MAX_TILE_SELECTIONS }).map((_, i) => (
-        <Tile key={i} id={`stat-skeleton-${i}`} background="card" borderRadius="xl" shadowed padding={12} className="flex items-center justify-between">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-3.5 w-24 rounded" />
-            <Skeleton className="h-6 w-12 rounded" />
-          </div>
-          <Skeleton className="size-11 rounded-full shrink-0" />
-        </Tile>
-      ))}
-    </TileWrapper>
+    <>
+      {/*
+        The Customize button's row, reserved.
+        `TeachersDashboard` draws it above the cards and this stood in for the
+        cards alone, so the whole block grew 27px the moment the statistics
+        landed and everything below it jumped down a line.
+      */}
+      <div className="flex items-center justify-end mb-1">
+        <Skeleton className="h-[23px] w-[91px] rounded-md" />
+      </div>
+      <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
+        {Array.from({ length: MAX_TILE_SELECTIONS }).map((_, i) => (
+          <Tile
+            key={i}
+            id={`stat-skeleton-${i}`}
+            background="card"
+            borderRadius="xl"
+            shadowed
+            padding={12}
+            className="flex items-center justify-between"
+          >
+            {/*
+              Heights track the real `StatCard`: a 19px label over an 18px
+              number with `gap-1` between them, and a 46px icon plate at the
+              card radius. It was a 14/24 pair under `gap-2` behind a 44px
+              CIRCLE — a placeholder of the wrong height and the wrong shape.
+            */}
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-[19px] w-24 rounded" />
+              <Skeleton className="h-[18px] w-12 rounded" />
+            </div>
+            <Skeleton className="size-[46px] shrink-0 rounded-lg" />
+          </Tile>
+        ))}
+      </TileWrapper>
+    </>
   )
 }
 
@@ -66,31 +91,41 @@ function StatsSkeleton() {
 function TeacherCardSkeleton() {
   return (
     <Tile id="teacher-card-skeleton" background="card" borderRadius="lg" shadowed padding={16} className="flex flex-col gap-3">
+      {/*
+        Sized off the real `TeacherCard`, which measures 157px: a 36px avatar
+        row, a 35px pair of contact lines and a 31px footer. This stood 170px
+        — a 48px avatar and a 28px footer — so every card in the grid shrank
+        by 13px when the teachers arrived, and the pagination below them moved.
+      */}
       {/* Avatar + name */}
       <div className="flex items-center gap-3">
-        <Skeleton className="size-12 rounded-full shrink-0" />
+        <Skeleton className="size-9 rounded-full shrink-0" />
         <div className="flex flex-col gap-1.5 flex-1 min-w-0">
           <Skeleton className="h-4 w-28 rounded" />
           <Skeleton className="h-3 w-36 rounded" />
         </div>
       </div>
+      {/*
+        Explicit pixels, not `h-3.5`/`size-5`. This app's root font is 14px, so
+        the rem-based scale runs small — `h-3.5` measures 12.25px, not 14 — and
+        a skeleton built from it came out 7px short of the card even after the
+        shapes were right. Pixels are what the real rows measure.
+      */}
       {/* Contact lines */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Skeleton className="w-3.5 h-3.5 rounded shrink-0" />
-          <Skeleton className="h-3 w-32 rounded" />
+          <Skeleton className="size-[14px] rounded shrink-0" />
+          <Skeleton className="h-[14px] w-32 rounded" />
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="w-3.5 h-3.5 rounded shrink-0" />
-          <Skeleton className="h-3 w-44 rounded" />
+          <Skeleton className="size-[14px] rounded shrink-0" />
+          <Skeleton className="h-[14px] w-44 rounded" />
         </div>
       </div>
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-border/50">
-        <div className="flex items-center gap-2">
-          <Skeleton className="w-7 h-7 rounded-full" />
-        </div>
-        <Skeleton className="h-7 w-20 rounded-md" />
+        <Skeleton className="size-[20px] rounded-full" />
+        <Skeleton className="h-[20px] w-20 rounded-md" />
       </div>
     </Tile>
   )
@@ -115,6 +150,7 @@ export default function Teachers() {
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
   const [teacherStatistics, setTeacherStatistics] = React.useState<TeacherStatistics | null>(null)
   const [departmentData, setDepartmentData] = React.useState<DepartmentData[]>([])
+  const [isLoadingDepartments, setIsLoadingDepartments] = React.useState(true)
   const [attendanceData, setAttendanceData] = React.useState<AttendanceData[]>([])
   const [isLoadingAttendance, setIsLoadingAttendance] = React.useState(true)
   const [isLoading, setIsLoading] = React.useState(true)
@@ -158,10 +194,13 @@ export default function Teachers() {
   React.useEffect(() => {
     async function loadDepartments() {
       try {
+        setIsLoadingDepartments(true)
         const data = await fetchDepartmentDistribution()
         setDepartmentData(data)
       } catch (error) {
         console.error('Failed to fetch department data:', error)
+      } finally {
+        setIsLoadingDepartments(false)
       }
     }
 
@@ -351,7 +390,11 @@ export default function Teachers() {
           rowStart={{ md: 1 }}
           rowEnd={{ lg: 3 }}
         >
-          <DepartmentChart data={departmentData} total={totalTeachers} />
+          <DepartmentChart
+            data={departmentData}
+            total={totalTeachers}
+            isLoading={isLoadingDepartments}
+          />
         </Tile>
       </TileWrapper>
 
@@ -385,7 +428,7 @@ export default function Teachers() {
                     className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}
                     style={{
                       backgroundColor: 'var(--accent)',
-                      color: text.heading,
+                      color: 'var(--accent-foreground)',
                       borderColor: 'var(--accent)',
                     }}
                   >
@@ -418,11 +461,20 @@ export default function Teachers() {
 
       {/* Teachers Grid */}
       {isLoading ? (
-        <TileWrapper columns={{ default: 1, md: 2, lg: 3, xl: 4 }} gap={12}>
-          {Array.from({ length: pageSize }).map((_, i) => (
-            <TeacherCardSkeleton key={i} />
-          ))}
-        </TileWrapper>
+        <>
+          <TileWrapper columns={{ default: 1, md: 2, lg: 3, xl: 4 }} gap={12}>
+            {Array.from({ length: pageSize }).map((_, i) => (
+              <TeacherCardSkeleton key={i} />
+            ))}
+          </TileWrapper>
+          {/*
+            The pagination row is drawn beside the cards once they land, so it
+            is part of the height this stands in for. The cards themselves
+            matched exactly and the page still grew 66px — this row was the
+            whole of it.
+          */}
+          <Skeleton className="h-[53px] w-full rounded-lg" />
+        </>
       ) : paginatedTeachers.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-muted-foreground">

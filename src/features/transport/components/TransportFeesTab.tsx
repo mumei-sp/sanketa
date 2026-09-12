@@ -293,25 +293,22 @@ export function TransportFeesTab() {
     },
   ], [feeStructures])
 
-  if (isLoading) {
-    // Totals of zero while the fetch is running would read as "nobody owes
-    // anything", which is a very different statement from "not loaded yet".
-    return (
-      <div className="space-y-3">
-        <Skeleton className="h-24 w-full rounded-lg" />
-        {[0, 1, 2, 3, 4].map(row => (
-          <Skeleton key={row} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  }
   return (
     <div className="space-y-4">
       {/* Stats */}
+      {/*
+        Placeholders rather than the real cards while the fetch runs. These are
+        money totals, and a `DashboardStatCard` handed a zero draws "₹0" — which
+        reads as "nobody owes anything" rather than "not counted yet". That is
+        why this tab replaced itself wholesale before; only the stats needed it.
+        63px is what a stat card measures.
+      */}
       <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
-        {feeStats.map(stat => (
-          <DashboardStatCard key={stat.id} stat={stat} />
-        ))}
+        {isLoading
+          ? feeStats.map(stat => (
+              <Skeleton key={stat.id} className="h-[63px] w-full rounded-xl" />
+            ))
+          : feeStats.map(stat => <DashboardStatCard key={stat.id} stat={stat} />)}
       </TileWrapper>
 
       {/* Fee Structure */}
@@ -340,6 +337,12 @@ export function TransportFeesTab() {
         <DataTable
           columns={feeColumns}
           data={feeStructures}
+          isLoading={isLoading}
+          loadingRowHeight={37}
+          // No pagination here, so a page size would be a meaningless
+          // reservation — five is what this table holds and what the skeleton
+          // this replaced drew.
+          loadingRowCount={5}
           enableSorting
           enablePagination={false}
           enableFiltering={false}
@@ -423,6 +426,8 @@ export function TransportFeesTab() {
         <DataTable
           columns={studentFeeColumns}
           data={filteredStudents}
+          isLoading={isLoading}
+          loadingRowHeight={44}
           enableSorting
           enablePagination
           enableFiltering={false}

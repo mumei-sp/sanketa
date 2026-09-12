@@ -157,7 +157,11 @@ export function ReimbursementsTracking({
         shadowed={false}
         className="h-full"
       >
-        <Card className="h-full w-full pt-4 pb-2 flex flex-col gap-0">
+          {/* Height measured against the loaded card (487px). These three sit in
+              one grid row, so whichever is tallest sets it — the breakdown
+              collapsed to its header at 76px and the reimbursements panel stood
+              115px short, which is the whole of the page's 115px jump. */}
+        <Card className="h-full min-h-[487px] w-full pt-4 pb-2 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Reimbursements Tracking</h3>
             <CardAction>

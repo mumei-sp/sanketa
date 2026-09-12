@@ -19,6 +19,7 @@ interface GradeEntryTableProps {
   onMarksChange: (studentId: string, marks: number | null) => void
   onRemarksChange: (studentId: string, remarks: string) => void
   disabled?: boolean
+  isLoading?: boolean
 }
 
 export function GradeEntryTable({
@@ -26,6 +27,7 @@ export function GradeEntryTable({
   onMarksChange,
   onRemarksChange,
   disabled = false,
+  isLoading = false,
 }: GradeEntryTableProps) {
   const { calculateGrade } = useGradeCalculator()
 
@@ -144,6 +146,13 @@ export function GradeEntryTable({
     <DataTable
       columns={columns}
       data={entries}
+      // A class, at the height a class takes. These tables show a whole roster
+      // with pagination off, so the reservation is the class size rather than a
+      // page size — the page-level skeleton this replaces drew six rows of 42px
+      // against twenty-four of 51px, which is where the ~1000px jump came from.
+      isLoading={isLoading}
+      loadingRowCount={24}
+      loadingRowHeight={50.5}
       enableSorting
       enablePagination={false}
       showToolbar={false}

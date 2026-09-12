@@ -17,7 +17,6 @@ import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
-import { Skeleton } from '@/components/ui/skeleton'
 import { GradeEntryTable } from '../components/GradeEntryTable'
 import { GradeEntryCards } from '../components/GradeEntryCards'
 import { GradeSummaryBar } from '../components/GradeSummaryBar'
@@ -273,23 +272,14 @@ export function GradeEntryPage() {
         )}
 
         {/* ═══ CONTENT ═══ */}
-        {isLoading ? (
-          <Tile id="grade-loading" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
-            <div className="space-y-4">
-              {/* Toolbar skeleton */}
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-6 w-[160px]" />
-                <Skeleton className="h-8 w-[120px]" />
-              </div>
-              {/* Table header skeleton */}
-              <Skeleton className="h-10 w-full rounded" />
-              {/* Row skeletons */}
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full rounded" />
-              ))}
-            </div>
-          </Tile>
-        ) : entries.length === 0 ? (
+        {/*
+          `!isLoading` guards the empty state, and the table draws its own
+          placeholder rows. Before, a page-scale skeleton stood in for the whole
+          card and reserved six rows where twenty-four were coming; take the
+          guard away and the empty state would claim the class is empty while
+          the fetch is still running.
+        */}
+        {!isLoading && entries.length === 0 ? (
           <Tile id="grade-empty" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
             <div className="flex items-center justify-center py-16">
               <span className="text-sm text-text-muted">No students found for Class {selectedClass}</span>
@@ -313,6 +303,7 @@ export function GradeEntryPage() {
                   onMarksChange={handleMarksChange}
                   onRemarksChange={handleRemarksChange}
                   disabled={isSaving || !canEnterForClass}
+                  isLoading={isLoading}
                 />
               </div>
 

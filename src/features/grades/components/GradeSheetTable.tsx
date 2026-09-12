@@ -9,6 +9,7 @@ import * as React from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Eye } from 'lucide-react'
 import { DataTable } from '@/components/table'
+import { Skeleton } from '@/components/ui/skeleton'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
@@ -19,9 +20,10 @@ interface GradeSheetTableProps {
   summary: GradeSheetSummary
   subjectList: { id: string; name: string; shortName: string }[]
   onViewReportCard?: (studentId: string) => void
+  isLoading?: boolean
 }
 
-export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }: GradeSheetTableProps) {
+export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard, isLoading = false }: GradeSheetTableProps) {
   const columns: ColumnDef<GradeSheetRow>[] = React.useMemo(() => {
     const cols: ColumnDef<GradeSheetRow>[] = [
       // Roll #
@@ -153,14 +155,29 @@ export function GradeSheetTable({ rows, summary, subjectList, onViewReportCard }
       <DataTable
         columns={columns}
         data={rows}
+      // A class, at the height a class takes. These tables show a whole roster
+        // with pagination off, so the reservation is the class size rather than a
+        // page size — the page-level skeleton this replaces drew six rows of 42px
+        // against twenty-four of 54px, which is where the ~1000px jump came from.
+        isLoading={isLoading}
+        loadingRowCount={24}
+        loadingRowHeight={54}
         enableSorting
         enablePagination={false}
         showToolbar={false}
         bodyProps={{ rowClassName: 'hover:bg-accent/20' }}
       />
 
+      {/*
+        The footer is part of the card's height, so it has to be reserved too —
+        without this the sheet still grew 44px when the marks landed. A
+        placeholder rather than the real bar, because the real one would average
+        an empty list and print zeros.
+      */}
+      {isLoading && <Skeleton className="mt-3 h-[33px] w-full rounded-lg" />}
+
       {/* Summary footer */}
-      {rows.length > 0 && (
+      {!isLoading && rows.length > 0 && (
         <div
           className="flex items-center gap-4 flex-wrap mt-3 rounded-lg"
           style={{

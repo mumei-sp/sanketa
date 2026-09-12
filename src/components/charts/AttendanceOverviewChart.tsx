@@ -25,6 +25,7 @@ import { PanelTile, PANEL_SELECT_TRIGGER, type ResponsiveValue } from '@/compone
 import type { AttendanceData } from '@/data/dashboard'
 import { colors } from '@/theme/colors'
 import { ChartGradient } from '@/theme/ChartGradient'
+import { useBrandColors } from '@/hooks/use-brand-colors'
 
 interface AttendanceOverviewChartProps {
   data: AttendanceData[]
@@ -167,6 +168,7 @@ export function AttendanceOverviewChart({
   tileLayoutMode = 'block',
 }: AttendanceOverviewChartProps) {
   const [timeRange, setTimeRange] = React.useState('this-week')
+  const brand = useBrandColors()
 
   // Filter data based on selected time range
   const filteredData = React.useMemo(() => {
@@ -256,7 +258,19 @@ export function AttendanceOverviewChart({
             <ResponsiveContainer width="100%" height="100%" minHeight={204}>
               <BarChart data={filteredData} margin={{ top: 10, right: 0, left: 4, bottom: 0 }}>
                 <defs>
-                  <ChartGradient id="attendanceGradient" />
+                  {/*
+                    The dashboard's Student Attendance bars are the same chart
+                    and carry 0.9 → 0.4. This took `ChartGradient`'s bare
+                    defaults — 0.45 → 0.1, which are the AREA-fill opacities —
+                    so the bars rendered at half the ink of their twin, and in
+                    dark mode nearly vanished into the card.
+                  */}
+                  <ChartGradient
+                    id="attendanceGradient"
+                    color={brand.primary}
+                    topOpacity={0.9}
+                    bottomOpacity={0.4}
+                  />
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"

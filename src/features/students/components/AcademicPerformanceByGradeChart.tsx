@@ -32,10 +32,20 @@ type Period = 'last' | 'this'
  * Each entry: [fillColor, strokeCapColor]. Caps are a darker sibling of the
  * fill via color-mix so they track whichever preset is active.
  */
+/**
+ * Grade colours, in the order the rest of the app assigns them.
+ *
+ * This read accent → heading → primary while the dashboard's own grade series
+ * (`GRADE_PALETTE` in the dashboard mock, which the service hands to Student
+ * Performance) reads accent → primary → heading. The two charts are about the
+ * same grades, so Grade 2 was navy on one page and pink on the other, and
+ * Grade 3 the reverse — the same class changing colour depending on which
+ * screen you were looking at.
+ */
 const GRADE_PALETTE: [string, string][] = [
   ['var(--accent)',  'color-mix(in srgb, var(--accent) 65%, black)'],
-  ['var(--heading)', 'var(--heading)'],
   ['var(--primary)', 'color-mix(in srgb, var(--primary) 65%, black)'],
+  ['var(--heading)', 'var(--heading)'],
 ]
 
 function getGradeColor(index: number): { fill: string; stroke: string } {
@@ -186,15 +196,28 @@ export function AcademicPerformanceByGradeChart({ isLoading }: Props) {
   if (isLoading) {
     return (
       <PanelTile id="academic-performance-tile">
-        <Card className="pt-4 pb-2 gap-2 h-full flex flex-col">
+        {/*
+          Card and content classes match the loaded branch exactly, and the
+          header reserves the legend row the real card carries — the two
+          branches had different paddings and no legend, so the card stood 8px
+          taller while loading than it did once drawn.
+        */}
+        <Card className="pt-4 pb-0 gap-2 h-full flex flex-col">
           <CardHeader>
-            <h3 className="text-section-title">Academic Performance</h3>
+            <div className="flex flex-col gap-2">
+              <h3 className="text-section-title">Academic Performance</h3>
+              <div className="flex gap-4">
+                {[0, 1, 2].map(i => (
+                  <Skeleton key={i} className="h-[16px] w-16 rounded" />
+                ))}
+              </div>
+            </div>
             <CardAction>
               <Skeleton className="h-8 w-[140px]" />
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-2 pb-4 flex-1">
-            <Skeleton className="h-[170px] w-full" />
+          <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0">
+            <Skeleton className="h-full min-h-[170px] w-full" />
           </CardContent>
         </Card>
       </PanelTile>

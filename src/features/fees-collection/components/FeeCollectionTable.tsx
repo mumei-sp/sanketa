@@ -4,7 +4,6 @@ import { useCsvExport } from '@/lib/use-csv-export'
 import type { Row, Table as TanStackTable } from '@tanstack/react-table'
 import { DataTable, MobileRecordCard } from '@/components/table'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { Skeleton } from '@/components/ui/skeleton'
 import { createFeeCollectionColumns, FeeStatusPill } from './fee-collection-columns'
 import type { FeeCollectionRecord, FeeStatus } from '@/features/fees-collection/types'
 import {
@@ -247,29 +246,16 @@ export function FeeCollectionTable({ data, isLoading = false, onRowClick }: FeeC
     onRowClick?.(row.original)
   }, [onRowClick])
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-[160px]" />
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-[140px]" />
-            <Skeleton className="h-8 w-[140px]" />
-            <Skeleton className="h-8 w-[120px]" />
-          </div>
-        </div>
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full" />
-          {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <DataTable
+      // The toolbar and the header are chrome, not data — they can draw at
+      // once. Only the ROWS are unknown, and `DataTable` holds a page of
+      // them at the right height until they arrive. This used to replace
+      // the whole component with stacked grey bars, which meant the real
+      // filters appeared late and at a different height than they stood.
+      isLoading={isLoading}
+      loadingRowHeight={37}
       columns={columns}
       data={groupedData}
       enableSorting

@@ -114,7 +114,11 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
         padding={0}
         shadowed={false}
       >
-        <Card className="w-full pt-4 pb-2 flex flex-col gap-0">
+          {/* Height measured against the loaded card (239px). These three sit in
+              one grid row, so whichever is tallest sets it — the breakdown
+              collapsed to its header at 76px and the reimbursements panel stood
+              115px short, which is the whole of the page's 115px jump. */}
+        <Card className="w-full min-h-[239px] pt-4 pb-2 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Expense Trend</h3>
             <CardAction>
@@ -122,7 +126,7 @@ export function ExpenseTrendChart({ data, isLoading = false }: ExpenseTrendChart
             </CardAction>
           </CardHeader>
           <CardContent className="px-4 pt-2 pb-4">
-            <Skeleton className="h-[204px] w-full" />
+            <Skeleton className="h-[150px] w-full" />
           </CardContent>
         </Card>
       </Tile>

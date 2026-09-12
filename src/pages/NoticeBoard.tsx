@@ -280,8 +280,13 @@ export default function NoticeBoard() {
               </div>
             </Tile>
 
-            {/* Notice card skeletons */}
-            {[1, 2, 3, 4, 5].map(i => (
+            {/*
+              One per notice the list is about to show, at the height a notice
+              card stands: `pageSize` cards of 93px, not five of about eighty.
+              Five short cards against nine tall ones is most of the 532px this
+              page moved when the notices arrived.
+            */}
+            {Array.from({ length: pageSize }).map((_, i) => (
               <Tile
                 key={i}
                 id={`notice-skeleton-${i}`}
@@ -290,9 +295,9 @@ export default function NoticeBoard() {
                 borderRadius="lg"
                 shadowed={false}
                 padding="p-4"
-                className="border"
+                className="border h-[93px]"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex h-full items-center gap-4">
                   {/* Thumbnail */}
                   <Skeleton className="size-[52px] min-w-[52px] rounded-lg" />
                   {/* Content */}
@@ -321,6 +326,9 @@ export default function NoticeBoard() {
                 </div>
               </Tile>
             ))}
+
+            {/* The pagination bar is part of the column's height too. */}
+            <Skeleton className="h-[53px] w-full rounded-lg" />
           </div>
 
           {/* Detail panel skeleton - desktop only */}

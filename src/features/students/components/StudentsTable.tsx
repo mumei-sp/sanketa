@@ -41,10 +41,13 @@ interface StudentsTableProps {
   onExport?: () => void
 }
 
+/** Rows per page — the skeleton draws this many, so the two cannot drift. */
+const PAGE_SIZE = 10
+
 /**
  * Students table component using TanStack Table
  */
-export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTableProps, 'onImport' | 'onExport'>) {
+export function StudentsTable({ data, isLoading = false }: Omit<StudentsTableProps, 'onImport' | 'onExport'>) {
   const navigate = useNavigate()
   // Unscoped: "may you enrol anywhere". Which class a new student lands in is
   // not known until the form is filled, so AddStudent makes the scoped check.
@@ -274,6 +277,10 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
     <DataTable
       columns={studentColumns}
       data={data}
+      isLoading={isLoading}
+      // A student row carries an avatar, so it stands taller than the line of
+      // text a placeholder row assumes by default.
+      loadingRowHeight={58.4}
       enableSorting
       enablePagination
       enableFiltering
@@ -294,7 +301,7 @@ export function StudentsTable({ data, isLoading: _isLoading }: Omit<StudentsTabl
       tableOptions={{
         initialState: {
           pagination: {
-            pageSize: 10,
+            pageSize: PAGE_SIZE,
           },
         },
       }}

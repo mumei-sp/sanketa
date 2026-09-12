@@ -19,9 +19,10 @@ import type { StudentPerformance } from '../../types'
 interface PromotionTableProps {
   candidates: PromotionCandidate[]
   onDecisionChange: (studentId: string, decision: PromotionDecision) => void
+  isLoading?: boolean
 }
 
-export function PromotionTable({ candidates, onDecisionChange }: PromotionTableProps) {
+export function PromotionTable({ candidates, onDecisionChange, isLoading = false }: PromotionTableProps) {
   const columns: ColumnDef<PromotionCandidate>[] = React.useMemo(() => [
     {
       accessorKey: 'rollNumber',
@@ -105,6 +106,13 @@ export function PromotionTable({ candidates, onDecisionChange }: PromotionTableP
     <DataTable
       columns={columns}
       data={candidates}
+      // A class, at the height a class takes. These tables show a whole roster
+      // with pagination off, so the reservation is the class size rather than a
+      // page size — the page-level skeleton this replaces drew six rows of 42px
+      // against twenty-four of 51px, which is where the ~1000px jump came from.
+      isLoading={isLoading}
+      loadingRowCount={24}
+      loadingRowHeight={51}
       enableSorting
       enablePagination={false}
       showToolbar={false}

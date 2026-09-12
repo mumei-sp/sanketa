@@ -184,8 +184,9 @@ export function EnrollmentTrendsChart({
               <Skeleton className="h-8 w-[110px]" />
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-2 pb-0 flex-1">
-            <Skeleton className="h-[170px] w-full" />
+          {/* Same classes as the loaded branch, so the card is the same height. */}
+          <CardContent className="px-4 pt-0 pb-0 flex-1 min-h-0">
+            <Skeleton className="h-full min-h-[170px] w-full" />
           </CardContent>
         </Card>
       </PanelTile>

@@ -150,13 +150,21 @@ export function TransportOverview() {
     // school has no fleet, which is a very different claim from "loading".
     return (
       <div className="space-y-4">
-        <TileWrapper columns={{ default: 1, md: 2, lg: 4 }} gap={12}>
+        {/*
+          Measured against the three blocks these stand in for: a 63px stat row,
+          a 240px band of charts and a 410px alerts panel. They were 84, 224 and
+          168 — the alerts panel alone was 242px short — which is why the page
+          grew 454px when the fleet arrived. The column counts match the real
+          stat row too; at `default: 1` the placeholder stacked four rows deep on
+          a phone where the real row is 2x2.
+        */}
+        <TileWrapper columns={{ default: 2, lg: 4 }} gap={12}>
           {[0, 1, 2, 3].map(card => (
-            <Skeleton key={card} className="h-24 w-full rounded-xl" />
+            <Skeleton key={card} className="h-[63px] w-full rounded-xl" />
           ))}
         </TileWrapper>
-        <Skeleton className="h-64 w-full rounded-xl" />
-        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-[240px] w-full rounded-xl" />
+        <Skeleton className="h-[410px] w-full rounded-xl" />
       </div>
     )
   }

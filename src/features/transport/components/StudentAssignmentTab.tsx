@@ -28,7 +28,6 @@ import { accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchAssignments,
   fetchRoutes,
@@ -362,25 +361,23 @@ export function StudentAssignmentTab() {
     </Tile>
   )
 
-  if (isLoading) {
-    // An empty roster while the fetch is running reads as "nobody takes the
-    // bus", which is a very different claim from "not loaded yet".
-    return (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full rounded-lg" />
-        {[0, 1, 2, 3, 4].map(row => (
-          <Skeleton key={row} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-4">
       {toolbar}
 
-      {/* Grouped View — uses CompactTable for section-based layout */}
-      {grouped ? (
+      {/*
+        Grouping is a view over rows, so it only means anything once the rows
+        are here: while loading, the flat table's placeholder stands in whatever
+        the grouping is set to.
+
+        That matters because `grouped` is an empty ARRAY at that point, not
+        null — truthy, so the grouped branch would run and map nothing, leaving
+        the toolbar above a blank space. Drawing invented group headers instead
+        would be worse: how many groups there are, and what they are called, are
+        both properties of data that has not arrived.
+      */}
+      {grouped && !isLoading ? (
         <div className="space-y-3">
           {grouped.map(([groupName, items]) => (
             <Tile key={groupName} id={`group-${groupName}`} layoutMode="block" background="card" borderRadius="lg" shadowed padding={0}>
@@ -412,6 +409,8 @@ export function StudentAssignmentTab() {
         <DataTable
           columns={dtColumns}
           data={filtered}
+          isLoading={isLoading}
+          loadingRowHeight={39}
           enableSorting
           enablePagination
           enableFiltering={false}

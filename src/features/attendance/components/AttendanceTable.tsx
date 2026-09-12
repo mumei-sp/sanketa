@@ -90,7 +90,7 @@ function AttendanceDayCell({
 /**
  * Attendance table component using TanStack Table
  */
-export function AttendanceTable({ data }: AttendanceTableProps) {
+export function AttendanceTable({ data, isLoading = false }: AttendanceTableProps) {
   const {
     typeFilter,
     setTypeFilter,
@@ -228,6 +228,9 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
     <DataTable
       columns={columns}
       data={filteredData}
+      // Declared in the props and then dropped, so a table still fetching drew
+      // "No attendance recorded" — an answer it did not have yet.
+      isLoading={isLoading}
       enableSorting
       enablePagination
       enableFiltering

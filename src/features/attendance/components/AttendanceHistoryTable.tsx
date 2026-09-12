@@ -2,7 +2,6 @@ import * as React from 'react'
 import type { Row } from '@tanstack/react-table'
 import { DataTable } from '@/components/table'
 import { createHistoryColumns } from './attendance-history-columns'
-import { DailyAttendanceHistorySkeleton } from './DailyAttendanceSkeleton'
 import type { AttendanceHistoryRow } from '../types'
 
 interface AttendanceHistoryTableProps {
@@ -37,9 +36,6 @@ export function AttendanceHistoryTable({
     return row.original.isSubmitted ? '' : 'bg-primary-soft'
   }, [])
 
-  if (isLoading) {
-    return <DailyAttendanceHistorySkeleton />
-  }
 
   if (rows.length === 0) {
     return (
@@ -53,6 +49,13 @@ export function AttendanceHistoryTable({
     <DataTable
       columns={columns}
       data={rows}
+      // The page already wraps this in a card `Tile`; the skeleton this
+      // replaced rendered a SECOND one inside it, so the history view briefly
+      // showed a card within a card. Twelve rows is the reservation that
+      // skeleton made, kept here — the table has no pagination, so a page size
+      // would be a meaningless number to reserve against.
+      isLoading={isLoading}
+      loadingRowCount={12}
       enableSorting
       enablePagination={false}
       showToolbar={false}

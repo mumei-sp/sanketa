@@ -14,7 +14,6 @@ import { colors } from '@/theme/colors'
 import { spacing } from '@/config/spacing'
 import PageHeader from '@/components/layout/PageHeader'
 import { Tile } from '@/components/tile'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   Sheet,
   SheetContent,
@@ -225,23 +224,14 @@ export function GradeSheetPage() {
         </div>
 
         {/* ═══ CONTENT ═══ */}
-        {isLoading ? (
-          <Tile id="sheet-loading" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
-            <div className="space-y-4">
-              {/* Toolbar skeleton */}
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-6 w-[160px]" />
-                <Skeleton className="h-8 w-[120px]" />
-              </div>
-              {/* Table header skeleton */}
-              <Skeleton className="h-10 w-full rounded" />
-              {/* Row skeletons */}
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full rounded" />
-              ))}
-            </div>
-          </Tile>
-        ) : rows.length === 0 || rows.every(r => r.total === 0) ? (
+        {/*
+          `!isLoading` guards the empty state, and the table draws its own
+          placeholder rows. Before, a page-scale skeleton stood in for the whole
+          card and reserved six rows where twenty-four were coming; take the
+          guard away and the empty state would claim there are no marks while
+          the fetch is still running.
+        */}
+        {!isLoading && (rows.length === 0 || rows.every(r => r.total === 0)) ? (
           <Tile id="sheet-empty" layoutMode="block" background="card" borderRadius="lg" padding="p-6">
             <div className="flex flex-col items-center justify-center py-16 gap-2">
               <FileSpreadsheet className="size-8" style={{ color: colors.text.muted }} />
@@ -263,6 +253,7 @@ export function GradeSheetPage() {
               summary={summary}
               subjectList={subjectList}
               onViewReportCard={handleViewReportCard}
+              isLoading={isLoading}
             />
           </Tile>
         )}

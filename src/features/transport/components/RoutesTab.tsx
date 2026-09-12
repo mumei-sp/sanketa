@@ -26,7 +26,6 @@ import { accent, border } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchRoutes,
   saveRoute as saveRouteRequest,
@@ -273,22 +272,23 @@ export function RoutesTab() {
     setFormOpen(true)
   }, [])
 
-  if (isLoading) {
-    // A table of "no routes" while the fetch is still running is a claim about
-    // the data rather than about the request.
-    return (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full rounded-lg" />
-        {[0, 1, 2, 3, 4].map(row => (
-          <Skeleton key={row} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-4">
       <DataTable
+        // The toolbar and the header are chrome, not data — they can draw at
+        // once. Only the ROWS are unknown, and `DataTable` holds a page of
+        // them at the right height until they arrive. This used to replace
+        // the whole component with stacked grey bars, which meant the real
+        // filters appeared late and at a different height than they stood.
+        isLoading={isLoading}
+        loadingRowHeight={48}
+        // Five, not a full page. `loadingRowCount` defaults to the page
+        // size, which is the right reservation for a table that fills its
+        // first page — a school's route list does not. The skeleton this
+        // replaced drew five for the same reason; reserving ten made the
+        // table shrink 240px when the routes arrived.
+        loadingRowCount={5}
         columns={columns}
         data={filtered}
         enableSorting

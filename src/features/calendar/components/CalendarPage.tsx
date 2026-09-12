@@ -153,13 +153,17 @@ export function CalendarPage() {
           title="Calendar"
           breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Calendar' }]}
         />
+        {/*
+          Measured against the loaded page: a 48px category strip over a 708px
+          calendar. It was a 40px strip, a stray 32px bar that nothing replaces,
+          and a 500px block — which is where the 162px jump came from.
+        */}
         <div className="flex gap-3 overflow-x-auto">
           {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-10 w-36 rounded-full shrink-0" />
+            <Skeleton key={i} className="h-12 w-36 rounded-full shrink-0" />
           ))}
         </div>
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-[500px] w-full rounded-lg" />
+        <Skeleton className="h-[708px] w-full rounded-lg" />
       </div>
     )
   }

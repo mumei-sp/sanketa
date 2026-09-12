@@ -1,5 +1,7 @@
+import type * as React from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Tile } from '@/components/tile'
 import { useBrandColors } from '@/hooks/use-brand-colors'
 import type { DepartmentData } from '@/features/teachers/types'
@@ -28,6 +30,29 @@ export function DepartmentChart({
     Music: '#80CBC4',
     Library: '#BCAAA4',
   }
+  if (!isLoading && data.length === 0) {
+    return (
+      <Tile
+        id="department-chart-tile"
+        layoutMode="block"
+        background="card"
+        borderRadius="lg"
+        shadowed
+        padding={16}
+        className="h-full flex flex-col"
+      >
+        <h3 className="text-section-title text-heading mb-3">Department</h3>
+        <div className="flex-1 flex items-center justify-center">
+          <EmptyState
+            title="No departments yet"
+            description="The split appears once teachers are assigned subjects."
+            className="py-8"
+          />
+        </div>
+      </Tile>
+    )
+  }
+
   if (isLoading) {
     return (
       <Tile
@@ -40,7 +65,26 @@ export function DepartmentChart({
         className="h-full flex flex-col"
       >
         <h3 className="text-section-title text-heading mb-3">Department</h3>
-        <Skeleton className="h-full w-full flex-1" />
+        {/*
+          Shaped like the thing it stands in for — a 130px ring over a column
+          of legend rows — rather than one grey block the whole panel. A
+          placeholder that changes shape when the data lands reads as a jump,
+          which is the whole reason to draw one.
+        */}
+        <div className="flex-1 min-h-0 flex flex-col items-center gap-3">
+          <Skeleton className="size-[130px] shrink-0 rounded-full" />
+          <div className="w-full flex flex-col gap-2">
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Skeleton className="size-2.5 shrink-0 rounded-full" />
+                  <Skeleton className="h-3 w-24 rounded" />
+                </div>
+                <Skeleton className="h-3 w-10 shrink-0 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
       </Tile>
     )
   }
@@ -91,8 +135,13 @@ export function DepartmentChart({
           </div>
         </div>
 
-        {/* Legend — shows ~6 items, scrolls for the rest */}
-        <div className="w-full overflow-y-auto pr-1" style={{ maxHeight: 156 }}>
+        {/* Legend — shows ~6 items, scrolls for the rest. `tile-list` is the
+            shared version of the cap this was doing inline; the budget is
+            smaller than the default because the donut above it needs the room. */}
+        <div
+          className="w-full pr-1 tile-list"
+          style={{ '--tile-list-max-h': '156px' } as React.CSSProperties}
+        >
           <div className="flex flex-col gap-2">
             {data.map(item => (
               <div key={item.name} className="flex items-center justify-between gap-2">

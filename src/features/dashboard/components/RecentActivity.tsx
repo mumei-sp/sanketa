@@ -37,7 +37,9 @@ const VISIBLE_COUNT = 6
 function ActivitySkeleton() {
   return (
     <>
-      {[0, 1, 2, 3].map(row => (
+      {/* One per row the feed actually shows — see VISIBLE_COUNT. Four
+          placeholders for six rows left the tile 104px short. */}
+      {Array.from({ length: VISIBLE_COUNT }).map((_, row) => (
         <div key={row} className="flex items-start gap-3">
           <Skeleton className="size-10 shrink-0 rounded-full" />
           <div className="flex-1 space-y-1.5">
