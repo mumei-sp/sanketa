@@ -39,6 +39,7 @@ import {
   History,
   Undo2,
   Clock,
+  Quote,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -196,7 +197,11 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
       event.summary.toLowerCase().includes(needle) ||
       event.target.toLowerCase().includes(needle) ||
       event.actorName.toLowerCase().includes(needle) ||
-      (event.detail?.toLowerCase().includes(needle) ?? false)
+      (event.detail?.toLowerCase().includes(needle) ?? false) ||
+      // Searchable, because a reason is the part somebody remembers the
+      // wording of — "the one about maternity leave" — when they have
+      // forgotten the date and the role.
+      (event.reason?.toLowerCase().includes(needle) ?? false)
     )
   })
 
@@ -324,6 +329,19 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
                         {formatRelativeTime(event.at)}
                       </time>
                     </p>
+
+                    {/* Somebody's own words, quoted and never taken apart —
+                        unlike `detail`, which the app wrote in a shape this
+                        view splits into chips. */}
+                    {event.reason && (
+                      <p
+                        className="mt-1 flex items-start gap-1.5 text-caption"
+                        style={{ color: text.muted }}
+                      >
+                        <Quote className="mt-0.5 size-3 shrink-0" aria-hidden />
+                        <span className="italic">{event.reason}</span>
+                      </p>
+                    )}
 
                     {event.detail && (
                       <div className="mt-1.5 flex flex-wrap gap-1">

@@ -21,9 +21,15 @@
  * A term left is shown in days once it is close. "Until 31 Mar 2027" is the
  * fact; "9 days left" is the one that makes somebody act, and a date nine days
  * out does not read as urgent at a glance.
+ *
+ * ── And the reason, where there is one ─────────────────────────────────
+ * Quoted rather than paraphrased, because it is somebody's sentence and not
+ * the app's. It sits on the row rather than only in the log: the log is capped
+ * and eventually forgets, and "why does she have this?" is a question about
+ * this row, asked while looking at it.
  */
 
-import { Clock, Pencil, X, Check } from 'lucide-react'
+import { Clock, Pencil, X, Check, Quote } from 'lucide-react'
 import type { Role } from '@/config/permissions'
 import type { RoleGrant } from '@/api/services/user-service'
 import { border, text } from '@/theme/colors'
@@ -146,6 +152,16 @@ export function RoleGrantRow({
           </button>
         )}
       </div>
+
+      {grant.reason && (
+        <p
+          className="flex w-full items-start gap-1.5 text-caption"
+          style={{ color: temporary ? CAUTION.ink : text.muted }}
+        >
+          <Quote className="mt-0.5 size-3 shrink-0" aria-hidden />
+          <span className="italic">{grant.reason}</span>
+        </p>
+      )}
     </div>
   )
 }

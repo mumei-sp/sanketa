@@ -16,6 +16,13 @@
  * stops working on a date, silently, months later — that deserves a sentence
  * saying so before it is set, and a sentence needs somewhere to live.
  *
+ * ── And one question that is not required ─────────────────────────────
+ * A reason. Optional, because forcing one produces "asdf" and a required
+ * field full of noise is worse than an empty one. It is asked anyway because
+ * the log already answers *who* and *when* perfectly well, and the question
+ * somebody actually arrives with a year later is *why* — which nothing in the
+ * system could answer until now.
+ *
  * ── The presets are the school's calendar, not round numbers ──────────
  * "End of this term" and "End of the school year" are how a school actually
  * thinks about a temporary appointment; "in 90 days" is how a computer does.
@@ -81,6 +88,26 @@ function presetsFrom(now: Date): Preset[] {
   return out
 }
 
+/**
+ * Long enough for a sentence, short enough that nobody writes a memo.
+ *
+ * A reason that runs to a paragraph stops being readable where it is shown —
+ * one line under a grant, one line in a log — and the thing worth keeping is
+ * the sentence, not the essay around it.
+ */
+const REASON_LIMIT = 140
+
+/**
+ * A placeholder that is an example, not an instruction.
+ *
+ * Different for the two cases because they are asked in different situations:
+ * a temporary role almost always has a story, and a permanent one usually has
+ * a reason that is really a job description.
+ */
+function placeholderFor(temporary: boolean): string {
+  return temporary ? 'Acting head while Nandini Rao is on leave' : 'Took over admissions this year'
+}
+
 export function GrantRoleDialog({
   open,
   onOpenChange,
@@ -88,6 +115,7 @@ export function GrantRoleDialog({
   personName,
   alsoHolds,
   currentExpiry,
+  currentReason,
   alreadyHeld = false,
   onConfirm,
 }: {
@@ -99,6 +127,8 @@ export function GrantRoleDialog({
   alsoHolds: string[]
   /** Set when changing an existing grant rather than making a new one. */
   currentExpiry?: string
+  /** The reason already on the grant, so editing one does not start blank. */
+  currentReason?: string
   /**
    * Whether they hold this role already.
    *
@@ -108,13 +138,14 @@ export function GrantRoleDialog({
    * about somebody who has taught there for a year.
    */
   alreadyHeld?: boolean
-  onConfirm: (expiresAt: string | undefined) => void
+  onConfirm: (expiresAt: string | undefined, reason: string | undefined) => void
 }) {
   const now = React.useMemo(() => new Date(), [open])
   const presets = React.useMemo(() => presetsFrom(now), [now])
 
   const [temporary, setTemporary] = React.useState(false)
   const [date, setDate] = React.useState('')
+  const [reason, setReason] = React.useState('')
 
   // Reopened for a different role or person: start from what is true now
   // rather than from whatever the last grant left behind.
@@ -122,13 +153,15 @@ export function GrantRoleDialog({
     if (!open) return
     setTemporary(currentExpiry !== undefined)
     setDate(currentExpiry ? isoDate(new Date(currentExpiry)) : presets[0].iso)
-  }, [open, currentExpiry, presets])
+    setReason(currentReason ?? '')
+  }, [open, currentExpiry, currentReason, presets])
 
   if (!role) return null
 
   const changing = alreadyHeld
   const days = date ? daysUntil(new Date(date).toISOString(), now) : 0
   const valid = !temporary || (date !== '' && days >= 0)
+  const trimmedReason = reason.trim()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -226,6 +259,34 @@ export function GrantRoleDialog({
             </div>
           )}
 
+          {/* Why. Never required, and labelled as optional rather than merely
+              lacking an asterisk — an admin adding a teacher on a Tuesday
+              should not have to compose a justification, and the ones who do
+              have something to say are the ones worth hearing from. */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <Label htmlFor="grant-reason" className="text-body font-medium">
+                Why
+              </Label>
+              <span className="text-caption" style={{ color: text.muted }}>
+                Optional
+              </span>
+            </div>
+            <Input
+              id="grant-reason"
+              value={reason}
+              maxLength={REASON_LIMIT}
+              onChange={event => setReason(event.target.value)}
+              placeholder={placeholderFor(temporary)}
+              className="h-control"
+            />
+            <p className="text-caption" style={{ color: text.muted }}>
+              {reason.length > REASON_LIMIT - 30
+                ? `${REASON_LIMIT - reason.length} characters left`
+                : 'Kept with the role and shown in the log, so a year from now this answers itself.'}
+            </p>
+          </div>
+
           {/* What will actually happen, in a sentence, before it does. */}
           <div
             className="flex items-start gap-2 rounded-xl border p-3"
@@ -252,6 +313,7 @@ export function GrantRoleDialog({
                   {role.name} lasts until somebody takes it away. It will show as granted by you.
                 </>
               )}
+              {trimmedReason !== '' && <> The log will say why.</>}
             </p>
           </div>
         </div>
@@ -263,7 +325,10 @@ export function GrantRoleDialog({
           <Button
             disabled={!valid}
             onClick={() => {
-              onConfirm(temporary ? new Date(date).toISOString() : undefined)
+              onConfirm(
+                temporary ? new Date(date).toISOString() : undefined,
+                trimmedReason === '' ? undefined : trimmedReason,
+              )
               onOpenChange(false)
             }}
           >

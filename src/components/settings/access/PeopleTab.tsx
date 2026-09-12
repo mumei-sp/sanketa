@@ -130,7 +130,7 @@ interface PeopleTabProps {
     profileId: string,
     roleId: string,
     held: boolean,
-    options?: { expiresAt?: string },
+    options?: { expiresAt?: string; reason?: string },
   ) => Promise<boolean>
   onSetClasses: (profileId: string, classSections: string[]) => Promise<boolean>
   /** Re-read the joined list, after a change that reshapes a row. */
@@ -241,10 +241,14 @@ export function PeopleTab({
     person: Person
     role: Role
     currentExpiry?: string
+    currentReason?: string
   } | null>(null)
 
-  const openGrant = (person: Person, role: Role, currentExpiry?: string) =>
-    setGranting({ person, role, currentExpiry })
+  const openGrant = (
+    person: Person,
+    role: Role,
+    current: { expiresAt?: string; reason?: string } = {},
+  ) => setGranting({ person, role, currentExpiry: current.expiresAt, currentReason: current.reason })
 
   /**
    * The roles this person could be given, which is not all of them.
@@ -272,13 +276,13 @@ export function PeopleTab({
   }
 
   /** Give a role, or change how long an existing one lasts. */
-  const commitGrant = async (expiresAt: string | undefined) => {
+  const commitGrant = async (expiresAt: string | undefined, reason: string | undefined) => {
     if (!granting) return
     const { person, role, currentExpiry } = granting
     if (person.profileId === null) return
     const changing = currentExpiry !== undefined || person.roleIds.includes(role.id)
 
-    if (await onSetRole(person.profileId, role.id, true, { expiresAt })) {
+    if (await onSetRole(person.profileId, role.id, true, { expiresAt, reason })) {
       const ends = expiresAt ? ` until ${shortDate(expiresAt)}` : ''
       record({
         kind: 'user.role',
@@ -287,6 +291,7 @@ export function PeopleTab({
           ? `Set ${person.user.fullName}'s ${role.name}${ends || ' to permanent'}`
           : `Made ${person.user.fullName} ${role.name}${ends}`,
         detail: identifierOf(person.user),
+        reason,
         change: {
           entity: 'profile-role',
           id: `${person.profileId}:${role.id}`,
@@ -771,7 +776,7 @@ export function PeopleTab({
                           grant={grant}
                           editable={canAssignRole}
                           busy={busy}
-                          onChangeExpiry={() => openGrant(person, role, grant.expiresAt)}
+                          onChangeExpiry={() => openGrant(person, role, grant)}
                           onRemove={() => void toggleRole(person, grant.roleId)}
                         />
                       )
@@ -957,8 +962,9 @@ export function PeopleTab({
             : []
         }
         currentExpiry={granting?.currentExpiry}
+        currentReason={granting?.currentReason}
         alreadyHeld={granting ? granting.person.roleIds.includes(granting.role.id) : false}
-        onConfirm={expiresAt => void commitGrant(expiresAt)}
+        onConfirm={(expiresAt, reason) => void commitGrant(expiresAt, reason)}
       />
     </div>
   )

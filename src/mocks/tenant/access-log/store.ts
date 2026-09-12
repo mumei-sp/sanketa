@@ -89,6 +89,17 @@ export interface AccessEvent {
   summary: string
   /** The change itself, when there is something to spell out. */
   detail?: string
+  /**
+   * Why, in the words of whoever did it.
+   *
+   * Separate from `detail` and not merged into it, for two reasons. `detail`
+   * is written by the app in a shape the view takes apart — comma-separated
+   * chips — and a sentence somebody typed would shatter along its commas. And
+   * a machine's account of what moved and a person's account of why are
+   * different kinds of evidence; a log that blurs them is harder to trust,
+   * not easier to read.
+   */
+  reason?: string
   /** What actually moved, for undo. Absent on entries that predate it. */
   change?: AccessChange
   /**

@@ -61,6 +61,8 @@ export interface AccessEventDraft {
   target: string
   summary: string
   detail?: string
+  /** Why, typed by whoever acted. Shown as written; never taken apart. */
+  reason?: string
   /**
    * What moved, in fields rather than prose.
    *
@@ -229,7 +231,7 @@ export function AccessSettingsSection() {
       profileId: string,
       roleId: string,
       held: boolean,
-      options: { expiresAt?: string } = {},
+      options: { expiresAt?: string; reason?: string } = {},
     ) => {
       setSavingId(profileId)
       try {

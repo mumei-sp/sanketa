@@ -219,19 +219,31 @@ export async function setPersonRole(
      * absent on a role that had one is how an expiry is lifted.
      */
     expiresAt?: string
+    /**
+     * Why, in the granter's words. Optional, and replaced rather than merged —
+     * re-granting a role is a new decision, so the old reason goes with the
+     * old terms.
+     */
+    reason?: string
   } = {},
 ): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
-      if (held) grantRole(profileId, roleId, { expiresAt: options.expiresAt, assignedBy: granterId() })
-      else revokeRole(profileId, roleId)
+      if (held) {
+        grantRole(profileId, roleId, {
+          expiresAt: options.expiresAt,
+          reason: options.reason,
+          assignedBy: granterId(),
+        })
+      } else revokeRole(profileId, roleId)
       return true
     },
     async () => {
       if (held) {
         await apiClient.put(`/profiles/${profileId}/roles/${roleId}`, {
           expiresAt: options.expiresAt ?? null,
+          reason: options.reason ?? null,
         })
       } else {
         await apiClient.delete(`/profiles/${profileId}/roles/${roleId}`)
@@ -340,6 +352,8 @@ export interface RoleGrant {
   expiresAt?: string
   /** Null when nobody can be named — the seed grants have no author. */
   grantedBy: string | null
+  /** Why it was given, if whoever gave it said. `profile_roles.notes`. */
+  reason?: string
 }
 
 /** The grants on one profile, with the granter resolved to a name. */
@@ -349,6 +363,7 @@ function grantsWithNames(profileId: string): RoleGrant[] {
     assignedAt: grant.assignedAt,
     expiresAt: grant.expiresAt,
     grantedBy: grant.assignedBy ? (profileNameOf(grant.assignedBy) ?? null) : null,
+    reason: grant.reason,
   }))
 }
 

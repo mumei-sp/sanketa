@@ -75,6 +75,10 @@ function sweepLapsedGrants(): void {
       target: who,
       summary: what ? `${who}'s ${what} role lapsed` : `A role ${who} held lapsed`,
       detail: detail.length > 0 ? detail.join(', ') : undefined,
+      // Carried over from the grant. A lapse reads as arbitrary without it and
+      // obvious with it — "acting head while Nandini is on leave" explains its
+      // own ending better than any sentence the sweep could write.
+      reason: grant.reason,
     })
   })
 
@@ -119,6 +123,8 @@ export async function recordAccessEvent(input: {
   target: string
   summary: string
   detail?: string
+  /** Free text from whoever acted. Never parsed — only shown. */
+  reason?: string
   change?: AccessChange
   undoOf?: string
 }): Promise<AccessEvent | null> {

@@ -260,6 +260,20 @@ export interface ProfileRole {
    * thing to report when its turn comes.
    */
   lapseRecorded?: boolean
+  /**
+   * Why this person was given this, in whoever's words gave it.
+   *
+   * `profile_roles.notes` in the schema, and called a reason here because
+   * "notes" is an invitation to write a paragraph and this wants a sentence:
+   * *acting head while Nandini is on leave*. Optional, and most grants will
+   * not have one — but the one grant somebody queries a year later is exactly
+   * the one that needed it.
+   *
+   * Kept on the row as well as in the access log because the log is capped and
+   * eventually forgets, and because "why does she have this?" is a question
+   * about a row, not about a day.
+   */
+  reason?: string
 }
 
 const TABLE = 'profiles'
@@ -722,12 +736,12 @@ export function updateProfile(id: string, patch: Partial<Omit<Profile, 'id'>>): 
  * acting head turns out to be staying.
  *
  * `assignedBy` is the granter's profile id. Absent for the seed, which has
- * nobody to name.
+ * nobody to name. `reason` is what they typed, if anything.
  */
 export function grantRole(
   profileId: string,
   roleId: string,
-  options: { expiresAt?: string; assignedBy?: string } = {},
+  options: { expiresAt?: string; assignedBy?: string; reason?: string } = {},
 ): void {
   const database = load()
   const existing = database.roles.find(
@@ -740,6 +754,11 @@ export function grantRole(
     // extending a role that had already run out silently used up its one line
     // in the log, and the second ending would never be recorded.
     delete existing.lapseRecorded
+    // Replaced wholesale, like the expiry beside it. Re-granting is a new
+    // decision, and keeping the old reason would leave "acting head while
+    // Nandini is on leave" attached to a role that has since been made
+    // permanent. The log still has what it used to say.
+    existing.reason = options.reason
     // Re-stamped: an expiry lifted or extended is a new decision by a new
     // person, and dating it to the original grant would credit the wrong one.
     existing.assignedAt = now()
@@ -750,6 +769,7 @@ export function grantRole(
       assignedAt: now(),
       expiresAt: options.expiresAt,
       assignedBy: options.assignedBy,
+      reason: options.reason,
     })
   }
   persist()
