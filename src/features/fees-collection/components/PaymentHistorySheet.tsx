@@ -125,13 +125,13 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
                   <span style={{ fontSize: '11px', color: text.muted }}>{txn.paidDate}</span>
                   <span
                     className="text-[10px] font-medium rounded-full px-2 py-px"
-                    style={{ backgroundColor: accent.base, color: 'var(--heading)' }}
+                    style={{ backgroundColor: accent.base, color: 'var(--accent-foreground)' }}
                   >
                     {PAYMENT_METHOD_LABELS[txn.method]}
                   </span>
                   <span
                     className="text-[10px] font-medium rounded-full px-2 py-px"
-                    style={{ backgroundColor: statusColors.success.base, color: '#fff' }}
+                    style={{ backgroundColor: statusColors.success.base, color: 'var(--heading-accent, var(--heading))' }}
                   >
                     {txn.status}
                   </span>

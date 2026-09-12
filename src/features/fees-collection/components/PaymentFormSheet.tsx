@@ -133,7 +133,11 @@ export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: Pay
                   style={{
                     border: `1.5px solid ${method === m ? 'var(--heading)' : border.default}`,
                     backgroundColor: method === m ? accent.base : 'transparent',
-                    color: 'var(--heading)',
+                    // Selected is filled with the fixed accent, unselected is
+                    // transparent over the sheet. One label cannot serve both:
+                    // `--heading` follows the theme to near-white, which is
+                    // right over the sheet and 1.13:1 on the accent.
+                    color: method === m ? 'var(--accent-foreground)' : 'var(--heading)',
                   }}
                 >
                   {PAYMENT_METHOD_LABELS[m]}

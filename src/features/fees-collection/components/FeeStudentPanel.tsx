@@ -179,8 +179,17 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
             <span
               className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold"
               style={{
-                backgroundColor: allPaid ? statusColors.success.base : withOpacity('var(--accent)', 0.5),
-                color: allPaid ? '#fff' : 'var(--heading)',
+                // Both states are solid fills with fixed labels, which is what
+                // the sibling chips elsewhere do. The unpaid half used to be a
+                // TRANSLUCENT accent, and a 50% tint over the card lands
+                // mid-grey in dark — 3.61:1 under `--heading` and 2.73:1 under
+                // `--text-body`, the one lightness where neither reads. White
+                // on the success green was 2.17:1 for the same reason it was on
+                // the attendance pill.
+                backgroundColor: allPaid ? statusColors.success.base : 'var(--accent)',
+                color: allPaid
+                  ? 'var(--heading-accent, var(--heading))'
+                  : 'var(--accent-foreground)',
               }}
             >
               {allPaid ? 'Fully Paid' : `₹${totalPaid.toLocaleString('en-IN')} paid`}

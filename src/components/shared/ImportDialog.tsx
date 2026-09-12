@@ -272,7 +272,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
 
               {/* Column hints */}
               <div style={{ borderRadius: 8, border: `1px solid ${border.subtle}`, overflow: 'hidden' }}>
-                <p style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--heading)', backgroundColor: accent.base }}>
+                <p style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--accent-foreground)', backgroundColor: accent.base }}>
                   Expected columns
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '10px 12px' }}>
@@ -284,7 +284,10 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                         padding: '2px 8px',
                         borderRadius: 4,
                         backgroundColor: col.required ? accent.base : background.surface,
-                        color: 'var(--heading)',
+                        // Required sits on the fixed accent fill, optional on the card —
+                        // so the label follows the fill: fixed partner on one, themed on
+                        // the other. `--heading` on accent measured 1.13:1.
+                        color: col.required ? 'var(--accent-foreground)' : 'var(--heading)',
                         border: `1px solid ${border.subtle}`,
                       }}
                     >
@@ -346,11 +349,11 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: '7px 10px', backgroundColor: accent.base, color: 'var(--heading)', fontWeight: 600, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '7px 10px', backgroundColor: accent.base, color: 'var(--accent-foreground)', fontWeight: 600, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap' }}>
                         #
                       </th>
                       {parseResult.headers.map(h => (
-                        <th key={h} style={{ padding: '7px 10px', backgroundColor: accent.base, color: 'var(--heading)', fontWeight: 600, textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1 }}>
+                        <th key={h} style={{ padding: '7px 10px', backgroundColor: accent.base, color: 'var(--accent-foreground)', fontWeight: 600, textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1 }}>
                           {h}
                         </th>
                       ))}
