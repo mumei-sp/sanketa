@@ -20,11 +20,20 @@
 import { newId } from '@/mocks/_shared'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
-/** What kind of change happened. Kept coarse — the summary carries detail. */
+/**
+ * What kind of change happened. Kept coarse — the summary carries detail.
+ *
+ * `role.lapse` is the odd one: nobody did it. A grant given until a date stops
+ * working on that date, and without a line saying so the role quietly ceasing
+ * to work is indistinguishable from a bug. It is the only kind written by the
+ * system rather than by a person, and the only one that is never reversible —
+ * there is no change to put back, only a clock that ran out.
+ */
 export type AccessEventKind =
   | 'role.create'
   | 'role.update'
   | 'role.delete'
+  | 'role.lapse'
   | 'user.role'
   | 'user.classes'
   | 'user.create'
@@ -192,10 +201,28 @@ export function listEvents(limit = MAX_ROWS): AccessEvent[] {
   return load().rows.slice(0, limit).map(event => ({ ...event }))
 }
 
-export function recordEvent(input: Omit<AccessEvent, 'id' | 'at'>): AccessEvent {
+/**
+ * Append one line.
+ *
+ * `at` defaults to now, which is right for everything a person does — the
+ * write and the act are the same moment. A lapse is not: the role ended on its
+ * expiry date and the sweep only noticed later, so it passes the date it
+ * actually happened and the entry has to go where that date belongs rather
+ * than at the front. Hence a positioned insert instead of an unshift: the log
+ * is ordered by when things happened, not by when they were written down.
+ */
+export function recordEvent(
+  input: Omit<AccessEvent, 'id' | 'at'> & { at?: string },
+): AccessEvent {
   const database = load()
-  const event: AccessEvent = { ...input, id: newId('AE'), at: new Date().toISOString() }
-  database.rows.unshift(event)
+  const at = input.at ?? new Date().toISOString()
+  const event: AccessEvent = { ...input, id: newId('AE'), at }
+  // Rows are newest first, so the slot is the first one not newer than this.
+  // Ties land above their equals, which keeps a live write at the top where
+  // the person who just made it expects to see it.
+  const slot = database.rows.findIndex(row => row.at <= at)
+  if (slot === -1) database.rows.push(event)
+  else database.rows.splice(slot, 0, event)
   if (database.rows.length > MAX_ROWS) database.rows.length = MAX_ROWS
   persist()
   return { ...event }

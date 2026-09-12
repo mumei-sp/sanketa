@@ -25,6 +25,8 @@ export {
   updateProfile,
   grantRole,
   revokeRole,
+  lapsedGrants,
+  markLapsesRecorded,
   createDesignation,
   deactivateDesignation,
   setDesignation,

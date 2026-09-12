@@ -250,6 +250,16 @@ export interface ProfileRole {
    * expires on its own beats one somebody has to remember to remove.
    */
   expiresAt?: string
+  /**
+   * Whether the lapse has been written to the access log yet.
+   *
+   * Not a fact about the grant — a fact about the bookkeeping, and it is a
+   * column rather than a lookup for the same reason a job queue has one: the
+   * sweep has to know what it has already done without reading the log back.
+   * Cleared whenever the grant is re-issued, because a fresh expiry is a fresh
+   * thing to report when its turn comes.
+   */
+  lapseRecorded?: boolean
 }
 
 const TABLE = 'profiles'
@@ -726,6 +736,10 @@ export function grantRole(
   if (existing) {
     existing.expiresAt = options.expiresAt
     if (options.assignedBy !== undefined) existing.assignedBy = options.assignedBy
+    // A new expiry is a new lapse to report. Leaving the flag set would mean
+    // extending a role that had already run out silently used up its one line
+    // in the log, and the second ending would never be recorded.
+    delete existing.lapseRecorded
     // Re-stamped: an expiry lifted or extended is a new decision by a new
     // person, and dating it to the original grant would credit the wrong one.
     existing.assignedAt = now()
@@ -753,6 +767,40 @@ export function roleGrantsOf(profileId: string): ProfileRole[] {
   return liveRoles(load().roles)
     .filter(row => row.profileId === profileId)
     .map(row => ({ ...row }))
+}
+
+/**
+ * Grants whose date has passed and that nothing has reported yet.
+ *
+ * A backend would sweep this on a schedule and write the audit rows from a
+ * job. There is no scheduler in a browser, so it is swept when somebody reads
+ * the access log — which is the only place the answer is shown, and so the
+ * only place the difference is observable. Either way the entry is dated to
+ * `expiresAt`, not to the sweep: the role ended when it ended.
+ *
+ * Read and mark are separate calls so the caller can write the log *before*
+ * marking. It is the right way round for a record: if something fails in
+ * between, the failure mode is a line written twice rather than an ending that
+ * was never written down.
+ */
+export function lapsedGrants(): ProfileRole[] {
+  const stamp = now()
+  return load()
+    .roles.filter(
+      row => row.expiresAt !== undefined && row.expiresAt <= stamp && !row.lapseRecorded,
+    )
+    .map(row => ({ ...row }))
+}
+
+/** Tick off the lapses that have been reported. Idempotent, as a sweep must be. */
+export function markLapsesRecorded(rows: { profileId: string; roleId: string }[]): void {
+  if (rows.length === 0) return
+  const database = load()
+  const done = new Set(rows.map(row => `${row.profileId}:${row.roleId}`))
+  database.roles.forEach(row => {
+    if (done.has(`${row.profileId}:${row.roleId}`)) row.lapseRecorded = true
+  })
+  persist()
 }
 
 export function revokeRole(profileId: string, roleId: string): void {

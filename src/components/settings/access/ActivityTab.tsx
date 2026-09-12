@@ -38,6 +38,7 @@ import {
   Layers,
   History,
   Undo2,
+  Clock,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -61,8 +62,10 @@ import {
   formatAbsoluteTime,
 } from '@/features/notifications/utils/notification-display'
 import { usePermissions } from '@/features/auth/PermissionContext'
+import { AUTOMATIC_ACTOR } from '@/api/services/access-log-service'
 import type { AccessEvent, AccessEventKind } from '@/api/services/access-log-service'
 import type { Permission } from '@/config/permissions'
+import { CAUTION } from './RoleGrantRow'
 import { SearchField } from './parts'
 import { undoBlocker, type UndoContext } from './undo'
 
@@ -70,6 +73,7 @@ const ICONS: Record<AccessEventKind, LucideIcon> = {
   'role.create': ShieldPlus,
   'role.update': ShieldCheck,
   'role.delete': ShieldX,
+  'role.lapse': Clock,
   'user.role': UserCog,
   'user.classes': Layers,
   'user.create': UserPlus,
@@ -113,6 +117,10 @@ const UNDO_NEEDS: Record<AccessEventKind, Permission> = {
   'role.create': 'roles.manage',
   'role.update': 'roles.manage',
   'role.delete': 'roles.manage',
+  // Never reached — a lapse carries no `change`, so `blockerFor` turns it away
+  // before it gets here. Present because the map is exhaustive on purpose: the
+  // day a kind is added, this is one of the places that has to have an answer.
+  'role.lapse': 'roles.assign',
   'user.role': 'roles.assign',
   'user.classes': 'users.update',
   'user.create': 'users.create',
@@ -164,6 +172,11 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
 
   /** Null when this entry can be taken back; otherwise why it cannot. */
   const blockerFor = (event: AccessEvent): string | null => {
+    // Before the generic "no change to put back" message, because that one
+    // implies somebody could have reversed this if only the log were newer.
+    // Nobody made this happen, so there is nothing to take back — the grant
+    // would have to be given again.
+    if (event.kind === 'role.lapse') return 'A role ending on its own is not a change to take back.'
     if (!event.change) return 'Entries from before this feature cannot be taken back.'
     if (reversed.has(event.id)) return 'Already taken back.'
     if (!newest.has(event.id)) return 'Something newer has changed this since.'
@@ -240,6 +253,11 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
           >
             {day.events.map(event => {
               const Icon = ICONS[event.kind] ?? ShieldCheck
+              // Nobody did this one. It is marked in the app's one caution
+              // tone rather than the navy every other entry wears, because a
+              // reader scanning for "who changed this" needs to stop reading
+              // this row as an answer to that question.
+              const automatic = event.actorName === AUTOMATIC_ACTOR
               const isReversed = reversed.has(event.id)
               const blocker = blockerFor(event)
               return (
@@ -254,7 +272,7 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
                     aria-hidden
                     className="absolute -left-[25px] top-1 flex size-4 items-center justify-center rounded-full ring-4"
                     style={{
-                      backgroundColor: 'var(--heading)',
+                      backgroundColor: automatic ? CAUTION.ink : 'var(--heading)',
                       // Punches the rail out behind the dot so the line reads
                       // as passing behind it rather than into it.
                       ['--tw-ring-color' as string]: 'var(--card)',
@@ -289,9 +307,16 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
                       <span
                         aria-hidden
                         className="flex size-4 items-center justify-center rounded-full text-[8px] font-bold"
-                        style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
+                        style={
+                          automatic
+                            ? { backgroundColor: CAUTION.chipBg, color: CAUTION.ink }
+                            : { backgroundColor: 'var(--muted)', color: 'var(--heading)' }
+                        }
                       >
-                        {getInitials(event.actorName)}
+                        {/* Initials for a person; a clock for the thing that
+                            is not one. "A" in a circle would read as somebody
+                            whose name begins with A. */}
+                        {automatic ? <Clock className="size-2.5" /> : getInitials(event.actorName)}
                       </span>
                       {event.actorName}
                       <span aria-hidden>·</span>
