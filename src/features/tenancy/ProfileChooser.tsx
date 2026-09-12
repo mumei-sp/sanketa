@@ -93,7 +93,7 @@ function SchoolPicker({
             <span
               aria-hidden
               className="flex size-7 items-center justify-center rounded-lg text-caption font-bold"
-              style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
+              style={{ backgroundColor: 'var(--accent)', color: 'var(--heading-accent, var(--heading))' }}
             >
               {selected.tenantName.slice(0, 2).toUpperCase()}
             </span>

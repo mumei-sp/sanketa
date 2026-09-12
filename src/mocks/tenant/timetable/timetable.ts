@@ -36,11 +36,17 @@ import { currentYear, currentTerm } from '@/mocks/tenant/academic'
 
 // color-mix lets brand-derived shades track the user's active preset without
 // us having to manage half a dozen extra CSS vars.
-const PRIMARY_SOFT = 'color-mix(in srgb, var(--primary) 55%, white)'
-const PRIMARY_MUTED = 'color-mix(in srgb, var(--primary) 30%, white)'
-const ACCENT_SOFT = 'color-mix(in srgb, var(--accent) 55%, white)'
-const ACCENT_MUTED = 'color-mix(in srgb, var(--accent) 30%, white)'
-const ACCENT_SUBTLE = 'color-mix(in srgb, var(--accent) 20%, white)'
+//
+// Mixed toward `--card`, not `white`: a slot is a tint of the surface it sits
+// on, and in dark mode that surface is not white. Mixing with a literal white
+// kept the slot pale while the subject label on it followed the theme to
+// near-white. `--card` is `#ffffff` in light mode, so these render unchanged
+// there and simply follow the surface down in dark.
+const PRIMARY_SOFT = 'color-mix(in srgb, var(--primary) 55%, var(--card))'
+const PRIMARY_MUTED = 'color-mix(in srgb, var(--primary) 30%, var(--card))'
+const ACCENT_SOFT = 'color-mix(in srgb, var(--accent) 55%, var(--card))'
+const ACCENT_MUTED = 'color-mix(in srgb, var(--accent) 30%, var(--card))'
+const ACCENT_SUBTLE = 'color-mix(in srgb, var(--accent) 20%, var(--card))'
 
 export const subjects: Subject[] = [
   { id: 'math',    name: 'Mathematics',        shortName: 'Math',    color: BRAND_ACCENT },

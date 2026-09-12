@@ -31,11 +31,11 @@ function getHourRange(schedule: ScheduleBlock[]): number[] {
 function getBlockStyles(variant: ScheduleBlock['variant']): { backgroundColor: string; color: string } {
   switch (variant) {
     case 'accent':
-      return { backgroundColor: 'var(--accent)', color: 'var(--heading)' }
+      return { backgroundColor: 'var(--accent)', color: 'var(--heading-accent, var(--heading))' }
     case 'dark':
       return { backgroundColor: 'var(--heading)', color: background.card }
     case 'primary':
-      return { backgroundColor: 'var(--primary)', color: 'var(--heading)' }
+      return { backgroundColor: 'var(--primary)', color: 'var(--heading-accent, var(--heading))' }
   }
 }
 

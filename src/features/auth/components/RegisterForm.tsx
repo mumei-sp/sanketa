@@ -139,7 +139,7 @@ export function RegisterForm() {
           type="submit"
           disabled={isSubmitting}
           className="h-11 w-full rounded-full text-sm font-semibold"
-          style={{ backgroundColor: 'var(--primary)', color: 'var(--heading)' }}
+          style={{ backgroundColor: 'var(--primary)', color: 'var(--heading-accent, var(--heading))' }}
         >
           {isSubmitting ? (
             <>

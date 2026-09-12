@@ -33,7 +33,7 @@ function EventsContent({ events }: { events: CalendarEvent[] }) {
               className="text-badge px-2 py-0.5 rounded font-medium"
               style={{
                 backgroundColor: event.bgColor,
-                color: 'var(--heading)',
+                color: 'var(--heading-accent, var(--heading))',
               }}
             >
               {event.date}

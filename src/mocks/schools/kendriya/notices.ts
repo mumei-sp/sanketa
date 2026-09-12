@@ -84,7 +84,7 @@ export const noticeFixtures: NoticeBoardEntry[] = [
   {
     id: 'nb-5',
     title: 'Fee Payment Reminder (Grade 9)',
-    tags: [{ label: 'Finance', color: 'color-mix(in srgb, var(--accent) 80%, var(--heading) 8%)' }],
+    tags: [{ label: 'Finance', color: 'color-mix(in srgb, var(--accent) 80%, white)' }],
     audience: 'Grade 9 Students & Parents',
     reach: { grades: ['9'] },
     postDate: relativeDisplay(-6),
@@ -100,7 +100,7 @@ export const noticeFixtures: NoticeBoardEntry[] = [
   {
     id: 'nb-6',
     title: 'National Holiday – School Closed',
-    tags: [{ label: 'Notice', color: 'color-mix(in srgb, var(--primary) 80%, var(--heading) 8%)' }],
+    tags: [{ label: 'Notice', color: 'color-mix(in srgb, var(--primary) 80%, white)' }],
     audience: 'Entire School',
     postDate: relativeDisplay(-18),
     expiryDate: relativeDisplay(-2),

@@ -51,7 +51,7 @@ export function NoticePreviewCard({ values }: NoticePreviewCardProps) {
           {values.category && (
             <span
               className="text-badge px-2.5 py-1 rounded-full"
-              style={{ backgroundColor: categoryColor, color: 'var(--heading)' }}
+              style={{ backgroundColor: categoryColor, color: 'var(--heading-accent, var(--heading))' }}
             >
               {values.category}
             </span>

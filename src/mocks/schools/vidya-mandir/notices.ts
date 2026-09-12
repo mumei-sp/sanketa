@@ -24,8 +24,8 @@ type Tag = { label: NoticeCategory; color: string }
 
 const ACADEMIC: Tag = { label: 'Academic', color: 'color-mix(in srgb, var(--primary) 55%, white)' }
 const EVENTS: Tag = { label: 'Events', color: 'color-mix(in srgb, var(--accent) 65%, white)' }
-const NOTICE: Tag = { label: 'Notice', color: 'color-mix(in srgb, var(--primary) 80%, var(--heading) 8%)' }
-const FINANCE: Tag = { label: 'Finance', color: 'color-mix(in srgb, var(--accent) 80%, var(--heading) 8%)' }
+const NOTICE: Tag = { label: 'Notice', color: 'color-mix(in srgb, var(--primary) 80%, white)' }
+const FINANCE: Tag = { label: 'Finance', color: 'color-mix(in srgb, var(--accent) 80%, white)' }
 const ANNOUNCEMENT: Tag = { label: 'Announcement', color: 'color-mix(in srgb, var(--primary) 65%, white)' }
 
 export const noticeFixtures: NoticeBoardEntry[] = [

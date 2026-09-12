@@ -117,7 +117,7 @@ export function NoticeBoard({ items, isLoading = false }: NoticeBoardProps) {
                                   <span
                                     key={tag.label}
                                     className="text-badge px-2 py-0.5 rounded-full whitespace-nowrap"
-                                    style={{ backgroundColor: tag.color, color: 'var(--heading)' }}
+                                    style={{ backgroundColor: tag.color, color: 'var(--heading-accent, var(--heading))' }}
                                   >
                                     {tag.label}
                                   </span>

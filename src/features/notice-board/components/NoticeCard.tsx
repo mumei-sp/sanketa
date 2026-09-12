@@ -67,6 +67,11 @@ export function NoticeCard({ notice, isSelected, onClick, onTogglePin }: NoticeC
       <div className="flex-1 min-w-0 space-y-0.5">
         {/* Tags — limit to 1 visible row */}
         <div className="flex items-center gap-1.5 flex-wrap overflow-hidden max-h-6">
+          {/* `--heading-accent`, which `applyAppearance` holds at the school's
+              brand colour in BOTH themes — the right pair for a chip that is
+              itself fixed in both. `--heading` would follow the theme to
+              near-white and measure 1.01:1 against its own pale chip. See the
+              note in `utils/category-colors`. */}
           {notice.tags.map(tag => (
             <span
               key={tag.label}

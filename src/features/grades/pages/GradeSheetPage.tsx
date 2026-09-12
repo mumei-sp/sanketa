@@ -215,7 +215,7 @@ export function GradeSheetPage() {
                   downloadCsv(csv, `grades-${selectedClass}-${selectedExam}.csv`)
                 }}
                 className="tap-target flex items-center justify-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 cursor-pointer transition-colors"
-                style={{ backgroundColor: 'var(--accent)', color: 'var(--heading)' }}
+                style={{ backgroundColor: 'var(--accent)', color: 'var(--heading-accent, var(--heading))' }}
               >
                 <Download className="w-3.5 h-3.5" />
                 Export
