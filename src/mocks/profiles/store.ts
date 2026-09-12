@@ -1,50 +1,82 @@
 /**
  * Who a person is *at this school*, and what they may do here.
  *
- * Three tables in one key, the way `parents` holds parents and their links
+ * Four tables in one key, the way `parents` holds parents and their links
  * together: they are written together and read together, and splitting them
- * would mean three round trips to answer one question.
+ * would mean four round trips to answer one question.
  *
  *   user_profiles          one row per person at this school
+ *   staff                  the employment record, for people who have one
  *   profile_types          the kinds of person this school recognises
  *   profile_roles          which roles each person holds here
  *
- * Per school, all three. That is the whole point: the same login is a teacher
+ * Per school, all four. That is the whole point: the same login is a teacher
  * at one school and a parent at another, and `roleId` sitting on the global
  * user row could only ever hold one answer.
  *
+ * ── One row per person, not one row per account ────────────────────────
+ * This used to hold five rows at a school of 1,127 people: a profile existed
+ * only where a login did. That is not what `user_profiles` is. Every student,
+ * teacher and parent is a person at the school and gets a row, whether or not
+ * they can sign in — `userId` is nullable, and for most people it is null.
+ *
+ * It matters beyond tidiness. With identity only for account-holders there is
+ * no single key for a person, so every table keys on a capacity id instead and
+ * something has to translate at each boundary; a login arriving later has to
+ * be stitched to records that already exist; a role cannot be granted to
+ * somebody who never signs in; and the same human in two capacities is two
+ * unrelated rows. That last one had to be patched with a runtime phone match,
+ * which is gone now — see `StaffGuardianFixture`.
+ *
+ * ── The profile id *is* the capacity id ────────────────────────────────
+ * `students`, `teachers`, `parents` and `staff` each take `profile_id` as
+ * their own primary key, all four referencing `user_profiles(id)`. So a
+ * teacher's profile id is their row in the faculty list, and a parent's is
+ * their row in the parents table. Not a pointer from one to the other: the
+ * same id.
+ *
  * ── Capacity is not stored ─────────────────────────────────────────────
- * There is no `capacity` column on a profile. What someone *is* here is which
- * capacity records point at them — `studentId`, `teacherId`, `parentId`,
- * `staffId` below are those pointers, and a person may hold several. The
- * member of staff whose child attends the school has a `teacherId` and a
- * `parentId`, which is exactly what the old single `profileType` could not
- * say. See SCHEMA.md.
+ * There is no `capacity` column, and no pointer fields either. What someone
+ * *is* here is which capacity tables have a row with their id, which is what
+ * `capacitiesOf` asks. A person may hold several: the member of staff whose
+ * child attends the school has a `teachers` row and a `parents` row under one
+ * profile, which is exactly what a single `profileType` could never say.
  *
  * `profile_types` survives alongside as a *classification* a school can extend
  * — "Bus Driver", "Visiting Faculty" — each declaring which record shape it
- * uses. Open codes, closed capacities.
+ * uses. Open codes, closed capacities. See SCHEMA.md.
  */
 
 import { newId } from '@/mocks/_shared'
 import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
-import { listParents } from '@/mocks/parents'
+import { listParents, findParent } from '@/mocks/parents'
+import { listStudents, findStudent } from '@/mocks/students'
+import { teachersData, findTeacher } from '@/mocks/teachers/teachers'
+import { getDisplayName } from '@/features/students/utils/formatting'
 import { tenantFixtures } from '@/mocks/tenants'
 
 /** A record shape. Closed: a new one is a developer adding a table. */
 export type Capacity = 'student' | 'staff' | 'teacher' | 'parent' | 'none'
 
 export interface Profile {
-  /** `user_profiles.id`, unique within this school. */
+  /** `user_profiles.id`, unique within this school, shared with their records. */
   id: string
-  /** `user_profiles.user_id` → the global `users.id`. No FK: it crosses databases. */
-  userId: string
-  /** Capacity pointers. Several may be set; that is the point. */
-  studentId?: string
-  teacherId?: string
-  parentId?: string
-  staffId?: string
+  /**
+   * `user_profiles.user_id` → the global `users.id`. No FK: it crosses
+   * databases.
+   *
+   * Undefined for everyone who cannot sign in, which at a school is most
+   * people. A login arriving later sets this and nothing else moves.
+   */
+  userId?: string
+  /**
+   * Denormalised from whichever record they are.
+   *
+   * `user_profiles` carries the name columns in the schema, and a list of the
+   * school's people should not need a join into four tables to render.
+   */
+  fullName: string
   /**
    * `teacher_classes`, flattened onto the profile.
    *
@@ -54,6 +86,27 @@ export interface Profile {
    */
   assignedClasses?: string[]
   isDeleted?: boolean
+}
+
+/**
+ * The employment record — `staff`, keyed on the profile.
+ *
+ * The capacity nothing else seeds. An administrator, a principal and an
+ * accountant have no student, teacher or parent row, so without this they are
+ * profiles with no capacity at all — which is what they were, carrying
+ * employee numbers that resolved to nothing. SCHEMA-FIXES puts this first in
+ * its order for that reason.
+ *
+ * A teacher is staff who teach, so their `teachers` row implies one; only
+ * non-teaching staff need a row here.
+ */
+export interface StaffRecord {
+  /** → `user_profiles.id`. Primary key. */
+  profileId: string
+  employeeId: string
+  designation: string
+  department?: string
+  joiningDate?: string
 }
 
 export interface ProfileType {
@@ -91,6 +144,7 @@ const TABLE = 'profiles'
 
 interface Database {
   profiles: Profile[]
+  staff: StaffRecord[]
   types: ProfileType[]
   roles: ProfileRole[]
   typeLinks: ProfileTypeLink[]
@@ -123,82 +177,129 @@ const BUILTIN_TYPES: Omit<ProfileType, 'id'>[] = [
 const now = () => new Date().toISOString()
 
 /**
- * This school's people, from its own folder.
+ * A fingerprint of this school's `access` block.
  *
- * Per school, and that matters more than it looks. While every school seeded
- * the same four profiles, a teacher assigned 8A and 8B at one school arrived
- * at the next already holding 8A and 8B there — and `8A` exists at most
- * schools. The seed being shared was itself the leak the tenant boundary was
- * supposed to prevent.
+ * Without it, adding a profile to a school's seed is invisible on any browser
+ * that has run the app. Over the fixture, never the live rows, so granting
+ * somebody a role on the People screen does not reseed the table it was
+ * granted in.
+ */
+function signatureOf(): string {
+  return seedSignature(tenantFixtures().access ?? null)
+}
+
+/**
+ * This school's people, from its own tables.
  *
- * A school with no `access` block gets no profiles, which is the true answer
- * for a school nobody has been given a job at yet.
+ * ── The order matters ─────────────────────────────────────────────────
+ * A profile row per person, built from the capacity tables: every student on
+ * the roster, every teacher on the faculty list, every parent the guardians
+ * produced, and every member of the office staff the school's `access` block
+ * names. The same id in two of those lists is one person and one row — which
+ * is how the teacher who is also a parent comes out as one profile with two
+ * capacities.
+ *
+ * Then the logins are attached. An `access` entry does not create a profile;
+ * it finds one and hangs a `users.id` on it, except for staff, whose record
+ * this is the only source of.
+ *
+ * ── Per school ────────────────────────────────────────────────────────
+ * That matters more than it looks. While every school seeded the same four
+ * profiles, a teacher assigned 8A and 8B at one school arrived at the next
+ * already holding 8A and 8B there — and `8A` exists at most schools. The seed
+ * being shared was itself the leak the tenant boundary was supposed to
+ * prevent.
+ *
+ * A school with no `access` block still gets its people; what it does not get
+ * is anybody who can sign in, which is the true state of a school whose
+ * records are loaded and whose staff have not been invited.
  */
 function seed(): Database {
   const types: ProfileType[] = BUILTIN_TYPES.map(type => ({ ...type, id: `PT-${type.code}` }))
   const typeId = (code: string) => `PT-${code}`
   const fixtures = tenantFixtures().access
 
-  if (!fixtures) return { profiles: [], types, roles: [], typeLinks: [] }
+  // ── One row per person ──
+  const profiles: Profile[] = []
+  const byId = new Map<string, Profile>()
+  const upsert = (id: string, fullName: string) => {
+    const existing = byId.get(id)
+    if (existing) return existing
+    const profile: Profile = { id, fullName }
+    profiles.push(profile)
+    byId.set(id, profile)
+    return profile
+  }
 
-  // Parent ids are generated when the parents table seeds itself from this
-  // school's roster, so a fixture states a number and the join happens here.
-  // Last ten digits, which is how the parents table decides two guardians are
-  // one person.
-  const digits = (value?: string) => (value ?? '').replace(/\D/g, '').slice(-10)
-  const parents = listParents()
-  const parentIdFor = (phone?: string) =>
-    phone === undefined
-      ? undefined
-      : parents.find(parent => digits(parent.phone) === digits(phone))?.profileId
-
-  const profiles: Profile[] = fixtures.profiles.map(fixture => ({
-    id: fixture.id,
-    userId: fixture.userId,
-    studentId: fixture.studentId,
-    teacherId: fixture.teacherId,
-    staffId: fixture.staffId,
-    parentId: parentIdFor(fixture.parentPhone),
-    assignedClasses: fixture.assignedClasses ? [...fixture.assignedClasses] : undefined,
-  }))
-
-  const hasParentRecord = new Set(
-    profiles.filter(profile => profile.parentId !== undefined).map(profile => profile.id),
+  listStudents().forEach(student => upsert(String(student.id), getDisplayName(student)))
+  teachersData.forEach(teacher =>
+    upsert(String(teacher.id), teacher.fullName ?? teacher.displayName ?? teacher.teacherId),
   )
+  listParents().forEach(parent => upsert(parent.profileId, parent.fullName))
 
-  // A `parent` role on somebody with no parent record here would scope to no
-  // children and read as a permissions bug rather than as missing data.
-  const roles: ProfileRole[] = fixtures.roles
-    .filter(row => row.roleId !== 'parent' || hasParentRecord.has(row.profileId))
-    .map(row => ({
-      profileId: row.profileId,
-      roleId: row.roleId,
-      assignedAt: now(),
-      expiresAt: row.expiresAt,
-    }))
+  // ── The employment records, and the logins ──
+  const staff: StaffRecord[] = []
+  const roles: ProfileRole[] = []
+  const typeLinks: ProfileTypeLink[] = []
 
-  const typeLinks: ProfileTypeLink[] = fixtures.typeCodes
-    .filter(row => row.code !== 'parent' || hasParentRecord.has(row.profileId))
-    .map(row => ({
-      profileId: row.profileId,
-      profileTypeId: typeId(row.code),
-      isPrimary: row.isPrimary === true,
-    }))
+  if (fixtures) {
+    // A fixture entry refers to itself by `key`, because half of them do not
+    // know their own profile id until this runs.
+    const idByKey = new Map<string, string>()
+    const digits = (value?: string) => (value ?? '').replace(/\D/g, '').slice(-10)
 
-  return { profiles, types, roles, typeLinks, seed: signatureOf() }
-}
+    fixtures.profiles.forEach(entry => {
+      let id = entry.id
+      if (id === undefined && entry.parentPhone !== undefined) {
+        // The parents table minted this one when it seeded the guardians off
+        // the roster, so the seed names the number and we find the row.
+        id = listParents().find(parent => digits(parent.phone) === digits(entry.parentPhone))
+          ?.profileId
+      }
+      if (id === undefined) return
 
-/**
- * A fingerprint of this school's `access` block.
- *
- * Without it, adding a profile to a school's seed is invisible on any browser
- * that has run the app — which is how giving Rohan Sharma a profile at each
- * school would have changed nothing at all for anyone but a first-time
- * visitor. Over the fixture, never the live rows, so granting somebody a role
- * on the People screen does not reseed the table it was granted in.
- */
-function signatureOf(): string {
-  return seedSignature(tenantFixtures().access ?? null)
+      // A pure member of staff has no student, teacher or parent record to
+      // take a name from, so the seed carries one. `user_profiles` has name
+      // columns in the schema for exactly this reason.
+      const profile = upsert(id, entry.fullName ?? entry.staff?.designation ?? id)
+      profile.userId = entry.userId
+      if (entry.assignedClasses) profile.assignedClasses = [...entry.assignedClasses]
+      idByKey.set(entry.key, id)
+
+      if (entry.staff) {
+        staff.push({
+          profileId: id,
+          employeeId: entry.staff.employeeId,
+          designation: entry.staff.designation,
+          department: entry.staff.department,
+        })
+      }
+    })
+
+    // A `parent` role on somebody with no parent record here would scope to no
+    // children and read as a permissions bug rather than as missing data.
+    const hasParentRecord = (id: string) => listParents().some(parent => parent.profileId === id)
+
+    fixtures.roles.forEach(row => {
+      const profileId = idByKey.get(row.key)
+      if (!profileId) return
+      if (row.roleId === 'parent' && !hasParentRecord(profileId)) return
+      roles.push({ profileId, roleId: row.roleId, assignedAt: now(), expiresAt: row.expiresAt })
+    })
+
+    fixtures.typeCodes.forEach(row => {
+      const profileId = idByKey.get(row.key)
+      if (!profileId) return
+      if (row.code === 'parent' && !hasParentRecord(profileId)) return
+      typeLinks.push({
+        profileId,
+        profileTypeId: typeId(row.code),
+        isPrimary: row.isPrimary === true,
+      })
+    })
+  }
+
+  return { profiles, staff, types, roles, typeLinks, seed: signatureOf() }
 }
 
 function load(): Database {
@@ -212,6 +313,7 @@ function load(): Database {
       // corrupt storage.
       if (
         Array.isArray(parsed.profiles) &&
+        Array.isArray(parsed.staff) &&
         Array.isArray(parsed.types) &&
         Array.isArray(parsed.roles) &&
         Array.isArray(parsed.typeLinks) &&
@@ -255,6 +357,35 @@ export function profileOf(userId: string): Profile | undefined {
   return found ? { ...found } : undefined
 }
 
+/**
+ * What records this person has here.
+ *
+ * Asked of the capacity tables rather than read off a column, because that is
+ * what a capacity is: `students`, `teachers`, `parents` and `staff` all take
+ * `profile_id` as their primary key, so having one is having a row. Plural,
+ * and that is the point — the teacher whose child attends comes back
+ * `['teacher', 'parent']`.
+ */
+export function capacitiesOf(profileId: string): Capacity[] {
+  const out: Capacity[] = []
+  if (findStudent(profileId)) out.push('student')
+  if (findTeacher(profileId)) out.push('teacher')
+  if (staffOf(profileId)) out.push('staff')
+  if (findParent(profileId)) out.push('parent')
+  return out
+}
+
+/** Their employment record, if they have one. */
+export function staffOf(profileId: string): StaffRecord | undefined {
+  const found = load().staff.find(row => row.profileId === profileId)
+  return found ? { ...found } : undefined
+}
+
+/** Everyone at this school with an employment record. */
+export function listStaff(): StaffRecord[] {
+  return load().staff.map(row => ({ ...row }))
+}
+
 export function listProfileTypes(): ProfileType[] {
   return load().types.map(row => ({ ...row }))
 }
@@ -295,12 +426,28 @@ export function profilesWithRole(roleId: string): Profile[] {
 
 // ── Writes ────────────────────────────────────────────────────────────
 
-export function createProfile(input: Omit<Profile, 'id'>): Profile {
+/**
+ * A profile for somebody the school's own tables do not already know.
+ *
+ * Which, now that every student, teacher and parent already has one, means
+ * office staff — so this takes the employment record with it. Giving somebody
+ * an existing profile a login is `attachLogin`, not this.
+ */
+export function createProfile(
+  input: Omit<Profile, 'id'>,
+  staff?: Omit<StaffRecord, 'profileId'>,
+): Profile {
   const database = load()
   const profile: Profile = { ...input, id: newId('UP') }
   database.profiles.push(profile)
+  if (staff) database.staff.push({ profileId: profile.id, ...staff })
   persist()
   return { ...profile }
+}
+
+/** Hang a login on a person who is already here. */
+export function attachLogin(profileId: string, userId: string): Profile | null {
+  return updateProfile(profileId, { userId })
 }
 
 export function updateProfile(id: string, patch: Partial<Omit<Profile, 'id'>>): Profile | null {
@@ -406,6 +553,26 @@ export function deleteProfile(profileId: string): boolean {
   const index = database.profiles.findIndex(row => row.id === profileId)
   if (index === -1) return false
   database.profiles.splice(index, 1)
+  database.roles = database.roles.filter(row => row.profileId !== profileId)
+  database.typeLinks = database.typeLinks.filter(link => link.profileId !== profileId)
+  database.staff = database.staff.filter(row => row.profileId !== profileId)
+  persist()
+  return true
+}
+
+/**
+ * Take a login off a profile, leaving the person.
+ *
+ * What "remove somebody from this school" means for anyone who is also a
+ * student, a teacher or a parent here: the account goes, the human stays on
+ * the roster. `deleteProfile` is for a profile the school's own tables do not
+ * otherwise know about — the office staff this seed created.
+ */
+export function detachLogin(profileId: string): boolean {
+  const database = load()
+  const profile = database.profiles.find(row => row.id === profileId)
+  if (!profile) return false
+  delete profile.userId
   database.roles = database.roles.filter(row => row.profileId !== profileId)
   database.typeLinks = database.typeLinks.filter(link => link.profileId !== profileId)
   persist()

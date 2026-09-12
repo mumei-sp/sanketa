@@ -107,13 +107,13 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
     setDone(new Set())
     Promise.all([fetchParents(), fetchParentLinks()])
       .then(([parents, links]) => {
-        // Which parent records already have an account at this school. Read
-        // from the profiles, because the link between a login and a parent
-        // record is per school — the same person is a different `parents` row
-        // at each one.
+        // Which parent records already have an account at this school. A
+        // parent's profile id *is* their `parents` row's id, so the account's
+        // profile id is the answer — and it is per school, because the same
+        // person is a different `parents` row at each one.
         const taken = new Set(
           usersRef.current
-            .map(user => profileOf(user.id)?.parentId)
+            .map(user => profileOf(user.id)?.id)
             .filter((id): id is string => id !== undefined),
         )
         setCandidates(

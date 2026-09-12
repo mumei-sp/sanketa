@@ -39,18 +39,17 @@ export const vidyaMandir: TenantFixtures = {
   access: {
     profiles: [
       {
-        id: 'VM-UP-1',
-        // The same `users.id` as Kendriya's UP-5 — one login, two schools,
-        // two profiles. The profile ids are this school's own, which is what
-        // schema-per-tenant means: `UP-5` here would be a different row from
-        // `UP-5` there, so they are named apart to keep a log readable.
+        key: 'rohan',
+        // The same `users.id` as Kendriya's — one login, two schools, two
+        // profiles. The profile ids are this school's own, which is what
+        // schema-per-tenant means.
         userId: '5',
-        // Ira Sharma's father, joined to her by the number her record names.
+        // Ira Sharma's father, found by the number her record names.
         parentPhone: '9845123457',
       },
     ],
-    roles: [{ profileId: 'VM-UP-1', roleId: 'parent' }],
-    typeCodes: [{ profileId: 'VM-UP-1', code: 'parent', isPrimary: true }],
+    roles: [{ key: 'rohan', roleId: 'parent' }],
+    typeCodes: [{ key: 'rohan', code: 'parent', isPrimary: true }],
   },
   extraRoles: [
     {

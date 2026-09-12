@@ -25,3 +25,14 @@ import type { Teacher } from '@/features/teachers/types'
 import { tenantFixtures } from '@/mocks/tenants'
 
 export const teachersData: Teacher[] = tenantFixtures().teachers
+
+/**
+ * One teacher by their profile id — `user_profiles.id` at this school.
+ *
+ * `Teacher.id` *is* the profile id: under the schema, `teachers` takes
+ * `profile_id` as its own primary key, so the two are one id and not a
+ * pointer from one to the other.
+ */
+export function findTeacher(profileId: string): Teacher | undefined {
+  return teachersData.find(teacher => String(teacher.id) === profileId)
+}

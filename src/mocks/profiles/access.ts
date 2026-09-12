@@ -12,7 +12,8 @@
  * the server resolves what-you-are-here from the active one on each request.
  */
 
-import { profileOf, roleIdsOf, typesOf } from './store'
+import { profileOf, roleIdsOf, typesOf, capacitiesOf } from './store'
+import { findStudent } from '@/mocks/students'
 import { studentsOfParent } from '@/mocks/parents'
 import type { Capacity } from './store'
 
@@ -27,7 +28,7 @@ export interface TenantAccess {
    * reads her own classes *and* her own child.
    */
   roleIds: string[]
-  /** Which record shapes they have here, derived from the pointers. */
+  /** Which record shapes they have here — which capacity tables hold them. */
   capacities: Capacity[]
   /** Their classifications, primary first. Display and filtering only. */
   typeCodes: string[]
@@ -59,18 +60,17 @@ export function resolveTenantAccess(userId: string | undefined): TenantAccess {
   const profile = profileOf(userId)
   if (!profile) return EMPTY
 
-  const capacities: Capacity[] = []
-  if (profile.studentId) capacities.push('student')
-  if (profile.teacherId) capacities.push('teacher')
-  if (profile.staffId) capacities.push('staff')
-  if (profile.parentId) capacities.push('parent')
+  // Asked of the capacity tables, not read off pointer columns. A capacity is
+  // having a row whose primary key is this profile, so that is the question.
+  const capacities = capacitiesOf(profile.id)
 
   // Their own record if they are a student here, their children's if they are
-  // a parent here, and both if somehow both. Read from this school's link
-  // table, which is the reason that table is per-tenant.
+  // a parent here, and both if somehow both. Both keyed on the profile id,
+  // which is the whole point of the profile being the id: `student_parents`
+  // links profile to profile.
   const studentIds = [
-    ...(profile.studentId ? [profile.studentId] : []),
-    ...(profile.parentId ? studentsOfParent(profile.parentId) : []),
+    ...(capacities.includes('student') && findStudent(profile.id) ? [profile.id] : []),
+    ...(capacities.includes('parent') ? studentsOfParent(profile.id) : []),
   ]
 
   return {

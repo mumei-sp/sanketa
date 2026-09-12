@@ -17,8 +17,11 @@ import * as mockServer from '@/mocks/global/users'
 import { addMembership, activeTenantCode } from '@/mocks/global'
 import {
   assignProfileType,
+  attachLogin,
+  capacitiesOf,
   createProfile,
   deleteProfile,
+  detachLogin,
   grantRole,
   listProfileTypes,
   profileOf,
@@ -130,14 +133,20 @@ export async function enrolPersonHere(
       const type = listProfileTypes().find(candidate => candidate.code === profileTypeCode)
       if (!type) return null
 
-      const profile = createProfile({
-        userId,
-        // The pointer that matches the kind. An employee number from the login
-        // id, which is what a school with no HR system would do anyway; the
-        // family pointers are left for whoever links the records, since a
-        // parent with no children linked is not yet a parent of anybody.
-        staffId: type.capacity === 'staff' ? `E-${userId}` : undefined,
-      })
+      // A staff kind needs an employment record — that *is* the capacity, and
+      // without one they would be a profile with no record of any sort. An
+      // employee number from the login id, which is what a school with no HR
+      // system would do anyway.
+      //
+      // The family and teaching kinds get no record here on purpose. A parent
+      // with no children linked is not yet a parent of anybody, and linking
+      // them is the student form's job.
+      const profile = createProfile(
+        { userId, fullName: mockServer.listUsers().find(row => row.id === userId)?.fullName ?? userId },
+        type.capacity === 'staff'
+          ? { employeeId: `E-${userId}`, designation: type.name }
+          : undefined,
+      )
       assignProfileType(profile.id, type.id, true)
       return profile.id
     },
@@ -163,7 +172,13 @@ export async function removeProfileHere(profileId: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
-      return deleteProfile(profileId)
+      // A person the school's own tables know — a parent, a teacher — keeps
+      // their row and loses their login; deleting the profile would take the
+      // person off the roster. Only a profile that exists solely because
+      // somebody was given an account here is removed outright.
+      return capacitiesOf(profileId).length > 0
+        ? detachLogin(profileId)
+        : deleteProfile(profileId)
     },
     async () => {
       await apiClient.delete(`/tenants/${activeTenantCode()}/profiles/${profileId}`)
@@ -290,16 +305,28 @@ export async function createUser(input: {
       // see SCHEMA-FIXES, which notes that no such write path exists there yet.
       addMembership({ userId: user.id, tenantCode: activeTenantCode() })
 
-      const profile = createProfile({
-        userId: user.id,
-        studentId: input.studentId,
-        parentId: input.parentId,
-        teacherId: input.teacherId,
-        // Staff get an employee number from their login id, which is what a
-        // school with no HR system would do anyway.
-        staffId: isStaffKind(input.profileType) ? `E-${user.id}` : undefined,
-        assignedClasses: input.assignedClasses,
-      })
+      // If the account belongs to somebody the school already has a record
+      // for — a parent being given a login, say — the login hangs on *their*
+      // profile rather than creating a second one for the same human. That is
+      // the whole reason a profile is one row per person and not one per
+      // account.
+      const existing = input.parentId ?? input.studentId
+      const profile = existing
+        ? (attachLogin(existing, user.id) ??
+          createProfile({ userId: user.id, fullName: user.fullName }))
+        : createProfile(
+            {
+              userId: user.id,
+              fullName: user.fullName,
+              assignedClasses: input.assignedClasses,
+            },
+            isStaffKind(input.profileType)
+              ? { employeeId: `E-${user.id}`, designation: input.profileType ?? 'Staff' }
+              : undefined,
+          )
+      if (input.assignedClasses && existing) {
+        updateProfile(profile.id, { assignedClasses: input.assignedClasses })
+      }
       grantRole(profile.id, input.roleId)
       // Built-in type ids are `PT-<code>`, and the codes are the profile-type
       // names, so this needs no lookup.

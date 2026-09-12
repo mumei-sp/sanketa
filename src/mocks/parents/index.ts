@@ -9,6 +9,7 @@
 
 export {
   listParents,
+  findParent,
   listLinks,
   parentsOfStudent,
   studentsOfParent,

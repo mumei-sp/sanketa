@@ -32,46 +32,66 @@ export const kendriya: TenantFixtures = {
   todos: todoFixtures,
   access: {
     profiles: [
-      { id: 'UP-1', userId: '1', staffId: 'E-0001' },
-      { id: 'UP-2', userId: '2', staffId: 'E-0002' },
       {
-        id: 'UP-3',
-        userId: '3',
-        teacherId: 'T-1006',
-        assignedClasses: ['8A', '8B'],
-        // Her own child is in 9B, a class she does not teach. The member of
-        // staff whose child attends the school is the case a single role per
-        // person could never express, so it lives in the seed and cannot
-        // regress unnoticed.
-        parentPhone: '9880114477',
+        key: 'admin',
+        userId: '1',
+        id: 'UP-1',
+        fullName: 'Surya Admin',
+        staff: { employeeId: 'E-0001', designation: 'Administrator', department: 'Administration' },
       },
-      { id: 'UP-4', userId: '4', staffId: 'E-0004' },
       {
-        id: 'UP-5',
+        key: 'principal',
+        userId: '2',
+        id: 'UP-2',
+        fullName: 'Nandini Rao',
+        staff: { employeeId: 'E-0002', designation: 'Principal', department: 'Administration' },
+      },
+      {
+        key: 'meera',
+        userId: '3',
+        // Her *teacher row* is her profile — `t-6` in the faculty list, which
+        // is T-1006. Not a pointer to it: under the schema a teacher takes
+        // `profile_id` as its own primary key, so the ids are the same id.
+        id: 't-6',
+        assignedClasses: ['8A', '8B'],
+      },
+      {
+        key: 'accountant',
+        userId: '4',
+        id: 'UP-4',
+        fullName: 'Vikram Shah',
+        staff: { employeeId: 'E-0004', designation: 'Accountant', department: 'Finance' },
+      },
+      {
+        key: 'rohan',
         userId: '5',
-        // Aarav Sharma's father. Joined to his own child by the number, the
-        // way the guardian rows on the roster are — see `ProfileFixture`.
-        // He is a parent at Vidya Mandir too, on one account: the two-school
-        // family is the case the global identity tables exist for, and it is
-        // asserted from both ends, here and in `../vidya-mandir/index.ts`.
+        // Aarav Sharma's father. The parents table made his profile when it
+        // seeded the guardians off the roster, so the seed names the number
+        // rather than an id it cannot know. He is a parent at Vidya Mandir
+        // too, on one login: the two-school family is the case the global
+        // identity tables exist for, and it is asserted from both ends.
         parentPhone: '9845123457',
       },
     ],
     roles: [
-      { profileId: 'UP-1', roleId: 'admin' },
-      { profileId: 'UP-2', roleId: 'principal' },
-      { profileId: 'UP-3', roleId: 'teacher' },
-      { profileId: 'UP-3', roleId: 'parent' },
-      { profileId: 'UP-4', roleId: 'accountant' },
-      { profileId: 'UP-5', roleId: 'parent' },
+      { key: 'admin', roleId: 'admin' },
+      { key: 'principal', roleId: 'principal' },
+      { key: 'meera', roleId: 'teacher' },
+      { key: 'meera', roleId: 'parent' },
+      { key: 'accountant', roleId: 'accountant' },
+      { key: 'rohan', roleId: 'parent' },
     ],
     typeCodes: [
-      { profileId: 'UP-1', code: 'admin', isPrimary: true },
-      { profileId: 'UP-2', code: 'staff', isPrimary: true },
-      { profileId: 'UP-3', code: 'teacher', isPrimary: true },
-      { profileId: 'UP-3', code: 'parent' },
-      { profileId: 'UP-4', code: 'staff', isPrimary: true },
-      { profileId: 'UP-5', code: 'parent', isPrimary: true },
+      { key: 'admin', code: 'admin', isPrimary: true },
+      { key: 'principal', code: 'staff', isPrimary: true },
+      { key: 'meera', code: 'teacher', isPrimary: true },
+      { key: 'meera', code: 'parent' },
+      { key: 'accountant', code: 'staff', isPrimary: true },
+      { key: 'rohan', code: 'parent', isPrimary: true },
     ],
+    // Meera Iyengar is on the faculty list and on her own son's record as his
+    // mother. One person, so one profile: the guardian row the parents table
+    // would otherwise mint for her becomes her teacher profile instead.
+    staffGuardians: [{ phone: '9880114477', profileId: 't-6' }],
   },
 }

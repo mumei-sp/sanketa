@@ -21,34 +21,91 @@ import type { TodoItem } from '@/features/dashboard/types'
 import type { Role } from '@/config/permissions'
 
 /**
- * One person's profile at this school, as a school's seed script would state it.
+ * An account-holder at this school, as a school's seed script would state it.
  *
- * `parentPhone` rather than a parent id: parent ids are generated when the
- * parents table seeds itself from the roster, so a fixture cannot know one.
- * A number is a fact about the person, and the store does the join — matching
- * on the last ten digits, which is what the parents table does to decide
- * whether two guardians are one human.
+ * ── Not "a profile" — a *login attached to* a profile ──────────────────
+ * Every person at the school is a profile, whether or not they can sign in:
+ * 441 students, 31 staff and 655 parents at Kendriya, against five logins.
+ * Those profiles are built from the capacity tables — a student row, a
+ * teacher row, a parent row — and this block does one further thing, which is
+ * to say which of them a login belongs to.
+ *
+ * So an entry does not create a profile. It *finds* one and attaches a
+ * `users.id` to it, except for pure staff, whose employment record this block
+ * is the only source of.
+ *
+ * ── Two ways to name the profile ──────────────────────────────────────
+ * `id` when the school controls it: a teacher's profile id is their row in the
+ * faculty list, and a member of the office staff has no other record, so the
+ * seed names one. `parentPhone` when the parents table minted it — parent ids
+ * come out of seeding the guardians on the roster, so a fixture cannot know
+ * one, and the number is the fact it does know.
+ *
+ * `key` is how the roles and types below refer back here, since half the
+ * entries do not know their own id until seed time.
  */
 export interface ProfileFixture {
-  id: string
+  /** Fixture-local handle, used by `roles` and `typeCodes` below. */
+  key: string
   /** → the global `users.id`. */
   userId: string
-  studentId?: string
-  teacherId?: string
-  staffId?: string
-  /** Their own number, if they are also a parent here. */
+  /** The profile id, when this school controls it — a teacher or staff row. */
+  id?: string
+  /** Their number, when the profile is one the parents table created. */
   parentPhone?: string
+  /**
+   * Their name, for somebody with no record to take one from.
+   *
+   * `user_profiles` carries name columns in the schema, and the office staff
+   * have no student, teacher or parent row to read one off. Their login has
+   * the name too, but that is the *global* database and a tenant seed does not
+   * reach across it — which is the same reason provisioning writes the name
+   * into both.
+   */
+  fullName?: string
+  /**
+   * An employment record, for somebody who is staff and not a teacher.
+   *
+   * The `staff` capacity table, which nothing else seeds: an administrator,
+   * a principal and an accountant have no student, teacher or parent row, so
+   * without this they would be profiles with no capacity at all — which is
+   * what they were, pointing at employee numbers that resolved to nothing.
+   */
+  staff?: { employeeId: string; designation: string; department?: string }
   /** `teacher_classes`. Per school, which is why it is here and not global. */
   assignedClasses?: string[]
+}
+
+/**
+ * A guardian who is already somebody else here.
+ *
+ * The member of staff whose child attends the school appears twice in the raw
+ * data: once in the faculty list and once as a name and number on their own
+ * child's record. They are one person and must be one profile, or their
+ * teaching and their parenthood hang off two unrelated ids.
+ *
+ * Stated by the school rather than inferred. The mock used to match them at
+ * runtime on the last ten digits of a phone number, which is the kind of
+ * heuristic that works on a fixture and fails the first time two parents share
+ * a family mobile. Reconciling duplicate records at import is a seed's job,
+ * and this is the seed saying who is who.
+ */
+export interface StaffGuardianFixture {
+  /** The number on the child's record. */
+  phone: string
+  /** The profile it actually belongs to. */
+  profileId: string
 }
 
 /** Who is at this school, what they may do, and what kind of person they are. */
 export interface TenantAccessFixtures {
   profiles: ProfileFixture[]
   /** Many per profile — that is the whole point. */
-  roles: { profileId: string; roleId: string; expiresAt?: string }[]
+  roles: { key: string; roleId: string; expiresAt?: string }[]
   /** Classifications, by built-in code. */
-  typeCodes: { profileId: string; code: string; isPrimary?: boolean }[]
+  typeCodes: { key: string; code: string; isPrimary?: boolean }[]
+  /** Guardians who are already a profile here. See above. */
+  staffGuardians?: StaffGuardianFixture[]
 }
 
 export interface TenantFixtures {

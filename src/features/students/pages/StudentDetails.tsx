@@ -131,10 +131,11 @@ export default function StudentDetails() {
   }, [loadGuardians])
 
   const guardianHasAccount = React.useCallback(
-    // Per school: a guardian's `parents` row and the account attached to it
-    // are both this school's, so the join goes through the profile.
+    // A guardian's `parents` row and their profile are one row under one id,
+    // so an account on that id is an account for that guardian. Per school,
+    // because both sides of it are.
     (parentProfileId: string) =>
-      accounts.some(user => profileOf(user.id)?.parentId === parentProfileId),
+      accounts.some(user => profileOf(user.id)?.id === parentProfileId),
     [accounts],
   )
 

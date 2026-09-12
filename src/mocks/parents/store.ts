@@ -120,11 +120,20 @@ function sameHuman(a: { fullName: string; phone?: string }, b: { fullName: strin
   return digits(a.phone) === digits(b.phone)
 }
 
+/** Last ten digits — how a number is compared anywhere in this file. */
+const digitsOf = (value?: string) => (value ?? '').replace(/\D/g, '').slice(-10)
+
 function seed(): Database {
   const parents: Parent[] = []
   const links: StudentParent[] = []
   let sequence = 0
   const roster = listStudents()
+  const alreadyAProfile = new Map(
+    (tenantFixtures().access?.staffGuardians ?? []).map(entry => [
+      digitsOf(entry.phone),
+      entry.profileId,
+    ]),
+  )
 
   roster.forEach(student => {
     const guardians = student.guardians
@@ -147,12 +156,23 @@ function seed(): Database {
 
       let parent = parents.find(existing => sameHuman(existing, candidate))
       if (!parent) {
-        sequence += 1
-        parent = {
-          profileId: `P-${String(2000 + sequence)}`,
-          fullName: candidate.fullName,
-          email: null,
-          phone: candidate.phone,
+        // A guardian the school has already told us is somebody else here —
+        // the member of staff whose child attends — keeps that profile id
+        // instead of being minted a new one. One person, one
+        // `user_profiles.id`, with a teacher row and a parent row hanging off
+        // it, which is what the schema says and what makes her teaching and
+        // her parenthood the same person's.
+        const known = alreadyAProfile.get(digitsOf(candidate.phone))
+        if (known) {
+          parent = { profileId: known, fullName: candidate.fullName, email: null, phone: candidate.phone }
+        } else {
+          sequence += 1
+          parent = {
+            profileId: `P-${String(2000 + sequence)}`,
+            fullName: candidate.fullName,
+            email: null,
+            phone: candidate.phone,
+          }
         }
         parents.push(parent)
       }
@@ -226,6 +246,12 @@ export function listParents(): Parent[] {
 
 export function listLinks(): StudentParent[] {
   return load().links.map(cloneLink)
+}
+
+/** One parent by their profile id — `user_profiles.id` at this school. */
+export function findParent(profileId: string): Parent | undefined {
+  const found = load().parents.find(row => row.profileId === profileId)
+  return found ? cloneParent(found) : undefined
 }
 
 /** The parents of one student, with the relationship each holds. */
