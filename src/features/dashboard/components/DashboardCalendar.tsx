@@ -144,10 +144,10 @@ export function DashboardCalendar({
         <div className="flex items-center justify-between pb-2 px-4">
           <h3 className="text-section-title">{MONTHS[month]} {year}</h3>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7 bg-white hover:bg-white/80" onClick={prevMonth}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 bg-white hover:bg-white/80" onClick={prevMonth} aria-label="Previous month">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 bg-white hover:bg-white/80" onClick={nextMonth}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 bg-white hover:bg-white/80" onClick={nextMonth} aria-label="Next month">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -165,10 +165,10 @@ export function DashboardCalendar({
         <CardHeader className="flex-shrink-0 pb-2">
           <h3 className="text-section-title">{MONTHS[month]} {year}</h3>
           <div className="flex items-center gap-1 col-start-2 row-span-2 row-start-1 self-start justify-self-end">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prevMonth}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prevMonth} aria-label="Previous month">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={nextMonth}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={nextMonth} aria-label="Next month">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
