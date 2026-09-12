@@ -17,7 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Tile } from '@/components/tile'
-import { text } from '@/theme/colors'
+
 import { useIsDesktop } from '@/hooks/use-mobile'
 import { ClipboardList, Plus, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -417,7 +417,7 @@ export default function NoticeBoard() {
                           className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[140px]', TOOLBAR_FILTER_CONTROL)}
                           style={{
                             backgroundColor: 'var(--accent)',
-                            color: text.heading,
+                            color: 'var(--accent-foreground)',
                             borderColor: 'var(--accent)',
                           }}
                         >
@@ -445,7 +445,7 @@ export default function NoticeBoard() {
                           className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[100px]', TOOLBAR_FILTER_CONTROL)}
                           style={{
                             backgroundColor: 'var(--accent)',
-                            color: text.heading,
+                            color: 'var(--accent-foreground)',
                             borderColor: 'var(--accent)',
                           }}
                         >

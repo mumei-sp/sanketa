@@ -31,7 +31,7 @@ export default function NotFound() {
         style={{
           fontSize: 16,
           fontWeight: 600,
-          color: text.heading,
+          color: 'var(--heading)',
           margin: '16px 0 8px',
         }}
       >
@@ -76,7 +76,7 @@ export default function NotFound() {
             padding: '8px 20px',
             fontSize: 13,
             fontWeight: 500,
-            color: text.heading,
+            color: 'var(--heading)',
             backgroundColor: background.card,
             border: `1px solid ${border.default}`,
             borderRadius: 8,

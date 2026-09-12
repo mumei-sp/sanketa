@@ -88,7 +88,7 @@ export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: Pay
     onClick={handleSubmit}
     disabled={!transactionId.trim() || isSaving}
     className="gap-1.5"
-    style={{ backgroundColor: text.heading, color: background.card }}
+    style={{ backgroundColor: 'var(--heading)', color: background.card }}
     >
     <CheckCircle className="w-3.5 h-3.5" />
     {isSaving ? 'Saving...' : 'Mark as Paid'}
@@ -110,17 +110,17 @@ export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: Pay
             }}
           >
             <div>
-              <p style={{ fontSize: '13px', fontWeight: 600, color: text.heading }}>{record.feeCategory}</p>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--heading)' }}>{record.feeCategory}</p>
               <p style={{ fontSize: '11px', color: text.muted }}>{record.studentName} · {record.class}</p>
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 700, color: text.heading }}>
+            <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--heading)' }}>
               ₹{record.totalAmount.toLocaleString('en-IN')}
             </span>
           </div>
 
           {/* Payment method */}
           <div>
-            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['2'], display: 'block' }}>
+            <Label className="text-xs font-semibold" style={{ color: 'var(--heading)', marginBottom: spacing['2'], display: 'block' }}>
               Payment Received Via
             </Label>
             <div style={{ display: 'flex', gap: spacing['1.5'], flexWrap: 'wrap' }}>
@@ -131,9 +131,9 @@ export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: Pay
                   onClick={() => setMethod(m)}
                   className="text-xs font-medium rounded-full px-3 py-1.5 cursor-pointer transition-all"
                   style={{
-                    border: `1.5px solid ${method === m ? text.heading : border.default}`,
+                    border: `1.5px solid ${method === m ? 'var(--heading)' : border.default}`,
                     backgroundColor: method === m ? accent.base : 'transparent',
-                    color: text.heading,
+                    color: 'var(--heading)',
                   }}
                 >
                   {PAYMENT_METHOD_LABELS[m]}
@@ -144,7 +144,7 @@ export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: Pay
 
           {/* Transaction / Reference ID */}
           <div>
-            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['1.5'], display: 'block' }}>
+            <Label className="text-xs font-semibold" style={{ color: 'var(--heading)', marginBottom: spacing['1.5'], display: 'block' }}>
               Transaction / Reference ID
             </Label>
             <Input
@@ -158,7 +158,7 @@ export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: Pay
 
           {/* Date received */}
           <div>
-            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['1.5'], display: 'block' }}>
+            <Label className="text-xs font-semibold" style={{ color: 'var(--heading)', marginBottom: spacing['1.5'], display: 'block' }}>
               Date Received
             </Label>
             <input
@@ -166,13 +166,13 @@ export function PaymentFormSheet({ open, onOpenChange, record, onComplete }: Pay
               value={paidDate}
               onChange={e => setPaidDate(e.target.value)}
               className="w-full text-sm rounded-md border px-3 py-2 outline-none"
-              style={{ borderColor: border.default, color: text.heading, backgroundColor: background.card }}
+              style={{ borderColor: border.default, color: 'var(--heading)', backgroundColor: background.card }}
             />
           </div>
 
           {/* Notes (optional) */}
           <div>
-            <Label className="text-xs font-semibold" style={{ color: text.heading, marginBottom: spacing['1.5'], display: 'block' }}>
+            <Label className="text-xs font-semibold" style={{ color: 'var(--heading)', marginBottom: spacing['1.5'], display: 'block' }}>
               Notes <span style={{ fontWeight: 400, color: text.muted }}>(optional)</span>
             </Label>
             <Input

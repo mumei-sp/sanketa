@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
             style={{
               fontSize: 16,
               fontWeight: 600,
-              color: text.heading,
+              color: 'var(--heading)',
               margin: '0 0 8px',
             }}
           >

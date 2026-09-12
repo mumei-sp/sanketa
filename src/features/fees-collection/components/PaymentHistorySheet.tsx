@@ -58,7 +58,7 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
     <div style={{ padding: spacing['6'], paddingTop: '48px', overflow: 'auto', height: '100%' }}>
       {/* Header */}
       <div style={{ marginBottom: spacing['6'] }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 700, color: text.heading, margin: 0 }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--heading)', margin: 0 }}>
           Payment History
         </h2>
         <p style={{ fontSize: '13px', color: text.muted, marginTop: '4px' }}>
@@ -76,7 +76,7 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
           }}
         >
           <span style={{ fontSize: '11px', color: text.muted, display: 'block' }}>Total Paid</span>
-          <span style={{ fontSize: '20px', fontWeight: 700, color: text.heading }}>
+          <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--heading)' }}>
             ₹{totalPaid.toLocaleString('en-IN')}
           </span>
         </div>
@@ -88,7 +88,7 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
           }}
         >
           <span style={{ fontSize: '11px', color: text.muted, display: 'block' }}>Transactions</span>
-          <span style={{ fontSize: '20px', fontWeight: 700, color: text.heading }}>
+          <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--heading)' }}>
             {transactions.length}
           </span>
         </div>
@@ -113,10 +113,10 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
               }}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span style={{ fontSize: '13px', fontWeight: 600, color: text.heading }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--heading)' }}>
                   {txn.feeCategory}
                 </span>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: text.heading }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--heading)' }}>
                   ₹{txn.amount.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -125,7 +125,7 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
                   <span style={{ fontSize: '11px', color: text.muted }}>{txn.paidDate}</span>
                   <span
                     className="text-[10px] font-medium rounded-full px-2 py-px"
-                    style={{ backgroundColor: accent.base, color: text.heading }}
+                    style={{ backgroundColor: accent.base, color: 'var(--heading)' }}
                   >
                     {PAYMENT_METHOD_LABELS[txn.method]}
                   </span>
@@ -140,7 +140,7 @@ export function PaymentHistorySheet({ studentId, studentName, onViewReceipt }: P
                   type="button"
                   onClick={() => onViewReceipt(txn)}
                   className="flex items-center gap-1 text-[11px] font-medium cursor-pointer"
-                  style={{ color: text.heading }}
+                  style={{ color: 'var(--heading)' }}
                 >
                   <Receipt className="w-3 h-3" />
                   Receipt

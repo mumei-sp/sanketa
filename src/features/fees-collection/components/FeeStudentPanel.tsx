@@ -160,7 +160,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
           <p style={{ fontSize: '12px', color: text.muted, marginBottom: '3px', letterSpacing: '0.02em' }}>
             {student.studentId} · Class {student.class}
           </p>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: text.heading, margin: 0, letterSpacing: '-0.01em' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--heading)', margin: 0, letterSpacing: '-0.01em' }}>
             {student.studentName}
           </h2>
         </div>
@@ -168,7 +168,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
         {/* Amount hero */}
         <div className="flex items-end justify-between" style={{ marginBottom: spacing['3'] }}>
           <div>
-            <span style={{ fontSize: '32px', fontWeight: 800, color: text.heading, letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: '32px', fontWeight: 800, color: 'var(--heading)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
               ₹{totalDue.toLocaleString('en-IN')}
             </span>
             <p style={{ fontSize: '11px', color: text.muted, marginTop: '4px' }}>
@@ -216,7 +216,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
             disabled={isReminding}
             onClick={() => void remind()}
             className="flex items-center gap-1.5 mt-4 text-[11px] font-semibold cursor-pointer transition-opacity hover:opacity-70 disabled:opacity-50"
-            style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity('var(--heading)', 0.3) }}
+            style={{ color: 'var(--heading)', textDecoration: 'underline', textUnderlineOffset: '3px', textDecorationColor: withOpacity('var(--heading)', 0.3) }}
           >
             <Send className="w-3 h-3" />
             {isReminding ? 'Recording…' : 'Send Payment Reminder'}
@@ -255,7 +255,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
                 {/* Left: category + details */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="flex items-center gap-2">
-                    <span style={{ fontSize: '13px', fontWeight: 500, color: text.heading }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--heading)' }}>
                       {record.feeCategory}
                     </span>
                     <span
@@ -284,7 +284,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
 
                 {/* Right: amount + action */}
                 <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: spacing['4'] }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: text.heading, fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--heading)', fontVariantNumeric: 'tabular-nums' }}>
                     ₹{record.totalAmount.toLocaleString('en-IN')}
                   </span>
                   {isPaid ? (
@@ -372,7 +372,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
                 {/* Content */}
                 <div className="flex items-start justify-between">
                   <div>
-                    <span style={{ fontSize: '13px', fontWeight: 500, color: text.heading }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--heading)' }}>
                       {txn.feeCategory}
                     </span>
                     <p style={{ fontSize: '11px', color: text.muted, marginTop: '2px', lineHeight: 1.4 }}>
@@ -383,7 +383,7 @@ export function FeeStudentPanel({ studentId, allRecords, onDataChanged }: FeeStu
                       <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '10px' }}>{txn.receiptId}</span>
                     </p>
                   </div>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: text.heading, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--heading)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
                     ₹{txn.amount.toLocaleString('en-IN')}
                   </span>
                 </div>

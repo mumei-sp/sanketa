@@ -219,7 +219,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
             flexShrink: 0,
           }}
         >
-          <SheetTitle style={{ color: text.heading }}>{title}</SheetTitle>
+          <SheetTitle style={{ color: 'var(--heading)' }}>{title}</SheetTitle>
         </SheetHeader>
 
         {/* ── Scrollable body ── */}
@@ -237,13 +237,13 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                 className="flex flex-col items-center justify-center gap-3 rounded-xl cursor-pointer transition-all"
                 style={{
                   padding: spacing['10'],
-                  border: `2px dashed ${isDragging ? text.heading : border.default}`,
+                  border: `2px dashed ${isDragging ? 'var(--heading)' : border.default}`,
                   backgroundColor: isDragging ? accent.base : 'transparent',
                 }}
               >
-                <Upload className="size-8" style={{ color: isDragging ? text.heading : border.default }} />
+                <Upload className="size-8" style={{ color: isDragging ? 'var(--heading)' : border.default }} />
                 <div className="text-center">
-                  <p style={{ fontSize: '14px', fontWeight: 500, color: text.heading }}>
+                  <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--heading)' }}>
                     Drop CSV file here or click to browse
                   </p>
                   <p style={{ fontSize: '11px', color: text.muted, marginTop: '4px' }}>
@@ -264,7 +264,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                 type="button"
                 onClick={handleDownloadTemplate}
                 className="flex items-center justify-center gap-2 text-xs font-medium cursor-pointer transition-opacity hover:opacity-70"
-                style={{ color: text.heading, textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                style={{ color: 'var(--heading)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
               >
                 <FileText className="w-3.5 h-3.5" />
                 Download CSV template
@@ -272,7 +272,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
 
               {/* Column hints */}
               <div style={{ borderRadius: 8, border: `1px solid ${border.subtle}`, overflow: 'hidden' }}>
-                <p style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: text.heading, backgroundColor: accent.base }}>
+                <p style={{ padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--heading)', backgroundColor: accent.base }}>
                   Expected columns
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '10px 12px' }}>
@@ -284,7 +284,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                         padding: '2px 8px',
                         borderRadius: 4,
                         backgroundColor: col.required ? accent.base : background.surface,
-                        color: text.heading,
+                        color: 'var(--heading)',
                         border: `1px solid ${border.subtle}`,
                       }}
                     >
@@ -302,10 +302,10 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
             <>
               {/* Stats */}
               <div className="flex items-center gap-4">
-                <span style={{ fontSize: '13px', color: text.heading }}>
+                <span style={{ fontSize: '13px', color: 'var(--heading)' }}>
                   <strong>{parseResult.rows.length}</strong> rows found
                 </span>
-                <span style={{ fontSize: '13px', color: text.heading }}>
+                <span style={{ fontSize: '13px', color: 'var(--heading)' }}>
                   <strong>{parseResult.headers.length}</strong> columns
                 </span>
                 {hasErrors && (
@@ -346,11 +346,11 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: '7px 10px', backgroundColor: accent.base, color: text.heading, fontWeight: 600, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap' }}>
+                      <th style={{ padding: '7px 10px', backgroundColor: accent.base, color: 'var(--heading)', fontWeight: 600, textAlign: 'left', position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap' }}>
                         #
                       </th>
                       {parseResult.headers.map(h => (
-                        <th key={h} style={{ padding: '7px 10px', backgroundColor: accent.base, color: text.heading, fontWeight: 600, textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1 }}>
+                        <th key={h} style={{ padding: '7px 10px', backgroundColor: accent.base, color: 'var(--heading)', fontWeight: 600, textAlign: 'left', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1 }}>
                           {h}
                         </th>
                       ))}
@@ -387,7 +387,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
               >
                 <CheckCircle className="w-7 h-7" style={{ color: '#fff' }} />
               </div>
-              <p style={{ fontSize: '16px', fontWeight: 600, color: text.heading }}>Import Complete</p>
+              <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--heading)' }}>Import Complete</p>
               <p style={{ fontSize: '13px', color: text.muted }}>
                 {importedCount} records imported successfully.
               </p>
@@ -416,7 +416,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
                 onClick={handleImport}
                 disabled={isImporting || (hasErrors && validationErrors.some(e => e.includes('required') || e.includes('Missing')))}
                 className="gap-1.5"
-                style={{ backgroundColor: text.heading, color: background.card }}
+                style={{ backgroundColor: 'var(--heading)', color: background.card }}
               >
                 <Upload className="w-3 h-3" />
                 {isImporting ? 'Importing...' : `Import ${parseResult?.rows.length ?? 0} Records`}
@@ -424,7 +424,7 @@ export function ImportDialog({ open, onOpenChange, title, columns, templateSampl
             </>
           )}
           {step === 'done' && (
-            <Button size="sm" onClick={() => onOpenChange(false)} style={{ backgroundColor: text.heading, color: background.card }}>
+            <Button size="sm" onClick={() => onOpenChange(false)} style={{ backgroundColor: 'var(--heading)', color: background.card }}>
               Done
             </Button>
           )}

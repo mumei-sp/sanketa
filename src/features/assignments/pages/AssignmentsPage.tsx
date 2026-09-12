@@ -31,7 +31,7 @@ export function AssignmentsPage() {
           style={{
             fontSize: '18px',
             fontWeight: 600,
-            color: text.heading,
+            color: 'var(--heading)',
             margin: 0,
           }}
         >
