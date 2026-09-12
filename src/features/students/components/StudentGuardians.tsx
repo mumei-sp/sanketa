@@ -23,15 +23,15 @@ import { Badge } from '@/components/ui/badge'
 import { fontSizes } from '@/config/typography'
 import { spacing } from '@/config/spacing'
 import { text, background } from '@/theme/colors'
-import type { ParentOfStudent } from '@/api/services/parent-service'
+import type { GuardianOfStudent } from '@/api/services/guardian-service'
 
 interface StudentGuardiansProps {
-  guardians: ParentOfStudent[]
+  guardians: GuardianOfStudent[]
   /** Whether each guardian already has an account, by profile id. */
-  hasAccount: (parentProfileId: string) => boolean
+  hasAccount: (guardianProfileId: string) => boolean
   onAdd?: () => void
-  onEdit?: (guardian: ParentOfStudent) => void
-  onUnlink?: (parentProfileId: string) => void
+  onEdit?: (guardian: GuardianOfStudent) => void
+  onUnlink?: (guardianProfileId: string) => void
 }
 
 export function StudentGuardians({

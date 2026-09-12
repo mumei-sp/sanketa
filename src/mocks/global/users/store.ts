@@ -191,7 +191,7 @@ export function listUsers(): SchoolUser[] {
  *
  * A number is compared on its last ten digits, so `+91 98451 23457`,
  * `9845123457` and `098451-23457` are one identifier. That is the same
- * comparison the parents table uses to decide whether two guardians are one
+ * comparison the guardians table uses to decide whether two guardians are one
  * person, and it has to be, or a school could hold a number in the directory
  * under one spelling and fail to match the account under another.
  */
@@ -249,7 +249,7 @@ export function claimedIdentifier(input: {
  * not be signable-into before the services filter.
  */
 function isFamily(profileType: ProfileType): boolean {
-  return profileType === 'student' || profileType === 'parent' || profileType === 'guardian'
+  return profileType === 'student' || profileType === 'parent'
 }
 
 /**
@@ -273,7 +273,7 @@ export function createUser(input: {
   profileType?: ProfileType
   status?: AccountStatus
   studentId?: string
-  parentId?: string
+  guardianId?: string
   assignedClasses?: string[]
 }): SchoolUser | null {
   const database = load()

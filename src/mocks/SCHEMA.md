@@ -118,8 +118,8 @@ a family mobile cannot both hold it, and the second needs an address.
 | `user_profiles` | One row per person **at this school**, carrying the replicated person columns | exists (MySQL) | yes |
 | `students` | `profile_id` PK → `user_profiles(id)`. Admission and roll numbers, grade, section | exists (MySQL) | yes |
 | `teachers` | `profile_id` PK → `user_profiles(id)`. Employee id, qualification, department | exists (MySQL) | yes |
-| `parents` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) | yes |
-| `student_parents` | Who a child's guardians are | exists (MySQL) | yes |
+| `guardians` | `profile_id` PK → `user_profiles(id)`. Was `parents` | exists (MySQL) | yes |
+| `student_guardians` | Who a child's guardians are, and what each is to them. Was `student_parents` | exists (MySQL) | yes |
 | `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends | this frontend | yes |
 | `roles` | School-defined. `scope_axis` is new — see below | designed (Postgres) | yes |
 | `permissions` | The catalogue. Codes are code constants | designed (Postgres) | code constants |
@@ -131,9 +131,9 @@ a family mobile cannot both hold it, and the second needs an address.
 
 ### Capacities and profile types — two different things
 
-`students`, `teachers` and `parents` each take `profile_id` as their primary
+`students`, `teachers` and `guardians` each take `profile_id` as their primary
 key, all three referencing the same `user_profiles(id)`. Nothing stops one
-profile having a `teachers` row *and* a `parents` row — so **a teacher whose
+profile having a `teachers` row *and* a `guardians` row — so **a teacher whose
 child attends the same school is already representable**.
 
 The only thing that disagreed was `user_profiles.profile_type`, a single
@@ -217,10 +217,10 @@ column, and each is a place the mock will have to grow one.
 
 `user_profiles` is one row per person and not one per login, which is the
 thing easiest to get wrong and hardest to notice. At Kendriya the mock seeds
-**1,129 profiles for 1,127 people** — 441 students, 31 staff, 655 parents, plus
+**1,129 profiles for 1,127 people** — 441 students, 31 staff, 655 guardians, plus
 three office staff, less one person counted twice — against **five logins**.
 That one person counted twice is the whole case: the teacher whose child
-attends is a single profile with a `teachers` row and a `parents` row under one
+attends is a single profile with a `teachers` row and a `guardians` row under one
 id, and she reads her own classes and her own son from it.
 
 `user_id` is null on 1,124 of those rows, which is why SCHEMA-FIXES puts making

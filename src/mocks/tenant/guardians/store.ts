@@ -1,7 +1,7 @@
 /**
- * The mock parent directory, and who each parent belongs to.
+ * The mock guardian directory, and who each guardian belongs to.
  *
- * Two tables, named after the backend's: `parents` extends a profile, and
+ * Two tables, named after the backend's: `guardians` extends a profile, and
  * `student_parents` links it to students with a relationship and a primary
  * flag. Both already exist in `develop/user-management`; this catches the mock
  * up rather than inventing a shape the backend will have to reconcile.
@@ -11,7 +11,7 @@
  * `{ name, phone, relation }` under `father`, `mother` or
  * `alternativeGuardian`. That is fine for "who do we ring", and useless for
  * "who can sign in": no id, so nothing can point at them; and no link, so the
- * same person on two children's records is two unrelated strings. A parent
+ * same person on two children's records is two unrelated strings. A guardian
  * with two children must be one account that sees both.
  *
  * The embedded fields were kept for a while as "the contact details on the
@@ -23,9 +23,9 @@
  *
  * ── Seeding ────────────────────────────────────────────────────────────
  * First run reads the embedded guardians and matches them across students on
- * name and phone, so siblings share one parent row. What it cannot invent is
+ * name and phone, so siblings share one guardian row. What it cannot invent is
  * an email — the contact details carry a phone and a relationship, nothing
- * else — so a seeded parent has `email: null`. That used to mean they could
+ * else — so a seeded guardian has `email: null`. That used to mean they could
  * not be given an account; sign-in takes a number now, so the phone the school
  * already has is enough, and `email: null` is just a missing address.
  */
@@ -34,28 +34,28 @@ import { newId } from '@/mocks/_shared'
 import { listStudents } from '@/mocks/tenant/students/store'
 import { personOf, upsertPerson } from '@/mocks/tenant/profiles/store'
 import { deriveFamilies, familiesSignature, sameHuman } from './derive'
-import type { StudentParent } from './derive'
+import type { StudentGuardian } from './derive'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
-export type { StudentParent } from './derive'
+export type { StudentGuardian } from './derive'
 
 /**
- * A parent, as every caller means it — the `parents` row joined to the person.
+ * A guardian, as every caller means it — the `guardians` row joined to the person.
  *
  * Only `profileId`, `email`, `occupation` and `workplace` are stored here. The
  * name and the number are `user_profiles` columns and live there, which is
- * what makes the parent of a child at two schools one name rather than two.
+ * what makes the guardian of a child at two schools one name rather than two.
  */
-export interface Parent {
-  /** Profile id — the schema's `parents.profile_id`. */
+export interface Guardian {
+  /** Profile id — the schema's `guardians.profile_id`. */
   profileId: string
   /** From `user_profiles.full_name`. */
   fullName: string
   /**
-   * Null until someone supplies one, which for most parents is never.
+   * Null until someone supplies one, which for most guardians is never.
    *
    * Not a blocker for an account any more — sign-in takes the mobile number
-   * the school already holds. It matters for the second parent on a shared
+   * the school already holds. It matters for the second guardian on a shared
    * family number, who needs an address of their own because a number belongs
    * to one account. Null rather than an empty string so "never had one" is
    * distinguishable from "cleared it".
@@ -67,14 +67,14 @@ export interface Parent {
   workplace?: string
 }
 
-/** What the `parents` table actually stores. The rest is the person. */
-export type ParentRow = Omit<Parent, 'fullName' | 'phone'>
+/** What the `guardians` table actually stores. The rest is the person. */
+export type GuardianRow = Omit<Guardian, 'fullName' | 'phone'>
 
-const TABLE = 'parents'
+const TABLE = 'guardians'
 
 interface Database {
-  parents: ParentRow[]
-  links: StudentParent[]
+  guardians: GuardianRow[]
+  links: StudentGuardian[]
   /**
    * Which roster these rows were derived from. See `familiesSignature`.
    *
@@ -95,25 +95,44 @@ onTenantSwitch(() => {
 
 function seed(): Database {
   // The derivation lives in `derive.ts`, because the profiles store runs it
-  // too: it has to know every person at the school, parents included, before
-  // this table exists. Here it becomes `parents` rows; there it becomes the
+  // too: it has to know every person at the school, guardians included, before
+  // this table exists. Here it becomes `guardians` rows; there it becomes the
   // name and the number on each profile.
-  const { parents, links } = deriveFamilies()
+  const { guardians, links } = deriveFamilies()
   return {
-    parents: parents.map(parent => ({ profileId: parent.profileId, email: null })),
+    guardians: guardians.map(guardian => ({ profileId: guardian.profileId, email: null })),
     links,
     seed: familiesSignature(),
   }
 }
 
+/**
+ * Drop what this table used to be called.
+ *
+ * The rows moved to `guardians` and the old key is orphaned — nothing reads
+ * it, and it is a quarter of a megabyte per browser that has ever run the app,
+ * sitting under a name that looks like a live table to anyone opening
+ * devtools. A real rename migration drops the old table; this is that.
+ *
+ * Safe to delete from this file once no browser can still be holding one.
+ */
+function dropRenamedTable(): void {
+  try {
+    localStorage.removeItem(tenantKey('parents'))
+  } catch {
+    // Unavailable in private mode; there was nothing to drop either.
+  }
+}
+
 function load(): Database {
   if (db) return db
+  dropRenamedTable()
   try {
     const raw = localStorage.getItem(tenantKey(TABLE))
     if (raw) {
       const parsed = JSON.parse(raw) as Database
       if (
-        Array.isArray(parsed.parents) &&
+        Array.isArray(parsed.guardians) &&
         Array.isArray(parsed.links) &&
         parsed.seed === familiesSignature()
       ) {
@@ -121,7 +140,7 @@ function load(): Database {
         // The cascade a real `student_parents` FK would do for free. The
         // student directory reseeds itself whenever its fixtures are edited,
         // and this table survives that, so links to students who went with the
-        // reseed have to go too. Left in place they are invisible — a parent's
+        // reseed have to go too. Left in place they are invisible — a guardian's
         // scope lists an id nothing resolves — right up until something counts
         // children rather than resolving them.
         const known = new Set(listStudents().map(student => String(student.id)))
@@ -157,121 +176,121 @@ function persist(): void {
  * `user_profiles.full_name` and `user_profiles.primary_phone`, which is why
  * the join renames as it goes rather than spreading.
  */
-const cloneParent = (parent: ParentRow): Parent => {
-  const person = personOf(parent.profileId)
+const cloneGuardian = (guardian: GuardianRow): Guardian => {
+  const person = personOf(guardian.profileId)
   return {
-    ...parent,
-    fullName: person.fullName ?? parent.profileId,
+    ...guardian,
+    fullName: person.fullName ?? guardian.profileId,
     phone: person.primaryPhone,
   }
 }
-const cloneLink = (link: StudentParent): StudentParent => ({ ...link })
+const cloneLink = (link: StudentGuardian): StudentGuardian => ({ ...link })
 
 // ── Reads ─────────────────────────────────────────────────────────────
 
-export function listParents(): Parent[] {
-  return load().parents.map(cloneParent)
+export function listGuardians(): Guardian[] {
+  return load().guardians.map(cloneGuardian)
 }
 
-export function listLinks(): StudentParent[] {
+export function listLinks(): StudentGuardian[] {
   return load().links.map(cloneLink)
 }
 
-/** One parent by their profile id — `user_profiles.id` at this school. */
-export function findParent(profileId: string): Parent | undefined {
-  const found = load().parents.find(row => row.profileId === profileId)
-  return found ? cloneParent(found) : undefined
+/** One guardian by their profile id — `user_profiles.id` at this school. */
+export function findGuardian(profileId: string): Guardian | undefined {
+  const found = load().guardians.find(row => row.profileId === profileId)
+  return found ? cloneGuardian(found) : undefined
 }
 
-/** The parents of one student, with the relationship each holds. */
-export function parentsOfStudent(studentProfileId: string): (Parent & { relationship: string; isPrimary: boolean })[] {
+/** The guardians of one student, with the relationship each holds. */
+export function guardiansOfStudent(studentProfileId: string): (Guardian & { relationship: string; isPrimary: boolean })[] {
   const database = load()
   return database.links
     .filter(link => link.studentProfileId === studentProfileId)
     .flatMap(link => {
-      const parent = database.parents.find(row => row.profileId === link.parentProfileId)
-      return parent
-        ? [{ ...cloneParent(parent), relationship: link.relationship, isPrimary: link.isPrimary }]
+      const guardian = database.guardians.find(row => row.profileId === link.guardianProfileId)
+      return guardian
+        ? [{ ...cloneGuardian(guardian), relationship: link.relationship, isPrimary: link.isPrimary }]
         : []
     })
 }
 
 /**
- * The students one parent covers.
+ * The students one guardian covers.
  *
- * This is the list a parent account's scope is built from — the reason the
+ * This is the list a guardian account's scope is built from — the reason the
  * link table exists rather than a field on the student.
  */
-export function studentsOfParent(parentProfileId: string): string[] {
+export function studentsOfGuardian(guardianProfileId: string): string[] {
   return load()
-    .links.filter(link => link.parentProfileId === parentProfileId)
+    .links.filter(link => link.guardianProfileId === guardianProfileId)
     .map(link => link.studentProfileId)
 }
 
 // ── Writes ────────────────────────────────────────────────────────────
 
-/** Two rows: the profile carries who they are, `parents` that they are one. */
-export function createParent(input: {
+/** Two rows: the profile carries who they are, `guardians` that they are one. */
+export function createGuardian(input: {
   fullName: string
   email?: string | null
   phone?: string
-}): Parent {
+}): Guardian {
   const database = load()
-  const parent: ParentRow = { profileId: newId('P'), email: input.email?.trim() || null }
-  upsertPerson(parent.profileId, {
+  const guardian: GuardianRow = { profileId: newId('G'), email: input.email?.trim() || null }
+  upsertPerson(guardian.profileId, {
     fullName: input.fullName.trim(),
     primaryPhone: input.phone?.trim() || undefined,
   })
-  database.parents.push(parent)
+  database.guardians.push(guardian)
   persist()
-  return cloneParent(parent)
+  return cloneGuardian(guardian)
 }
 
-export function updateParent(
+export function updateGuardian(
   profileId: string,
   patch: { fullName?: string; email?: string | null; phone?: string },
-): Parent | null {
+): Guardian | null {
   const database = load()
-  const parent = database.parents.find(row => row.profileId === profileId)
-  if (!parent) return null
+  const guardian = database.guardians.find(row => row.profileId === profileId)
+  if (!guardian) return null
 
-  // Correcting a parent's name is a write to `user_profiles`, and correcting
-  // the address the school has for them is a write to `parents`.
+  // Correcting a guardian's name is a write to `user_profiles`, and correcting
+  // the address the school has for them is a write to `guardians`.
   const person: { fullName?: string; primaryPhone?: string } = {}
   if (patch.fullName !== undefined) person.fullName = patch.fullName.trim()
   if (patch.phone !== undefined) person.primaryPhone = patch.phone.trim() || undefined
   if (Object.keys(person).length > 0) upsertPerson(profileId, person)
 
-  if (patch.email !== undefined) parent.email = patch.email?.trim() || null
+  if (patch.email !== undefined) guardian.email = patch.email?.trim() || null
 
   persist()
-  return cloneParent(parent)
+  return cloneGuardian(guardian)
 }
 
 /**
- * Link a parent to a student.
+ * Link a guardian to a student.
  *
- * Idempotent on the pair, because the schema has `UNIQUE(student, parent)` and
+ * Idempotent on the pair, because the schema has `UNIQUE(student, guardian)` and
  * a screen that links twice should be a no-op rather than a duplicate row.
  */
-export function linkParent(input: {
+export function linkGuardian(input: {
   studentProfileId: string
-  parentProfileId: string
+  guardianProfileId: string
   relationship: string
   isPrimary?: boolean
-}): StudentParent | null {
+}): StudentGuardian | null {
   const database = load()
-  if (!database.parents.some(row => row.profileId === input.parentProfileId)) return null
+  if (!database.guardians.some(row => row.profileId === input.guardianProfileId)) return null
 
   const existing = database.links.find(
     link =>
       link.studentProfileId === input.studentProfileId &&
-      link.parentProfileId === input.parentProfileId,
+      link.guardianProfileId === input.guardianProfileId,
   )
   const link = existing ?? {
-    id: newId('SP'),
+    id: newId('SG'),
     studentProfileId: input.studentProfileId,
-    parentProfileId: input.parentProfileId,
+    guardianProfileId: input.guardianProfileId,
     relationship: input.relationship,
     isPrimary: false,
   }
@@ -305,7 +324,7 @@ export interface GuardianSlot {
  *
  * The form has three slots — father, mother, one alternative — holding a name
  * and a phone and no id. This is what turns them into people: the rows that an
- * account can be attached to, that a sibling shares, and that a parent's
+ * account can be attached to, that a sibling shares, and that a guardian's
  * `studentIds` scope is built from. Without it a school could type a father's
  * name on the enrolment form and find, later, that he cannot be given an
  * account because nothing in the directory knows he exists.
@@ -322,7 +341,7 @@ export interface GuardianSlot {
  *
  * ── What it will not do ────────────────────────────────────────────────
  * Emptying a slot does not unlink. A blank field is not a decision — most of
- * them are blank because nobody filled them in — and unlinking a parent can
+ * them are blank because nobody filled them in — and unlinking a guardian can
  * take away their access to their child. Removing a guardian is done on the
  * detail page, where the button says so.
  */
@@ -335,7 +354,7 @@ export function reconcileGuardians(studentProfileId: string, slots: GuardianSlot
   // alternative guardian recorded as 'Father' would otherwise be claimed by
   // the father slot and then again by the alternative one.
   const claimed = new Set<string>()
-  const claim = (matches: (link: StudentParent) => boolean) => {
+  const claim = (matches: (link: StudentGuardian) => boolean) => {
     const link = mine().find(candidate => !claimed.has(candidate.id) && matches(candidate))
     if (link) claimed.add(link.id)
     return link
@@ -353,34 +372,34 @@ export function reconcileGuardians(studentProfileId: string, slots: GuardianSlot
     if (!fullName) return
 
     if (existing) {
-      updateParent(existing.parentProfileId, { fullName, phone: slot.phone })
+      updateGuardian(existing.guardianProfileId, { fullName, phone: slot.phone })
       existing.relationship = slot.relationship
       persist()
       return
     }
 
     const candidate = { fullName, phone: slot.phone }
-    const parent =
-      database.parents.map(cloneParent).find(row => sameHuman(row, candidate)) ??
-      createParent({ fullName, phone: slot.phone })
+    const guardian =
+      database.guardians.map(cloneGuardian).find(row => sameHuman(row, candidate)) ??
+      createGuardian({ fullName, phone: slot.phone })
 
-    linkParent({
+    linkGuardian({
       studentProfileId: studentId,
-      parentProfileId: parent.profileId,
+      guardianProfileId: guardian.profileId,
       relationship: slot.relationship,
       // The school rings somebody first, and on a record that names nobody yet
-      // that is whoever was entered first. Never moved off a parent who
+      // that is whoever was entered first. Never moved off a guardian who
       // already holds it, since the form has no field that asks.
       isPrimary: !mine().some(link => link.isPrimary),
     })
   })
 }
 
-export function unlinkParent(studentProfileId: string, parentProfileId: string): boolean {
+export function unlinkGuardian(studentProfileId: string, guardianProfileId: string): boolean {
   const database = load()
   const index = database.links.findIndex(
     link =>
-      link.studentProfileId === studentProfileId && link.parentProfileId === parentProfileId,
+      link.studentProfileId === studentProfileId && link.guardianProfileId === guardianProfileId,
   )
   if (index === -1) return false
   database.links.splice(index, 1)

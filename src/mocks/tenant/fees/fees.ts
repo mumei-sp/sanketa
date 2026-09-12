@@ -112,7 +112,7 @@ function nextReceiptId(): string { return `REC-${yyyymm()}-${String(txnCounter).
 /**
  * Which household a student belongs to, for the purposes of paying.
  *
- * The primary guardian's number, which is what the parents table matches
+ * The primary guardian's number, which is what the guardians table matches
  * siblings on too. Falling back to the student's own code means an orphan
  * record is its own household rather than joining a phantom one.
  */

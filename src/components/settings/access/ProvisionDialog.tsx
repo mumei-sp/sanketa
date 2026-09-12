@@ -44,14 +44,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { border, text } from '@/theme/colors'
 import { getInitials } from '@/utils/format'
 import { useAppToast } from '@/hooks/use-app-toast'
-import { fetchParents, fetchParentLinks, type Parent } from '@/api/services/parent-service'
+import { fetchGuardians, fetchGuardianLinks, type Guardian } from '@/api/services/guardian-service'
 import { createUser, identifierTaken, type SchoolUser } from '@/api/services/user-service'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { profileOf } from '@/mocks/tenant/profiles'
 
 /** One row: somebody who could have an account and does not. */
 interface Candidate {
-  parent: Parent
+  guardian: Guardian
   children: number
 }
 
@@ -86,7 +86,7 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
   const [busy, setBusy] = React.useState<string | null>(null)
   const [done, setDone] = React.useState<Set<string>>(new Set())
 
-  const parentRole = roles.find(role => role.id === 'parent')
+  const guardianRole = roles.find(role => role.id === 'parent')
 
   // Current without being a dependency — see the effect below.
   const usersRef = React.useRef(users)
@@ -105,27 +105,27 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
   React.useEffect(() => {
     if (!open) return
     setDone(new Set())
-    Promise.all([fetchParents(), fetchParentLinks()])
-      .then(([parents, links]) => {
+    Promise.all([fetchGuardians(), fetchGuardianLinks()])
+      .then(([guardians, links]) => {
         // Which parent records already have an account at this school. A
         // parent's profile id *is* their `parents` row's id, so the account's
         // profile id is the answer — and it is per school, because the same
-        // person is a different `parents` row at each one.
+        // person is a different `guardians` row at each one.
         const taken = new Set(
           usersRef.current
             .map(user => profileOf(user.id)?.id)
             .filter((id): id is string => id !== undefined),
         )
         setCandidates(
-          parents
-            .filter(parent => !taken.has(parent.profileId))
-            .map(parent => ({
-              parent,
-              children: links.filter(link => link.parentProfileId === parent.profileId).length,
+          guardians
+            .filter(guardian => !taken.has(guardian.profileId))
+            .map(guardian => ({
+              guardian,
+              children: links.filter(link => link.guardianProfileId === guardian.profileId).length,
             })),
         )
         setEmails(
-          Object.fromEntries(parents.map(parent => [parent.profileId, parent.email ?? ''])),
+          Object.fromEntries(guardians.map(guardian => [guardian.profileId, guardian.email ?? ''])),
         )
       })
       .catch(error => {
@@ -135,7 +135,7 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
   }, [open])
 
   /**
-   * Whether this parent's own number can be the account's identifier.
+   * Whether this guardian's own number can be the account's identifier.
    *
    * Read off the accounts already in hand rather than asked of the server per
    * row: the dialog is given the directory, and forty round trips to learn
@@ -143,34 +143,34 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
    * dialog.
    */
   const phoneFor = React.useCallback(
-    (parent: Parent): string | undefined => {
-      if (!parent.phone) return undefined
-      const claimed = usersRef.current.some(user => samePhone(user.phone, parent.phone))
-      return claimed ? undefined : parent.phone
+    (guardian: Guardian): string | undefined => {
+      if (!guardian.phone) return undefined
+      const claimed = usersRef.current.some(user => samePhone(user.phone, guardian.phone))
+      return claimed ? undefined : guardian.phone
     },
     [],
   )
 
   const provision = async (candidate: Candidate) => {
-    const email = (emails[candidate.parent.profileId] ?? '').trim()
-    const phone = phoneFor(candidate.parent)
+    const email = (emails[candidate.guardian.profileId] ?? '').trim()
+    const phone = phoneFor(candidate.guardian)
     // Either identifier will do. Both when both are there — the number is what
     // they will type, the address is where the school can reach them.
     if (!phone && !looksLikeEmail(email)) return
-    if (!parentRole) return
+    if (!guardianRole) return
 
-    setBusy(candidate.parent.profileId)
+    setBusy(candidate.guardian.profileId)
     try {
       // No `status` passed on purpose: the store derives it from the profile
       // type, so a family account is disabled whether or not a caller
       // remembers to ask for that.
       const created = await createUser({
-        fullName: candidate.parent.fullName,
+        fullName: candidate.guardian.fullName,
         email: looksLikeEmail(email) ? email : null,
         phone,
-        roleId: parentRole.id,
+        roleId: guardianRole.id,
         profileType: 'parent',
-        parentId: candidate.parent.profileId,
+        guardianId: candidate.guardian.profileId,
       })
       if (!created) {
         const taken = await identifierTaken({ email: email || null, phone })
@@ -181,7 +181,7 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
         )
         return
       }
-      setDone(current => new Set(current).add(candidate.parent.profileId))
+      setDone(current => new Set(current).add(candidate.guardian.profileId))
       onCreated(created)
       showSuccess(`Account created for ${created.fullName}`, {
         description: 'Created disabled — activate it on the People screen to let them sign in.',
@@ -194,10 +194,10 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
     }
   }
 
-  const waiting = candidates?.filter(candidate => !done.has(candidate.parent.profileId)) ?? []
+  const waiting = candidates?.filter(candidate => !done.has(candidate.guardian.profileId)) ?? []
   // The rows that still need a human to type something: no number on file, or
   // a number that already signs in to somebody else.
-  const needTyping = waiting.filter(candidate => !phoneFor(candidate.parent)).length
+  const needTyping = waiting.filter(candidate => !phoneFor(candidate.guardian)).length
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -244,9 +244,9 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
 
             <div className="flex flex-col gap-2">
               {waiting.map(candidate => {
-                const id = candidate.parent.profileId
+                const id = candidate.guardian.profileId
                 const email = emails[id] ?? ''
-                const phone = phoneFor(candidate.parent)
+                const phone = phoneFor(candidate.guardian)
                 const ready = phone !== undefined || looksLikeEmail(email)
                 return (
                   <div
@@ -259,28 +259,28 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
                       className="flex size-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
                       style={{ backgroundColor: 'var(--heading)', color: 'var(--card)' }}
                     >
-                      {getInitials(candidate.parent.fullName)}
+                      {getInitials(candidate.guardian.fullName)}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span
                         className="block truncate text-body font-medium"
                         style={{ color: 'var(--heading)' }}
                       >
-                        {candidate.parent.fullName}
+                        {candidate.guardian.fullName}
                       </span>
                       <span className="block text-caption" style={{ color: text.muted }}>
                         {candidate.children === 1 ? '1 child' : `${candidate.children} children`}
                         {phone
                           ? ` · signs in with ${phone}`
-                          : candidate.parent.phone
-                            ? ` · ${candidate.parent.phone} is taken`
+                          : candidate.guardian.phone
+                            ? ` · ${candidate.guardian.phone} is taken`
                             : ' · no number on file'}
                       </span>
                     </span>
 
                     <span className="flex items-center gap-2 max-md:w-full">
                       <Label htmlFor={`prov-${id}`} className="sr-only">
-                        Email for {candidate.parent.fullName}
+                        Email for {candidate.guardian.fullName}
                       </Label>
                       <Input
                         id={`prov-${id}`}
@@ -296,7 +296,7 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
                       <Button
                         size="sm"
                         className="shrink-0 gap-1.5"
-                        disabled={!ready || busy === id || !parentRole}
+                        disabled={!ready || busy === id || !guardianRole}
                         onClick={() => void provision(candidate)}
                       >
                         <UserPlus className="size-3.5" />

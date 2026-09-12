@@ -39,7 +39,7 @@ import type { Role } from '@/config/permissions'
  * ── Two ways to name the profile ──────────────────────────────────────
  * `id` when the school controls it: a teacher's profile id is their row in the
  * faculty list, and a member of the office staff has no other record, so the
- * seed names one. `parentPhone` when the parents table minted it — parent ids
+ * seed names one. `guardianPhone` when the guardians table minted it — guardian ids
  * come out of seeding the guardians on the roster, so a fixture cannot know
  * one, and the number is the fact it does know.
  *
@@ -53,8 +53,8 @@ export interface ProfileFixture {
   userId: string
   /** The profile id, when this school controls it — a teacher or staff row. */
   id?: string
-  /** Their number, when the profile is one the parents table created. */
-  parentPhone?: string
+  /** Their number, when the profile is one the guardians table created. */
+  guardianPhone?: string
   /**
    * Their name, for somebody with no record to take one from.
    *

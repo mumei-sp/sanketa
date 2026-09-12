@@ -57,7 +57,7 @@ const FamilyScopeContext = React.createContext<FamilyScopeValue | null>(null)
  * `parents` record, and the distinction lives in `student_parents.relationship`
  * where it belongs.
  */
-const FAMILY_CAPACITIES: Capacity[] = ['student', 'parent']
+const FAMILY_CAPACITIES: Capacity[] = ['student', 'guardian']
 
 /** Capacities that make somebody school rather than family. Not exclusive. */
 const STAFF_CAPACITIES: Capacity[] = ['teacher', 'staff']

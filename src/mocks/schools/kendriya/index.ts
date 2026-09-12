@@ -72,12 +72,12 @@ export const kendriya: TenantFixtures = {
       {
         key: 'rohan',
         userId: '5',
-        // Aarav Sharma's father. The parents table made his profile when it
+        // Aarav Sharma's father. The guardians table made his profile when it
         // seeded the guardians off the roster, so the seed names the number
         // rather than an id it cannot know. He is a parent at Vidya Mandir
         // too, on one login: the two-school family is the case the global
         // identity tables exist for, and it is asserted from both ends.
-        parentPhone: '9845123457',
+        guardianPhone: '9845123457',
       },
     ],
     roles: [
@@ -97,7 +97,7 @@ export const kendriya: TenantFixtures = {
       { key: 'rohan', code: 'parent', isPrimary: true },
     ],
     // Meera Iyengar is on the faculty list and on her own son's record as his
-    // mother. One person, so one profile: the guardian row the parents table
+    // mother. One person, so one profile: the guardian row the guardians table
     // would otherwise mint for her becomes her teacher profile instead.
     staffGuardians: [{ phone: '9880114477', profileId: 't-6' }],
   },

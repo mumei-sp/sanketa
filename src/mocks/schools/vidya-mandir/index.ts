@@ -52,7 +52,7 @@ export const vidyaMandir: TenantFixtures = {
         // schema-per-tenant means.
         userId: '5',
         // Ira Sharma's father, found by the number her record names.
-        parentPhone: '9845123457',
+        guardianPhone: '9845123457',
       },
     ],
     roles: [{ key: 'rohan', roleId: 'parent' }],

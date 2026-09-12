@@ -25,11 +25,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { text } from '@/theme/colors'
-import type { Parent, ParentOfStudent } from '@/api/services/parent-service'
+import type { Guardian, GuardianOfStudent } from '@/api/services/guardian-service'
 
-/** What the sheet hands back. `parentProfileId` null means "create this one". */
+/** What the sheet hands back. `guardianProfileId` null means "create this one". */
 export interface GuardianDraft {
-  parentProfileId: string | null
+  guardianProfileId: string | null
   fullName: string
   email: string | null
   phone: string
@@ -41,9 +41,9 @@ interface GuardianFormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Set when editing an existing link. */
-  guardian: ParentOfStudent | null
+  guardian: GuardianOfStudent | null
   /** Everyone the school already knows, minus those already on this student. */
-  candidates: Parent[]
+  candidates: Guardian[]
   onSave: (draft: GuardianDraft) => void
   isSaving: boolean
 }
@@ -104,7 +104,7 @@ export function GuardianFormSheet({
   const submit = () => {
     if (!canSave) return
     onSave({
-      parentProfileId: guardian ? guardian.profileId : pick === NEW_PERSON ? null : pick,
+      guardianProfileId: guardian ? guardian.profileId : pick === NEW_PERSON ? null : pick,
       fullName: fullName.trim(),
       email: email.trim() || null,
       phone: phone.trim(),

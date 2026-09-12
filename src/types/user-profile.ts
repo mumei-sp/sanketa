@@ -22,7 +22,6 @@ export type ProfileTypeName =
   | 'parent'
   | 'admin'
   | 'staff'
-  | 'guardian'
 
 /**
  * Base UserProfile interface matching user_profiles table schema

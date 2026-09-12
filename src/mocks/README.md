@@ -36,7 +36,7 @@ src/mocks/
 │   │                    calendar_events · timetable · event_attendees
 │   ├── profiles/        user_profiles · staff · profile_types · profile_roles
 │   │                    ← the person: name, DOB, gender, phone, picture
-│   ├── students/ teachers/ parents/         the capacity tables
+│   ├── students/ teachers/ guardians/       the capacity tables
 │   │                    ← only what is true of them *here*
 │   ├── roles/ access-log/
 │   ├── attendance/ grades/ timetable/ fees/ expenses/ transport/
@@ -82,7 +82,7 @@ tables already exist.
 ### The person and the capacity
 
 `user_profiles` owns the columns that describe a person — name parts, date of
-birth, gender, primary phone, picture. `students`, `teachers` and `parents` own
+birth, gender, primary phone, picture. `students`, `teachers` and `guardians` own
 only what is true of that person *at this school*: an admission number, an
 employee id, a relationship. One id runs through all of them, because the
 schema gives each capacity table `profile_id` as its own primary key.
@@ -106,9 +106,9 @@ round before the importing store's own `db` exists. It reads as `Cannot access
 'db' before initialization` from a file that never mentions the table.
 
 **The profiles store imports no capacity store.** The arrow runs one way now:
-`students`, `teachers` and `parents` read the person from `profiles`, so
+`students`, `teachers` and `guardians` read the person from `profiles`, so
 `profiles` cannot read them back. Two consequences live in the tree:
-`parents/derive.ts` holds the guardian derivation both sides need, and
+`guardians/derive.ts` holds the guardian derivation both sides need, and
 `profiles/capacities.ts` holds `capacitiesOf`, which is a join across four
 tables rather than part of any one of them.
 

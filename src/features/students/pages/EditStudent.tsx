@@ -10,7 +10,7 @@ import { StudentFormActions } from '../components/StudentFormActions'
 import { getStudentBreadcrumbs } from '../utils/breadcrumbs'
 import { useStudentFormHandlers } from '../hooks/use-student-form-handlers'
 import { updateStudent } from '@/api/services/student-service'
-import { fetchParentsOfStudent, type ParentOfStudent } from '@/api/services/parent-service'
+import { fetchGuardiansOfStudent, type GuardianOfStudent } from '@/api/services/guardian-service'
 import { formToStudent } from '../utils/transform'
 import { STUDENT_MESSAGES, STUDENT_LABELS } from '../constants'
 import { useAppToast } from '@/hooks/use-app-toast'
@@ -28,11 +28,11 @@ export default function EditStudent() {
    * blank guardian slots and then fill them in, because a save in that gap
    * would be a save of what the screen was showing.
    */
-  const [guardians, setGuardians] = React.useState<ParentOfStudent[] | null>(null)
+  const [guardians, setGuardians] = React.useState<GuardianOfStudent[] | null>(null)
   React.useEffect(() => {
     if (!id) return
     let cancelled = false
-    fetchParentsOfStudent(id)
+    fetchGuardiansOfStudent(id)
       .then(rows => {
         if (!cancelled) setGuardians(rows)
       })

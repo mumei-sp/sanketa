@@ -243,7 +243,7 @@ function makeHousehold(
  *
  * Derived from the household and nothing else — deliberately not from the
  * generator's stream — because two siblings' records have to name the same
- * father with the same number, character for character. The parents table
+ * father with the same number, character for character. The guardians table
  * seeds itself by matching guardians across students, so a one-character
  * difference between two children's copies of their father is two fathers,
  * two parent accounts, and a family view that shows one child each.

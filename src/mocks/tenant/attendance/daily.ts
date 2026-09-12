@@ -43,7 +43,7 @@ import { rng, pick, type Rng } from '@/mocks/schools/_generate/random'
  * looks like it worked.
  *
  * So a roster row is now a student record, carrying `Student.id` — the same
- * key `student_parents` links on and the same one a family's scope holds.
+ * key `student_guardians` links on and the same one a family's scope holds.
  *
  * A class with nobody enrolled comes back empty, which is the truth about it.
  * It used to come back filled with invented people — `stu-9a-01` and a

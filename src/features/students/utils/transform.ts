@@ -1,6 +1,6 @@
 import type { Student } from '../types'
 import type { StudentFormValues } from '../schemas/student-schema'
-import type { ParentOfStudent } from '@/api/services/parent-service'
+import type { GuardianOfStudent } from '@/api/services/guardian-service'
 import { splitPhone } from '@/utils/format'
 
 /**
@@ -92,7 +92,7 @@ export function formToStudent(formValues: StudentFormValues): Partial<Student> {
  */
 export function studentToForm(
   student: Student,
-  guardians: ParentOfStudent[],
+  guardians: GuardianOfStudent[],
 ): Partial<StudentFormValues> {
   const formValues: Partial<StudentFormValues> = {
     personalInfo: {
@@ -278,7 +278,7 @@ export function studentToApi(student: Student): Record<string, unknown> {
  * guess when there is no such link.
  */
 export function guardiansToFormSlots(
-  guardians: ParentOfStudent[],
+  guardians: GuardianOfStudent[],
 ): StudentFormValues['guardianInfo'] {
   const named = (relationship: string) =>
     guardians.find(guardian => guardian.relationship === relationship)
@@ -286,7 +286,7 @@ export function guardiansToFormSlots(
     guardian => guardian.relationship !== 'Father' && guardian.relationship !== 'Mother',
   )
 
-  const slot = (guardian: ParentOfStudent | undefined) => {
+  const slot = (guardian: GuardianOfStudent | undefined) => {
     const { countryCode, number } = splitPhone(guardian?.phone)
     return { name: guardian?.fullName ?? '', phoneCountryCode: countryCode, phone: number }
   }

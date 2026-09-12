@@ -137,7 +137,7 @@ export function studentCount(): number {
   return load().rows.length
 }
 
-/** By profile id — the `id` a scope and a `student_parents` link both hold. */
+/** By profile id — the `id` a scope and a `student_guardians` link both hold. */
 export function findStudent(id: string | number): Student | undefined {
   const found = load().rows.find(row => sameId(row.id, id))
   return found ? join(found) : undefined

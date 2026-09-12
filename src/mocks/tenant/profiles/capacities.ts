@@ -2,10 +2,10 @@
  * What records a person has at this school.
  *
  * Asked of the capacity tables rather than read off a column, because that is
- * what a capacity is: `students`, `teachers`, `parents` and `staff` all take
+ * what a capacity is: `students`, `teachers`, `guardians` and `staff` all take
  * `profile_id` as their primary key, so having one is having a row. Plural,
  * and that is the point — the teacher whose child attends comes back
- * `['teacher', 'parent']`, which is what a single `profile_type` could never
+ * `['teacher', 'guardian']`, which is what a single `profile_type` could never
  * say.
  *
  * ── Why it is not in `store.ts` ────────────────────────────────────────
@@ -20,13 +20,13 @@ import type { Capacity } from './store'
 import { staffOf } from './store'
 import { findStudent } from '@/mocks/tenant/students/store'
 import { findTeacher } from '@/mocks/tenant/teachers/teachers'
-import { findParent } from '@/mocks/tenant/parents/store'
+import { findGuardian } from '@/mocks/tenant/guardians/store'
 
 export function capacitiesOf(profileId: string): Capacity[] {
   const out: Capacity[] = []
   if (findStudent(profileId)) out.push('student')
   if (findTeacher(profileId)) out.push('teacher')
   if (staffOf(profileId)) out.push('staff')
-  if (findParent(profileId)) out.push('parent')
+  if (findGuardian(profileId)) out.push('guardian')
   return out
 }

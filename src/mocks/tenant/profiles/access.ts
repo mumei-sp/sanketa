@@ -15,7 +15,7 @@
 import { profileOf, roleIdsOf, typesOf } from './store'
 import { capacitiesOf } from './capacities'
 import { findStudent } from '@/mocks/tenant/students/store'
-import { studentsOfParent } from '@/mocks/tenant/parents/store'
+import { studentsOfGuardian } from '@/mocks/tenant/guardians/store'
 import type { Capacity } from './store'
 
 export interface TenantAccess {
@@ -66,12 +66,12 @@ export function resolveTenantAccess(userId: string | undefined): TenantAccess {
   const capacities = capacitiesOf(profile.id)
 
   // Their own record if they are a student here, their children's if they are
-  // a parent here, and both if somehow both. Both keyed on the profile id,
-  // which is the whole point of the profile being the id: `student_parents`
+  // a guardian here, and both if somehow both. Both keyed on the profile id,
+  // which is the whole point of the profile being the id: `student_guardians`
   // links profile to profile.
   const studentIds = [
     ...(capacities.includes('student') && findStudent(profile.id) ? [profile.id] : []),
-    ...(capacities.includes('parent') ? studentsOfParent(profile.id) : []),
+    ...(capacities.includes('guardian') ? studentsOfGuardian(profile.id) : []),
   ]
 
   return {

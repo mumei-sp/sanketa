@@ -99,7 +99,7 @@ const ALL_KINDS = '__all__'
 const KIND_GROUPS: { id: string; label: string; capacities: string[] }[] = [
   { id: 'staff', label: 'Staff', capacities: ['staff', 'teacher'] },
   { id: 'student', label: 'Students', capacities: ['student'] },
-  { id: 'family', label: 'Parents & guardians', capacities: ['parent'] },
+  { id: 'family', label: 'Parents & guardians', capacities: ['guardian'] },
 ]
 
 /** How an account's status should read, and how loudly. */

@@ -17,7 +17,7 @@ import {
 } from '@/mocks/_shared/caller'
 import { classSectionOf } from '@/utils/class-section-helpers'
 import { joinPhone } from '@/utils/format'
-import { reconcileGuardians, type GuardianSlot } from '@/mocks/tenant/parents'
+import { reconcileGuardians, type GuardianSlot } from '@/mocks/tenant/guardians'
 import {
   findStudent,
   insertStudent,
@@ -193,7 +193,7 @@ export async function fetchStudentDetailData(_id: string): Promise<StudentDetail
  *
  * `guardians` is a transport field, not a stored one: it rides in on the
  * create/update payload because that is where the form's guardian section
- * lands, and the mock turns it into `parents` + `student_parents` rows and
+ * lands, and the mock turns it into `guardians` + `student_guardians` rows and
  * then drops it. The backend does the same work inside the one transaction
  * that writes the student, which is why the HTTP path below does nothing
  * special — it posts the payload and the server reconciles.

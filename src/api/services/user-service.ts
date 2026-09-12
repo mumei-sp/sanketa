@@ -289,7 +289,7 @@ export async function createUser(input: {
   profileType?: ProfileType
   status?: AccountStatus
   studentId?: string
-  parentId?: string
+  guardianId?: string
   assignedClasses?: string[]
 }): Promise<SchoolUser | null> {
   return mockOrHttp(
@@ -310,7 +310,7 @@ export async function createUser(input: {
       // profile rather than creating a second one for the same human. That is
       // the whole reason a profile is one row per person and not one per
       // account.
-      const existing = input.parentId ?? input.studentId
+      const existing = input.guardianId ?? input.studentId
       const profile = existing
         ? (attachLogin(existing, user.id) ??
           createProfile({ userId: user.id, fullName: user.fullName }))
