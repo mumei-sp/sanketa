@@ -41,7 +41,7 @@ export function TeacherLeaveRequest({ leaveRequests }: TeacherLeaveRequestProps)
             fontSize: fontSizes.xs,
             fontWeight: 500,
             backgroundColor: 'var(--accent)',
-            color: 'var(--heading)',
+            color: 'var(--accent-foreground)',
           }}
         >
           {request.type}

@@ -3,7 +3,7 @@ import { Tile } from '@/components/tile'
 import { StatusPill } from '@/components/ui/status-pill'
 import { Button } from '@/components/ui/button'
 import { Bus, Truck, CarFront, MapPin, User, Pencil, Trash2, Wrench } from 'lucide-react'
-import { text, accent, status } from '@/theme/colors'
+import { accent, status } from '@/theme/colors'
 import { VEHICLE_STATUS_COLORS } from '../constants'
 import { getExpiryConfig, getOccupancyColor, getOccupancyPercent, formatDate } from '../utils/transport-utils'
 import type { Vehicle, VehicleType } from '../types'
@@ -45,10 +45,10 @@ export function VehicleCard({ vehicle, onEdit, onDelete }: VehicleCardProps) {
               className="flex items-center justify-center size-10 rounded-full shrink-0"
               style={{ backgroundColor: VEHICLE_TYPE_COLOR[vehicle.type] }}
             >
-              <TypeIcon className="size-5" style={{ color: text.heading }} />
+              <TypeIcon className="size-5" style={{ color: 'var(--heading)' }} />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold truncate" style={{ color: text.heading }}>
+              <span className="text-sm font-semibold truncate" style={{ color: 'var(--heading)' }}>
                 {vehicle.registrationNumber}
               </span>
               <span className="text-xs text-muted-foreground truncate">{vehicle.make} {vehicle.model} &middot; {vehicle.type}</span>
@@ -75,7 +75,7 @@ export function VehicleCard({ vehicle, onEdit, onDelete }: VehicleCardProps) {
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Occupancy</span>
-            <span className="text-xs font-medium" style={{ color: text.heading }}>
+            <span className="text-xs font-medium" style={{ color: 'var(--heading)' }}>
               {vehicle.currentOccupancy}/{vehicle.capacity} ({occupancyPct}%)
             </span>
           </div>
@@ -107,7 +107,7 @@ export function VehicleCard({ vehicle, onEdit, onDelete }: VehicleCardProps) {
         <div className="flex items-center gap-2">
           <Wrench className="size-3.5 text-muted-foreground shrink-0" />
           <span className="text-[11px] text-muted-foreground">
-            Next service: <span className="font-medium" style={{ color: text.heading }}>{formatDate(vehicle.nextMaintenanceDate)}</span>
+            Next service: <span className="font-medium" style={{ color: 'var(--heading)' }}>{formatDate(vehicle.nextMaintenanceDate)}</span>
           </span>
         </div>
 

@@ -22,7 +22,7 @@ import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { DashboardStatCard } from '@/features/dashboard/components/DashboardStatCard'
-import { text, accent } from '@/theme/colors'
+import { accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
@@ -204,7 +204,7 @@ export function TransportFeesTab() {
     {
       accessorKey: 'routeName',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Route" />,
-      cell: ({ row }) => <span className="text-xs font-semibold" style={{ color: text.heading }}>{row.original.routeName}</span>,
+      cell: ({ row }) => <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>{row.original.routeName}</span>,
     },
     {
       accessorKey: 'distanceSlab',
@@ -220,7 +220,7 @@ export function TransportFeesTab() {
     {
       accessorKey: 'twoWayFee',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Two-way" />,
-      cell: ({ row }) => <span className="text-xs text-numeric font-semibold" style={{ color: text.heading }}>{formatCurrency(row.original.twoWayFee)}</span>,
+      cell: ({ row }) => <span className="text-xs text-numeric font-semibold" style={{ color: 'var(--heading)' }}>{formatCurrency(row.original.twoWayFee)}</span>,
     },
     {
       accessorKey: 'term',
@@ -228,7 +228,7 @@ export function TransportFeesTab() {
       cell: ({ row }) => (
         <span
           className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-          style={{ backgroundColor: accent.soft, color: text.heading }}
+          style={{ backgroundColor: accent.soft, color: 'var(--heading)' }}
         >
           {row.original.term}
         </span>
@@ -259,7 +259,7 @@ export function TransportFeesTab() {
     {
       accessorKey: 'studentName',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
-      cell: ({ row }) => <span className="text-xs font-semibold" style={{ color: text.heading }}>{row.original.studentName}</span>,
+      cell: ({ row }) => <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>{row.original.studentName}</span>,
     },
     {
       id: 'class',
@@ -283,7 +283,7 @@ export function TransportFeesTab() {
       accessorFn: (row) => getStudentFee(row, feeStructures),
       cell: ({ row }) => {
         const fee = getStudentFee(row.original, feeStructures)
-        return <span className="text-xs text-numeric font-medium" style={{ color: text.heading }}>{formatCurrency(fee)}</span>
+        return <span className="text-xs text-numeric font-medium" style={{ color: 'var(--heading)' }}>{formatCurrency(fee)}</span>
       },
     },
     {
@@ -325,7 +325,7 @@ export function TransportFeesTab() {
         overflow="auto"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-section-title" style={{ color: text.heading }}>Fee Structure</h3>
+          <h3 className="text-section-title" style={{ color: 'var(--heading)' }}>Fee Structure</h3>
           {canManage && (
             <Button
               onClick={() => { setEditingFee(null); setFormOpen(true) }}
@@ -384,7 +384,7 @@ export function TransportFeesTab() {
       >
         <ListToolbar
           className="mb-4"
-          title={<h3 className="text-section-title" style={{ color: text.heading }}>Student Fee Status</h3>}
+          title={<h3 className="text-section-title" style={{ color: 'var(--heading)' }}>Student Fee Status</h3>}
           search={
             <ListToolbarSearch
               placeholder="Search"
@@ -402,7 +402,7 @@ export function TransportFeesTab() {
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger
                     className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[110px] text-xs', TOOLBAR_FILTER_CONTROL)}
-                    style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                    style={{ backgroundColor: accent.base, color: 'var(--heading)', borderColor: accent.base }}
                   >
                     <SelectValue />
                   </SelectTrigger>

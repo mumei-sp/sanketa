@@ -22,7 +22,7 @@ import { StatusPill } from '@/components/ui/status-pill'
 import { DataTable } from '@/components/table'
 import { DataTableColumnHeader } from '@/components/table/header/DataTableColumnHeader'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { text, accent, border } from '@/theme/colors'
+import { accent, border } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
@@ -132,7 +132,7 @@ export function RoutesTab() {
       accessorKey: 'code',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Code" />,
       cell: ({ row }) => (
-        <span className="text-xs font-semibold" style={{ color: text.heading }}>{row.original.code}</span>
+        <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>{row.original.code}</span>
       ),
     },
     {
@@ -164,15 +164,15 @@ export function RoutesTab() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:shadow-sm"
             style={{
               backgroundColor: isExpanded ? accent.base : accent.soft,
-              color: text.heading,
+              color: 'var(--heading)',
               border: `1.5px solid ${isExpanded ? accent.active : accent.base}`,
             }}
           >
-            <MapPin className="size-3.5" style={{ color: text.heading }} />
+            <MapPin className="size-3.5" style={{ color: 'var(--heading)' }} />
             {row.original.stops.length} stops
             {isExpanded
-              ? <ChevronDown className="size-4" strokeWidth={2.5} style={{ color: text.heading }} />
-              : <ChevronRight className="size-4" strokeWidth={2.5} style={{ color: text.heading }} />}
+              ? <ChevronDown className="size-4" strokeWidth={2.5} style={{ color: 'var(--heading)' }} />
+              : <ChevronRight className="size-4" strokeWidth={2.5} style={{ color: 'var(--heading)' }} />}
           </button>
         )
       },
@@ -240,7 +240,7 @@ export function RoutesTab() {
               <Select value={statusFilter} onValueChange={v => { setStatusFilter(v) }}>
                 <SelectTrigger
                   className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}
-                  style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                  style={{ backgroundColor: accent.base, color: 'var(--heading)', borderColor: accent.base }}
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -329,11 +329,11 @@ export function RoutesTab() {
                         <div className="flex items-center gap-6 mb-3">
                           <div className="flex items-center gap-1.5">
                             <BusIcon className="size-3.5 text-muted-foreground" />
-                            <span className="text-xs" style={{ color: text.heading }}>{route.vehicleName || 'No vehicle'}</span>
+                            <span className="text-xs" style={{ color: 'var(--heading)' }}>{route.vehicleName || 'No vehicle'}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <User className="size-3.5 text-muted-foreground" />
-                            <span className="text-xs" style={{ color: text.heading }}>{route.driverName || 'No driver'}</span>
+                            <span className="text-xs" style={{ color: 'var(--heading)' }}>{route.driverName || 'No driver'}</span>
                           </div>
                           <span className="text-xs text-muted-foreground">
                             {route.studentsAssigned}/{route.capacity} students
@@ -345,21 +345,21 @@ export function RoutesTab() {
                           <table className="w-full">
                             <thead>
                               <tr style={{ backgroundColor: accent.base }}>
-                                <th className="text-[10px] font-medium text-left px-3 py-2 w-8" style={{ color: text.heading }}>#</th>
-                                <th className="text-[10px] font-medium text-left px-3 py-2" style={{ color: text.heading }}>Stop Name</th>
-                                <th className="text-[10px] font-medium text-center px-3 py-2 w-20" style={{ color: text.heading }}>Pickup</th>
-                                <th className="text-[10px] font-medium text-center px-3 py-2 w-20" style={{ color: text.heading }}>Drop</th>
-                                <th className="text-[10px] font-medium text-right px-3 py-2 w-20" style={{ color: text.heading }}>Students</th>
+                                <th className="text-[10px] font-medium text-left px-3 py-2 w-8" style={{ color: 'var(--heading)' }}>#</th>
+                                <th className="text-[10px] font-medium text-left px-3 py-2" style={{ color: 'var(--heading)' }}>Stop Name</th>
+                                <th className="text-[10px] font-medium text-center px-3 py-2 w-20" style={{ color: 'var(--heading)' }}>Pickup</th>
+                                <th className="text-[10px] font-medium text-center px-3 py-2 w-20" style={{ color: 'var(--heading)' }}>Drop</th>
+                                <th className="text-[10px] font-medium text-right px-3 py-2 w-20" style={{ color: 'var(--heading)' }}>Students</th>
                               </tr>
                             </thead>
                             <tbody>
                               {route.stops.map(stop => (
                                 <tr key={stop.id} className="border-t" style={{ borderColor: border.subtle }}>
                                   <td className="text-xs text-muted-foreground px-3 py-2">{stop.sequence}</td>
-                                  <td className="text-xs font-medium px-3 py-2" style={{ color: text.heading }}>{stop.name}</td>
+                                  <td className="text-xs font-medium px-3 py-2" style={{ color: 'var(--heading)' }}>{stop.name}</td>
                                   <td className="text-xs text-center text-muted-foreground px-3 py-2">{stop.pickupTime}</td>
                                   <td className="text-xs text-center text-muted-foreground px-3 py-2">{stop.dropTime}</td>
-                                  <td className="text-xs text-right font-medium px-3 py-2" style={{ color: text.heading }}>{stop.studentsCount}</td>
+                                  <td className="text-xs text-right font-medium px-3 py-2" style={{ color: 'var(--heading)' }}>{stop.studentsCount}</td>
                                 </tr>
                               ))}
                             </tbody>

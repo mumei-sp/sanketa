@@ -60,7 +60,7 @@ export function TeacherPerformance({ metrics, performanceByPeriod }: TeacherPerf
           borderRadius: spacing['3'],
           border: 'none',
           backgroundColor: 'var(--accent)',
-          color: 'var(--heading)',
+          color: 'var(--accent-foreground)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',

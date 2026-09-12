@@ -92,7 +92,7 @@ export function TeacherSchedule({ schedule, scheduleByView }: TeacherSchedulePro
           borderRadius: spacing['3'],
           border: 'none',
           backgroundColor: 'var(--accent)',
-          color: 'var(--heading)',
+          color: 'var(--accent-foreground)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',

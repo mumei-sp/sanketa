@@ -6,7 +6,7 @@ import { VehiclesTab } from '@/features/transport/components/VehiclesTab'
 import { DriversTab } from '@/features/transport/components/DriversTab'
 import { StudentAssignmentTab } from '@/features/transport/components/StudentAssignmentTab'
 import { TransportFeesTab } from '@/features/transport/components/TransportFeesTab'
-import { accent, text } from '@/theme/colors'
+import { accent } from '@/theme/colors'
 
 export default function Transport() {
   return (
@@ -33,7 +33,7 @@ export default function Transport() {
               key={tab.value}
               value={tab.value}
               className="flex-1 h-full rounded-md text-xs font-medium transition-all duration-200 cursor-pointer data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:font-semibold data-[state=inactive]:bg-transparent data-[state=inactive]:shadow-none data-[state=inactive]:opacity-70 data-[state=inactive]:hover:opacity-100"
-              style={{ color: text.heading }}
+              style={{ color: 'var(--accent-foreground)' }}
             >
               {tab.label}
             </TabsTrigger>

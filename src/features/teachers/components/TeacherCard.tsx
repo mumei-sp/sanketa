@@ -152,7 +152,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
           />
           <AvatarFallback
             className="text-sm font-semibold"
-            style={{ backgroundColor: primary.soft, color: 'var(--heading)' }}
+            style={{ backgroundColor: primary.soft, color: 'var(--primary-foreground)' }}
           >
             {initials}
           </AvatarFallback>
@@ -204,7 +204,7 @@ export function TeacherCard({ teacher, onViewDetails, onEdit, onDelete }: Teache
           className="h-7 text-xs px-3 hover:opacity-90 border-0"
           style={{
             backgroundColor: 'var(--accent)',
-            color: 'var(--heading)',
+            color: 'var(--accent-foreground)',
           }}
         >
           Message

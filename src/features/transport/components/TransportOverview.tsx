@@ -177,7 +177,7 @@ export function TransportOverview() {
           <Tile id="route-util-inner" layoutMode="block" background="transparent" padding={0} shadowed={false}>
             <Card className="h-[240px] pt-4 pb-2">
               <CardHeader className="px-4 pb-0">
-                <CardTitle className="text-section-title" style={{ color: text.heading }}>Route Utilization</CardTitle>
+                <CardTitle className="text-section-title" style={{ color: 'var(--heading)' }}>Route Utilization</CardTitle>
               </CardHeader>
               <CardContent className="px-4 pt-2 pb-0 flex-1 min-h-0 flex flex-col">
                 <div className="flex-shrink-0 flex items-center gap-4 mb-2">
@@ -203,13 +203,13 @@ export function TransportOverview() {
                           const d = payload[0].payload
                           return (
                             <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
-                              <p className="text-xs font-semibold mb-1" style={{ color: text.heading }}>{d.name}</p>
-                              <div className="flex items-center gap-2 text-xs" style={{ color: text.heading }}>
+                              <p className="text-xs font-semibold mb-1" style={{ color: 'var(--heading)' }}>{d.name}</p>
+                              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--heading)' }}>
                                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent)' }} aria-hidden />
                                 <span>Capacity:</span>
                                 <span className="font-semibold">{d.capacity}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-xs" style={{ color: text.heading }}>
+                              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--heading)' }}>
                                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--primary)' }} aria-hidden />
                                 <span>Students:</span>
                                 <span className="font-semibold">{d.students}</span>
@@ -238,7 +238,7 @@ export function TransportOverview() {
           <Tile id="vehicle-inner" layoutMode="block" background="transparent" padding={0} shadowed={false}>
             <Card className="h-[240px] pt-4 pb-2">
               <CardHeader className="px-4 pb-0">
-                <CardTitle className="text-section-title" style={{ color: text.heading }}>Vehicle Status</CardTitle>
+                <CardTitle className="text-section-title" style={{ color: 'var(--heading)' }}>Vehicle Status</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center gap-2 px-4 pt-2 pb-0">
                 <div className="relative w-[100px] h-[100px] shrink-0">
@@ -262,7 +262,7 @@ export function TransportOverview() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-lg font-bold" style={{ color: text.heading }}>{vehicles.length}</span>
+                    <span className="text-lg font-bold" style={{ color: 'var(--heading)' }}>{vehicles.length}</span>
                     <span className="text-[8px] text-muted-foreground">Total</span>
                   </div>
                 </div>
@@ -273,7 +273,7 @@ export function TransportOverview() {
                         <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: VEHICLE_STATUS_CHART_COLORS[item.name] || border.default }} />
                         <span className="text-[10px] text-muted-foreground truncate">{item.name}</span>
                       </div>
-                      <span className="text-[10px] font-semibold" style={{ color: text.heading }}>{item.value}</span>
+                      <span className="text-[10px] font-semibold" style={{ color: 'var(--heading)' }}>{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -287,7 +287,7 @@ export function TransportOverview() {
           <Tile id="fee-inner" layoutMode="block" background="transparent" padding={0} shadowed={false}>
             <Card className="h-[240px] pt-4 pb-2">
               <CardHeader className="px-4 pb-0">
-                <CardTitle className="text-section-title" style={{ color: text.heading }}>Fee Collection</CardTitle>
+                <CardTitle className="text-section-title" style={{ color: 'var(--heading)' }}>Fee Collection</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center gap-2 px-4 pt-2 pb-0">
                 <div className="relative w-[100px] h-[100px] shrink-0">
@@ -311,7 +311,7 @@ export function TransportOverview() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-lg font-bold" style={{ color: text.heading }}>{collectionRate}%</span>
+                    <span className="text-lg font-bold" style={{ color: 'var(--heading)' }}>{collectionRate}%</span>
                     <span className="text-[8px] text-muted-foreground">Collected</span>
                   </div>
                 </div>
@@ -322,7 +322,7 @@ export function TransportOverview() {
                         <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: FEE_COLLECTION_COLORS[i] }} />
                         <span className="text-[10px] text-muted-foreground">{item.name}</span>
                       </div>
-                      <span className="text-[10px] font-semibold" style={{ color: text.heading }}>{item.value}</span>
+                      <span className="text-[10px] font-semibold" style={{ color: 'var(--heading)' }}>{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -336,7 +336,7 @@ export function TransportOverview() {
       <Tile id="transport-alerts" layoutMode="block" background="card" borderRadius="lg" shadowed padding={16}>
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="size-4" style={{ color: status.warning.text }} />
-          <h3 className="text-section-title" style={{ color: text.heading }}>Recent Alerts</h3>
+          <h3 className="text-section-title" style={{ color: 'var(--heading)' }}>Recent Alerts</h3>
           {alerts.length > ALERTS_SHOWN && (
             <span className="text-xs text-muted-foreground">
               worst {ALERTS_SHOWN} of {alerts.length}
@@ -351,7 +351,7 @@ export function TransportOverview() {
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <div className="flex items-center gap-2">
                     <StatusPill label={severityLabel} config={ALERT_SEVERITY_COLORS[alert.severity]} />
-                    <span className="text-sm font-medium" style={{ color: text.heading }}>{alert.title}</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--heading)' }}>{alert.title}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">{alert.description}</span>
                 </div>

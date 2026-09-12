@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { text, background, border } from '@/theme/colors'
+import { text, border } from '@/theme/colors'
 import { textRoles } from '@/config/typography'
 import { useIsMobile } from '@/hooks/use-mobile'
 
@@ -126,7 +126,13 @@ export function GridPagination({
           style={{
             fontSize: textRoles.body.fontSize,
             backgroundColor: currentPage === 1 ? border.subtle : 'var(--accent)',
-            color: text.body,
+            // Tracks the fill. `--accent` is the school's brand tint and stays
+            // pale in dark mode, so the label on it must be the fixed
+            // auto-contrast pair rather than `--text-body`, which follows the
+            // theme to near-white and measured 1.17:1 on its own button. The
+            // disabled fill is a near-transparent hairline, so it keeps the
+            // themed colour — the background there really is the dark card.
+            color: currentPage === 1 ? text.body : 'var(--accent-foreground)',
             borderColor: border.default,
           }}
           aria-label="Previous page"
@@ -143,7 +149,7 @@ export function GridPagination({
               style={{
                 fontSize: textRoles.body.fontSize,
                 backgroundColor: isActive ? 'var(--primary)' : 'var(--accent)',
-                color: isActive ? background.card : text.body,
+                color: isActive ? 'var(--primary-foreground)' : 'var(--accent-foreground)',
                 border: isActive ? 'none' : `1px solid ${border.default}`,
               }}
               aria-label={`Go to page ${pageNum}`}
@@ -160,7 +166,7 @@ export function GridPagination({
           style={{
             fontSize: textRoles.body.fontSize,
             backgroundColor: currentPage === totalPages ? border.subtle : 'var(--accent)',
-            color: text.body,
+            color: currentPage === totalPages ? text.body : 'var(--accent-foreground)',
             borderColor: border.default,
           }}
           aria-label="Next page"

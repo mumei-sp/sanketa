@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { TileWrapper, Tile } from '@/components/tile'
 import { GridPagination } from '@/components/pagination/GridPagination'
-import { text, accent } from '@/theme/colors'
+import { accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
@@ -169,7 +169,7 @@ export function DriversTab() {
                 <Select value={statusFilter} onValueChange={v => { setCurrentPage(1); setStatusFilter(v) }}>
                   <SelectTrigger
                     className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[120px]', TOOLBAR_FILTER_CONTROL)}
-                    style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                    style={{ backgroundColor: accent.base, color: 'var(--heading)', borderColor: accent.base }}
                   >
                     <SelectValue />
                   </SelectTrigger>

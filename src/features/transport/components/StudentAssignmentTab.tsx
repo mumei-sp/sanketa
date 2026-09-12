@@ -24,7 +24,7 @@ import { DataTableColumnHeader } from '@/components/table/header/DataTableColumn
 import { CompactTable, type CompactTableColumn } from '@/components/ui/compact-table'
 import { GridPagination } from '@/components/pagination/GridPagination'
 import { ImportDialog, type ImportColumn } from '@/components/shared/ImportDialog'
-import { text, accent } from '@/theme/colors'
+import { accent } from '@/theme/colors'
 import { useCsvExport } from '@/lib/use-csv-export'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { toast } from 'sonner'
@@ -212,7 +212,7 @@ export function StudentAssignmentTab() {
     {
       accessorKey: 'studentName',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Student Name" />,
-      cell: ({ row }) => <span className="text-xs font-semibold" style={{ color: text.heading }}>{row.original.studentName}</span>,
+      cell: ({ row }) => <span className="text-xs font-semibold" style={{ color: 'var(--heading)' }}>{row.original.studentName}</span>,
     },
     {
       id: 'class',
@@ -256,7 +256,7 @@ export function StudentAssignmentTab() {
 
   // CompactTable columns (grouped view)
   const groupedColumns: CompactTableColumn<StudentTransportAssignment>[] = useMemo(() => [
-    { key: 'studentName', header: 'Student Name', cellWeight: 600, cellColor: text.heading },
+    { key: 'studentName', header: 'Student Name', cellWeight: 600, cellColor: 'var(--heading)' },
     { key: 'class', header: 'Class', render: (row) => <span>{row.class}-{row.section}</span> },
     { key: 'routeName', header: 'Route' },
     { key: 'stopName', header: 'Stop' },
@@ -310,7 +310,7 @@ export function StudentAssignmentTab() {
               <Select value={routeFilter} onValueChange={setRouteFilter}>
                 <SelectTrigger
                   className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[160px]', TOOLBAR_FILTER_CONTROL)}
-                  style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                  style={{ backgroundColor: accent.base, color: 'var(--heading)', borderColor: accent.base }}
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -330,7 +330,7 @@ export function StudentAssignmentTab() {
               <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
                 <SelectTrigger
                   className={cn(TOOLBAR_CONTROL_HEIGHT, 'w-[140px]', TOOLBAR_FILTER_CONTROL)}
-                  style={{ backgroundColor: accent.base, color: text.heading, borderColor: accent.base }}
+                  style={{ backgroundColor: accent.base, color: 'var(--heading)', borderColor: accent.base }}
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -388,12 +388,12 @@ export function StudentAssignmentTab() {
                 className="flex items-center justify-between px-4 py-2.5 border-b"
                 style={{ borderColor: accent.base, backgroundColor: accent.soft }}
               >
-                <span className="text-sm font-semibold" style={{ color: text.heading }}>
+                <span className="text-sm font-semibold" style={{ color: 'var(--heading)' }}>
                   {groupName}
                 </span>
                 <span
                   className="text-xs font-medium px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: accent.base, color: text.heading }}
+                  style={{ backgroundColor: accent.base, color: 'var(--heading)' }}
                 >
                   {items.length} {items.length === 1 ? 'student' : 'students'}
                 </span>

@@ -94,7 +94,7 @@ export function TeacherWorkloadChart({ data, workloadByPeriod }: TeacherWorkload
           borderRadius: spacing['3'],
           border: 'none',
           backgroundColor: 'var(--accent)',
-          color: 'var(--heading)',
+          color: 'var(--accent-foreground)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',

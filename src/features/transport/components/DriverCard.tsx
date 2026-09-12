@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { StatusPill } from '@/components/ui/status-pill'
 import { Tile } from '@/components/tile'
 import { Phone, Pencil, Trash2, IdCard, Bus, AlertCircle } from 'lucide-react'
-import { primary, accent, text, status, statusVivid } from '@/theme/colors'
+import { primary, accent, status, statusVivid } from '@/theme/colors'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,7 +49,7 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
           onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
           aria-label="Edit driver"
         >
-          <Pencil className="w-3.5 h-3.5" style={{ color: text.heading }} />
+          <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
         </button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -60,12 +60,12 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = accent.soft }}
               aria-label="Delete driver"
             >
-              <Trash2 className="w-3.5 h-3.5" style={{ color: text.heading }} />
+              <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--heading)' }} />
             </button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle style={{ color: text.heading }}>Delete Driver</AlertDialogTitle>
+              <AlertDialogTitle style={{ color: 'var(--heading)' }}>Delete Driver</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete &ldquo;{displayName}&rdquo;? This action cannot be undone.
               </AlertDialogDescription>
@@ -83,12 +83,12 @@ export function DriverCard({ driver, onEdit, onDelete }: DriverCardProps) {
       {/* Profile Header */}
       <div className="flex items-center gap-3">
         <Avatar className="size-12 shrink-0" style={{ backgroundColor: primary.soft }}>
-          <AvatarFallback className="text-sm font-semibold" style={{ backgroundColor: primary.soft, color: text.heading }}>
+          <AvatarFallback className="text-sm font-semibold" style={{ backgroundColor: primary.soft, color: 'var(--heading)' }}>
             {initials}
           </AvatarFallback>
         </Avatar>
         <div className="flex flex-col min-w-0">
-          <h3 className="text-sm font-semibold truncate" style={{ color: text.heading }}>
+          <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--heading)' }}>
             {displayName}
           </h3>
           <p className="text-xs text-muted-foreground truncate">
