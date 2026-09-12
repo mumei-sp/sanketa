@@ -32,6 +32,13 @@ export async function fetchRoles(): Promise<Role[]> {
 }
 
 /**
+ * Create a role.
+ *
+ * Null when the school asked for one narrowed to `students`. That axis is the
+ * app's — a family role's scope comes from `student_guardians` and is not
+ * something a school configures — so the two built-ins hold it and nothing
+ * else may. See the note in the store.
+ *
  * @apiRoute POST /api/v1/roles
  */
 export async function createRole(input: {
@@ -39,7 +46,7 @@ export async function createRole(input: {
   description?: string
   permissions: Permission[]
   scopeBy?: ScopeAxis | 'none'
-}): Promise<Role> {
+}): Promise<Role | null> {
   return mockOrHttp(
     async () => {
       await withLatency()

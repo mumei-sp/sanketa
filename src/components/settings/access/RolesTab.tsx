@@ -496,6 +496,12 @@ export function RolesTab({
         name: 'New role',
         permissions: ['dashboard.read', 'notices.read'],
       })
+      // Unscoped, so the store cannot refuse it — but the type says it can,
+      // and a silent no-op would leave the panel showing the last role.
+      if (!created) {
+        showError('Could not create the role')
+        return
+      }
       await refresh()
       setSelectedId(created.id)
       setView('edit')
@@ -530,6 +536,15 @@ export function RolesTab({
         permissions: [...source.permissions],
         scopeBy: source.scopeBy,
       })
+      // Copying Student or Parent is the one duplicate that cannot be made:
+      // their axis is the app's, so the copy would be a family role a school
+      // invented — or, worse, silently unscoped and reaching every child.
+      if (!created) {
+        showError(`${source.name} cannot be copied`, {
+          description: "Roles limited to their holders' own records are built in.",
+        })
+        return
+      }
       await refresh()
       setSelectedId(created.id)
       setView('edit')
@@ -870,13 +885,17 @@ export function RolesTab({
                     {selected.scopeBy === 'classes'
                       ? 'Holders read every class but add and edit only the ones assigned to them.'
                       : selected.scopeBy === 'students'
-                        ? "Holders read only their own records — a student's, or a parent's children's."
+                        ? "Holders read only their own records — a student's, or a parent's children's. Built in, and fixed: this limit comes from who a child's guardians are, not from a setting."
                         : 'Holders reach everything their permissions allow, everywhere.'}
                   </p>
                 </div>
                 <Select
                   value={selected.scopeBy ?? 'none'}
-                  disabled={isSaving}
+                  // A family role cannot move off its axis either. A Parent
+                  // that reached every child is the one mistake in this editor
+                  // with no visible symptom — the screens look identical, and
+                  // the rows are somebody else's.
+                  disabled={isSaving || selected.scopeBy === 'students'}
                   onValueChange={value => setScopeAxis(value as ScopeAxis | 'none')}
                 >
                   <SelectTrigger id="role-scope" className="h-control w-[210px] max-md:w-full">
@@ -885,7 +904,15 @@ export function RolesTab({
                   <SelectContent>
                     <SelectItem value="none">Not limited</SelectItem>
                     <SelectItem value="classes">To assigned classes</SelectItem>
-                    <SelectItem value="students">To their own records</SelectItem>
+                    {/* Offered only to the roles that already hold it. A
+                        family role's scope is not configurable — it comes from
+                        `student_guardians` — so Student and Parent are the two
+                        that have it and nothing a school makes can. Hiding it
+                        rather than disabling it: a control that is always
+                        refused is worse than one that was never there. */}
+                    {selected.scopeBy === 'students' && (
+                      <SelectItem value="students">To their own records</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

@@ -111,6 +111,12 @@ export type ScopeAxis = 'classes' | 'students'
  * would let the two disagree, and a role whose axis is `students` but whose
  * side is `staff` grants a parent's narrowing with a teacher's reach.
  *
+ * What makes the derivation *safe* is a rule in the roles store: a school's
+ * own role may not take the `students` axis. A family role's scope is not
+ * configurable — it comes from `student_guardians`, and your children are your
+ * children — so the family side is a closed set of the two built-ins, and
+ * nothing a school creates can land on it.
+ *
  * The day a third axis is added — a counsellor's caseload, a head of year's
  * cohort — this stops being derivable, because such a role is staff narrowed
  * on students. That is the same change `ScopeAxis` already calls a developer's

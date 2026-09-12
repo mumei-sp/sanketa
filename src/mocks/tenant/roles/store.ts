@@ -54,6 +54,29 @@ onTenantSwitch(() => {
   db = null
 })
 
+/**
+ * The `students` axis is the app's, not a school's.
+ *
+ * A family role narrows to a person's own record, or their children's — and
+ * that scope is not configurable. It comes from `student_guardians`: your
+ * children are your children, and a school inventing a role has nothing new to
+ * narrow by. Every custom role a school actually names is staff — Librarian,
+ * Vice Principal, Lab Assistant, Exam Controller — and those narrow by class
+ * or not at all.
+ *
+ * So the two family roles stay built-in and closed, and `sideOfRole` becomes
+ * safe to derive rather than store: nothing a school creates can land on the
+ * family side, so a `side` column could only ever repeat what `scopeBy`
+ * already says and eventually disagree with it.
+ *
+ * The day a third axis exists — a counsellor's caseload, a head of year's
+ * cohort — it will be staff narrowed by students, and this rule is where that
+ * lands. `ScopeAxis` already calls a new axis a developer's change.
+ */
+function familyAxisAllowed(role: Pick<Role, 'builtin'> | undefined): boolean {
+  return role?.builtin === true
+}
+
 function seed(): Database {
   // Built-ins are the app's and every school gets them; `extraRoles` are the
   // ones this school invented. A Librarian at one school and not at another is
@@ -220,8 +243,13 @@ export function createRole(input: {
   permissions: Permission[]
   /** Carried on create so duplicating a scoped role produces a scoped one. */
   scopeBy?: ScopeAxis | 'none'
-}): Role {
+}): Role | null {
   const database = load()
+  // A school's own role may not be a family one. Refused rather than quietly
+  // coerced to unscoped: duplicating Parent would otherwise produce a role
+  // that looks like Parent, is named like Parent and reaches the whole school.
+  if (input.scopeBy === 'students') return null
+
   const role: Role = {
     id: makeId(input.name, new Set(database.rows.map(existing => existing.id))),
     name: input.name.trim(),
@@ -258,6 +286,12 @@ export function updateRole(
   if (patch.description !== undefined) role.description = patch.description.trim() || undefined
   if (patch.permissions !== undefined) role.permissions = [...patch.permissions]
   if (patch.scopeBy !== undefined) {
+    // A school cannot move its own role onto the family axis, and cannot move
+    // a built-in family role off it either — Student and Parent are what the
+    // axis exists for, and a Parent that reached every child would be the one
+    // mistake in this editor with no visible symptom.
+    if (patch.scopeBy === 'students' && !familyAxisAllowed(role)) return null
+    if (role.scopeBy === 'students' && patch.scopeBy !== 'students') return null
     // `'none'` rather than `undefined` for "not narrowed": every field here is
     // skipped when undefined, which is what makes a patch partial, so there
     // would otherwise be no way to express clearing the axis.
