@@ -13,10 +13,10 @@ import {
   visibleRecordToCaller,
   visibleToCaller,
 } from '@/mocks/_shared/caller'
-import { classRosters } from '@/mocks/attendance/daily'
-import { gradeSubmissions, findSubmission, upsertSubmission } from '@/mocks/grades/grades'
+import { classRosters } from '@/mocks/tenant/attendance/daily'
+import { gradeSubmissions, findSubmission, upsertSubmission } from '@/mocks/tenant/grades/grades'
 import { EXAMS, GRADEABLE_SUBJECT_IDS } from '@/features/grades/constants'
-import { subjects } from '@/mocks/timetable/timetable'
+import { subjects } from '@/mocks/tenant/timetable/timetable'
 import type { Exam, GradeEntry, GradeSubmission, GradeSheetRow, GradeSheetSummary } from '@/features/grades/types'
 
 // ---------------------------------------------------------------------------

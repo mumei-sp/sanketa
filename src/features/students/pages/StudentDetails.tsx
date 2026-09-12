@@ -50,7 +50,7 @@ import * as detailService from '@/api/services/student-detail-service'
 import type { StudentDetailData, StudentHealthRecord, StudentScholarship, StudentActivity, StudentBehaviorEntry } from '../types'
 import type { DocumentItem } from '@/components/ui/documents-list'
 import { attendanceMonthKey } from '@/utils/academic-date'
-import { profileOf } from '@/mocks/profiles'
+import { profileOf } from '@/mocks/tenant/profiles'
 
 // ── Modal state discriminated union ──
 

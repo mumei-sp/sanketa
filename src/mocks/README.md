@@ -6,31 +6,65 @@ All in-memory seed data for the Sanketa UI lives under this directory. The layou
 
 ## Directory layout
 
+The tree is the architecture. Two databases, the seed data that fills them,
+and the plumbing — not twenty-three sibling folders.
+
 ```
 src/mocks/
-├── _shared/                   Utilities used by every feature mock
-│   ├── constants.ts           SCHOOL_DOMAIN, PHONE_COUNTRY_CODE, CURRENCY, ID_BASE
-│   ├── date-helpers.ts        relativeDate / scatterPastDates / currentAcademicYear / …
-│   ├── id-helpers.ts          makeId / seriesIds / txnId / newId / shortUuid
-│   ├── fake.ts                Indian-leaning names, Bangalore addresses, phone10(), emailFor()
-│   ├── simulate-latency.ts    withLatency() helper for mock adapters
-│   ├── pagination.ts          paginate() — wraps T[] in the project ApiListResponse envelope
-│   └── index.ts               barrel
-├── students/                  store (persisted) + fixtures + dashboard + details + academic-performance
-├── teachers/                  teachersData + statistics + workload + details
-├── attendance/                attendance + daily + overview
-├── timetable/                 subjects / classSections / classTimetables / exceptions
-├── grades/                    gradeSubmissions + helpers
-├── calendar/                  mockCalendarEvents
-├── notices/                   noticeBoardEntries
-├── fees/                      feeCollectionData + paymentTransactions + trends + helpers
-├── expenses/                  expensesData + reimbursementsData + trend / breakdown
-├── transport/                 mockDrivers + mockVehicles + mockRoutes + assignments + alerts
-├── auth/                      mockLogin / mockRegister
-└── dashboard/                 dashboardStats + chart datasets + todos + recent activity
+├── SCHEMA.md        the target DB schema, and how much of it is mocked
+├── SCHEMA-FIXES.md  what the backend still has to change
+│
+├── _shared/         plumbing every layer uses
+│   ├── tenant-context.ts   activeTenant() · tenantKey() · globalKey()  ← the choke point
+│   ├── seed-signature.ts   how a store notices its fixture changed
+│   ├── caller.ts           who is asking, and what they may see
+│   ├── date-helpers.ts · id-helpers.ts · pagination.ts · simulate-latency.ts
+│   └── constants.ts
+│
+├── global/          the GLOBAL database — one row per person, whatever school
+│   ├── users/           login identity: email?, phone?, status
+│   ├── memberships/     user_tenant_mapping — who is at which school
+│   ├── tenants/         the schools themselves
+│   └── sessions/
+│
+├── tenant/          the PER-SCHOOL database — shared tables, per-school rows
+│   ├── profiles/        user_profiles · staff · profile_types · profile_roles
+│   ├── students/ teachers/ parents/         the capacity tables
+│   ├── roles/ access-log/
+│   ├── attendance/ grades/ timetable/ fees/ expenses/ transport/
+│   ├── notices/ calendar/ notifications/ reminders/ reimbursements/
+│   └── dashboard/       aggregates over the above
+│
+├── schools/         THE SEED DATA — what each school's schema starts with
+│   ├── types.ts         TenantFixtures: the contract a school folder fills
+│   ├── _generate/       random · names · roster · faculty · transport ·
+│   │                    expenses · calendar
+│   ├── kendriya/        students teachers transport expenses config
+│   │                    notices calendar todos index
+│   └── vidya-mandir/    ← the same nine files
+│
+└── auth/            sign-in, and the PASETO tenant-context token
 ```
 
-Every feature folder ships an `index.ts` barrel — consumers should `import { listStudents } from '@/mocks/students'` rather than reaching into individual files.
+`global/` and `tenant/` are the two databases. A store declares which it
+belongs to by the key it asks for — `globalKey('users')` against
+`tenantKey('students')` — and that is the whole of the boundary. Two schools
+are two disjoint row sets rather than one set with a `tenant_id` column, so a
+query cannot accidentally span schools; there is no filter to forget.
+
+`schools/` is not a third database. It is the seed script, split per school: a
+school does not get its own `students` table any more than it gets its own
+`CREATE TABLE`, it gets its own rows.
+
+Every folder ships an `index.ts` barrel — consumers should
+`import { listStudents } from '@/mocks/tenant/students'` rather than reaching
+into individual files.
+
+### Adding a school
+
+A folder under `schools/` with the nine files, a line in `BY_CODE` in
+`schools/index.ts`, and a row in the global `tenants` store. Nothing else: the
+tables already exist.
 
 ---
 
@@ -92,10 +126,28 @@ grep -rE "@apiRoute" src/api/services
 
 ## Editing seed data
 
-- **Add a student / teacher**: append to `src/mocks/{students,teachers}/*.ts`. Downstream mocks that use the canonical data (fees, expenses, dashboard stats) pick up the change automatically — see `resolveStudent()` in `src/mocks/fees/fees.ts` and the reimbursement / dashboard loops.
-- **Change date distribution**: tweak the `scatterPastDates(count, days)` calls in `src/mocks/{expenses,notices}/*.ts` or the `relativeDisplay(offset)` constants in `src/mocks/notices/notices.ts`. Dates are always relative to *today*, so screenshots stay current indefinitely.
-- **Change currency / country code / school domain**: edit `src/mocks/_shared/constants.ts`. Every mock that builds phone numbers or emails reads from there, so a single edit propagates.
-- **Add a new regional identifier**: extend `INDIAN_FIRST_NAMES` / `INDIAN_LAST_NAMES` / `BANGALORE_LOCALITIES` in `src/mocks/_shared/fake.ts`.
+Everything a school *is* lives in its own folder under `schools/`. A store
+fingerprints the fixture it seeded from, so an edit reseeds on the next load
+rather than being shadowed by the copy already in `localStorage`.
+
+- **A school's roster, faculty, buses or ledger** — edit the config in
+  `schools/<school>/{students,teachers,transport,expenses}.ts`. These are
+  generated, so you change the *shape* (how many sections, which localities,
+  which departments to hire into) rather than typing rows.
+- **A school's notices, calendar or to-dos** — edit the lists in
+  `schools/<school>/{notices,calendar,todos}.ts`. These are written out,
+  because a notice is the most local thing a school produces.
+- **A school's class sections or name** — `schools/<school>/config.ts`.
+  Everything downstream follows: the roster fills those sections, the
+  timetable covers them, the faculty is sized for them.
+- **Who can sign in** — the `access` block in `schools/<school>/index.ts`
+  attaches a login to a profile that already exists. The logins themselves are
+  global: `global/users/store.ts`.
+- **Currency, dialling code, school domain** — `_shared/constants.ts`.
+- **Names** — `schools/_generate/names.ts`, grouped by community so a family
+  stays coherent. Not a flat pool: drawn from one, you get *Fatima Iyengar*.
+
+Dates are always relative to *today*, so screenshots stay current.
 
 ---
 
@@ -108,49 +160,54 @@ grep -rE "@apiRoute" src/api/services
 | `isoDate(date?)` | `"2026-04-17"` | Feeding form inputs, API params |
 | `displayDate(date?)` | `"Apr 17, 2026"` | Table cells, notice cards |
 | `relativeDate(offset)` | `Date` | Building anything from a day offset |
-| `relativeIso(offset)` | `"2026-04-17"` | Same as relativeDate but ISO string |
-| `relativeDisplay(offset)` | `"Apr 17, 2026"` | Same as relativeDate but display string |
-| `businessDaysAgo(n)` | `Date` | Skip weekends — attendance history |
-| `scatterPastDates(count, days)` | `Date[]` | Evenly spread N records across a window |
-| `scatterAroundToday(count, span)` | `Date[]` | Events centered on today |
+| `relativeIso(offset)` | `"2026-04-17"` | Same, as an ISO string |
+| `relativeDisplay(offset)` | `"Apr 17, 2026"` | Same, as a display string |
 | `currentAcademicYear()` | `"2025-26"` | Timetable `academicYear` field |
-| `academicYearStart()` | `Date` | Apr 1 of current AY |
-| `yyyymm()` | `"202604"` | Transaction ID month segment |
+| `academicYearStart()` | `Date` | Apr 1 of the current AY |
+| `yyyymm()` | `"202604"` | Transaction-id month segment |
 
 ### IDs (`_shared/id-helpers.ts`)
 
 | Helper | Use |
 |---|---|
 | `makeId('S', 2101)` | `"S-2101"` — stable numeric series |
-| `seriesIds('S', 2101, 5)` | 5 consecutive ids from a seed |
 | `txnId(n)` | `"TXN-202604-0042"` — month segment auto-updates |
-| `newId('stu')` | collision-free id for freshly-created records |
+| `newId('stu')` | collision-free id for a freshly-created record |
 
-### Fake data (`_shared/fake.ts`)
+### Generation (`schools/_generate/random.ts`)
+
+Seeded, so two runs produce the same school. `Math.random()` would mean the
+student you were looking at is somebody else after a refresh.
 
 | Helper | Use |
 |---|---|
-| `personName(seed)` | `{ firstName, lastName }` (85% Indian) |
-| `fullName(seed)` | `"Aarav Sharma"` |
-| `phone10(seed)` | `"9845123456"` (valid TRAI prefix) |
-| `phoneDisplay(seed)` | `"+91 98451 23456"` |
-| `emailFor('Aarav','Sharma')` | `"aarav.sharma@sanketa.edu"` |
-| `bangaloreAddress(seed)` | full address with real locality + 560xxx PIN |
+| `rng('kendriya:roster')` | a named stream — name them per thing generated |
+| `int` · `pick` · `chance` | an integer, an item, a coin |
+| `weighted(source, items)` | respects a `weight` field |
+| `bell(source, min, max)` | clustered, not flat — marks and class sizes bunch |
+
+### Tenancy (`_shared/tenant-context.ts`)
+
+| Helper | Use |
+|---|---|
+| `activeTenant()` | the active school's code |
+| `tenantKey('students')` | `sanketa:mock-db:kendriya:students` |
+| `globalKey('users')` | `sanketa:mock-db:global:users` |
+| `onTenantSwitch(forget)` | a store dropping its cache when the school changes |
 
 ### Latency + pagination
 
 | Helper | Use |
 |---|---|
-| `await withLatency()` | 200–600ms delay in mock adapter |
-| `await withLatency({ min, max })` | custom range |
+| `await withLatency()` | 200–600 ms delay in a mock adapter |
 | `paginate(items, params)` | wrap `T[]` in `PaginatedResponse<T>` |
 
 ---
 
 ## Principles
 
-1. **Single source of truth**. Every mock file for a feature lives under `src/mocks/{feature}/` — never under `src/features/*/mocks/` or `src/data/mocks/`.
+1. **The tree is the architecture**. `global/` and `tenant/` are the two databases; `schools/` is the seed data that fills them. Nothing mock-shaped lives under `src/features/*/mocks/` or `src/data/mocks/`.
 2. **Deterministic seeds, dynamic timestamps**. Names and IDs are stable across runs; dates are computed relative to `Date.now()` so nothing looks stale.
-3. **Cross-feature references resolve at runtime**. Fees / expenses / dashboard stats look data up in the student and teacher mocks rather than hardcoding names, so a single edit ripples correctly. Tables that persist (students, users, roles, parents, transport, notifications) expose functions and keep their rows private; the ones that are still plain fixtures export the array.
+3. **Nothing is asserted that could be counted**. Fees, marks, registers, the workload chart and every dashboard tile are derived from the roster and the faculty rather than typed alongside them — so a number on one screen is the same number on the screen it links to. Tables that persist expose functions and keep their rows private; the rest are module constants rebuilt at import, which is fine because switching school reloads the page.
 4. **Mock and HTTP paths live in the same service file**. Editing a mock lets you see the intended backend shape right next to it; swapping is an env flag, not a rewrite.
-5. **Regionally appropriate**. Sanketa is an Indian (Bangalore, Karnataka) school — names lean Indian, phones are `+91`, currency is `₹`, addresses use real Bangalore localities and 560xxx PINs.
+5. **Regionally real**. Kendriya Vidyalaya is in Bengaluru and Vidya Mandir in Mysuru: names are drawn per community so a household is coherent, phones are `+91`, currency is `₹`, addresses use real localities and their own PINs, and the Mysuru school's calendar has Dasara on it.

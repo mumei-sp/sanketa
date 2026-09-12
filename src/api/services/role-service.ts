@@ -10,7 +10,7 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
-import * as mockServer from '@/mocks/roles'
+import * as mockServer from '@/mocks/tenant/roles'
 import type { Permission, Role, ScopeAxis } from '@/config/permissions'
 
 /**

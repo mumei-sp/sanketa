@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { fetchTeacherById } from '@/api/services/teacher-service'
 import type { TeacherDetail } from '../types/teacher-detail'
-import { getTeacherDetailById } from '@/mocks/teachers/details'
+import { getTeacherDetailById } from '@/mocks/tenant/teachers/details'
 
 interface UseTeacherByIdResult {
   teacher: TeacherDetail | null

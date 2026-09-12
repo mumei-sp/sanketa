@@ -20,7 +20,7 @@
  * one of each — so a teacher at one school and a parent at another had one
  * answer for two questions, and a teacher whose child attends the same school
  * had one answer for two roles. They live in the school's `profile_roles` and
- * `user_profiles` now; see `src/mocks/profiles`.
+ * `user_profiles` now; see `src/mocks/tenant/profiles`.
  */
 
 import { newId } from '@/mocks/_shared'
@@ -80,7 +80,7 @@ let db: Database | null = null
 
 const SEED_ROWS: SchoolUser[] = [
   // Identity only. What each of them *is* at a school lives in that school's
-  // folder — see `tenants/kendriya`, which gives these ids their profiles,
+  // folder — see `schools/kendriya`, which gives these ids their profiles,
   // roles and classes.
   { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', status: 'active' },
   { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', status: 'active' },

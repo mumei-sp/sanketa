@@ -10,7 +10,7 @@ import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, txnId, newId, CURRENCY } from '@/mocks/_shared'
 import { callerSeesEveryRow, visibleToCaller } from '@/mocks/_shared/caller'
-import { findStudentByCode } from '@/mocks/students'
+import { findStudentByCode } from '@/mocks/tenant/students'
 import type {
   FeeStat,
   FeeTrendData,
@@ -21,15 +21,15 @@ import type {
   Receipt,
   FeeCategory,
 } from '@/features/fees-collection/types'
-import * as reminderServer from '@/mocks/reminders'
-import type { PaymentReminder } from '@/mocks/reminders'
+import * as reminderServer from '@/mocks/tenant/reminders'
+import type { PaymentReminder } from '@/mocks/tenant/reminders'
 import {
   feeTrendData,
   feeProgressData,
   feeCollectionData,
   paymentTransactions,
   findFeeRecord,
-} from '@/mocks/fees'
+} from '@/mocks/tenant/fees'
 
 // ---------------------------------------------------------------------------
 // Dashboard Stats (computed dynamically from mutable data)

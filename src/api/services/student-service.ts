@@ -17,7 +17,7 @@ import {
 } from '@/mocks/_shared/caller'
 import { classSectionOf } from '@/utils/class-section-helpers'
 import { joinPhone } from '@/utils/format'
-import { reconcileGuardians, type GuardianSlot } from '@/mocks/parents'
+import { reconcileGuardians, type GuardianSlot } from '@/mocks/tenant/parents'
 import {
   findStudent,
   insertStudent,
@@ -25,13 +25,13 @@ import {
   patchStudents,
   replaceStudent,
   studentCount,
-} from '@/mocks/students'
-import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/students/dashboard'
-import { studentDetailFor } from '@/mocks/students/details'
+} from '@/mocks/tenant/students'
+import { enrollmentTrendsData, attendanceOverviewData } from '@/mocks/tenant/students/dashboard'
+import { studentDetailFor } from '@/mocks/tenant/students/details'
 import {
   academicPerformanceLastSemester,
   academicPerformanceThisSemester,
-} from '@/mocks/students/academic-performance'
+} from '@/mocks/tenant/students/academic-performance'
 import type { AcademicPerformanceEntry } from '@/features/students/types'
 
 // ---------------------------------------------------------------------------

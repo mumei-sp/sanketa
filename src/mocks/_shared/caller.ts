@@ -22,8 +22,8 @@
  */
 
 import { authUtils } from '@/api/utils/auth'
-import { listRoles } from '@/mocks/roles/store'
-import { resolveTenantAccess } from '@/mocks/profiles'
+import { listRoles } from '@/mocks/tenant/roles/store'
+import { resolveTenantAccess } from '@/mocks/tenant/profiles'
 import { defineAbilityFor, subjectFor, type AppAbility, type SubjectFields } from '@/config/ability'
 import { findRole, type Action, type Subject } from '@/config/permissions'
 

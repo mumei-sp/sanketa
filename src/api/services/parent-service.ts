@@ -1,7 +1,7 @@
 /**
  * Parents API Service
  *
- * Mock path (the in-browser parent directory under `src/mocks/parents`) + HTTP
+ * Mock path (the in-browser parent directory under `src/mocks/tenant/parents`) + HTTP
  * path (apiClient). Two tables behind it — `parents` and `student_parents` —
  * both of which already exist in the backend schema, so these routes are the
  * shape it will expose rather than a guess.
@@ -10,8 +10,8 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
-import * as mockServer from '@/mocks/parents'
-import type { Parent, StudentParent } from '@/mocks/parents'
+import * as mockServer from '@/mocks/tenant/parents'
+import type { Parent, StudentParent } from '@/mocks/tenant/parents'
 
 export type { Parent, StudentParent }
 

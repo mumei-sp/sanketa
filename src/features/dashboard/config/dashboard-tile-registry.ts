@@ -27,8 +27,8 @@ import {
 } from 'lucide-react'
 import type { DashboardStat } from '../types'
 import type { TileOption } from '@/components/tile/TileCustomizeModal'
-import { listStudents, studentCount } from '@/mocks/students'
-import { teachersData } from '@/mocks/teachers/teachers'
+import { listStudents, studentCount } from '@/mocks/tenant/students'
+import { teachersData } from '@/mocks/tenant/teachers/teachers'
 
 // Counts come from the tables. They used to be the seed size times a
 // multiplier — 40 × 30 for students, 18 × 5 for faculty — which put "1,200

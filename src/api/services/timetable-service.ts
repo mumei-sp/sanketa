@@ -19,7 +19,7 @@ import {
   classTimetables,
   timetableExceptions,
   subjects,
-} from '@/mocks/timetable/timetable'
+} from '@/mocks/tenant/timetable/timetable'
 
 /** @apiRoute GET /api/v1/classes/sections */
 export async function fetchClassSections(): Promise<ClassSection[]> {

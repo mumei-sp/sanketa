@@ -24,7 +24,7 @@
 import * as React from 'react'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { fetchStudents } from '@/api/services/student-service'
-import { resolveTenantAccess, type Capacity } from '@/mocks/profiles'
+import { resolveTenantAccess, type Capacity } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 import type { Student } from '@/features/students/types'
 

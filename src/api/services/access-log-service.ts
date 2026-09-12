@@ -13,8 +13,8 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
-import * as mockServer from '@/mocks/access-log'
-import type { AccessEvent, AccessEventKind, AccessChange, AccessEntity } from '@/mocks/access-log'
+import * as mockServer from '@/mocks/tenant/access-log'
+import type { AccessEvent, AccessEventKind, AccessChange, AccessEntity } from '@/mocks/tenant/access-log'
 
 export type { AccessEvent, AccessEventKind, AccessChange, AccessEntity }
 

@@ -7,12 +7,12 @@ import type { DepartmentData, Teacher, TeacherStatistics } from '@/features/teac
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency, newId, makeId, ID_BASE } from '@/mocks/_shared'
-import { teachersData } from '@/mocks/teachers/teachers'
+import { teachersData } from '@/mocks/tenant/teachers/teachers'
 import {
   teacherStatisticsData,
   departmentDistributionData,
-} from '@/mocks/teachers/statistics'
-import { teacherWorkloadData } from '@/mocks/teachers/workload'
+} from '@/mocks/tenant/teachers/statistics'
+import { teacherWorkloadData } from '@/mocks/tenant/teachers/workload'
 
 /**
  * Fetch all teachers.

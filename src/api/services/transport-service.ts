@@ -1,7 +1,7 @@
 /**
  * Transport API Service
  *
- * Mock path (the in-browser transport tables under `src/mocks/transport`) +
+ * Mock path (the in-browser transport tables under `src/mocks/tenant/transport`) +
  * HTTP path (apiClient).
  *
  * Five entities, one service, because they are one backend area and the tabs
@@ -13,7 +13,7 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
-import * as mockServer from '@/mocks/transport/store'
+import * as mockServer from '@/mocks/tenant/transport/store'
 import type {
   StudentTransportAssignment,
   TransportAlert,

@@ -28,7 +28,7 @@ import { useCurrentUser } from '@/hooks/use-current-user'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { getInitials } from '@/utils/format'
-import { resolveTenantAccess } from '@/mocks/profiles'
+import { resolveTenantAccess } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 
 /**

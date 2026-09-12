@@ -56,7 +56,7 @@ import {
   type Person,
   type SchoolUser,
 } from '@/api/services/user-service'
-import { listProfileTypes } from '@/mocks/profiles'
+import { listProfileTypes } from '@/mocks/tenant/profiles'
 import type { AccountStatus } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import { SearchField } from './parts'

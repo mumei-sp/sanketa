@@ -47,7 +47,7 @@ import { useAppToast } from '@/hooks/use-app-toast'
 import { fetchParents, fetchParentLinks, type Parent } from '@/api/services/parent-service'
 import { createUser, identifierTaken, type SchoolUser } from '@/api/services/user-service'
 import { usePermissions } from '@/features/auth/PermissionContext'
-import { profileOf } from '@/mocks/profiles'
+import { profileOf } from '@/mocks/tenant/profiles'
 
 /** One row: somebody who could have an account and does not. */
 interface Candidate {

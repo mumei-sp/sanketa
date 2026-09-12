@@ -16,7 +16,7 @@
 import { Info } from 'lucide-react'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { listTenants } from '@/mocks/global'
-import { resolveTenantAccess } from '@/mocks/profiles'
+import { resolveTenantAccess } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 
 export function NoRoleHereNotice() {

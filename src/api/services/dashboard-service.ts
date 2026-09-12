@@ -14,7 +14,7 @@ import {
   attendanceDatasets,
   calendarEvents,
   todoItems,
-} from '@/mocks/dashboard'
+} from '@/mocks/tenant/dashboard'
 import type {
   DashboardStat,
   PerformanceDataset,

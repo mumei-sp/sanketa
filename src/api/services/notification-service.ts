@@ -22,7 +22,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
 import { getEnvConfig } from '@/api/utils/env'
-import * as mockServer from '@/mocks/notifications'
+import * as mockServer from '@/mocks/tenant/notifications'
 import { authUtils } from '@/api/utils/auth'
 import type {
   NotificationViewer,
@@ -201,7 +201,7 @@ export async function runNotificationSweep(): Promise<void> {
   // delivers each publish synchronously, so a settled promise means every
   // notification this pass produced has already reached the client.
   try {
-    const { sweep } = await import('@/mocks/notifications/sweep')
+    const { sweep } = await import('@/mocks/tenant/notifications/sweep')
     sweep()
   } catch (error) {
     console.error('Notification sweep failed', error)

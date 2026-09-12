@@ -7,7 +7,7 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId, displayDate } from '@/mocks/_shared'
-import { noticeBoardEntries } from '@/mocks/notices'
+import { noticeBoardEntries } from '@/mocks/tenant/notices'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
 

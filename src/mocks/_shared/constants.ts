@@ -34,7 +34,7 @@ export const ID_BASE = {
  * charts were built on the invented total rather than the real one.
  *
  * The roster is generated at the size of a school now (see
- * `mocks/tenants/_generate/roster.ts`), so the counts come from the tables and
+ * `mocks/schools/_generate/roster.ts`), so the counts come from the tables and
  * the multipliers are gone. What is left is a rate, which is a fact about a
  * school rather than a way of hiding a small fixture.
  */

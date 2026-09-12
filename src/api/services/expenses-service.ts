@@ -12,14 +12,14 @@ import type {
 } from '@/features/expenses/types'
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
-import * as reimbursementServer from '@/mocks/reimbursements'
+import * as reimbursementServer from '@/mocks/tenant/reimbursements'
 import { emitDomainEvent } from './notification-service'
 import { withLatency } from '@/mocks/_shared'
 import {
   expenseTrendData,
   expenseBreakdownData,
   expensesData,
-} from '@/mocks/expenses'
+} from '@/mocks/tenant/expenses'
 
 /**
  * Monthly expense trend datapoints for the chart.

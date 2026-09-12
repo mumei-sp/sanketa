@@ -28,7 +28,7 @@ import {
   resolveTenantAccess,
   revokeRole,
   updateProfile,
-} from '@/mocks/profiles'
+} from '@/mocks/tenant/profiles'
 import type { SchoolUser } from '@/mocks/global/users'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
 

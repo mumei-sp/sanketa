@@ -19,7 +19,7 @@ import {
   SCHOOL_CONFIG_STORAGE_KEY,
 } from '@/config/school-config'
 import { DEFAULT_APPEARANCE, getPreset } from '@/theme/appearance'
-import { tenantFixtures } from '@/mocks/tenants'
+import { tenantFixtures } from '@/mocks/schools'
 import { tenantKey } from '@/mocks/_shared/tenant-context'
 
 /**

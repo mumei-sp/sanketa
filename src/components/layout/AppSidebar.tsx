@@ -26,7 +26,7 @@ import { navigationItems, visibleNavigationItems, ChevronDownIcon } from '@/conf
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { useFamilyScope } from '@/features/family/FamilyScopeContext'
 import { cn } from '@/lib/utils'
-import { resolveTenantAccess } from '@/mocks/profiles'
+import { resolveTenantAccess } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 
 interface AppSidebarProps {

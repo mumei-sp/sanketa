@@ -16,15 +16,15 @@ import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId } from '@/mocks/_shared'
 import { callerSeesEveryRow, visibleToCaller } from '@/mocks/_shared/caller'
-import { generateMockAttendanceData } from '@/mocks/attendance/attendance'
-import { attendanceOverviewMonthlyData } from '@/mocks/attendance/overview'
+import { generateMockAttendanceData } from '@/mocks/tenant/attendance/attendance'
+import { attendanceOverviewMonthlyData } from '@/mocks/tenant/attendance/overview'
 import {
   classRosters,
   availableClasses,
   attendanceSubmissions,
   getSubmissionForDate,
   getWeekdaysInMonth,
-} from '@/mocks/attendance/daily'
+} from '@/mocks/tenant/attendance/daily'
 
 /**
  * Fetch attendance history records (N most recent business days).
