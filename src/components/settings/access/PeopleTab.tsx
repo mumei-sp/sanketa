@@ -23,7 +23,7 @@
 
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import { Info, AlertTriangle, Layers, UserPlus, Eye, Users, ChevronDown } from 'lucide-react'
+import { Info, AlertTriangle, Layers, UserPlus, Eye, Users, ChevronDown, Clock } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -61,7 +61,14 @@ import type { Capacity } from '@/mocks/tenant/profiles'
 import type { AccountStatus } from '@/features/auth/types'
 import type { RecordAccessEvent } from './AccessSettingsSection'
 import type { Role } from '@/config/permissions'
-import { RoleGrantRow, AddRoleRow, GrantSummary, shortDate } from './RoleGrantRow'
+import {
+  RoleGrantRow,
+  AddRoleRow,
+  GrantSummary,
+  shortDate,
+  expiryLabel,
+  CAUTION,
+} from './RoleGrantRow'
 import { GrantRoleDialog } from './GrantRoleDialog'
 import { SearchField } from './parts'
 import { ProvisionDialog } from './ProvisionDialog'
@@ -701,7 +708,13 @@ export function PeopleTab({
                       </Badge>
                     )}
                   </p>
-                  <p className="text-caption text-muted-foreground">{user.email}</p>
+                  {/* Whatever they are reachable on. `email` alone rendered an
+                      empty line for anyone signed up by phone — every parent
+                      provisioned from a guardian record, which is most of them.
+                      `identifierOf` is the same fallback the search box and the
+                      audit log already use, so a person is identified the same
+                      way wherever they appear. */}
+                  <p className="text-caption text-muted-foreground">{identifierOf(user)}</p>
                   {/* What they hold and where it came from, on one line. Only
                       while closed — open, every grant has its own row below and
                       this would say it all twice. */}
@@ -737,18 +750,40 @@ export function PeopleTab({
 
                 {/* Role pills stand in for the rows underneath while the card
                     is closed, so "what is this person" is answerable without
-                    opening anything. */}
+                    opening anything.
+
+                    A pill carries its grant's expiry, not just its name. An
+                    expiry is the one thing about a grant that changes with
+                    nobody touching it, so it has to be legible before somebody
+                    thinks to look — "Exam Controller · 9 days left", amber, on
+                    a card that is still shut. Saying it only on the row inside
+                    means the person who needed to know had to open every card
+                    to find out whether anyone's access was about to lapse. */}
                 {!isOpen && held.length > 0 && (
                   <span className="flex flex-wrap items-center justify-end gap-1.5">
-                    {held.map(role => (
-                      <span
-                        key={role.id}
-                        className="rounded-full px-2.5 py-1 text-xs font-medium"
-                        style={{ backgroundColor: 'var(--heading)', color: 'var(--card)' }}
-                      >
-                        {role.name}
-                      </span>
-                    ))}
+                    {held.map(role => {
+                      const grant = person.grants.find(entry => entry.roleId === role.id)
+                      const temporary = grant?.expiresAt !== undefined
+                      return (
+                        <span
+                          key={role.id}
+                          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                          style={
+                            temporary
+                              ? {
+                                  backgroundColor: CAUTION.chipBg,
+                                  color: CAUTION.ink,
+                                  border: `1px solid ${CAUTION.line}`,
+                                }
+                              : { backgroundColor: 'var(--heading)', color: 'var(--card)' }
+                          }
+                        >
+                          {temporary && <Clock className="size-3 shrink-0" aria-hidden />}
+                          {role.name}
+                          {grant?.expiresAt && ` · ${expiryLabel(grant.expiresAt)}`}
+                        </span>
+                      )
+                    })}
                   </span>
                 )}
 
