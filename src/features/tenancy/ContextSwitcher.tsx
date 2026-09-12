@@ -38,7 +38,12 @@ import { getInitials } from '@/utils/format'
 import { cn } from '@/lib/utils'
 import type { UserContext } from '@/mocks/global'
 import { useContexts } from './ContextsProvider'
-import { contextTitle, contextSubtitle, contextMonogramSource } from './context-labels'
+import {
+  contextTitle,
+  contextSubtitle,
+  contextMonogramSource,
+  contextTint,
+} from './context-labels'
 
 /**
  * The little mark: round for a person, square-ish for an institution.
@@ -48,6 +53,9 @@ import { contextTitle, contextSubtitle, contextMonogramSource } from './context-
  */
 function Mark({ context, size }: { context: UserContext; size: 'sm' | 'md' }) {
   const family = context.side === 'family'
+  // Same tint the tile gave this child, so the thing you pressed to get in is
+  // the thing you recognise in the corner once you are.
+  const tint = contextTint(context)
   return (
     <span
       aria-hidden
@@ -57,8 +65,8 @@ function Mark({ context, size }: { context: UserContext; size: 'sm' | 'md' }) {
       )}
       style={{
         borderRadius: family ? '9999px' : 'var(--radius-sm)',
-        backgroundColor: family ? 'var(--primary)' : 'var(--accent)',
-        color: 'var(--heading)',
+        backgroundColor: tint.background,
+        color: tint.foreground,
       }}
     >
       {getInitials(contextMonogramSource(context))}

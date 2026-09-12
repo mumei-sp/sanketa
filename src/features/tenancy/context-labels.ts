@@ -78,3 +78,83 @@ export function contextMonogramSource(context: UserContext): string {
 export function contextAriaLabel(context: UserContext): string {
   return `${context.primaryRoleName} at ${context.tenantName}`
 }
+
+// ── Tints ─────────────────────────────────────────────────────────────
+
+/** A background and something readable on it. */
+export interface ContextTint {
+  background: string
+  foreground: string
+}
+
+/**
+ * The three brand tokens, as avatar tints.
+ *
+ * The same trio the dashboard already distinguishes series with — accent,
+ * primary, heading — paired here with a foreground, because an avatar has text
+ * on it and navy on navy is nothing. Navy-on-card is the treatment the account
+ * avatar in `UserMenu` already uses, so the third tint is not a new idea.
+ *
+ * Three is the whole palette on purpose. A fourth would have to come from
+ * outside the brand, and a family with four children at one school is rarer
+ * than a palette that stops looking like Sanketa.
+ */
+const TINTS: readonly ContextTint[] = [
+  { background: 'var(--primary)', foreground: 'var(--heading)' },
+  { background: 'var(--accent)', foreground: 'var(--heading)' },
+  { background: 'var(--heading)', foreground: 'var(--card)' },
+]
+
+/** What an institution is tinted. One school, one colour — it is not a person. */
+const INSTITUTION: ContextTint = { background: 'var(--accent)', foreground: 'var(--heading)' }
+
+/**
+ * A stable index for a child, from their id.
+ *
+ * Hashed rather than taken from their position in a list, so a child keeps the
+ * same colour wherever they appear — the chip in the top bar shows only the
+ * first of them, and it has to agree with the tile that was pressed to get
+ * there. Position would also mean a child changed colour when a sibling was
+ * added.
+ */
+function tintIndex(seed: string): number {
+  let hash = 0
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (Math.imul(31, hash) + seed.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash) % TINTS.length
+}
+
+/** One child's tint. Stable for the life of the id. */
+export function childTint(studentId: string): ContextTint {
+  return TINTS[tintIndex(studentId)]
+}
+
+/**
+ * Tints for several children shown together, nudged apart where they collide.
+ *
+ * Two siblings hashing to the same colour is a one-in-three accident, and two
+ * identical circles overlapping is worse than either of them being off their
+ * own colour. The first child always keeps their own — that is the one the chip
+ * also shows — and later ones step forward until they differ.
+ */
+export function childTints(studentIds: string[]): ContextTint[] {
+  const used = new Set<number>()
+  return studentIds.map(id => {
+    let index = tintIndex(id)
+    while (used.has(index) && used.size < TINTS.length) {
+      index = (index + 1) % TINTS.length
+    }
+    used.add(index)
+    return TINTS[index]
+  })
+}
+
+/**
+ * The tint for a context's mark — a child's if it is a family, the school's
+ * otherwise.
+ */
+export function contextTint(context: UserContext): ContextTint {
+  const child = context.side === 'family' ? context.children[0] : undefined
+  return child ? childTint(child.studentId) : INSTITUTION
+}

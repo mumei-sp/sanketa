@@ -37,6 +37,8 @@ import {
   contextSubtitle,
   contextMonogramSource,
   contextAriaLabel,
+  contextTint,
+  childTints,
   scopeLine,
 } from './context-labels'
 
@@ -45,9 +47,13 @@ function Avatar({ context }: { context: UserContext }) {
   const family = context.side === 'family'
 
   if (family && context.children.length > 1) {
+    // A sibling shares the frame, so their colours are resolved together —
+    // two identical overlapping circles read as one smudge.
+    const shown = context.children.slice(0, 2)
+    const tints = childTints(shown.map(child => child.studentId))
     return (
       <span className="flex items-center" aria-hidden>
-        {context.children.slice(0, 2).map((child, index) => (
+        {shown.map((child, index) => (
           <span
             key={child.studentId}
             className={cn(
@@ -55,8 +61,8 @@ function Avatar({ context }: { context: UserContext }) {
               index > 0 && '-ml-5',
             )}
             style={{
-              backgroundColor: index === 0 ? 'var(--primary)' : 'var(--accent)',
-              color: 'var(--heading)',
+              backgroundColor: tints[index].background,
+              color: tints[index].foreground,
               boxShadow: '0 0 0 3px var(--card)',
             }}
           >
@@ -68,6 +74,7 @@ function Avatar({ context }: { context: UserContext }) {
   }
 
   const label = contextMonogramSource(context)
+  const tint = contextTint(context)
 
   return (
     <span
@@ -76,9 +83,9 @@ function Avatar({ context }: { context: UserContext }) {
       style={{
         // A person is round; an institution is not.
         borderRadius: family ? '9999px' : 'var(--radius)',
-        backgroundColor: family ? 'var(--primary)' : 'var(--accent)',
-        color: 'var(--heading)',
-        boxShadow: `0 0 0 2px var(--card), 0 0 0 4px ${family ? 'var(--primary)' : 'var(--accent)'}`,
+        backgroundColor: tint.background,
+        color: tint.foreground,
+        boxShadow: `0 0 0 2px var(--card), 0 0 0 4px ${tint.background}`,
       }}
     >
       {getInitials(label)}
