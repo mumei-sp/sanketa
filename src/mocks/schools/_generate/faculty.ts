@@ -119,7 +119,6 @@ export function generateFaculty(config: FacultyConfig): Teacher[] {
       const sequence = config.idBase + rows.length
       rows.push({
         id: `${config.idPrefix}${sequence}`,
-        userId: 2000 + sequence,
         firstName: first,
         lastName: last,
         fullName,

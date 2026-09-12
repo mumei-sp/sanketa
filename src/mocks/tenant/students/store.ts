@@ -28,11 +28,26 @@ import type { Student } from '@/features/students/types'
 import { tenantFixtures } from '@/mocks/schools'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 import { seedSignature } from '@/mocks/_shared/seed-signature'
+import type { CapacityRow } from '@/mocks/tenant/profiles/store'
+import { splitPerson, personOf, upsertPerson } from '@/mocks/tenant/profiles/store'
 
 const TABLE = 'students'
 
+/**
+ * What this table stores: the `students` columns, and nothing about the person.
+ *
+ * Her name, her date of birth and the number she answers are `user_profiles`
+ * columns and live there — one copy, however many schools she attends. What is
+ * here is what is true of her *at this school*: an admission number, a roll
+ * number, a section.
+ *
+ * `id` stays on the row. It is the profile's id, not a second key: the schema
+ * gives `students` `profile_id` as its own primary key.
+ */
+export type StudentRow = CapacityRow<Student>
+
 interface Database {
-  rows: Student[]
+  rows: StudentRow[]
   /** Which fixture list these rows were seeded from. See `signatureOf`. */
   seed: string
 }
@@ -48,10 +63,12 @@ onTenantSwitch(() => {
 
 function seed(): Database {
   const fixtures = tenantFixtures().students
-  // Copies, so the fixture literal stays pristine and `resetStudents` has
-  // something unmodified to put back.
+  // The fixtures are authored as whole people — a name and a roll number side
+  // by side, which is the readable way to write a seed. Splitting is what
+  // makes them two rows; the profiles store seeds the other half from the same
+  // fixtures, so neither has to wait on the other.
   return {
-    rows: fixtures.map(student => ({ ...student })),
+    rows: fixtures.map(student => splitPerson(student).row),
     seed: seedSignature(fixtures),
   }
 }
@@ -93,7 +110,12 @@ function persist(): void {
   }
 }
 
-const clone = (student: Student): Student => ({ ...student })
+/**
+ * Row plus person — what every caller of this module means by "a student".
+ *
+ * The row wins on a key they share, which is only `id`, and they agree on it.
+ */
+const join = (row: StudentRow): Student => ({ ...personOf(String(row.id)), ...row }) as Student
 
 /** Ids are `string | number` on the record, so never compare them raw. */
 const sameId = (a: Student['id'], b: string | number) => String(a) === String(b)
@@ -101,7 +123,7 @@ const sameId = (a: Student['id'], b: string | number) => String(a) === String(b)
 // ── Reads ─────────────────────────────────────────────────────────────
 
 export function listStudents(): Student[] {
-  return load().rows.map(clone)
+  return load().rows.map(join)
 }
 
 /**
@@ -118,7 +140,7 @@ export function studentCount(): number {
 /** By profile id — the `id` a scope and a `student_parents` link both hold. */
 export function findStudent(id: string | number): Student | undefined {
   const found = load().rows.find(row => sameId(row.id, id))
-  return found ? clone(found) : undefined
+  return found ? join(found) : undefined
 }
 
 /**
@@ -129,16 +151,23 @@ export function findStudent(id: string | number): Student | undefined {
  */
 export function findStudentByCode(studentId: string): Student | undefined {
   const found = load().rows.find(row => row.studentId === studentId)
-  return found ? clone(found) : undefined
+  return found ? join(found) : undefined
 }
 
 // ── Writes ────────────────────────────────────────────────────────────
 
-/** Newest first, which is the order the directory is read in. */
+/**
+ * Newest first, which is the order the directory is read in.
+ *
+ * Two rows, as it would be against the real schema: the profile first, because
+ * the student row's primary key is the profile's id.
+ */
 export function insertStudent(student: Student): Student {
-  load().rows.unshift(student)
+  const { person, row } = splitPerson(student)
+  upsertPerson(String(student.id), person)
+  load().rows.unshift(row)
   persist()
-  return clone(student)
+  return join(row)
 }
 
 /** Replace one row wholesale. Returns null if there is nothing to replace. */
@@ -146,9 +175,11 @@ export function replaceStudent(id: string | number, next: Student): Student | nu
   const database = load()
   const index = database.rows.findIndex(row => sameId(row.id, id))
   if (index === -1) return null
-  database.rows[index] = next
+  const { person, row } = splitPerson(next)
+  upsertPerson(String(id), person)
+  database.rows[index] = row
   persist()
-  return clone(next)
+  return join(row)
 }
 
 /**
@@ -167,7 +198,11 @@ export function patchStudents(
   entries.forEach(({ id, patch }) => {
     const index = database.rows.findIndex(row => sameId(row.id, id))
     if (index === -1) return
-    database.rows[index] = { ...database.rows[index], ...patch }
+    // A patch arrives as a slice of a student and may touch either table —
+    // renaming her is a profile write, moving her a class is a student one.
+    const { person, row } = splitPerson(patch)
+    if (Object.keys(person).length > 0) upsertPerson(String(id), person)
+    database.rows[index] = { ...database.rows[index], ...row }
     changed = true
   })
   if (changed) persist()

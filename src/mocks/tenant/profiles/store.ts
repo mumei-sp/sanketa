@@ -50,9 +50,7 @@
 import { newId } from '@/mocks/_shared'
 import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
-import { listParents, findParent } from '@/mocks/tenant/parents/store'
-import { listStudents, findStudent } from '@/mocks/tenant/students/store'
-import { teachersData, findTeacher } from '@/mocks/tenant/teachers/teachers'
+import { deriveFamilies, familiesSignature, digitsOf } from '@/mocks/tenant/parents/derive'
 import { getDisplayName } from '@/features/students/utils/formatting'
 import { tenantFixtures } from '@/mocks/schools'
 
@@ -70,13 +68,36 @@ export interface Profile {
    * people. A login arriving later sets this and nothing else moves.
    */
   userId?: string
-  /**
-   * Denormalised from whichever record they are.
-   *
-   * `user_profiles` carries the name columns in the schema, and a list of the
-   * school's people should not need a join into four tables to render.
-   */
+
+  // ── The replicated columns ────────────────────────────────────────────
+  //
+  // Exactly the subset GlobalDB.user_profiles syncs down, and the reason they
+  // are here rather than on `students` and `teachers`: they are facts about
+  // the *person*, true at whichever school she walks into. The capacity row
+  // below carries only what is true of her here — an admission number, an
+  // employee id.
+  //
+  // They used to live on the capacity rows, with `fullName` copied onto the
+  // profile beside them. Two copies of a name is one that can go stale, and
+  // the same teacher's name was stored once per school she taught at.
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  /** Nullable in the schema and derivable, but always written here. */
   fullName: string
+  preferredName?: string
+  displayName?: string
+  dateOfBirth?: string
+  /** 0=MALE, 1=FEMALE, 2=OTHER, 3=PREFER_NOT_TO_SAY, as in the schema. */
+  gender?: 0 | 1 | 2 | 3
+  primaryPhone?: string
+  /** Dialling code paired with `primaryPhone`. Not a schema column yet. */
+  phoneCountryCode?: string
+  profilePictureUrl?: string
+  /** Sync metadata. Never written here: nothing syncs in a browser. */
+  syncedAt?: string
+  syncVersion?: number
+
   /**
    * `teacher_classes`, flattened onto the profile.
    *
@@ -86,6 +107,55 @@ export interface Profile {
    */
   assignedClasses?: string[]
   isDeleted?: boolean
+}
+
+/**
+ * The columns a capacity row hands over to the profile.
+ *
+ * Named once, because three stores split their fixtures on this list and a
+ * fourth would have to agree with them. `id` is deliberately absent: it is on
+ * both sides, being the same id.
+ */
+export const PERSON_COLUMNS = [
+  'userId',
+  'firstName',
+  'middleName',
+  'lastName',
+  'fullName',
+  'preferredName',
+  'displayName',
+  'dateOfBirth',
+  'gender',
+  'primaryPhone',
+  'phoneCountryCode',
+  'profilePictureUrl',
+  'syncedAt',
+  'syncVersion',
+] as const
+
+type PersonColumn = (typeof PERSON_COLUMNS)[number]
+
+/** What a capacity store stores: its own row, with the person columns taken out. */
+export type CapacityRow<T> = Omit<T, PersonColumn>
+
+/**
+ * Split a whole-person record into the half each table keeps.
+ *
+ * The fixtures are authored as people — a student is written with her name and
+ * her roll number together, which is the readable way to write a seed. This is
+ * where that becomes two rows.
+ */
+export function splitPerson<T extends object>(
+  record: T,
+): { person: Partial<Profile>; row: CapacityRow<T> } {
+  const person: Record<string, unknown> = {}
+  const row: Record<string, unknown> = {}
+  const columns = new Set<string>(PERSON_COLUMNS)
+  Object.entries(record).forEach(([key, value]) => {
+    if (columns.has(key)) person[key] = value
+    else row[key] = value
+  })
+  return { person: person as Partial<Profile>, row: row as CapacityRow<T> }
 }
 
 /**
@@ -156,6 +226,7 @@ let db: Database | null = null
 
 onTenantSwitch(() => {
   db = null
+  index = null
 })
 
 /**
@@ -177,15 +248,28 @@ const BUILTIN_TYPES: Omit<ProfileType, 'id'>[] = [
 const now = () => new Date().toISOString()
 
 /**
- * A fingerprint of this school's `access` block.
+ * A fingerprint of every fixture this table's rows are built from.
  *
  * Without it, adding a profile to a school's seed is invisible on any browser
- * that has run the app. Over the fixture, never the live rows, so granting
+ * that has run the app. Over the fixtures, never the live rows, so granting
  * somebody a role on the People screen does not reseed the table it was
  * granted in.
+ *
+ * It covers the roster and the faculty now, not just the `access` block. That
+ * follows from the person columns moving here: correcting a student's name in
+ * her school's folder reseeds `students`, and if this table did not notice,
+ * the joined name would still be the old one — the exact staleness that
+ * keeping one copy is meant to rule out. Guardians come in through
+ * `familiesSignature`, since the parents are derived from them.
  */
 function signatureOf(): string {
-  return seedSignature(tenantFixtures().access ?? null)
+  const fixtures = tenantFixtures()
+  return seedSignature([
+    fixtures.access ?? null,
+    familiesSignature(),
+    fixtures.students.map(student => [String(student.id), splitPerson(student).person]),
+    fixtures.teachers.map(teacher => [String(teacher.id), splitPerson(teacher).person]),
+  ])
 }
 
 /**
@@ -217,25 +301,44 @@ function signatureOf(): string {
 function seed(): Database {
   const types: ProfileType[] = BUILTIN_TYPES.map(type => ({ ...type, id: `PT-${type.code}` }))
   const typeId = (code: string) => `PT-${code}`
-  const fixtures = tenantFixtures().access
+  const school = tenantFixtures()
+  const fixtures = school.access
+  const families = deriveFamilies()
 
   // ── One row per person ──
+  //
+  // Read off the school's own fixtures rather than off the capacity tables.
+  // Those tables now read their person columns from here, so asking them would
+  // be asking a table that is waiting on this one. The fixtures are the seed
+  // script and know everybody.
   const profiles: Profile[] = []
   const byId = new Map<string, Profile>()
-  const upsert = (id: string, fullName: string) => {
+  // First writer wins. The teacher whose child attends is reached twice — once
+  // as faculty, once as a guardian — and her faculty record is the fuller one.
+  const upsert = (id: string, person: Partial<Profile>) => {
     const existing = byId.get(id)
     if (existing) return existing
-    const profile: Profile = { id, fullName }
+    const profile: Profile = { ...person, id, fullName: person.fullName ?? id }
     profiles.push(profile)
     byId.set(id, profile)
     return profile
   }
 
-  listStudents().forEach(student => upsert(String(student.id), getDisplayName(student)))
-  teachersData.forEach(teacher =>
-    upsert(String(teacher.id), teacher.fullName ?? teacher.displayName ?? teacher.teacherId),
+  school.students.forEach(student =>
+    upsert(String(student.id), {
+      ...splitPerson(student).person,
+      fullName: getDisplayName(student),
+    }),
   )
-  listParents().forEach(parent => upsert(parent.profileId, parent.fullName))
+  school.teachers.forEach(teacher =>
+    upsert(String(teacher.id), {
+      ...splitPerson(teacher).person,
+      fullName: teacher.fullName ?? teacher.displayName ?? teacher.teacherId,
+    }),
+  )
+  families.parents.forEach(parent =>
+    upsert(parent.profileId, { fullName: parent.fullName, primaryPhone: parent.phone }),
+  )
 
   // ── The employment records, and the logins ──
   const staff: StaffRecord[] = []
@@ -246,22 +349,24 @@ function seed(): Database {
     // A fixture entry refers to itself by `key`, because half of them do not
     // know their own profile id until this runs.
     const idByKey = new Map<string, string>()
-    const digits = (value?: string) => (value ?? '').replace(/\D/g, '').slice(-10)
 
     fixtures.profiles.forEach(entry => {
       let id = entry.id
       if (id === undefined && entry.parentPhone !== undefined) {
-        // The parents table minted this one when it seeded the guardians off
-        // the roster, so the seed names the number and we find the row.
-        id = listParents().find(parent => digits(parent.phone) === digits(entry.parentPhone))
-          ?.profileId
+        // The guardians off the roster minted this one, so the seed names the
+        // number and we find the row.
+        id = families.parents.find(
+          parent => digitsOf(parent.phone) === digitsOf(entry.parentPhone),
+        )?.profileId
       }
       if (id === undefined) return
 
       // A pure member of staff has no student, teacher or parent record to
       // take a name from, so the seed carries one. `user_profiles` has name
       // columns in the schema for exactly this reason.
-      const profile = upsert(id, entry.fullName ?? entry.staff?.designation ?? id)
+      const profile = upsert(id, {
+        fullName: entry.fullName ?? entry.staff?.designation ?? id,
+      })
       profile.userId = entry.userId
       if (entry.assignedClasses) profile.assignedClasses = [...entry.assignedClasses]
       idByKey.set(entry.key, id)
@@ -278,7 +383,8 @@ function seed(): Database {
 
     // A `parent` role on somebody with no parent record here would scope to no
     // children and read as a permissions bug rather than as missing data.
-    const hasParentRecord = (id: string) => listParents().some(parent => parent.profileId === id)
+    const hasParentRecord = (id: string) =>
+      families.parents.some(parent => parent.profileId === id)
 
     fixtures.roles.forEach(row => {
       const profileId = idByKey.get(row.key)
@@ -332,6 +438,7 @@ function load(): Database {
 }
 
 function persist(): void {
+  index = null
   if (!db) return
   try {
     localStorage.setItem(tenantKey(TABLE), JSON.stringify(db))
@@ -358,21 +465,48 @@ export function profileOf(userId: string): Profile | undefined {
 }
 
 /**
- * What records this person has here.
+ * The person columns for one profile, for a capacity store to join onto its row.
  *
- * Asked of the capacity tables rather than read off a column, because that is
- * what a capacity is: `students`, `teachers`, `parents` and `staff` all take
- * `profile_id` as their primary key, so having one is having a row. Plural,
- * and that is the point — the teacher whose child attends comes back
- * `['teacher', 'parent']`.
+ * Returns an empty object rather than undefined for a profile that is not
+ * here: a student row without a profile is a broken seed, and a directory that
+ * renders her with a blank name is easier to see and to fix than one that
+ * throws on the first row.
  */
-export function capacitiesOf(profileId: string): Capacity[] {
-  const out: Capacity[] = []
-  if (findStudent(profileId)) out.push('student')
-  if (findTeacher(profileId)) out.push('teacher')
-  if (staffOf(profileId)) out.push('staff')
-  if (findParent(profileId)) out.push('parent')
-  return out
+export function personOf(profileId: string): Partial<Profile> {
+  const found = personIndex().get(String(profileId))
+  if (!found) return {}
+  const { assignedClasses: _classes, isDeleted: _deleted, id: _id, ...person } = found
+  return person
+}
+
+/**
+ * An id index, because the join is per row.
+ *
+ * `listStudents()` asks this 441 times for one directory, and the dashboards
+ * ask for the directory several times a render. Scanning 1,129 profiles each
+ * time is half a million comparisons for one screen. Dropped by `persist`, so
+ * a write is never read back stale.
+ */
+let index: Map<string, Profile> | null = null
+function personIndex(): Map<string, Profile> {
+  if (index) return index
+  index = new Map(load().profiles.map(row => [row.id, row]))
+  return index
+}
+
+/**
+ * Write the person half of a capacity record.
+ *
+ * Creating a student now writes two rows, the way it would against the real
+ * schema. The profile comes first, because the capacity row's primary key is
+ * the profile's id.
+ */
+export function upsertPerson(profileId: string, person: Partial<Profile>): void {
+  const database = load()
+  const existing = database.profiles.find(row => row.id === String(profileId))
+  if (existing) Object.assign(existing, person)
+  else database.profiles.push({ ...person, id: String(profileId), fullName: person.fullName ?? String(profileId) })
+  persist()
 }
 
 /** Their employment record, if they have one. */

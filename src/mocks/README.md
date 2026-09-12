@@ -33,7 +33,9 @@ src/mocks/
 │   ├── scheduling/      time_slots · rooms · calendar_categories ·
 │   │                    calendar_events · timetable · event_attendees
 │   ├── profiles/        user_profiles · staff · profile_types · profile_roles
+│   │                    ← the person: name, DOB, gender, phone, picture
 │   ├── students/ teachers/ parents/         the capacity tables
+│   │                    ← only what is true of them *here*
 │   ├── roles/ access-log/
 │   ├── attendance/ grades/ timetable/ fees/ expenses/ transport/
 │   ├── notices/ calendar/ notifications/ reminders/ reimbursements/
@@ -70,13 +72,38 @@ A folder under `schools/` with the eleven files, a line in `BY_CODE` in
 `schools/index.ts`, and a row in the global `tenants` store. Nothing else: the
 tables already exist.
 
-### One rule about imports
+### The person and the capacity
 
-A store imports another **store**, never its barrel. A barrel re-exports the
+`user_profiles` owns the columns that describe a person — name parts, date of
+birth, gender, primary phone, picture. `students`, `teachers` and `parents` own
+only what is true of that person *at this school*: an admission number, an
+employee id, a relationship. One id runs through all of them, because the
+schema gives each capacity table `profile_id` as its own primary key.
+
+The fixtures under `schools/` are still written as whole people, which is the
+only readable way to write a seed. `splitPerson()` is where that becomes two
+rows, and the capacity stores join them back on the way out — so
+`listStudents()` returns a `Student` with her name on it, as it always did,
+while the name itself is stored once.
+
+That fixes the thing two copies always eventually do. Rename a teacher on the
+People screen and the profile is what changed; before this, the faculty list
+was reading its own stale copy.
+
+### Two rules about imports
+
+**A store imports another store, never its barrel.** A barrel re-exports the
 derived modules beside the table — the dashboard series, the academic
 performance chart — and those do work as they initialise, which comes back
 round before the importing store's own `db` exists. It reads as `Cannot access
 'db' before initialization` from a file that never mentions the table.
+
+**The profiles store imports no capacity store.** The arrow runs one way now:
+`students`, `teachers` and `parents` read the person from `profiles`, so
+`profiles` cannot read them back. Two consequences live in the tree:
+`parents/derive.ts` holds the guardian derivation both sides need, and
+`profiles/capacities.ts` holds `capacitiesOf`, which is a join across four
+tables rather than part of any one of them.
 
 ---
 

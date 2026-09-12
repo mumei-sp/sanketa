@@ -73,7 +73,6 @@ export interface RosterConfig {
   /** Profile-id prefix, so two schools' ids never read alike in a log. */
   idPrefix: string
   /** First `users.id` for this school's students. */
-  userIdBase: number
   /** First mobile number, so no two families anywhere share one. */
   phoneBase: number
   /** The April the current academic year began. */
@@ -459,7 +458,6 @@ export function generateRoster(config: RosterConfig): Student[] {
 
       rows.push({
         id: `${config.idPrefix}${config.codeBase + sequence}`,
-        userId: config.userIdBase + sequence,
 
         firstName,
         lastName: household.surname,

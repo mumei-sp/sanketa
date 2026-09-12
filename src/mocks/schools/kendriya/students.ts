@@ -35,7 +35,6 @@ import { generateRoster, BANGALORE } from '../_generate'
 const anchors: Student[] = [
   {
     id: '1',
-    userId: 1001,
     firstName: 'Aarav',
     lastName: 'Sharma',
     fullName: 'Aarav Sharma',
@@ -79,7 +78,6 @@ const anchors: Student[] = [
   },
   {
     id: '2',
-    userId: 1002,
     firstName: 'Nikhil',
     lastName: 'Iyengar',
     fullName: 'Nikhil Iyengar',
@@ -143,7 +141,6 @@ export const studentFixtures: Student[] = generateRoster({
   codeBase: 2110,
   admissionPrefix: 'ADM',
   idPrefix: '',
-  userIdBase: 1100,
   phoneBase: 9845100000,
   academicYearStart: 2026,
   anchors,

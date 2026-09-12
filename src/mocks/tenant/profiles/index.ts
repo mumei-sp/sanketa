@@ -9,7 +9,8 @@
 export {
   listProfiles,
   profileOf,
-  capacitiesOf,
+  personOf,
+  upsertPerson,
   staffOf,
   listStaff,
   attachLogin,
@@ -27,6 +28,7 @@ export {
   deactivateProfileType,
   assignProfileType,
 } from './store'
+export { capacitiesOf } from './capacities'
 export type {
   Profile,
   StaffRecord,

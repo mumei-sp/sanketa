@@ -32,13 +32,24 @@
 
 import { newId } from '@/mocks/_shared'
 import { listStudents } from '@/mocks/tenant/students/store'
-import { tenantFixtures } from '@/mocks/schools'
-import { seedSignature } from '@/mocks/_shared/seed-signature'
+import { personOf, upsertPerson } from '@/mocks/tenant/profiles/store'
+import { deriveFamilies, familiesSignature, sameHuman } from './derive'
+import type { StudentParent } from './derive'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 
+export type { StudentParent } from './derive'
+
+/**
+ * A parent, as every caller means it — the `parents` row joined to the person.
+ *
+ * Only `profileId`, `email`, `occupation` and `workplace` are stored here. The
+ * name and the number are `user_profiles` columns and live there, which is
+ * what makes the parent of a child at two schools one name rather than two.
+ */
 export interface Parent {
   /** Profile id — the schema's `parents.profile_id`. */
   profileId: string
+  /** From `user_profiles.full_name`. */
   fullName: string
   /**
    * Null until someone supplies one, which for most parents is never.
@@ -50,29 +61,22 @@ export interface Parent {
    * distinguishable from "cleared it".
    */
   email: string | null
+  /** From `user_profiles.primary_phone`. */
   phone?: string
   occupation?: string
   workplace?: string
 }
 
-/** One parent's link to one student. The schema's `student_parents`. */
-export interface StudentParent {
-  id: string
-  studentProfileId: string
-  parentProfileId: string
-  /** 'Father', 'Mother', 'Guardian' — free text, as in the schema. */
-  relationship: string
-  /** The one the school rings first. At most one per student. */
-  isPrimary: boolean
-}
+/** What the `parents` table actually stores. The rest is the person. */
+export type ParentRow = Omit<Parent, 'fullName' | 'phone'>
 
 const TABLE = 'parents'
 
 interface Database {
-  parents: Parent[]
+  parents: ParentRow[]
   links: StudentParent[]
   /**
-   * Which roster these rows were derived from. See `signatureOf`.
+   * Which roster these rows were derived from. See `familiesSignature`.
    *
    * Absent on a file written before this existed, which reads as "does not
    * match" and reseeds — the right answer, since the rosters changed.
@@ -89,106 +93,17 @@ onTenantSwitch(() => {
   db = null
 })
 
-/**
- * A fingerprint of the guardians this table was derived from.
- *
- * The student directory reseeds itself whenever its fixtures change, and this
- * table is derived from that directory — so a roster change leaves it holding
- * the guardians of students who no longer exist. `load()` already prunes dead
- * links, which keeps the family view honest, but the parents themselves
- * survived: a directory of people whose children are gone, showing up in
- * guardian pickers and parent counts and nowhere explicable.
- *
- * Taken over the guardian blocks rather than the whole record, so correcting a
- * mark does not rebuild the family tree. Over the fixtures rather than the
- * live directory for the reason in `_shared/seed-signature.ts`.
- */
-function signatureOf(): string {
-  return seedSignature(
-    tenantFixtures().students.map(student => [String(student.id), student.guardians]),
-  )
-}
-
-/** Same person? Name and phone together, both loosely compared. */
-function sameHuman(a: { fullName: string; phone?: string }, b: { fullName: string; phone?: string }) {
-  const name = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ')
-  const digits = (value?: string) => (value ?? '').replace(/\D/g, '').slice(-10)
-  if (name(a.fullName) !== name(b.fullName)) return false
-  // A shared name with no phone on either side is a guess, not a match — two
-  // families can hold the same name. A shared name and a shared number is not.
-  if (!digits(a.phone) || !digits(b.phone)) return false
-  return digits(a.phone) === digits(b.phone)
-}
-
-/** Last ten digits — how a number is compared anywhere in this file. */
-const digitsOf = (value?: string) => (value ?? '').replace(/\D/g, '').slice(-10)
-
 function seed(): Database {
-  const parents: Parent[] = []
-  const links: StudentParent[] = []
-  let sequence = 0
-  const roster = listStudents()
-  const alreadyAProfile = new Map(
-    (tenantFixtures().access?.staffGuardians ?? []).map(entry => [
-      digitsOf(entry.phone),
-      entry.profileId,
-    ]),
-  )
-
-  roster.forEach(student => {
-    const guardians = student.guardians
-    if (!guardians) return
-
-    const entries: { relationship: string; name?: string; phone?: string }[] = [
-      { relationship: 'Father', name: guardians.father?.name, phone: guardians.father?.phone },
-      { relationship: 'Mother', name: guardians.mother?.name, phone: guardians.mother?.phone },
-      {
-        relationship: guardians.alternativeGuardian?.relation || 'Guardian',
-        name: guardians.alternativeGuardian?.name,
-        phone: guardians.alternativeGuardian?.phone,
-      },
-    ]
-
-    let primaryTaken = false
-    entries.forEach(entry => {
-      if (!entry.name?.trim()) return
-      const candidate = { fullName: entry.name.trim(), phone: entry.phone }
-
-      let parent = parents.find(existing => sameHuman(existing, candidate))
-      if (!parent) {
-        // A guardian the school has already told us is somebody else here —
-        // the member of staff whose child attends — keeps that profile id
-        // instead of being minted a new one. One person, one
-        // `user_profiles.id`, with a teacher row and a parent row hanging off
-        // it, which is what the schema says and what makes her teaching and
-        // her parenthood the same person's.
-        const known = alreadyAProfile.get(digitsOf(candidate.phone))
-        if (known) {
-          parent = { profileId: known, fullName: candidate.fullName, email: null, phone: candidate.phone }
-        } else {
-          sequence += 1
-          parent = {
-            profileId: `P-${String(2000 + sequence)}`,
-            fullName: candidate.fullName,
-            email: null,
-            phone: candidate.phone,
-          }
-        }
-        parents.push(parent)
-      }
-
-      links.push({
-        id: `SP-${links.length + 1}`,
-        studentProfileId: String(student.id),
-        parentProfileId: parent.profileId,
-        relationship: entry.relationship,
-        isPrimary: !primaryTaken,
-      })
-      primaryTaken = true
-    })
-  })
-
-  return { parents, links, seed: signatureOf() }
+  // The derivation lives in `derive.ts`, because the profiles store runs it
+  // too: it has to know every person at the school, parents included, before
+  // this table exists. Here it becomes `parents` rows; there it becomes the
+  // name and the number on each profile.
+  const { parents, links } = deriveFamilies()
+  return {
+    parents: parents.map(parent => ({ profileId: parent.profileId, email: null })),
+    links,
+    seed: familiesSignature(),
+  }
 }
 
 function load(): Database {
@@ -200,7 +115,7 @@ function load(): Database {
       if (
         Array.isArray(parsed.parents) &&
         Array.isArray(parsed.links) &&
-        parsed.seed === signatureOf()
+        parsed.seed === familiesSignature()
       ) {
         db = parsed
         // The cascade a real `student_parents` FK would do for free. The
@@ -235,7 +150,21 @@ function persist(): void {
   }
 }
 
-const cloneParent = (parent: Parent): Parent => ({ ...parent })
+/**
+ * Row plus person.
+ *
+ * `fullName` and `phone` are not on the row any more — they are
+ * `user_profiles.full_name` and `user_profiles.primary_phone`, which is why
+ * the join renames as it goes rather than spreading.
+ */
+const cloneParent = (parent: ParentRow): Parent => {
+  const person = personOf(parent.profileId)
+  return {
+    ...parent,
+    fullName: person.fullName ?? parent.profileId,
+    phone: person.primaryPhone,
+  }
+}
 const cloneLink = (link: StudentParent): StudentParent => ({ ...link })
 
 // ── Reads ─────────────────────────────────────────────────────────────
@@ -262,7 +191,7 @@ export function parentsOfStudent(studentProfileId: string): (Parent & { relation
     .flatMap(link => {
       const parent = database.parents.find(row => row.profileId === link.parentProfileId)
       return parent
-        ? [{ ...parent, relationship: link.relationship, isPrimary: link.isPrimary }]
+        ? [{ ...cloneParent(parent), relationship: link.relationship, isPrimary: link.isPrimary }]
         : []
     })
 }
@@ -281,18 +210,18 @@ export function studentsOfParent(parentProfileId: string): string[] {
 
 // ── Writes ────────────────────────────────────────────────────────────
 
+/** Two rows: the profile carries who they are, `parents` that they are one. */
 export function createParent(input: {
   fullName: string
   email?: string | null
   phone?: string
 }): Parent {
   const database = load()
-  const parent: Parent = {
-    profileId: newId('P'),
+  const parent: ParentRow = { profileId: newId('P'), email: input.email?.trim() || null }
+  upsertPerson(parent.profileId, {
     fullName: input.fullName.trim(),
-    email: input.email?.trim() || null,
-    phone: input.phone?.trim() || undefined,
-  }
+    primaryPhone: input.phone?.trim() || undefined,
+  })
   database.parents.push(parent)
   persist()
   return cloneParent(parent)
@@ -306,9 +235,14 @@ export function updateParent(
   const parent = database.parents.find(row => row.profileId === profileId)
   if (!parent) return null
 
-  if (patch.fullName !== undefined) parent.fullName = patch.fullName.trim()
+  // Correcting a parent's name is a write to `user_profiles`, and correcting
+  // the address the school has for them is a write to `parents`.
+  const person: { fullName?: string; primaryPhone?: string } = {}
+  if (patch.fullName !== undefined) person.fullName = patch.fullName.trim()
+  if (patch.phone !== undefined) person.primaryPhone = patch.phone.trim() || undefined
+  if (Object.keys(person).length > 0) upsertPerson(profileId, person)
+
   if (patch.email !== undefined) parent.email = patch.email?.trim() || null
-  if (patch.phone !== undefined) parent.phone = patch.phone.trim() || undefined
 
   persist()
   return cloneParent(parent)
@@ -427,7 +361,7 @@ export function reconcileGuardians(studentProfileId: string, slots: GuardianSlot
 
     const candidate = { fullName, phone: slot.phone }
     const parent =
-      database.parents.find(row => sameHuman(row, candidate)) ??
+      database.parents.map(cloneParent).find(row => sameHuman(row, candidate)) ??
       createParent({ fullName, phone: slot.phone })
 
     linkParent({

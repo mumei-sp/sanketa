@@ -27,7 +27,6 @@ import { generateRoster, MYSURU } from '../_generate'
 const anchors: Student[] = [
   {
     id: 'vm-1',
-    userId: 5001,
     firstName: 'Ira',
     lastName: 'Sharma',
     fullName: 'Ira Sharma',
@@ -83,7 +82,6 @@ export const studentFixtures: Student[] = generateRoster({
   codeBase: 3010,
   admissionPrefix: 'VM-ADM',
   idPrefix: 'vm-',
-  userIdBase: 5100,
   phoneBase: 9880200000,
   academicYearStart: 2026,
   anchors,

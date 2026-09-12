@@ -49,10 +49,16 @@ privacy flags and `custom_fields`, none of which a school screen reads.
 Rendering a class list without the copy would mean a cross-database join per
 row — the one thing the ARCH doc forbids above.
 
-The mock has no global `user_profiles` because it has nothing to gain from
-one. There is no round trip to save in a browser, and a second copy of every
-name could only go stale. `tenant/profiles` **is** the replica, and the sync is
-out of scope.
+`tenant/profiles` **is** the replica, carrying those same columns: name parts,
+date of birth, gender, primary phone, picture, `synced_at`, `sync_version`.
+They live there and nowhere else — `students` and `teachers` hold only what is
+true of a person *at this school*, and read the rest off the profile on the way
+out. One name per person, however many capacities she holds and however many
+schools she attends.
+
+There is no global `user_profiles`, because in a browser it would have nothing
+to do: no round trip to save, and a second copy of every name that could only
+go stale. The sync is out of scope, and `synced_at` is therefore never written.
 
 One replicated column did not belong there: `profile_type`. `UNIQUE(user_id)`
 on the global row meant a person had exactly one, copied verbatim into every
@@ -79,9 +85,9 @@ a family mobile cannot both hold it, and the second needs an address.
 
 | Table | Purpose | Status | Mocked |
 |---|---|---|---|
-| `user_profiles` | One row per person **at this school** | exists (MySQL) | yes |
-| `students` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) | yes |
-| `teachers` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) | yes |
+| `user_profiles` | One row per person **at this school**, carrying the replicated person columns | exists (MySQL) | yes |
+| `students` | `profile_id` PK → `user_profiles(id)`. Admission and roll numbers, grade, section | exists (MySQL) | yes |
+| `teachers` | `profile_id` PK → `user_profiles(id)`. Employee id, qualification, department | exists (MySQL) | yes |
 | `parents` | `profile_id` PK → `user_profiles(id)` | exists (MySQL) | yes |
 | `student_parents` | Who a child's guardians are | exists (MySQL) | yes |
 | `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends | this frontend | yes |
@@ -190,6 +196,12 @@ id, and she reads her own classes and her own son from it.
 `user_id` is null on 1,124 of those rows, which is why SCHEMA-FIXES puts making
 the column nullable first.
 
+Each of those 1,129 rows is also the only place that person's name, date of
+birth and number are written. The fixtures are still authored as whole people —
+a name beside a roll number, which is how a seed stays readable — and split on
+the way in: the person half to `user_profiles`, the rest to `students`. Reads
+join them back, so `listStudents()` returns what it always did.
+
 ## States the mock carries and has never exercised
 
 Columns and paths that exist in the shape and have no seeded data behind them.
@@ -201,6 +213,8 @@ Each is a code path nothing has run:
 - `profile_roles.expires_at` — nothing expires.
 - A school-created `profile_types` row — all six are built-in at both schools.
 - `is_deleted` — the field is on the profile and nothing sets it.
+- `user_profiles.synced_at` / `sync_version` — carried on the row because the
+  replica has them; nothing syncs in a browser, so nothing writes them.
 
 ## What is mirrored but not implemented
 

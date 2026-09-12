@@ -23,8 +23,21 @@
 
 import type { Teacher } from '@/features/teachers/types'
 import { tenantFixtures } from '@/mocks/schools'
+import { splitPerson, personOf } from '@/mocks/tenant/profiles/store'
 
-export const teachersData: Teacher[] = tenantFixtures().teachers
+/**
+ * Faculty rows, with the person columns read off `user_profiles`.
+ *
+ * The fixture is authored as whole people — a name and a qualification
+ * together — and split here into the half `teachers` keeps and the half the
+ * profile owns, then handed back joined. Which looks like a no-op over a
+ * fixture and is not: rename a teacher on the People screen and the profile is
+ * what changed, so the profile is what this has to read.
+ */
+export const teachersData: Teacher[] = tenantFixtures().teachers.map(
+  teacher =>
+    ({ ...personOf(String(teacher.id)), ...splitPerson(teacher).row }) as Teacher,
+)
 
 /**
  * One teacher by their profile id — `user_profiles.id` at this school.

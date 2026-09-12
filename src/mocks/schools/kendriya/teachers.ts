@@ -27,7 +27,6 @@ import { generateFaculty, dealSections } from '../_generate/faculty'
 const namedFaculty: Teacher[] = [
   {
     id: 't-1',
-    userId: 2001,
     firstName: 'Aditi',
     lastName: 'Sharma',
     fullName: 'Aditi Sharma',
@@ -46,7 +45,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-2',
-    userId: 2002,
     firstName: 'Priya',
     lastName: 'Nair',
     fullName: 'Priya Nair',
@@ -65,7 +63,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-3',
-    userId: 2003,
     firstName: 'Rahul',
     lastName: 'Iyer',
     fullName: 'Rahul Iyer',
@@ -84,7 +81,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-4',
-    userId: 2004,
     firstName: 'Ayesha',
     lastName: 'Khan',
     fullName: 'Ayesha Khan',
@@ -103,7 +99,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-5',
-    userId: 2005,
     firstName: 'Vikram',
     lastName: 'Reddy',
     fullName: 'Vikram Reddy',
@@ -122,7 +117,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-6',
-    userId: 2006,
     firstName: 'Meera',
     lastName: 'Iyengar',
     fullName: 'Meera Iyengar',
@@ -141,7 +135,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-7',
-    userId: 2007,
     firstName: 'Karthik',
     lastName: 'Menon',
     fullName: 'Karthik Menon',
@@ -160,7 +153,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-8',
-    userId: 2008,
     firstName: 'Anjali',
     lastName: 'Krishnan',
     fullName: 'Anjali Krishnan',
@@ -179,7 +171,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-9',
-    userId: 2009,
     firstName: 'Suresh',
     lastName: 'Kumar',
     fullName: 'Suresh Kumar',
@@ -198,7 +189,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-10',
-    userId: 2010,
     firstName: 'Divya',
     lastName: 'Patel',
     fullName: 'Divya Patel',
@@ -217,7 +207,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-11',
-    userId: 2011,
     firstName: 'Arvind',
     lastName: 'Rao',
     fullName: 'Arvind Rao',
@@ -236,7 +225,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-12',
-    userId: 2012,
     firstName: 'Ritika',
     lastName: 'Banerjee',
     fullName: 'Ritika Banerjee',
@@ -255,7 +243,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-13',
-    userId: 2013,
     firstName: 'Imran',
     lastName: 'Ali',
     fullName: 'Imran Ali',
@@ -274,7 +261,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-14',
-    userId: 2014,
     firstName: 'Lakshmi',
     lastName: 'Subramanian',
     fullName: 'Lakshmi Subramanian',
@@ -293,7 +279,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-15',
-    userId: 2015,
     firstName: 'Deepak',
     lastName: 'Chatterjee',
     fullName: 'Deepak Chatterjee',
@@ -312,7 +297,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-16',
-    userId: 2016,
     firstName: 'Sneha',
     lastName: 'Desai',
     fullName: 'Sneha Desai',
@@ -331,7 +315,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-17',
-    userId: 2017,
     firstName: 'Michael',
     lastName: 'D\u2019Souza',
     fullName: 'Michael D’Souza',
@@ -350,7 +333,6 @@ const namedFaculty: Teacher[] = [
   },
   {
     id: 't-18',
-    userId: 2018,
     firstName: 'Fatima',
     lastName: 'Siddiqui',
     fullName: 'Fatima Siddiqui',

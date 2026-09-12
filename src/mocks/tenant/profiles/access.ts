@@ -12,7 +12,8 @@
  * the server resolves what-you-are-here from the active one on each request.
  */
 
-import { profileOf, roleIdsOf, typesOf, capacitiesOf } from './store'
+import { profileOf, roleIdsOf, typesOf } from './store'
+import { capacitiesOf } from './capacities'
 import { findStudent } from '@/mocks/tenant/students/store'
 import { studentsOfParent } from '@/mocks/tenant/parents/store'
 import type { Capacity } from './store'
