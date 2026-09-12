@@ -32,7 +32,7 @@ FK relationships across GlobalDB and SchoolDBs"* of the tenant one.
 | Table | Purpose | Status | Mocked |
 |---|---|---|---|
 | `users` | Login identity: `email?`, `phone?`, `status`, `keycloak_user_id` | exists (MySQL) | yes |
-| `user_profiles` | The person behind the login: name, DOB, gender, phone. Source of truth for the copy each tenant holds | exists (MySQL) | no — see below |
+| `user_profiles` | The person behind the login: name, DOB, gender, phone, address, contact preference. Source of truth for the copy each tenant holds | exists (MySQL) | yes |
 | `tenants` | The schools: `tenant_code`, `name`, `is_active` | exists (MySQL) | yes |
 | `user_tenant_mapping` | This person is at this school. `UNIQUE(user_id, tenant_id)` | exists (MySQL) | yes |
 | `tenant_database_mapping` | Which schema a tenant lives in | exists (MySQL) | folded into `tenants.schema` |
@@ -49,16 +49,46 @@ privacy flags and `custom_fields`, none of which a school screen reads.
 Rendering a class list without the copy would mean a cross-database join per
 row — the one thing the ARCH doc forbids above.
 
-`tenant/profiles` **is** the replica, carrying those same columns: name parts,
-date of birth, gender, primary phone, picture, `synced_at`, `sync_version`.
-They live there and nowhere else — `students` and `teachers` hold only what is
-true of a person *at this school*, and read the rest off the profile on the way
-out. One name per person, however many capacities she holds and however many
-schools she attends.
+Both tables are mocked, and the difference between them is the demonstration.
 
-There is no global `user_profiles`, because in a browser it would have nothing
-to do: no round trip to save, and a second copy of every name that could only
-go stale. The sync is out of scope, and `synced_at` is therefore never written.
+`global/profiles` holds **five rows** — one per account, because `user_id` is
+`UNIQUE NOT NULL` with a foreign key to `users`, so a row there requires a
+login. `tenant/profiles` at Kendriya holds **1,129**, one per person at the
+school. The platform has no reason to know a seven-year-old's date of birth;
+her school does.
+
+The replica carries eleven columns plus `synced_at` and `sync_version`. The
+global row carries those and, only there, address, second and emergency
+numbers, contact preference, bio, the privacy flags and `custom_fields` —
+Rohan Sharma's postcode and his second number are in `global:user_profiles` and
+in neither school, which is what makes "subset" a fact you can read off
+`localStorage` rather than a claim.
+
+`REPLICATED_COLUMNS` in `global/profiles/store.ts` states the subset once.
+`sync.ts` copies exactly those, and `tenant/profiles` imports the same list to
+know which of its columns it does not own.
+
+### The sync, and what it is not
+
+`DENORMALIZED_PROFILE_ARCHITECTURE.md` names three moments the replica is
+refreshed: a profile edit, a user reaching a tenant, and a lazy pull on a row
+that has never been synced. Two of them are wired — sign-in pulls, and
+switching school pulls for the school arrived at, which is how the father with
+a child at each school ends with both replicas stamped and a `sync_version` per
+school.
+
+What is *not* modelled is that it happens behind anybody's back. On the
+platform this is a trigger; here it is a function and a caller decides when,
+because a browser has no trigger, no queue and no second connection. The
+fan-out is one school at a time for the same reason: writing another tenant's
+rows would mean reaching past the tenant key, which is the one mechanism the
+boundary exists to enforce.
+
+The other direction is guarded rather than modelled. A school renaming somebody
+who holds a login writes upstream first and takes the same value back — because
+a value written only into a replica is one the next sync silently discards. For
+the 1,124 people with no login there is no upstream row, and the tenant table
+is their truth.
 
 One replicated column did not belong there: `profile_type`. `UNIQUE(user_id)`
 on the global row meant a person had exactly one, copied verbatim into every
@@ -213,8 +243,6 @@ Each is a code path nothing has run:
 - `profile_roles.expires_at` — nothing expires.
 - A school-created `profile_types` row — all six are built-in at both schools.
 - `is_deleted` — the field is on the profile and nothing sets it.
-- `user_profiles.synced_at` / `sync_version` — carried on the row because the
-  replica has them; nothing syncs in a browser, so nothing writes them.
 
 ## What is mirrored but not implemented
 

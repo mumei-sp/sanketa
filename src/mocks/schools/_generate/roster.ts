@@ -503,8 +503,6 @@ export function generateRoster(config: RosterConfig): Student[] {
 
         guardians,
 
-        syncedAt: `${config.academicYearStart}-04-01T09:00:00.000Z`,
-        syncVersion: 1,
       })
     })
   })

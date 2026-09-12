@@ -65,8 +65,6 @@ const anchors: Student[] = [
       father: { name: 'Rohan Sharma', phoneCountryCode: '+91', phone: '9845123457' },
       mother: { name: 'Meera Sharma', phoneCountryCode: '+91', phone: '9845123458' },
     },
-    syncedAt: '2026-04-01T09:00:00.000Z',
-    syncVersion: 1,
   },
 ]
 

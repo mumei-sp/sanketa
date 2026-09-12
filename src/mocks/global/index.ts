@@ -11,6 +11,16 @@
  */
 
 export * from './users'
+export {
+  listGlobalProfiles,
+  globalProfileOf,
+  replicaOf,
+  createGlobalProfile,
+  updateGlobalProfile,
+  syncProfileToActiveTenant,
+  syncUnsyncedProfiles,
+} from './profiles'
+export type { GlobalProfile } from './profiles'
 export { listTenants, listActiveTenants, findTenant, resetTenants } from './tenants/store'
 export type { Tenant } from './tenants/store'
 export {

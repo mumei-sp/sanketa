@@ -1,6 +1,7 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/features/auth/types'
 import { authUtils } from '@/api/utils/auth'
 import { issueSession, revokeSession, rotateSession } from '@/mocks/global/sessions/store'
+import { syncUnsyncedProfiles } from '@/mocks/global/profiles/sync'
 import { findByIdentifier, listUsers } from '@/mocks/global/users'
 import { resolveTenants } from '@/mocks/global'
 import { setActiveTenant, resetTenantContext } from '@/mocks/_shared/tenant-context'
@@ -74,6 +75,14 @@ export async function mockLogin(data: LoginRequest): Promise<AuthResponse> {
   // link table — asking which children someone has is only answerable once
   // you know which school is being asked about.
   setActiveTenant(tenants[0].schema)
+
+  // The lazy pull. `DENORMALIZED_PROFILE_ARCHITECTURE.md` names three moments
+  // the replica is refreshed — a profile edit, joining a tenant, and finding a
+  // row that has never been synced — and this is the third. A seeded school
+  // wrote its own profiles from its own fixtures, so they are correct and
+  // unstamped; stamping them here is what makes a later disagreement between
+  // the two copies mean something.
+  syncUnsyncedProfiles()
 
   // The context token, minted here because this is where the tenant list is
   // resolved and therefore the only place that can vouch for it.

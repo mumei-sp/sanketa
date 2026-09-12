@@ -24,6 +24,7 @@
  */
 
 import { globalKey } from '@/mocks/_shared/tenant-context'
+import { syncUnsyncedProfiles } from '@/mocks/global/profiles/sync'
 import { activeTenant, setActiveTenant } from '@/mocks/_shared/tenant-context'
 
 /** `token-ttl-seconds: 900` in fabric's `application.yml`. */
@@ -205,6 +206,11 @@ export function clearContextToken(): void {
 export function switchTenant(tenantCode: string): void {
   const claims = verifyContextToken(readContextToken())
   setActiveTenant(effectiveTenant(claims, tenantCode))
+  // The school being arrived at may never have pulled this person's global
+  // profile — sign-in only stamped the first one. This is the architecture
+  // doc's second trigger, a user reaching a tenant, and without it the father
+  // with a child at each school has one replica stamped and one not.
+  syncUnsyncedProfiles()
 }
 
 /**

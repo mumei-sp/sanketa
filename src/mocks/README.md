@@ -21,8 +21,10 @@ src/mocks/
 │   ├── date-helpers.ts · id-helpers.ts · pagination.ts · simulate-latency.ts
 │   └── constants.ts
 │
-├── global/          the GLOBAL database — one row per person, whatever school
-│   ├── users/           login identity: email?, phone?, status
+├── global/          the GLOBAL database — one row per *account*
+│   ├── users/           login identity: email?, phone?, status. Nothing else
+│   ├── profiles/        user_profiles — the person, and the source of the
+│   │                    subset every school replicates · sync.ts pushes it
 │   ├── memberships/     user_tenant_mapping — who is at which school
 │   ├── tenants/         the schools themselves
 │   └── sessions/
@@ -51,6 +53,11 @@ src/mocks/
 │
 └── auth/            sign-in, and the PASETO tenant-context token
 ```
+
+`user_profiles` is in both, on purpose: the global row is the person, the
+tenant row is a read replica of eleven of its columns. Five rows against 1,129,
+because a global profile needs a login and most people at a school do not have
+one. See SCHEMA.md.
 
 `global/` and `tenant/` are the two databases. A store declares which it
 belongs to by the key it asks for — `globalKey('users')` against

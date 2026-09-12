@@ -48,6 +48,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
+import { updateGlobalProfile, REPLICATED_COLUMNS } from '@/mocks/global/profiles/store'
 import { seedSignature } from '@/mocks/_shared/seed-signature'
 import { tenantKey, onTenantSwitch } from '@/mocks/_shared/tenant-context'
 import { deriveFamilies, familiesSignature, digitsOf } from '@/mocks/tenant/parents/derive'
@@ -500,14 +501,51 @@ function personIndex(): Map<string, Profile> {
  * Creating a student now writes two rows, the way it would against the real
  * schema. The profile comes first, because the capacity row's primary key is
  * the profile's id.
+ *
+ * ── The write-through ─────────────────────────────────────────────────
+ * This table is a read replica for anybody who holds a login: the truth about
+ * them is `GlobalDB.user_profiles`, and a value written only here would be
+ * overwritten by the next sync — silently, and at whatever moment somebody
+ * signed in. So a write that touches a replicated column on a profile with a
+ * `user_id` goes upstream first, and this row takes the same value.
+ *
+ * It happens here rather than in a service because every person-write in the
+ * app funnels through this function, which is the reason the split put it
+ * here. `fromSync` is how the sync itself avoids bouncing back. The column
+ * list is imported from `global/profiles` rather than restated, so "what the
+ * replica may not own" has exactly one definition.
+ *
+ * For the 1,124 people with no login there is no upstream row and nothing to
+ * do — this table *is* their truth, which is the whole difference between the
+ * two tables.
  */
-export function upsertPerson(profileId: string, person: Partial<Profile>): void {
+export function upsertPerson(
+  profileId: string,
+  person: Partial<Profile>,
+  options: { fromSync?: boolean } = {},
+): void {
   const database = load()
   const existing = database.profiles.find(row => row.id === String(profileId))
+
+  if (!options.fromSync && existing?.userId) {
+    const upstream: Record<string, unknown> = {}
+    REPLICATED_COLUMNS.forEach(column => {
+      if (column in person) upstream[column] = person[column]
+    })
+    if (Object.keys(upstream).length > 0) updateGlobalProfile(existing.userId, upstream)
+  }
+
   if (existing) Object.assign(existing, person)
-  else database.profiles.push({ ...person, id: String(profileId), fullName: person.fullName ?? String(profileId) })
+  else
+    database.profiles.push({
+      ...person,
+      id: String(profileId),
+      fullName: person.fullName ?? String(profileId),
+    })
   persist()
 }
+
+
 
 /** Their employment record, if they have one. */
 export function staffOf(profileId: string): StaffRecord | undefined {

@@ -73,8 +73,6 @@ const anchors: Student[] = [
       father: { name: 'Rohan Sharma', phoneCountryCode: '+91', phone: '9845123457' },
       mother: { name: 'Meera Sharma', phoneCountryCode: '+91', phone: '9845123458' },
     },
-    syncedAt: '2026-04-01T09:00:00.000Z',
-    syncVersion: 1,
   },
   {
     id: '2',
@@ -117,8 +115,6 @@ const anchors: Student[] = [
       father: { name: 'Srinivas Iyengar', phoneCountryCode: '+91', phone: '9880114478' },
       mother: { name: 'Meera Iyengar', phoneCountryCode: '+91', phone: '9880114477' },
     },
-    syncedAt: '2026-04-01T09:00:00.000Z',
-    syncVersion: 1,
   },
 ]
 

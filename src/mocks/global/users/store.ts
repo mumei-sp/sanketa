@@ -25,11 +25,20 @@
 
 import { newId } from '@/mocks/_shared'
 import type { AccountStatus, ProfileType } from '@/features/auth/types'
+import { globalProfileOf, createGlobalProfile } from '@/mocks/global/profiles/store'
 import { globalKey } from '@/mocks/_shared/tenant-context'
 import { seedSignature } from '@/mocks/_shared/seed-signature'
 
 export interface SchoolUser {
   id: string
+  /**
+   * From `GlobalDB.user_profiles.full_name`, joined on the way out.
+   *
+   * Not stored on this row. `users` is the credential — an id, something to be
+   * found by, and whether it may sign in; a name is a fact about the person,
+   * and the person is `user_profiles`. It reads as a field here because every
+   * caller wants a name beside the account and a join is not their problem.
+   */
   fullName: string
   /**
    * Null when the account signs in by number instead.
@@ -70,22 +79,26 @@ export interface SchoolUser {
 
 const TABLE = 'users'
 
+/** What the table stores. The name is the profile's. */
+type UserRow = Omit<SchoolUser, 'fullName'>
+
 interface Database {
-  rows: SchoolUser[]
+  rows: UserRow[]
   /** Which seed these rows came from — see `seedSignature`. */
   seed?: string
 }
 
 let db: Database | null = null
 
-const SEED_ROWS: SchoolUser[] = [
-  // Identity only. What each of them *is* at a school lives in that school's
-  // folder — see `schools/kendriya`, which gives these ids their profiles,
-  // roles and classes.
-  { id: '1', fullName: 'Surya Admin', email: 'admin@sanketa.edu', status: 'active' },
-  { id: '2', fullName: 'Nandini Rao', email: 'principal@sanketa.edu', status: 'active' },
-  { id: '3', fullName: 'Meera Iyengar', email: 'teacher@sanketa.edu', status: 'active' },
-  { id: '4', fullName: 'Vikram Shah', email: 'accountant@sanketa.edu', status: 'active' },
+const SEED_ROWS: UserRow[] = [
+  // Identity only, and now literally so: the names moved to
+  // `global/profiles`, which is where the schema keeps them. What each of them
+  // *is* at a school lives in that school's folder — see `schools/kendriya`,
+  // which gives these ids their profiles, roles and classes.
+  { id: '1', email: 'admin@sanketa.edu', status: 'active' },
+  { id: '2', email: 'principal@sanketa.edu', status: 'active' },
+  { id: '3', email: 'teacher@sanketa.edu', status: 'active' },
+  { id: '4', email: 'accountant@sanketa.edu', status: 'active' },
   /**
    * The father with a child at each school.
    *
@@ -106,7 +119,7 @@ const SEED_ROWS: SchoolUser[] = [
    * here and he silently becomes somebody with two memberships and no
    * children.
    */
-  { id: '5', fullName: 'Rohan Sharma', email: null, phone: '9845123457', status: 'active' },
+  { id: '5', email: null, phone: '9845123457', status: 'active' },
 ]
 
 function seed(): Database {
@@ -132,10 +145,11 @@ function load(): Database {
         // Rows written before `status` existed could sign in, which is what
         // every account could at the time. The per-school columns that used to
         // live here are dropped rather than migrated: their values described a
-        // school, and a global row cannot say which.
+        // school, and a global row cannot say which. `fullName` goes the same
+        // way, to `global/profiles` — though in practice the seed fingerprint
+        // changed with it, so no stored file reaches this branch carrying one.
         const migrated = parsed.rows.map(row => ({
           id: row.id,
-          fullName: row.fullName,
           email: row.email ?? null,
           phone: row.phone,
           status: row.status ?? ('active' as AccountStatus),
@@ -163,8 +177,9 @@ function persist(): void {
   }
 }
 
-function clone(user: SchoolUser): SchoolUser {
-  return { ...user }
+/** Row plus the name off `user_profiles`. */
+function clone(user: UserRow): SchoolUser {
+  return { ...user, fullName: globalProfileOf(user.id)?.fullName ?? user.id }
 }
 
 export function listUsers(): SchoolUser[] {
@@ -269,9 +284,8 @@ export function createUser(input: {
   if (claimedIdentifier({ email, phone }) !== null) return null
 
   const profileType = input.profileType ?? 'staff'
-  const user: SchoolUser = {
+  const user: UserRow = {
     id: newId('U'),
-    fullName: input.fullName.trim(),
     email,
     phone,
     // Derived from the kind, not defaulted to 'active' and left to callers.
@@ -288,6 +302,10 @@ export function createUser(input: {
   }
   database.rows.push(user)
   persist()
+  // Two tables, in the order the foreign key requires: the account, then the
+  // person behind it. A `users` row with no profile is what the schema's
+  // `UNIQUE NOT NULL user_id` exists to prevent.
+  createGlobalProfile(user.id, { fullName: input.fullName.trim(), primaryPhone: phone })
   return clone(user)
 }
 
