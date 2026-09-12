@@ -26,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill, type StatusPillConfig } from '@/components/ui/status-pill'
 import { StudentAvatar } from '@/components/shared/StudentAvatar'
 import { Button } from '@/components/ui/button'
-import { border, text, status, statusVivid, withOpacity } from '@/theme/colors'
+import { accent, border, text, status, statusVivid, withOpacity } from '@/theme/colors'
 import { fontSizes } from '@/config/typography'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
@@ -42,6 +42,21 @@ import { fetchClassSections, fetchClassTimetable } from '@/api/services/timetabl
 import { fetchCalendarEvents } from '@/api/services/dashboard-service'
 import { fetchNoticeBoardEntries } from '@/api/services/notice-board-service'
 import { fetchFeeCollection } from '@/api/services/fees-collection-service'
+import { fetchExams, fetchGradeSheet, fetchGradeableSubjects } from '@/api/services/grade-service'
+import {
+  fetchAssignments,
+  fetchRoutes,
+  fetchVehicles,
+  fetchDrivers,
+} from '@/api/services/transport-service'
+import { useGradeCalculator } from '@/features/grades/hooks/use-grade-calculator'
+import type { GradeSheetRow, GradeSheetSummary } from '@/features/grades/types'
+import type {
+  StudentTransportAssignment,
+  TransportRoute,
+  Vehicle,
+  TransportDriver,
+} from '@/features/transport/types'
 import { useFamilyScope } from '../FamilyScopeContext'
 import { ChildSwitcher } from '../components/ChildSwitcher'
 import type { StudentDetailData } from '@/features/students/types'
@@ -125,6 +140,7 @@ export function FamilyHome() {
   const currentUser = useCurrentUser()
   const { selected, isLoading, children } = useFamilyScope()
   const { config } = useSchoolConfig()
+  const { calculateGrade, passingThreshold } = useGradeCalculator()
 
   const [detail, setDetail] = React.useState<StudentDetailData | null>(null)
   const [mark, setMark] = React.useState<TodayMark>('unmarked')
@@ -132,6 +148,19 @@ export function FamilyHome() {
   const [events, setEvents] = React.useState<CalendarEvent[]>([])
   const [notices, setNotices] = React.useState<NoticeBoardEntry[]>([])
   const [fees, setFees] = React.useState<FeeCollectionRecord[]>([])
+  const [marks, setMarks] = React.useState<{
+    row: GradeSheetRow
+    summary: GradeSheetSummary
+    examName: string
+    maxMarks: number
+    subjects: { id: string; name: string; shortName: string }[]
+  } | null>(null)
+  const [ride, setRide] = React.useState<{
+    assignment: StudentTransportAssignment
+    route: TransportRoute | null
+    vehicle: Vehicle | null
+    driver: TransportDriver | null
+  } | null>(null)
 
   const studentId = selected ? String(selected.id) : null
   const classLabel = selected ? (classSectionOf(selected) ?? null) : null
@@ -187,6 +216,88 @@ export function FamilyHome() {
       .then(setFees)
       .catch(error => console.error('Failed to load fees', error))
   }, [])
+
+  /**
+   * The last exam this class has marks for, and the class average beside them.
+   *
+   * `fetchGradeSheet` narrows its ROWS to this reader — a parent gets their own
+   * child and nobody else — while `summary.subjectAverages` is computed over the
+   * whole roster before that narrowing, on the service's own reasoning that an
+   * average is the class's fact and blanking it would make a report card
+   * unreadable rather than private. So the marker on each bar is the real class
+   * average and not this one child's mark wearing a second hat.
+   */
+  React.useEffect(() => {
+    if (!studentId || !classLabel) return
+    let cancelled = false
+    setMarks(null)
+    void (async () => {
+      try {
+        const [exams, subjectList] = await Promise.all([fetchExams(), fetchGradeableSubjects()])
+        const exam = exams[0]
+        if (!exam) return
+        const { rows, summary } = await fetchGradeSheet(
+          classLabel,
+          exam.id,
+          calculateGrade,
+          passingThreshold,
+        )
+        const row = rows.find(candidate => candidate.studentId === studentId)
+        if (cancelled || !row) return
+        setMarks({
+          row,
+          summary,
+          examName: exam.termName,
+          maxMarks: exam.maxMarks ?? 100,
+          subjects: subjectList,
+        })
+      } catch (error) {
+        console.error('Failed to load marks', error)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [studentId, classLabel, calculateGrade, passingThreshold])
+
+  /**
+   * The bus, when there is one.
+   *
+   * Two conditions, and one read answers both: a school without the transport
+   * module has `fetchAssignments` refused and gets an empty list, and a day
+   * pupil at a school that does run buses simply has no row in it. Either way
+   * there is nothing to draw, and the card is ABSENT rather than empty.
+   */
+  React.useEffect(() => {
+    if (!studentId) return
+    let cancelled = false
+    setRide(null)
+    void (async () => {
+      try {
+        const assignments = await fetchAssignments()
+        const assignment = assignments.find(row => String(row.studentId) === studentId)
+        if (cancelled || !assignment) return
+        const [routes, vehicles, drivers] = await Promise.all([
+          fetchRoutes(),
+          fetchVehicles(),
+          fetchDrivers(),
+        ])
+        if (cancelled) return
+        const route = routes.find(candidate => candidate.id === assignment.routeId) ?? null
+        setRide({
+          assignment,
+          route,
+          vehicle: vehicles.find(candidate => candidate.id === route?.vehicleId) ?? null,
+          driver: drivers.find(candidate => candidate.id === route?.driverId) ?? null,
+        })
+      } catch (error) {
+        console.error('Failed to load the bus', error)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [studentId])
 
   const month = React.useMemo(() => {
     if (!detail) return null
@@ -295,6 +406,23 @@ export function FamilyHome() {
                       ? `${classLabel ?? 'The class'}'s attendance usually goes in by ${teaching[1]?.endTime ?? '09:00'}.`
                       : `Marked by ${firstName}'s class teacher.`}
                 </span>
+                {/*
+                  Drawn, and deliberately dead. There is no parent→school
+                  messaging module, so this says what it WILL do rather than
+                  pretending to do it — a button that looks live and does
+                  nothing is worse than one that admits it is not ready yet.
+                */}
+                {mark === 'absent' && (
+                  <button
+                    type="button"
+                    disabled
+                    title="Sending a note to the school is not built yet"
+                    className="tap-target mt-1 w-fit cursor-not-allowed rounded-md px-2.5 py-1 text-caption font-medium opacity-60"
+                    style={{ backgroundColor: accent.soft, color: 'var(--heading)' }}
+                  >
+                    Send a note · coming soon
+                  </button>
+                )}
               </span>
 
               {now && (
@@ -421,192 +549,311 @@ export function FamilyHome() {
           </SectionCard>
 
           <TileWrapper columns={{ default: 1, md: 12 }} gap={16}>
-            {/* ── The month, as a shape ── */}
-            <Tile id="family-attendance" width={{ default: 1, md: 7 }}>
-              <SectionCard title="Attendance this month" className={CARD}>
-                {!month ? (
-                  <Skeleton className="h-24 w-full rounded-lg" />
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {month.highlights.map(highlight => {
-                        const paint = DAY_MARK[highlight.variant] ?? DAY_MARK.present
-                        const weekday = new Date(
-                          new Date().getFullYear(),
-                          new Date().getMonth(),
-                          highlight.date,
-                        )
-                        return (
+            {/* Attendance and marks on the left, the classroom and what is coming
+                on the right. The two columns balance by HEIGHT — the old
+                7/5-then-5/7 interleave left one dead-ending in whitespace. */}
+            <Tile id="family-left" width={{ default: 1, md: 7 }}>
+              <div className="flex flex-col gap-4">
+  <SectionCard title="Attendance this month" className={CARD}>
+                  {!month ? (
+                    <Skeleton className="h-24 w-full rounded-lg" />
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {month.highlights.map(highlight => {
+                          const paint = DAY_MARK[highlight.variant] ?? DAY_MARK.present
+                          const weekday = new Date(
+                            new Date().getFullYear(),
+                            new Date().getMonth(),
+                            highlight.date,
+                          )
+                          return (
+                            <span
+                              key={highlight.date}
+                              title={`${paint.title} — ${highlight.date}`}
+                              className="flex flex-col items-center gap-1"
+                            >
+                              <span
+                                className="flex items-center justify-center rounded-md"
+                                style={{
+                                  width: 30,
+                                  height: 30,
+                                  backgroundColor: paint.tone.bg,
+                                  color: paint.tone.color,
+                                  fontSize: fontSizes.xs,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {paint.letter || highlight.date}
+                              </span>
+                              <span
+                                className="text-caption"
+                                style={{ color: text.muted, fontSize: '10px' }}
+                              >
+                                {WEEKDAY_LETTER[mondayIndex(weekday)]}
+                              </span>
+                            </span>
+                          )
+                        })}
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {(['late', 'absent', 'sick', 'onLeave'] as const).map(key => (
                           <span
-                            key={highlight.date}
-                            title={`${paint.title} — ${highlight.date}`}
-                            className="flex flex-col items-center gap-1"
+                            key={key}
+                            className="flex items-center gap-1.5 text-caption"
+                            style={{ color: text.muted }}
                           >
                             <span
-                              className="flex items-center justify-center rounded-md"
+                              className="flex size-4 items-center justify-center rounded"
                               style={{
-                                width: 30,
-                                height: 30,
-                                backgroundColor: paint.tone.bg,
-                                color: paint.tone.color,
-                                fontSize: fontSizes.xs,
-                                fontWeight: 700,
+                                backgroundColor: DAY_MARK[key].tone.bg,
+                                color: DAY_MARK[key].tone.color,
+                                fontSize: '9px',
+                                fontWeight: 800,
                               }}
                             >
-                              {paint.letter || highlight.date}
+                              {DAY_MARK[key].letter}
                             </span>
-                            <span
-                              className="text-caption"
-                              style={{ color: text.muted, fontSize: '10px' }}
-                            >
-                              {WEEKDAY_LETTER[mondayIndex(weekday)]}
-                            </span>
+                            {DAY_MARK[key].title}
                           </span>
-                        )
-                      })}
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {(['late', 'absent', 'sick', 'onLeave'] as const).map(key => (
-                        <span
-                          key={key}
-                          className="flex items-center gap-1.5 text-caption"
-                          style={{ color: text.muted }}
-                        >
-                          <span
-                            className="flex size-4 items-center justify-center rounded"
-                            style={{
-                              backgroundColor: DAY_MARK[key].tone.bg,
-                              color: DAY_MARK[key].tone.color,
-                              fontSize: '9px',
-                              fontWeight: 800,
-                            }}
-                          >
-                            {DAY_MARK[key].letter}
-                          </span>
-                          {DAY_MARK[key].title}
-                        </span>
-                      ))}
-                      <span className="text-caption" style={{ color: text.muted }}>
-                        Present days carry the date.
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </SectionCard>
-            </Tile>
-
-            {/* ── From the classroom ── */}
-            <Tile id="family-note" width={{ default: 1, md: 5 }}>
-              <SectionCard title="From the classroom" className={CARD}>
-                {!note ? (
-                  <p className="text-body-muted" style={{ color: text.muted }}>
-                    Nothing from {firstName}&rsquo;s teachers this term.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2.5">
-                    <StatusPill
-                      label={note.type}
-                      config={note.type === 'Positive Note' ? statusVivid.success : statusVivid.warning}
-                    />
-                    <p className="text-body" style={{ color: 'var(--heading)' }}>
-                      {note.details}
-                    </p>
-                    <div
-                      className="flex items-center gap-2 border-t pt-2.5"
-                      style={{ borderColor: border.default }}
-                    >
-                      <StudentAvatar name={note.reportedBy} size={28} />
-                      <span className="text-caption" style={{ color: text.muted }}>
-                        {note.reportedBy} · {note.date}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </SectionCard>
-            </Tile>
-
-            {/* ── Coming up ── */}
-            <Tile id="family-events" width={{ default: 1, md: 5 }}>
-              <SectionCard title="Coming up" className={CARD}>
-                {events.length === 0 ? (
-                  <Skeleton className="h-20 w-full rounded-lg" />
-                ) : (
-                  <ul className="flex flex-col gap-3">
-                    {events.slice(0, 3).map(event => {
-                      const [monthLabel, dayLabel] = event.date.split(' ')
-                      return (
-                        <li key={event.id} className="flex items-start gap-3">
-                          <span
-                            aria-hidden
-                            className="flex size-10 shrink-0 flex-col items-center justify-center rounded-lg"
-                            style={{ backgroundColor: 'var(--muted)' }}
-                          >
-                            <span
-                              className="text-body font-bold leading-none"
-                              style={{ color: 'var(--heading)' }}
-                            >
-                              {dayLabel ?? ''}
-                            </span>
-                            <span
-                              className="uppercase"
-                              style={{ fontSize: '9px', fontWeight: 600, color: text.muted }}
-                            >
-                              {monthLabel?.slice(0, 3) ?? ''}
-                            </span>
-                          </span>
-                          <span className="min-w-0">
-                            <span
-                              className="block text-body font-medium"
-                              style={{ color: 'var(--heading)' }}
-                            >
-                              {event.title}
-                            </span>
-                            <span className="block text-caption" style={{ color: text.muted }}>
-                              {event.startTime} · {event.subtitle}
-                            </span>
-                          </span>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </SectionCard>
-            </Tile>
-
-            {/* ── From the school ── */}
-            <Tile id="family-notices" width={{ default: 1, md: 7 }}>
-              <SectionCard title="From the school" className={CARD}>
-                {notices.length === 0 ? (
-                  <p className="text-body-muted" style={{ color: text.muted }}>
-                    Nothing on the board for you right now.
-                  </p>
-                ) : (
-                  <TileWrapper columns={{ default: 1, lg: 3 }} gap={10}>
-                    {notices.map(notice => (
-                      <div
-                        key={notice.id}
-                        className="flex flex-col gap-1 rounded-lg p-3"
-                        style={{
-                          backgroundColor: 'var(--muted)',
-                          border: `1px solid ${border.subtle}`,
-                        }}
-                      >
-                        <span
-                          className="text-body font-medium leading-snug"
-                          style={{ color: 'var(--heading)' }}
-                        >
-                          {notice.title}
-                        </span>
+                        ))}
                         <span className="text-caption" style={{ color: text.muted }}>
-                          {notice.audience} · {notice.postDate}
+                          Present days carry the date.
                         </span>
                       </div>
-                    ))}
-                  </TileWrapper>
+                    </div>
+                  )}
+                </SectionCard>
+
+                {/* ── Term 1 marks: the child's bar, and the class's on the same axis ── */}
+                <SectionCard title={marks ? `${marks.examName} marks` : 'Marks'} className={CARD}>
+                  {!marks ? (
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <p className="text-body-muted" style={{ color: text.muted }}>
+                        The upright marker on each bar is the class average.
+                      </p>
+                      <div className="flex flex-col gap-2.5">
+                        {marks.subjects.map(subject => {
+                          const scored = marks.row.subjects[subject.id]?.marks ?? null
+                          const average = marks.summary.subjectAverages[subject.id] ?? 0
+                          const pct = scored === null ? 0 : (scored / marks.maxMarks) * 100
+                          const avgPct = (average / marks.maxMarks) * 100
+                          return (
+                            <div key={subject.id} className="flex flex-col gap-1">
+                              <div className="flex items-baseline justify-between gap-2">
+                                <span className="truncate text-caption" style={{ color: text.body }}>
+                                  {subject.name}
+                                </span>
+                                <span
+                                  className="text-caption font-semibold"
+                                  style={{ color: scored === null ? text.muted : 'var(--heading)' }}
+                                >
+                                  {scored === null ? 'Not marked' : `${scored} / ${marks.maxMarks}`}
+                                </span>
+                              </div>
+                              <span
+                                className="relative block w-full overflow-hidden rounded-full"
+                                style={{ height: 8, backgroundColor: accent.soft }}
+                              >
+                                <span
+                                  className="absolute inset-y-0 left-0 rounded-full"
+                                  style={{ width: `${pct}%`, backgroundColor: 'var(--primary)' }}
+                                />
+                                {/* The class as a line rather than a second bar — two bars a
+                                    subject reads as a comparison nobody asked for. */}
+                                {average > 0 && (
+                                  <span
+                                    aria-hidden
+                                    title={`Class average ${average}`}
+                                    className="absolute inset-y-0"
+                                    style={{
+                                      left: `${Math.min(avgPct, 100)}%`,
+                                      width: 2,
+                                      backgroundColor: 'var(--heading)',
+                                      opacity: 0.45,
+                                    }}
+                                  />
+                                )}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </SectionCard>
+              </div>
+            </Tile>
+
+            <Tile id="family-right" width={{ default: 1, md: 5 }}>
+              <div className="flex flex-col gap-4">
+  <SectionCard title="From the classroom" className={CARD}>
+                  {!note ? (
+                    <p className="text-body-muted" style={{ color: text.muted }}>
+                      Nothing from {firstName}&rsquo;s teachers this term.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-2.5">
+                      <StatusPill
+                        label={note.type}
+                        config={note.type === 'Positive Note' ? statusVivid.success : statusVivid.warning}
+                      />
+                      <p className="text-body" style={{ color: 'var(--heading)' }}>
+                        {note.details}
+                      </p>
+                      <div
+                        className="flex items-center gap-2 border-t pt-2.5"
+                        style={{ borderColor: border.default }}
+                      >
+                        <StudentAvatar name={note.reportedBy} size={28} />
+                        <span className="text-caption" style={{ color: text.muted }}>
+                          {note.reportedBy} · {note.date}
+                        </span>
+                      </div>
+                      {/* Same as the hero's note button: the module does not
+                          exist, so the button says so. Named after the teacher
+                          who wrote the note, because there is something to
+                          reply TO — a generic "send a message" is what this
+                          replaced. */}
+                      <button
+                        type="button"
+                        disabled
+                        title="Replying to a teacher is not built yet"
+                        className="tap-target w-fit cursor-not-allowed rounded-md px-2.5 py-1 text-caption font-medium opacity-60"
+                        style={{ backgroundColor: accent.soft, color: 'var(--heading)' }}
+                      >
+                        Reply to {note.reportedBy.split(' ')[0]} · coming soon
+                      </button>
+                    </div>
+                  )}
+                </SectionCard>
+
+  <SectionCard title="Coming up" className={CARD}>
+                  {events.length === 0 ? (
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                  ) : (
+                    <ul className="flex flex-col gap-3">
+                      {events.slice(0, 3).map(event => {
+                        const [monthLabel, dayLabel] = event.date.split(' ')
+                        return (
+                          <li key={event.id} className="flex items-start gap-3">
+                            <span
+                              aria-hidden
+                              className="flex size-10 shrink-0 flex-col items-center justify-center rounded-lg"
+                              style={{ backgroundColor: 'var(--muted)' }}
+                            >
+                              <span
+                                className="text-body font-bold leading-none"
+                                style={{ color: 'var(--heading)' }}
+                              >
+                                {dayLabel ?? ''}
+                              </span>
+                              <span
+                                className="uppercase"
+                                style={{ fontSize: '9px', fontWeight: 600, color: text.muted }}
+                              >
+                                {monthLabel?.slice(0, 3) ?? ''}
+                              </span>
+                            </span>
+                            <span className="min-w-0">
+                              <span
+                                className="block text-body font-medium"
+                                style={{ color: 'var(--heading)' }}
+                              >
+                                {event.title}
+                              </span>
+                              <span className="block text-caption" style={{ color: text.muted }}>
+                                {event.startTime} · {event.subtitle}
+                              </span>
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </SectionCard>
+
+                {/* ── Getting home: absent entirely unless there is a bus AND a seat on it ── */}
+                {ride && (
+                  <SectionCard title="Getting home" className={CARD}>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-body font-semibold" style={{ color: 'var(--heading)' }}>
+                          {ride.route?.name ?? 'Route'}
+                        </span>
+                        <span
+                          className="rounded-full px-2 py-0.5 text-caption"
+                          style={{ backgroundColor: accent.soft, color: text.muted }}
+                        >
+                          Add-on
+                        </span>
+                      </div>
+                      <span className="text-caption" style={{ color: text.muted }}>
+                        {[ride.assignment.stopName, ride.assignment.pickupTime].filter(Boolean).join(' · ')}
+                      </span>
+                      <div className="flex flex-wrap gap-x-6 gap-y-1 pt-1">
+                        {ride.vehicle && (
+                          <span className="flex flex-col">
+                            <span className="text-caption" style={{ color: text.muted }}>
+                              Bus
+                            </span>
+                            <span className="text-caption font-semibold" style={{ color: text.body }}>
+                              {ride.vehicle.registrationNumber}
+                            </span>
+                          </span>
+                        )}
+                        {ride.driver && (
+                          <span className="flex flex-col">
+                            <span className="text-caption" style={{ color: text.muted }}>
+                              Driver
+                            </span>
+                            <span className="text-caption font-semibold" style={{ color: text.body }}>
+                              {`${ride.driver.firstName} ${ride.driver.lastName}`}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </SectionCard>
                 )}
-              </SectionCard>
+              </div>
             </Tile>
           </TileWrapper>
+
+          {/* From the school: a full-width band of short cards. Notices are short;
+              stacking them in a rail only made that column longer. */}
+<SectionCard title="From the school" className={CARD}>
+              {notices.length === 0 ? (
+                <p className="text-body-muted" style={{ color: text.muted }}>
+                  Nothing on the board for you right now.
+                </p>
+              ) : (
+                <TileWrapper columns={{ default: 1, lg: 3 }} gap={10}>
+                  {notices.map(notice => (
+                    <div
+                      key={notice.id}
+                      className="flex flex-col gap-1 rounded-lg p-3"
+                      style={{
+                        backgroundColor: 'var(--muted)',
+                        border: `1px solid ${border.subtle}`,
+                      }}
+                    >
+                      <span
+                        className="text-body font-medium leading-snug"
+                        style={{ color: 'var(--heading)' }}
+                      >
+                        {notice.title}
+                      </span>
+                      <span className="text-caption" style={{ color: text.muted }}>
+                        {notice.audience} · {notice.postDate}
+                      </span>
+                    </div>
+                  ))}
+                </TileWrapper>
+              )}
+            </SectionCard>
 
           <div className="flex justify-end">
             <Button variant="ghost" size="sm" asChild>
