@@ -30,7 +30,7 @@ import {
   updateProfile,
 } from '@/mocks/tenant/profiles'
 import type { SchoolUser } from '@/mocks/global/users'
-import type { AccountStatus, ProfileType } from '@/features/auth/types'
+import type { AccountStatus } from '@/features/auth/types'
 
 export type { SchoolUser }
 
@@ -143,9 +143,11 @@ export async function enrolPersonHere(
       // them is the student form's job.
       const profile = createProfile(
         { userId, fullName: mockServer.listUsers().find(row => row.id === userId)?.fullName ?? userId },
-        type.capacity === 'staff'
-          ? { employeeId: `E-${userId}`, designation: type.name }
-          : undefined,
+        // No `designation`: that is the title on the letterhead, which nobody
+        // has typed. It used to be filled with the profile type's name, which
+        // put the same fact in two columns and let them drift — see
+        // `StaffRecord`.
+        type.capacity === 'staff' ? { employeeId: `E-${userId}` } : undefined,
       )
       assignProfileType(profile.id, type.id, true)
       return profile.id
@@ -286,7 +288,17 @@ export async function createUser(input: {
   phone?: string
   roleId: string
   teacherId?: string
-  profileType?: ProfileType
+  /**
+   * The `profile_types.code` this person is here — `teacher`, `parent`, or a
+   * code the school invented. Defaults to `staff`.
+   *
+   * A code rather than one of six hard-coded names, because the table is
+   * school-extensible and this used to accept only what the app shipped with:
+   * the id was built as `PT-${code}`, which is the format of a *built-in* row
+   * and nothing else, so a school's own "Bus Driver" could not be assigned at
+   * all. It is resolved below, exactly as `enrolPersonHere` resolves it.
+   */
+  profileTypeCode?: string
   status?: AccountStatus
   studentId?: string
   guardianId?: string
@@ -295,6 +307,14 @@ export async function createUser(input: {
   return mockOrHttp(
     async () => {
       await withLatency()
+
+      // Resolved before anything is written: an unknown code would otherwise
+      // create a login and a membership and then fail to say what the person
+      // is, leaving an account nobody can classify.
+      const code = input.profileTypeCode ?? 'staff'
+      const type = listProfileTypes().find(candidate => candidate.code === code)
+      if (!type) return null
+
       const user = mockServer.createUser(input)
       if (!user) return null
 
@@ -320,17 +340,19 @@ export async function createUser(input: {
               fullName: user.fullName,
               assignedClasses: input.assignedClasses,
             },
-            isStaffKind(input.profileType)
-              ? { employeeId: `E-${user.id}`, designation: input.profileType ?? 'Staff' }
-              : undefined,
+            // The capacity decides the record, not the code. A school-defined
+            // type reuses one of the shapes the app has tables for, which is
+            // the whole reason `capacity` is closed while `code` is open — so
+            // "Bus Driver" gets an employment record without anybody adding a
+            // branch for it. This used to test the code against a list of two
+            // names, so every custom type produced a profile with no record.
+            type.capacity === 'staff' ? { employeeId: `E-${user.id}` } : undefined,
           )
       if (input.assignedClasses && existing) {
         updateProfile(profile.id, { assignedClasses: input.assignedClasses })
       }
       grantRole(profile.id, input.roleId)
-      // Built-in type ids are `PT-<code>`, and the codes are the profile-type
-      // names, so this needs no lookup.
-      assignProfileType(profile.id, `PT-${input.profileType ?? 'staff'}`, true)
+      assignProfileType(profile.id, type.id, true)
 
       return user
     },
@@ -341,10 +363,7 @@ export async function createUser(input: {
   )
 }
 
-/** Kinds whose record is an employment record rather than a family one. */
-function isStaffKind(profileType?: ProfileType): boolean {
-  return profileType === undefined || profileType === 'staff' || profileType === 'admin'
-}
+
 
 /**
  * Change what an account may do — its role, and the classes it may write to.

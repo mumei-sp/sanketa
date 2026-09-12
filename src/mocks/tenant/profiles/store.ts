@@ -175,7 +175,23 @@ export interface StaffRecord {
   /** → `user_profiles.id`. Primary key. */
   profileId: string
   employeeId: string
-  designation: string
+  /**
+   * The job title on the letterhead — "Senior Accountant", "Head of Science".
+   *
+   * ── Not a classification, and the difference matters ──────────────────
+   * What *kinds* of person somebody is lives in `profile_profile_types`, which
+   * is plural. This is one string, so it can never answer that question: the
+   * member of staff who is both Bus Driver and Librarian has two type links
+   * and one designation, and a school writing "Bus Driver" here would be
+   * choosing which half of the truth to keep.
+   *
+   * It was being written with the profile type's own name, which made the two
+   * columns say overlapping things and gave them room to disagree — the same
+   * mistake `profile_type` made, one table down. A title is free text a school
+   * types; a classification is a row it picks. Optional, because most schools
+   * have no title for most people.
+   */
+  designation?: string
   department?: string
   joiningDate?: string
 }

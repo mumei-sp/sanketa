@@ -120,7 +120,7 @@ a family mobile cannot both hold it, and the second needs an address.
 | `teachers` | `profile_id` PK → `user_profiles(id)`. Employee id, qualification, department | exists (MySQL) | yes |
 | `guardians` | `profile_id` PK → `user_profiles(id)`. Was `parents` | exists (MySQL) | yes |
 | `student_guardians` | Who a child's guardians are, and what each is to them. Was `student_parents` | exists (MySQL) | yes |
-| `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends | this frontend | yes |
+| `staff` | `profile_id` PK — non-teaching staff, and what `teachers` extends. `designation` is a job title, not a classification | this frontend | yes |
 | `roles` | School-defined. `scope_axis` is new — see below | designed (Postgres) | yes |
 | `permissions` | The catalogue. Codes are code constants | designed (Postgres) | code constants |
 | `role_permissions` | `role_id`, `permission_id`, `granted` | designed (Postgres) | an array on the role |

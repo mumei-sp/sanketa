@@ -24,7 +24,7 @@
  */
 
 import { newId } from '@/mocks/_shared'
-import type { AccountStatus, ProfileType } from '@/features/auth/types'
+import type { AccountStatus } from '@/features/auth/types'
 import { globalProfileOf, createGlobalProfile } from '@/mocks/global/profiles/store'
 import { globalKey } from '@/mocks/_shared/tenant-context'
 import { seedSignature } from '@/mocks/_shared/seed-signature'
@@ -243,16 +243,6 @@ export function claimedIdentifier(input: {
 }
 
 /**
- * Kinds that belong to a family rather than to the school.
- *
- * They narrow by student rather than by class, and they are the ones that must
- * not be signable-into before the services filter.
- */
-function isFamily(profileType: ProfileType): boolean {
-  return profileType === 'student' || profileType === 'parent'
-}
-
-/**
  * Add an account.
  *
  * Name, one contact detail, and the role they start in. No password: the mock
@@ -270,8 +260,11 @@ export function createUser(input: {
   email?: string | null
   phone?: string
   roleId: string
-  profileType?: ProfileType
   status?: AccountStatus
+  /**
+   * Set when the account is being attached to somebody the school already has
+   * a record for. Decides the default status — see below.
+   */
   studentId?: string
   guardianId?: string
   assignedClasses?: string[]
@@ -283,22 +276,28 @@ export function createUser(input: {
   if (email === null && asPhone(phone) === undefined) return null
   if (claimedIdentifier({ email, phone }) !== null) return null
 
-  const profileType = input.profileType ?? 'staff'
+  // Typed in, or provisioned from a record the school already holds.
+  const provisioned = input.studentId !== undefined || input.guardianId !== undefined
   const user: UserRow = {
     id: newId('U'),
     email,
     phone,
-    // Derived from the kind, not defaulted to 'active' and left to callers.
+    // Derived, not defaulted to 'active' and left to callers. Making it depend
+    // on each call site passing `status` was the first version, and it created
+    // a live parent account the first time a caller forgot. The safe state is
+    // the one you get by saying nothing.
     //
-    // A member of staff typed in on the People screen is someone an admin is
-    // adding now, and starts active. A student or family account is
-    // *provisioned* — created ahead of being usable — and starts disabled
-    // until someone confirms the contact details belong to that family.
+    // Derived from *how* the account was created rather than from what kind of
+    // person it belongs to. Somebody an admin typed in on the People screen has
+    // been looked at by a person, and starts active. An account provisioned
+    // against an existing record — a parent off the roster, a student off the
+    // directory — has not: nothing has checked that the number on file reaches
+    // that family, so it starts disabled until somebody says it does.
     //
-    // Making that depend on each call site passing `status` was the first
-    // version, and it created a live parent account the first time a caller
-    // forgot. The safe state is the one you get by saying nothing.
-    status: input.status ?? (isFamily(profileType) ? 'disabled' : 'active'),
+    // It used to read the profile type, which meant this table knew the names
+    // of a *tenant* table's rows — and got them wrong the moment a school
+    // invented one, since an unrecognised code fell through to 'active'.
+    status: input.status ?? (provisioned ? 'disabled' : 'active'),
   }
   database.rows.push(user)
   persist()

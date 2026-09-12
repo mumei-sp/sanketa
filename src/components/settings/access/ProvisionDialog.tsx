@@ -169,7 +169,7 @@ export function ProvisionDialog({ open, onOpenChange, users, onCreated }: Provis
         email: looksLikeEmail(email) ? email : null,
         phone,
         roleId: guardianRole.id,
-        profileType: 'parent',
+        profileTypeCode: 'parent',
         guardianId: candidate.guardian.profileId,
       })
       if (!created) {
