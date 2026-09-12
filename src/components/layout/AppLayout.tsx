@@ -1,10 +1,6 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import {
-  SidebarProvider,
-  SidebarInset,
-  useSidebar,
-} from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, useSidebar } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Logo } from './Logo'
@@ -21,7 +17,7 @@ import { PermissionProvider, usePermissions } from '@/features/auth/PermissionCo
 import { PreviewBanner } from '@/features/auth/PreviewBanner'
 import { FamilyScopeProvider } from '@/features/family/FamilyScopeContext'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
-import { SchoolSwitcher } from '@/features/tenancy/SchoolSwitcher'
+import { ContextSwitcher } from '@/features/tenancy/ContextSwitcher'
 import { NoRoleHereNotice } from '@/features/tenancy/NoRoleHereNotice'
 
 /**
@@ -79,8 +75,8 @@ function GlobalActionButtons({ variant = 'pill' }: { variant?: 'pill' | 'bar' })
   return (
     <>
       {/* First, because it changes what everything else means. Renders nothing
-          for the overwhelming majority who work at one school. */}
-      <SchoolSwitcher variant={variant} />
+          for the overwhelming majority with one way into the app. */}
+      <ContextSwitcher variant={variant} />
       {canOpenSettings && (
         <Button
           variant="ghost"

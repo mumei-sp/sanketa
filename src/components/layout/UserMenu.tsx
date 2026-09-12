@@ -12,8 +12,8 @@
  * on a wide screen, and hiding it behind a click would be a regression.
  */
 
-import * as React from 'react'
-import { LogOut, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { LogOut, Repeat, Settings } from 'lucide-react'
 import { leaveSession } from '@/features/auth/session-navigation'
 import {
   DropdownMenu,
@@ -25,40 +25,20 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { logout } from '@/api/services/auth-service'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { useRoleLabel } from '@/hooks/use-role-label'
+import { useContexts } from '@/features/tenancy/ContextsProvider'
+import { CHOOSE_PROFILE_PATH } from '@/features/tenancy/RequireContext'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { getInitials } from '@/utils/format'
-import { resolveTenantAccess } from '@/mocks/tenant/profiles'
-import { activeTenant } from '@/mocks/_shared/tenant-context'
-
-/**
- * What to call somebody under their name.
- *
- * Their roles at the school in view, because that is what a role is now — and
- * plural, because a person can hold several. Joined rather than reduced to one:
- * "Teacher · Parent" is the true answer for the member of staff whose child
- * attends, and picking one of the two would be a choice nobody asked for.
- */
-function useRoleLabel(): string {
-  const currentUser = useCurrentUser()
-  const { roles } = usePermissions()
-  const school = activeTenant()
-  const { roleIds } = React.useMemo(
-    () => resolveTenantAccess(currentUser?.id),
-    // `school` is read inside the resolver, not passed — a real dependency the
-    // linter cannot see.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentUser?.id, school],
-  )
-  const named = roleIds.map(id => roles.find(role => role.id === id)?.name ?? id)
-  return named.length > 0 ? named.join(' · ') : 'No role here'
-}
 
 export function UserMenu() {
   const roleLabel = useRoleLabel()
   const currentUser = useCurrentUser()
   const { setSettingsOpen } = useSchoolConfig()
   const { canAny } = usePermissions()
+  const { all } = useContexts()
+  const navigate = useNavigate()
 
   if (!currentUser) return null
 
@@ -99,14 +79,20 @@ export function UserMenu() {
             >
               {currentUser.fullName}
             </span>
-            <span className="block text-xs leading-tight text-muted-foreground">
-              {roleLabel}
-            </span>
+            <span className="block text-xs leading-tight text-muted-foreground">{roleLabel}</span>
           </span>
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent
+        align="end"
+        // Explicit, not `w-56`: this project remaps Tailwind's numeric spacing
+        // to a compact scale, so `--spacing-56` is 7.5rem and `w-56` renders a
+        // 120px menu rather than the 224px it reads as. That was survivable
+        // while every item was one short word, and wrapped "Switch profile"
+        // onto two lines the moment one was not.
+        className="w-[14rem]"
+      >
         {/* Repeated here because the name beside the avatar is hidden below
             `lg`, and a menu that opens with no idea whose account it is would
             be a poor thing to sign out from. */}
@@ -117,6 +103,30 @@ export function UserMenu() {
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="lg:hidden" />
+
+        {/* Only for the people it is a question for — the same rule the
+            chooser itself applies, read from the same place so the two cannot
+            disagree. Someone with one way in is offered nothing to switch to. */}
+        {all.length > 1 && (
+          <>
+            <DropdownMenuItem
+              onSelect={() => navigate(CHOOSE_PROFILE_PATH)}
+              // Stated rather than computed: the label sits in nested flex
+              // spans, and the accessibility tree exposes the item unnamed —
+              // where the single-text-node items beside it resolve fine.
+              aria-label={`Switch profile — ${all.length} available`}
+            >
+              <Repeat />
+              <span className="flex flex-col">
+                <span>Switch profile</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {all.length} available
+                </span>
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
 
         {canAny(['system.settings', 'roles.manage', 'users.read']) && (
           <>

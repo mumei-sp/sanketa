@@ -28,7 +28,7 @@ import {
   type SubjectFields,
 } from '@/config/ability'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import { resolveTenantAccess } from '@/mocks/tenant/profiles'
+import { resolveActiveAccess } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 
 /**
@@ -137,13 +137,18 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
    * are and which schools they may reach, and what they may do is a fact about
    * the school in front of them. A teacher at one school and a parent at
    * another has two answers, and a field on the session can hold one.
+   *
+   * Narrowed to the side being acted in, so this agrees with `caller.ts` —
+   * the same rules deciding what renders and what the services return. A UI
+   * built from the union over services built from one side would draw
+   * controls whose calls come back empty.
    */
   // Keyed on the school as well as the person, so switching recomputes rather
   // than serving the last school's answer. Switching currently reloads the
   // app, so this is belt as well as braces — until a switcher does it live.
   const school = activeTenant()
   const access = React.useMemo(
-    () => resolveTenantAccess(currentUser?.id),
+    () => resolveActiveAccess(currentUser?.id),
     // `school` is not passed in, it is read inside — the resolver asks the
     // tenant context which school is active. So it is a real dependency that
     // the linter cannot see, and dropping it would serve the previous

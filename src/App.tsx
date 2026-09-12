@@ -8,6 +8,12 @@ import { AuthRouteFallback } from './components/layout/RouteFallback'
 import { generateRoutesFromNavigation } from './config/routes'
 import { AuthGuard, GuestGuard } from './features/auth/components/RouteGuards'
 import { RequirePermission } from './features/auth/components/RequirePermission'
+import { ContextsProvider } from './features/tenancy/ContextsProvider'
+import {
+  RequireContext,
+  RedirectIfSingleContext,
+  CHOOSE_PROFILE_PATH,
+} from './features/tenancy/RequireContext'
 
 /**
  * The shell — guards, layout, router — stays eager: it renders on every route,
@@ -28,6 +34,11 @@ const EditTeacher = lazy(() => import('./features/teachers/pages/EditTeacher'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+/**
+ * Split like every other screen: most people never reach it, because most
+ * people have exactly one way into the app.
+ */
+const ProfileChooser = lazy(() => import('./features/tenancy/ProfileChooser'))
 
 const router = createBrowserRouter([
   // ── Auth routes (guest only — redirects to / if already logged in) ──
@@ -54,39 +65,67 @@ const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       {
-        path: '/',
-        element: <AppLayout />,
+        // One fan-out across every school this login can reach, resolved once
+        // and shared. Above the shell because the chooser lives outside it,
+        // and the same answer decides whether to ask at all.
+        element: <ContextsProvider />,
         children: [
-          ...generateRoutesFromNavigation(),
-          // Detail and form routes are not in the navigation config, so they
-          // need their gates stated here. Reading a profile and editing one are
-          // different permissions: a teacher can look up a student without
-          // being able to change the record.
-          // Everyone who can sign in has a notification feed, so this one
-          // carries no permission of its own — the feed is already filtered to
-          // what its reader is allowed to know about.
-          { path: 'notifications', element: <NotificationsPage /> },
           {
-            element: <RequirePermission permission="students.read" />,
-            children: [{ path: 'students/details/:id', element: <StudentDetails /> }],
-          },
-          {
-            element: <RequirePermission permission="students.create" />,
-            children: [{ path: 'students/add', element: <AddStudent /> }],
-          },
-          {
-            element: <RequirePermission permission="students.update" />,
-            children: [{ path: 'students/edit/:id', element: <EditStudent /> }],
-          },
-          {
-            element: <RequirePermission permission="teachers.read" />,
-            children: [{ path: 'teachers/details/:id', element: <TeacherDetails /> }],
-          },
-          {
-            element: <RequirePermission permission="teachers.manage" />,
+            // Only for people with something to choose — see the mirror guard.
+            element: <RedirectIfSingleContext />,
             children: [
-              { path: 'teachers/add', element: <AddTeacher /> },
-              { path: 'teachers/edit/:id', element: <EditTeacher /> },
+              {
+                path: CHOOSE_PROFILE_PATH,
+                element: (
+                  <Suspense fallback={<AuthRouteFallback />}>
+                    <ProfileChooser />
+                  </Suspense>
+                ),
+              },
+            ],
+          },
+          {
+            // Nothing of the app renders until it is known who is opening it.
+            element: <RequireContext />,
+            children: [
+              {
+                path: '/',
+                element: <AppLayout />,
+                children: [
+                  ...generateRoutesFromNavigation(),
+                  // Detail and form routes are not in the navigation config, so they
+                  // need their gates stated here. Reading a profile and editing one are
+                  // different permissions: a teacher can look up a student without
+                  // being able to change the record.
+                  // Everyone who can sign in has a notification feed, so this one
+                  // carries no permission of its own — the feed is already filtered to
+                  // what its reader is allowed to know about.
+                  { path: 'notifications', element: <NotificationsPage /> },
+                  {
+                    element: <RequirePermission permission="students.read" />,
+                    children: [{ path: 'students/details/:id', element: <StudentDetails /> }],
+                  },
+                  {
+                    element: <RequirePermission permission="students.create" />,
+                    children: [{ path: 'students/add', element: <AddStudent /> }],
+                  },
+                  {
+                    element: <RequirePermission permission="students.update" />,
+                    children: [{ path: 'students/edit/:id', element: <EditStudent /> }],
+                  },
+                  {
+                    element: <RequirePermission permission="teachers.read" />,
+                    children: [{ path: 'teachers/details/:id', element: <TeacherDetails /> }],
+                  },
+                  {
+                    element: <RequirePermission permission="teachers.manage" />,
+                    children: [
+                      { path: 'teachers/add', element: <AddTeacher /> },
+                      { path: 'teachers/edit/:id', element: <EditTeacher /> },
+                    ],
+                  },
+                ],
+              },
             ],
           },
         ],

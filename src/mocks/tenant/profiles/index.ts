@@ -37,5 +37,15 @@ export type {
   ProfileTypeLink,
   Capacity,
 } from './store'
-export { resolveTenantAccess } from './access'
+/**
+ * `resolveActiveAccess` is the everyday read — what this session may do.
+ * `resolveTenantAccess` is the whole truth about a person here, and exists for
+ * the chooser, which has to enumerate what they could be. See `access.ts`.
+ */
+export {
+  resolveTenantAccess,
+  resolveActiveAccess,
+  sidesAvailable,
+  narrowToSide,
+} from './access'
 export type { TenantAccess } from './access'

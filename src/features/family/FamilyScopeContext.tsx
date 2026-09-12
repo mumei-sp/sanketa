@@ -24,7 +24,7 @@
 import * as React from 'react'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { fetchStudents } from '@/api/services/student-service'
-import { resolveTenantAccess, type Capacity } from '@/mocks/tenant/profiles'
+import { resolveActiveAccess, type Capacity } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 import type { Student } from '@/features/students/types'
 
@@ -75,7 +75,7 @@ export function FamilyScopeProvider({ children }: { children: React.ReactNode })
    */
   const school = activeTenant()
   const access = React.useMemo(
-    () => resolveTenantAccess(currentUser?.id),
+    () => resolveActiveAccess(currentUser?.id),
     // `school` is not passed in, it is read inside — the resolver asks the
     // tenant context which school is active. So it is a real dependency that
     // the linter cannot see, and dropping it would serve the previous

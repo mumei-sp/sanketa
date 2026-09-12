@@ -33,3 +33,5 @@ export {
 } from './memberships/store'
 export type { Membership } from './memberships/store'
 export { activeTenantCode } from './active-tenant'
+export { listUserContexts, flattenContexts, isContextAvailable } from './contexts'
+export type { UserContext, TenantContexts, ContextChild } from './contexts'

@@ -10,7 +10,7 @@
  * resolved: *switching school reloads the page*. A `const` cannot be rebuilt,
  * so the only way it can ever be right is for the document to be new.
  *
- * `SchoolSwitcher` has always honoured it. Signing out and back in did not,
+ * `ContextSwitcher` has always honoured it. Signing out and back in did not,
  * and a session change is a school change — which is how signing out of an
  * account at one school and into an account at another produced a dashboard
  * reading 317 enrolled students above 22 active teachers for somebody who
