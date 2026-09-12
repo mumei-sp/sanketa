@@ -222,7 +222,9 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
           <CardHeader className="flex-shrink-0 pb-2">
             <h3 className="text-section-title">To Do List</h3>
             <CardAction data-compact>
-              <button type="button"
+              <button
+                type="button"
+                aria-label="Add a to-do"
                 className="tap-area p-1 rounded-md hover:bg-accent transition-colors"
                 onClick={() => setIsAdding(true)}
               >
@@ -261,6 +263,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                     <div className="flex-1 min-w-0 flex items-center gap-1.5">
                       <Input
                         ref={editInputRef}
+                        aria-label="Edit this to-do"
                         value={editText}
                         onChange={e => setEditText(e.target.value)}
                         onKeyDown={e => {
@@ -283,6 +286,9 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                       <button
                         type="button"
                         onClick={() => editDateRef.current?.showPicker()}
+                        aria-label={
+                          editDate ? `Due ${formatTodoDate(editDate)}. Change the date` : 'Set a date'
+                        }
                         className={cn(
                           'p-1.5 rounded-md hover:bg-accent transition-colors shrink-0',
                           editDate ? 'text-foreground' : 'text-muted-foreground',
@@ -296,9 +302,18 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                 ) : (
                   /* ── Normal Mode Row ── */
                   <div key={todo.id} className="flex items-start gap-3 group py-3 first:pt-0">
+                    {/* Named by the task itself. A row of bare checkboxes is
+                        announced as "checkbox, checkbox, checkbox" — the one
+                        thing a reader needs (which task) is the thing that was
+                        missing. */}
                     <Checkbox
                       checked={todo.completed}
                       onCheckedChange={() => toggleTodo(todo.id)}
+                      aria-label={
+                        todo.completed
+                          ? `Mark "${todo.text}" as not done`
+                          : `Mark "${todo.text}" as done`
+                      }
                       className="mt-0.5 cursor-pointer"
                     />
                     <div className="flex-1 min-w-0">
@@ -320,7 +335,9 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button type="button"
+                        <button
+                          type="button"
+                          aria-label={`Actions for "${todo.text}"`}
                           className="p-1 rounded-md opacity-0 touch:opacity-100 group-hover:opacity-100 focus:opacity-100 hover:bg-accent transition-all shrink-0"
                           onClick={e => e.stopPropagation()}
                         >
@@ -352,6 +369,7 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                   <div className="flex-1 min-w-0 flex items-center gap-1.5">
                     <Input
                       ref={addInputRef}
+                      aria-label="New to-do"
                       placeholder="What needs to be done?"
                       value={addText}
                       onChange={e => setAddText(e.target.value)}
@@ -375,6 +393,9 @@ export function DashboardTodoList({ items, isLoading = false }: DashboardTodoLis
                     <button
                       type="button"
                       onClick={() => addDateRef.current?.showPicker()}
+                      aria-label={
+                        addDate ? `Due ${formatTodoDate(addDate)}. Change the date` : 'Set a date'
+                      }
                       className={cn(
                         'p-1.5 rounded-md hover:bg-accent transition-colors shrink-0',
                         addDate ? 'text-foreground' : 'text-muted-foreground',
