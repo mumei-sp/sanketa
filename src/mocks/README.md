@@ -274,6 +274,53 @@ student you were looking at is somebody else after a refresh.
 
 ---
 
+## A chart with no bars is probably not a data bug
+
+Recharts animates a bar in from zero height, and a `Rectangle` of height zero
+renders no element at all. The animation is driven by `requestAnimationFrame`,
+which a hidden or headless browser throttles to nothing — so the chart draws
+its grid, its axes and its legend, and never a single bar. It stays that way,
+because the animation never leaves its first frame.
+
+It looks exactly like an empty dataset, and it has already cost one round of
+chasing a mock that was returning perfectly good numbers.
+
+Rule this out first, because it costs one line and the alternative is reading
+a generator:
+
+```js
+document.visibilityState   // "hidden" → stop here, the chart is fine
+```
+
+Do not try to tell the two apart by the DOM. A stalled animation and a
+`dataKey` naming a column the rows do not have look *identical*: both leave
+`.recharts-bar` layers holding empty `<g>` elements, because both end at a
+rectangle with nothing to draw.
+
+What does separate them is asking Recharts what it computed. It stores the
+resolved geometry on the bar's props, so a real value with a real height means
+the data was never the problem:
+
+```js
+const layer = card.querySelector('.recharts-bar')
+const fiber = layer[Object.keys(layer).find(k => k.startsWith('__reactFiber$'))]
+// walk .return to the props carrying `dataKey`; each datum should hold
+// { value, height } — height 0 on a good value is the animation, not the data
+```
+
+And if you do want to check the rows, they are one import away in dev:
+
+```js
+const svc = await import('/src/api/services/dashboard-service.ts')
+const [first] = await svc.fetchStudentPerformance()
+first.grades.map(g => g.key)   // must each be a key in first.data[0]
+```
+
+A real browser with the tab in front runs the animation and draws the bars.
+Screenshot tooling, CI and a collapsed preview pane do not.
+
+---
+
 ## Principles
 
 1. **The tree is the architecture**. `global/` and `tenant/` are the two databases; `schools/` is the seed data that fills them. Nothing mock-shaped lives under `src/features/*/mocks/` or `src/data/mocks/`.
