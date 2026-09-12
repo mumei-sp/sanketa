@@ -24,6 +24,46 @@ import type {
   Vehicle,
 } from '@/features/transport/types'
 
+// ── Who may look, and who may change it ───────────────────────────────
+
+/**
+ * The fleet, as a thing to look at.
+ *
+ * `transport.read` declares no axis, so this is all-or-nothing by design — and
+ * "nothing" has to mean nothing. Only `fetchAssignments` was enforcing that;
+ * the routes, the vehicles, the drivers, the fee bands and the alerts came
+ * back to anybody who asked, which for a school's fleet is its drivers' names
+ * and licence numbers and every stop a child is collected from.
+ *
+ * Empty rather than a refusal, the way every other guarded read in `src/api`
+ * answers: a caller who may not see the fleet is told there is none, which is
+ * what a backend filtering rows would return and leaks nothing about what it
+ * is withholding.
+ */
+function callerMaySeeTransport(): boolean {
+  return callerMay('read', 'Transport')
+}
+
+/**
+ * Whoever may run the fleet may change it.
+ *
+ * `transport.manage` is unnarrowed, so the bare question is the whole question
+ * — and nothing was asking it. Eleven writes across five tables: a parent
+ * could retire a bus, reroute it, rename its driver, reprice the term and move
+ * another family's child onto a different stop, held back only by a screen
+ * they were not offered.
+ *
+ * `manage` is a wildcard action, so a holder of this also passes the read
+ * above. That is the right domain rule — whoever may edit the fleet may
+ * obviously see it — and the reason the two checks can be independent without
+ * an accountant needing both permissions ticked.
+ */
+function assertMayManageTransport(what: string): void {
+  if (!callerMay('manage', 'Transport')) {
+    throw new Error(`Not allowed to ${what}.`)
+  }
+}
+
 // ── Routes ────────────────────────────────────────────────────────────
 
 /** @apiRoute GET /api/v1/transport/routes */
@@ -31,6 +71,7 @@ export async function fetchRoutes(): Promise<TransportRoute[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      if (!callerMaySeeTransport()) return []
       return mockServer.listRoutes()
     },
     async () => {
@@ -54,6 +95,7 @@ export async function saveRoute(input: Partial<TransportRoute>): Promise<Transpo
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('save a route')
       return mockServer.saveRoute(input)
     },
     async () => {
@@ -70,6 +112,7 @@ export async function deleteRoute(id: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('delete a route')
       return mockServer.deleteRoute(id)
     },
     async () => {
@@ -86,6 +129,7 @@ export async function fetchVehicles(): Promise<Vehicle[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      if (!callerMaySeeTransport()) return []
       return mockServer.listVehicles()
     },
     async () => {
@@ -100,6 +144,7 @@ export async function saveVehicle(input: Partial<Vehicle>): Promise<Vehicle> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('save a vehicle')
       return mockServer.saveVehicle(input)
     },
     async () => {
@@ -116,6 +161,7 @@ export async function deleteVehicle(id: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('delete a vehicle')
       return mockServer.deleteVehicle(id)
     },
     async () => {
@@ -132,6 +178,7 @@ export async function fetchDrivers(): Promise<TransportDriver[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      if (!callerMaySeeTransport()) return []
       return mockServer.listDrivers()
     },
     async () => {
@@ -146,6 +193,7 @@ export async function saveDriver(input: Partial<TransportDriver>): Promise<Trans
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('save a driver record')
       return mockServer.saveDriver(input)
     },
     async () => {
@@ -162,6 +210,7 @@ export async function deleteDriver(id: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('delete a driver record')
       return mockServer.deleteDriver(id)
     },
     async () => {
@@ -178,6 +227,7 @@ export async function fetchFeeStructures(): Promise<TransportFeeStructure[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      if (!callerMaySeeTransport()) return []
       return mockServer.listFeeStructures()
     },
     async () => {
@@ -194,6 +244,7 @@ export async function saveFeeStructure(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('save a transport fee')
       return mockServer.saveFeeStructure(input)
     },
     async () => {
@@ -213,6 +264,7 @@ export async function deleteFeeStructure(id: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('delete a transport fee')
       return mockServer.deleteFeeStructure(id)
     },
     async () => {
@@ -238,7 +290,7 @@ export async function fetchAssignments(): Promise<StudentTransportAssignment[]> 
       // `transport.read` growing `scopableBy: ['students']` and this becoming
       // a `visibleToCaller`. Noted rather than done: it changes what the role
       // editor offers, and no family account can sign in yet.
-      if (!callerMay('read', 'Transport')) return []
+      if (!callerMaySeeTransport()) return []
       return mockServer.listAssignments()
     },
     async () => {
@@ -255,6 +307,7 @@ export async function saveAssignment(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('change which bus a student takes')
       return mockServer.saveAssignment(input)
     },
     async () => {
@@ -284,6 +337,7 @@ export async function saveAssignments(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('import student transport')
       return mockServer.saveAssignments(inputs)
     },
     async () => {
@@ -301,6 +355,7 @@ export async function deleteAssignment(id: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageTransport('take a student off transport')
       return mockServer.deleteAssignment(id)
     },
     async () => {
@@ -325,6 +380,7 @@ export async function fetchTransportAlerts(): Promise<TransportAlert[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      if (!callerMaySeeTransport()) return []
       return mockServer.listAlerts()
     },
     async () => {
