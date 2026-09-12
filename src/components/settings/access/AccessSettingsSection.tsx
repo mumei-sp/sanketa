@@ -462,6 +462,7 @@ export function AccessSettingsSection() {
             undoContext={people ? { roles, people, currentUserId: currentUser?.id } : null}
             onUndo={handleUndo}
             isUndoing={isUndoing}
+            actionSlot={tab === 'activity' ? actionSlot : null}
           />
         </TabsContent>
       </Tabs>

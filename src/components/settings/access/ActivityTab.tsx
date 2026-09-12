@@ -29,6 +29,7 @@
  */
 
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import {
   ShieldPlus,
   ShieldX,
@@ -111,6 +112,8 @@ interface ActivityTabProps {
   undoContext: UndoContext | null
   onUndo: (event: AccessEvent) => Promise<void>
   isUndoing: boolean
+  /** A node on the tab strip's row, for this tab's own standing note. */
+  actionSlot?: HTMLElement | null
 }
 
 /** The permission each kind of change needed when it was made. */
@@ -127,7 +130,13 @@ const UNDO_NEEDS: Record<AccessEventKind, Permission> = {
   'user.create': 'users.create',
 }
 
-export function ActivityTab({ events, undoContext, onUndo, isUndoing }: ActivityTabProps) {
+export function ActivityTab({
+  events,
+  undoContext,
+  onUndo,
+  isUndoing,
+  actionSlot,
+}: ActivityTabProps) {
   const { can } = usePermissions()
   const [query, setQuery] = React.useState('')
   const [pending, setPending] = React.useState<AccessEvent | null>(null)
@@ -216,16 +225,18 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-body-muted text-muted-foreground">
-        Every change to roles and to who holds them. Newest first, and nobody can edit it.
-      </p>
-
-      <SearchField
-        value={query}
-        onChange={setQuery}
-        placeholder="Search the log…"
-        label="Search the access log"
-      />
+      {/*
+        What is true of the whole log belongs beside the tab that opens it, not
+        as a first line the eye has to clear before reaching the entries. It is
+        a standing fact rather than a heading for what follows.
+      */}
+      {actionSlot &&
+        createPortal(
+          <p className="text-caption text-muted-foreground">
+            The log is never edited. What it records can be reversed — as a new entry.
+          </p>,
+          actionSlot,
+        )}
 
       {visible.length === 0 && (
         <div
@@ -243,6 +254,19 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
           </p>
         </div>
       )}
+
+      {/* One card, as the design draws it: the log is a single record, and six
+          day-groups loose on the page read as six of them. */}
+      <div
+        className="flex flex-col gap-4 rounded-xl border p-4"
+        style={{ borderColor: border.subtle, backgroundColor: 'var(--card)' }}
+      >
+      <SearchField
+        value={query}
+        onChange={setQuery}
+        placeholder="Search the log…"
+        label="Search the access log"
+      />
 
       {days.map(day => (
         <div key={day.heading} className="flex flex-col gap-2">
@@ -398,6 +422,7 @@ export function ActivityTab({ events, undoContext, onUndo, isUndoing }: Activity
           </div>
         </div>
       ))}
+      </div>
 
       <AlertDialog open={pending !== null} onOpenChange={open => !open && setPending(null)}>
         <AlertDialogContent>
