@@ -66,6 +66,7 @@ export async function createNoticeBoardEntry(data: NoticeFormValues): Promise<No
         title: data.title,
         tags: [{ label: data.category as NoticeBoardEntry['tags'][0]['label'], color: CATEGORY_COLORS[data.category] || '#E2E3E5' }],
         audience: data.audience,
+        reach: data.reach,
         postDate: toDisplayDate(data.postDate),
         expiryDate: data.dateValue ? toDisplayDate(data.dateValue) : '',
         dateLabel: data.dateLabel,
@@ -116,6 +117,7 @@ export async function updateNoticeBoardEntry(
       // Title is intentionally immutable on edit.
       entry.tags = [{ label: data.category as NoticeBoardEntry['tags'][0]['label'], color: CATEGORY_COLORS[data.category] || '#E2E3E5' }]
       entry.audience = data.audience
+      entry.reach = data.reach
       entry.expiryDate = data.dateValue ? toDisplayDate(data.dateValue) : ''
       entry.dateLabel = data.dateLabel
       entry.dateEndValue = data.dateEndValue ? toDisplayDate(data.dateEndValue) : undefined

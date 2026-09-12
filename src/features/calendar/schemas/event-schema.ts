@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AudienceReachSchema } from '@/config/audience'
 
 export const EVENT_CATEGORIES = [
   { value: 'Academic', label: 'Academic' },
@@ -33,6 +34,8 @@ export const EventFormSchema = z.object({
   location: z.string().max(200).optional().or(z.literal('')),
   link: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   attendees: z.string().max(500).optional().or(z.literal('')),
+  /** The machine-readable half — see `config/audience.ts`. */
+  reach: AudienceReachSchema,
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
   reminder: z.enum(['none', '5min', '15min', '30min', '1hr', '1day']).default('none'),
   notes: z.string().max(1000, 'Notes must be under 1000 characters').optional().or(z.literal('')),

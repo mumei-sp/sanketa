@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { TextField, SelectField, DateField, TextareaField, SwitchField, FORM_GRID_2 } from '@/components/form/fields'
+import { AudienceReachField, DateField, FORM_GRID_2, SelectField, SwitchField, TextField, TextareaField } from '@/components/form/fields'
 import { FormSection } from '@/components/form/FormSection'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -65,6 +65,7 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
       content: '',
       category: CATEGORY_OPTIONS[0].value,
       audience: '',
+      reach: undefined,
       status: 'Active',
       postDate: new Date().toISOString(),
       dateLabel: DATE_LABEL_OPTIONS[0].value,
@@ -202,8 +203,10 @@ export function CreateNoticeForm({ onSubmit, onCancel, initialData }: NoticeForm
                 control={control}
                 label="Target Audience"
                 placeholder="e.g., Students (Grade 7-9)"
+                description="What the board says. The choices below are what the app acts on."
                 required
               />
+              <AudienceReachField name="reach" control={control} />
               <TextareaField
                 name="content"
                 control={control}

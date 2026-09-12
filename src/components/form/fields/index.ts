@@ -1,3 +1,5 @@
+export { AudienceReachField } from './AudienceReachField'
+export type { AudienceReachFieldProps } from './AudienceReachField'
 export { TextField, type TextFieldProps } from './TextField'
 export { SelectField, type SelectFieldProps, type SelectOption } from './SelectField'
 export { DateField, type DateFieldProps } from './DateField'

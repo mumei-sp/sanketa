@@ -41,6 +41,7 @@
  * rather than leaving it to prose for ever.
  */
 
+import { z } from 'zod'
 import type { ContextSide } from './permissions'
 
 /** The machine-readable half of an audience. Absent means everybody. */
@@ -103,3 +104,16 @@ export function gradeRange(from: number, to: number): string[] {
   for (let grade = from; grade <= to; grade += 1) out.push(String(grade))
   return out
 }
+
+/**
+ * The zod shape for a form collecting a reach.
+ *
+ * Declared here rather than in each feature's schema so the notice form and
+ * the event form cannot drift into validating the same object two ways.
+ */
+export const AudienceReachSchema = z
+  .object({
+    sides: z.array(z.enum(['staff', 'family'])).optional(),
+    grades: z.array(z.string()).optional(),
+  })
+  .optional()

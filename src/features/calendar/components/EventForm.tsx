@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { TextField, SelectField, DateField, TextareaField, SwitchField, FORM_GRID_2 } from '@/components/form/fields'
+import { AudienceReachField, DateField, FORM_GRID_2, SelectField, SwitchField, TextField, TextareaField } from '@/components/form/fields'
 import { FormSection } from '@/components/form/FormSection'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -39,6 +39,7 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
       location: '',
       link: '',
       attendees: '',
+      reach: undefined,
       priority: 'medium',
       reminder: 'none',
       notes: '',
@@ -169,7 +170,9 @@ export function EventForm({ onSubmit, onCancel, initialData, defaultDate }: Even
               control={control}
               label="Attendees"
               placeholder="e.g., Grade 7 & 8 Parents, All Staff"
+              description="What the card says. The choices below are what the app acts on."
             />
+            <AudienceReachField name="reach" control={control} />
             <TextareaField
               name="notes"
               control={control}
