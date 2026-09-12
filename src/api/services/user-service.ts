@@ -39,6 +39,58 @@ import type { AccountStatus } from '@/features/auth/types'
 
 export type { SchoolUser }
 
+// ---------------------------------------------------------------------------
+// Who may change who somebody is
+// ---------------------------------------------------------------------------
+
+/**
+ * The three acts this file performs, and the permission each one is.
+ *
+ * None of them were asked for. Between them these functions decide who exists
+ * at a school, what they are there, and which role they hold — so an unguarded
+ * `setPersonRole(myProfileId, 'admin', true)` was a complete bypass of every
+ * other check in the app, reachable from any signed-in session. The roles
+ * editor is the other half of that door; see `role-service`.
+ *
+ * All three permissions are unnarrowed, so the bare question is the whole
+ * question — there is no record here to test a condition against, which is the
+ * case `callerMay` is documented for.
+ *
+ * ── Why adding and removing are one permission ─────────────────────────
+ * `users.create` covers the undos as well as the acts: `deleteUser` exists to
+ * take back a `createUser` and `removeProfileHere` to take back an
+ * `enrolPersonHere`, both of them reached from the same undo toast. Splitting
+ * them would let an administrator add somebody they could not then remove,
+ * which is not a state the screen can express and not one a school would ask
+ * for. The catalogue has no `users.delete` for that reason.
+ */
+function assertMayAddPeople(what: string): void {
+  if (!callerMay('create', 'User')) {
+    throw new Error(`Not allowed to ${what}.`)
+  }
+}
+
+/** `users.update` — the classes somebody covers, and whether they may sign in. */
+function assertMayEditAccess(what: string): void {
+  if (!callerMay('update', 'User')) {
+    throw new Error(`Not allowed to ${what}.`)
+  }
+}
+
+/**
+ * `roles.assign` — which role somebody holds.
+ *
+ * Its own permission, and deliberately not `users.update`: deciding that a
+ * teacher covers 8B as well as 8A is an administrative nicety, and deciding
+ * that she is the Principal is not. A school that delegates the first does not
+ * thereby delegate the second.
+ */
+function assertMayAssignRoles(what: string): void {
+  if (!callerMay('assign', 'User')) {
+    throw new Error(`Not allowed to ${what}.`)
+  }
+}
+
 /**
  * Everyone with an account.
  *
@@ -48,6 +100,8 @@ export async function fetchUsers(): Promise<SchoolUser[]> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 100, max: 250 })
+      // Every login at the school, with the address each one signs in on.
+      if (!callerMay('read', 'User')) return []
       return mockServer.listUsers()
     },
     async () => {
@@ -96,6 +150,8 @@ export async function fetchPeople(): Promise<Person[]> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 120, max: 280 })
+      // And the same list joined to roles, classes and who granted them.
+      if (!callerMay('read', 'User')) return []
       return mockServer.listUsers().map(user => {
         const access = resolveTenantAccess(user.id)
         return {
@@ -139,6 +195,7 @@ export async function enrolPersonHere(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayAddPeople('enrol somebody at this school')
       if (profileOf(userId)) return null
 
       // Idempotent, so somebody already routable here is not disturbed.
@@ -184,6 +241,7 @@ export async function removeProfileHere(profileId: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayAddPeople('remove somebody from this school')
       // A person the school's own tables know — a parent, a teacher — keeps
       // their row and loses their login; deleting the profile would take the
       // person off the roster. Only a profile that exists solely because
@@ -219,31 +277,20 @@ export async function setPersonRole(
      * absent on a role that had one is how an expiry is lifted.
      */
     expiresAt?: string
-    /**
-     * Why, in the granter's words. Optional, and replaced rather than merged —
-     * re-granting a role is a new decision, so the old reason goes with the
-     * old terms.
-     */
-    reason?: string
   } = {},
 ): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
-      if (held) {
-        grantRole(profileId, roleId, {
-          expiresAt: options.expiresAt,
-          reason: options.reason,
-          assignedBy: granterId(),
-        })
-      } else revokeRole(profileId, roleId)
+      assertMayAssignRoles(held ? 'give somebody a role' : 'take a role away')
+      if (held) grantRole(profileId, roleId, { expiresAt: options.expiresAt, assignedBy: granterId() })
+      else revokeRole(profileId, roleId)
       return true
     },
     async () => {
       if (held) {
         await apiClient.put(`/profiles/${profileId}/roles/${roleId}`, {
           expiresAt: options.expiresAt ?? null,
-          reason: options.reason ?? null,
         })
       } else {
         await apiClient.delete(`/profiles/${profileId}/roles/${roleId}`)
@@ -268,6 +315,7 @@ export async function setPersonClasses(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayEditAccess('change which classes somebody covers')
       return updateProfile(profileId, { assignedClasses: [...classSections] }) !== null
     },
     async () => {
@@ -296,6 +344,7 @@ export async function identifierTaken(input: {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 40, max: 120 })
+      assertMayAddPeople('check whether an email or number is already in use')
       return mockServer.claimedIdentifier(input)
     },
     async () => {
@@ -352,8 +401,6 @@ export interface RoleGrant {
   expiresAt?: string
   /** Null when nobody can be named — the seed grants have no author. */
   grantedBy: string | null
-  /** Why it was given, if whoever gave it said. `profile_roles.notes`. */
-  reason?: string
 }
 
 /** The grants on one profile, with the granter resolved to a name. */
@@ -363,7 +410,6 @@ function grantsWithNames(profileId: string): RoleGrant[] {
     assignedAt: grant.assignedAt,
     expiresAt: grant.expiresAt,
     grantedBy: grant.assignedBy ? (profileNameOf(grant.assignedBy) ?? null) : null,
-    reason: grant.reason,
   }))
 }
 
@@ -403,6 +449,10 @@ export async function createUser(input: {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayAddPeople('add an account')
+      // An account is created holding a role, so the grant is part of the act
+      // and has to clear the same bar a grant made afterwards would.
+      assertMayAssignRoles('give somebody a role')
 
       // Checked before anything is written: an unknown title would otherwise
       // create a login and a membership and then fail to record what the
@@ -475,6 +525,9 @@ export async function updateUserAccess(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayEditAccess('change what an account may do')
+      // A role inside an access patch is still a role change.
+      if (patch.roleId !== undefined) assertMayAssignRoles('give somebody a role')
       return mockServer.updateUser(id, patch)
     },
     async () => {
@@ -497,6 +550,7 @@ export async function deleteUser(id: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayAddPeople('remove an account')
       return mockServer.deleteUser(id)
     },
     async () => {
@@ -515,6 +569,7 @@ export async function restoreUser(user: SchoolUser): Promise<SchoolUser | null> 
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayAddPeople('restore an account')
       return mockServer.restoreUser(user)
     },
     async () => {

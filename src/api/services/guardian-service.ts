@@ -13,12 +13,26 @@ import { withLatency } from '@/mocks/_shared'
 import * as mockServer from '@/mocks/tenant/guardians'
 import { callerSeesEveryRow, visibleToCaller, visibleRecordToCaller } from '@/mocks/_shared/caller'
 import { findStudent } from '@/mocks/tenant/students/store'
+import { personOf } from '@/mocks/tenant/profiles'
 import type { Guardian, StudentGuardian } from '@/mocks/tenant/guardians'
 
 export type { Guardian, StudentGuardian }
 
 /** A parent with the relationship they hold to one particular student. */
-export type GuardianOfStudent = Guardian & { relationship: string; isPrimary: boolean }
+export type GuardianOfStudent = Guardian & {
+  relationship: string
+  isPrimary: boolean
+  /**
+   * Whether this guardian can sign in.
+   *
+   * Answered here because the page that asks was answering it by pulling the
+   * *whole account directory* — every login at the school, with emails — to
+   * run `accounts.some(...)` over it. One boolean is what it wanted, and a
+   * boolean about a guardian the caller is already entitled to see leaks
+   * nothing, where the directory leaked everybody.
+   */
+  hasLogin: boolean
+}
 
 /**
  * Everyone on file as a parent or guardian.
@@ -101,7 +115,12 @@ export async function fetchGuardiansOfStudent(studentProfileId: string): Promise
           })) !== undefined
         : callerSeesEveryRow('read', 'Student')
       if (!allowed) return []
-      return mockServer.guardiansOfStudent(studentProfileId)
+      return mockServer.guardiansOfStudent(studentProfileId).map(guardian => ({
+        ...guardian,
+        // A guardian's `parents` row and their profile are one row under one
+        // id, so a login on that profile is a login for that guardian.
+        hasLogin: personOf(guardian.profileId).userId !== undefined,
+      }))
     },
     async () => {
       const { data } = await apiClient.get<GuardianOfStudent[]>(

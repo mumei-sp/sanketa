@@ -10,11 +10,23 @@
 import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { withLatency } from '@/mocks/_shared'
+import { callerMay } from '@/mocks/_shared/caller'
 import * as mockServer from '@/mocks/tenant/roles'
 import type { Permission, Role, ScopeAxis } from '@/config/permissions'
 
 /**
  * Every role the school has defined.
+ *
+ * ── Deliberately not guarded, and it must stay that way ────────────────
+ * This is the ability's own input. `PermissionProvider` calls it on mount for
+ * *every* signed-in account and resolves the caller's own roles out of what
+ * comes back — so gating it on `roles.read` would hand a parent an empty
+ * table, resolve them to no role, and deny them everything including the
+ * screens they are entitled to. The guard would read as tightening security
+ * and would in fact be an outage.
+ *
+ * What the table leaks is the shape of the school's permissions, not anybody's
+ * data. The role *editor* is what needs a guard, and that is the write below.
  *
  * @apiRoute GET /api/v1/roles
  */
@@ -29,6 +41,26 @@ export async function fetchRoles(): Promise<Role[]> {
       return data
     },
   )
+}
+
+/**
+ * Whoever may define what a role can do may create, rename and remove one.
+ *
+ * `roles.manage` is unnarrowed, so the bare question is the whole question —
+ * and nothing was asking it. This is the door every other guard in the app
+ * stands behind: `updateRole('parent', { permissions: ALL_PERMISSIONS })` from
+ * any signed-in session would have granted a family account everything, and
+ * every check that reads the roles table would then have agreed.
+ *
+ * A throw rather than the `null` these functions already return, because null
+ * here means a request the rules refuse on their own terms — a role narrowed
+ * to `students`, an id already taken — and a refusal of *the caller* is a
+ * different answer that a screen should not be able to confuse with it.
+ */
+function assertMayManageRoles(action: string): void {
+  if (!callerMay('manage', 'Role')) {
+    throw new Error(`Not allowed to ${action} a role.`)
+  }
 }
 
 /**
@@ -50,6 +82,7 @@ export async function createRole(input: {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageRoles('create')
       return mockServer.createRole(input)
     },
     async () => {
@@ -74,6 +107,7 @@ export async function updateRole(
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageRoles('change')
       return mockServer.updateRole(id, patch)
     },
     async () => {
@@ -95,6 +129,7 @@ export async function restoreRole(role: Role): Promise<Role | null> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageRoles('restore')
       return mockServer.restoreRole(role)
     },
     async () => {
@@ -113,6 +148,7 @@ export async function deleteRole(id: string): Promise<boolean> {
   return mockOrHttp(
     async () => {
       await withLatency()
+      assertMayManageRoles('delete')
       return mockServer.deleteRole(id)
     },
     async () => {

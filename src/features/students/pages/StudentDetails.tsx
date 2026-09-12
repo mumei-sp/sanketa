@@ -40,7 +40,6 @@ import {
   type Guardian,
   type GuardianOfStudent,
 } from '@/api/services/guardian-service'
-import { fetchUsers, type SchoolUser } from '@/api/services/user-service'
 import { usePermissions } from '@/features/auth/PermissionContext'
 import { canWriteStudent } from '@/utils/class-section-helpers'
 
@@ -50,7 +49,6 @@ import * as detailService from '@/api/services/student-detail-service'
 import type { StudentDetailData, StudentHealthRecord, StudentScholarship, StudentActivity, StudentBehaviorEntry } from '../types'
 import type { DocumentItem } from '@/components/ui/documents-list'
 import { attendanceMonthKey } from '@/utils/academic-date'
-import { profileOf } from '@/mocks/tenant/profiles'
 
 // ── Modal state discriminated union ──
 
@@ -107,20 +105,17 @@ export default function StudentDetails() {
    */
   const [guardians, setGuardians] = React.useState<GuardianOfStudent[]>([])
   const [allGuardians, setAllGuardians] = React.useState<Guardian[]>([])
-  const [accounts, setAccounts] = React.useState<SchoolUser[]>([])
   const [isSavingGuardian, setIsSavingGuardian] = React.useState(false)
 
   const loadGuardians = React.useCallback(async () => {
     if (!studentId) return
     try {
-      const [mine, everyone, users] = await Promise.all([
+      const [mine, everyone] = await Promise.all([
         fetchGuardiansOfStudent(studentId),
         fetchGuardians(),
-        fetchUsers(),
       ])
       setGuardians(mine)
       setAllGuardians(everyone)
-      setAccounts(users)
     } catch (error) {
       console.error('Failed to load guardians', error)
     }
@@ -131,12 +126,12 @@ export default function StudentDetails() {
   }, [loadGuardians])
 
   const guardianHasAccount = React.useCallback(
-    // A guardian's `parents` row and their profile are one row under one id,
-    // so an account on that id is an account for that guardian. Per school,
-    // because both sides of it are.
+    // Answered by the guardian read itself. This used to load every account at
+    // the school to decide it, which handed anyone who could open a student —
+    // a parent included — the whole login directory with its email addresses.
     (guardianProfileId: string) =>
-      accounts.some(user => profileOf(user.id)?.id === guardianProfileId),
-    [accounts],
+      guardians.find(guardian => guardian.profileId === guardianProfileId)?.hasLogin ?? false,
+    [guardians],
   )
 
   const handleSaveGuardian = React.useCallback(
