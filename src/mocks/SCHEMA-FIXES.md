@@ -14,13 +14,13 @@ designs something, the fix is to port it rather than invent it.
 | `users.email` is `UNIQUE NOT NULL`, so an account cannot exist without an address — but a school knows a family's mobile long before it knows an email, and usually never learns one | `MODIFY email VARCHAR(255) NULL` |
 | `users.phone` has a plain, non-unique index, so a number cannot resolve a login | `ADD CONSTRAINT uk_users_phone UNIQUE (phone)`. Deliberate cost: two parents sharing a family mobile cannot both hold it |
 | Nothing stops a row with neither identifier | `CHECK (email IS NOT NULL OR phone IS NOT NULL)` |
-| `user_profiles` in GlobalDB carries `profile_type`, address, contact preferences and `custom_fields` — facts about a person *at a school*, in the database the ARCH doc says holds identity only. One row cannot say a person is a teacher at one school and a parent at another | Reduce it to identity, or drop it. What someone is at a school belongs in that school's schema |
+| GlobalDB's `user_profiles` is replicated into every tenant as a column subset, so `UNIQUE(user_id)` plus `profile_type NOT NULL` gives one person one `profile_type` in every school at once — a teacher at one and a parent at another cannot be expressed | Drop `profile_type` from both copies, per the row below. The rest of the replica is sound: name, DOB, gender, phone and picture are facts about the person, not about the person at a school |
 
 ## Tenant — people and roles
 
 | Problem | Fix |
 |---|---|
-| `user_profiles.user_id` is `NOT NULL` in both databases, so a person cannot exist at a school without a login — but a school of 1,100 people has a handful who sign in, and the rest would need accounts created solely to satisfy the column, each one needing an email or phone under the identifier check above | `MODIFY user_id BIGINT NULL`. The unique index tolerates it: MySQL allows repeated NULLs |
+| `user_profiles.user_id` is `NOT NULL` in both databases, so a person cannot exist at a school without a login — but a school of 1,100 people has a handful who sign in, and the rest would need accounts created solely to satisfy the column, each one needing an email or phone under the identifier check above | `MODIFY user_id BIGINT NULL` in both. The unique index tolerates it: MySQL allows repeated NULLs. The tenant row must also be allowed to originate locally, since a person with no login has no global row to sync from |
 | No roles, permissions or role-permission tables exist, though both schema files' comments say roles live in the tenant DB | Port `roles`, `permissions`, `role_permissions` from `feature/db-schema:modules/permission-mgmt/schema.sql` into the tenant schema |
 | `roles` has no way to say which way a holder is narrowed | Add `scope_axis VARCHAR(20) NULL` — `classes`, `students`, or null for unnarrowed. Closed set: each axis needs a subject field and a condition branch, so a new one is a developer's change |
 | No table assigns roles to people, so a person can hold at most the one role a session carries | Add `profile_roles(profile_id, role_id, assigned_by, assigned_at, expires_at)`, `PRIMARY KEY (profile_id, role_id)`. This is the Postgres draft's `user_roles` re-keyed to the profile, which is what makes it per-school |
@@ -56,5 +56,5 @@ designs something, the fix is to port it rather than invent it.
 3. The three record gaps: `teacher_classes`, student status, `is_deleted`.
 4. The identity change on `users`.
 5. `academic-mgmt`, then turn the class-section labels into foreign keys.
-6. Reducing GlobalDB's `user_profiles` to identity. Last because it is the
-   most invasive and nothing is blocked on it.
+6. Dropping `profile_type` from GlobalDB's `user_profiles` and from the tenant
+   replica. Last because step 2 has to give it somewhere to go first.

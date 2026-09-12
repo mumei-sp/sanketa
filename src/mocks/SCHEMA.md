@@ -24,18 +24,42 @@ the two drafts compose.
 
 ## Global database — `sanketa_global`
 
-Identity, and nothing that belongs to a school. The rule from
-`Multi-Tenant-LMS__ARCH.md`: *"GlobalDB stores identity and lightweight mapping
-data only. Do not model domain FK relationships across GlobalDB and
-SchoolDBs."*
+Identity, and nothing that belongs to a school. `Multi-Tenant-LMS__ARCH.md`
+(on `feature/db-schema`) states the rule twice — *"GlobalDB stores identity and
+lightweight mapping data only"* of the global model, and *"Do not model domain
+FK relationships across GlobalDB and SchoolDBs"* of the tenant one.
 
 | Table | Purpose | Status | Mocked |
 |---|---|---|---|
 | `users` | Login identity: `email?`, `phone?`, `status`, `keycloak_user_id` | exists (MySQL) | yes |
+| `user_profiles` | The person behind the login: name, DOB, gender, phone. Source of truth for the copy each tenant holds | exists (MySQL) | no — see below |
 | `tenants` | The schools: `tenant_code`, `name`, `is_active` | exists (MySQL) | yes |
 | `user_tenant_mapping` | This person is at this school. `UNIQUE(user_id, tenant_id)` | exists (MySQL) | yes |
 | `tenant_database_mapping` | Which schema a tenant lives in | exists (MySQL) | folded into `tenants.schema` |
 | `fabric_sessions` | Issued token hashes, for revocation | exists (MySQL) | yes |
+
+### `user_profiles` lives in both databases on purpose
+
+The tenant copy is a read replica of a column subset.
+`DENORMALIZED_PROFILE_ARCHITECTURE.md` names the global row the source of truth
+and the tenant row a denormalized copy, kept current by sync triggers. The
+subset is strict: the tenant carries name, DOB, gender, primary phone and
+picture; the global row adds secondary and emergency contacts, address, bio,
+privacy flags and `custom_fields`, none of which a school screen reads.
+Rendering a class list without the copy would mean a cross-database join per
+row — the one thing the ARCH doc forbids above.
+
+The mock has no global `user_profiles` because it has nothing to gain from
+one. There is no round trip to save in a browser, and a second copy of every
+name could only go stale. `tenant/profiles` **is** the replica, and the sync is
+out of scope.
+
+One replicated column does not belong there: `profile_type`. `UNIQUE(user_id)`
+on the global row means a person has exactly one, copied verbatim into every
+school — so a teacher at Kendriya who is a parent at Vidya Mandir cannot be
+both. Every other replicated column is a fact about the person rather than
+about the person *at a school*, which is what makes the rest of the design
+sound. [SCHEMA-FIXES.md](./SCHEMA-FIXES.md) drops the column.
 
 ### Changes this frontend requires of `users`
 
