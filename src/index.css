@@ -94,59 +94,74 @@
    * These values are used by Tailwind v4 spacing utilities (p-, m-, gap-, space-x-, etc.)
    * =================================================================== */
   
+  /*
+   * The base every fractional step is built from.
+   *
+   * Tailwind derives `p-2.5`, `gap-1.5` and the rest from `calc(var(--spacing)
+   * * n)` — the named `--spacing-2\.5` below is only consulted for whole
+   * steps. Left at Tailwind's default of 0.25rem that calc runs off a 3.5px
+   * unit at this app's 14px root, so every half step came out 12.5% short:
+   * `gap-1.5` drew 5.25px where the scale says 6, across some 500 utilities.
+   *
+   * 0.286rem is 4px, which is what `spacing['1']` already is — so the base and
+   * the named steps are now the same scale rather than two, and 0.5/1.5/2.5
+   * land on 2/6/10 exactly as documented.
+   */
+  --spacing: 0.286rem; /* 4px — one spacing unit */
+
   /* Pixel-based spacing */
   --spacing-px: 1px; /* spacing.px */
 
   /* Ultra compact (0-1) */
   --spacing-0: 0; /* spacing['0'] */
-  --spacing-0\.5: 0.125rem; /* 2px - spacing['0.5'] */
-  --spacing-1: 0.25rem; /* 4px - spacing['1'] */
+  --spacing-0\.5: 0.143rem; /* 2px - spacing['0.5'] */
+  --spacing-1: 0.286rem; /* 4px - spacing['1'] */
 
   /* Small spacing (1.5-3) */
-  --spacing-1\.5: 0.375rem; /* 6px - spacing['1.5'] */
-  --spacing-2: 0.5rem; /* 8px - spacing['2'] */
-  --spacing-2\.5: 0.625rem; /* 10px - spacing['2.5'] */
-  --spacing-3: 0.75rem; /* 12px - spacing['3'] */
+  --spacing-1\.5: 0.429rem; /* 6px - spacing['1.5'] */
+  --spacing-2: 0.571rem; /* 8px - spacing['2'] */
+  --spacing-2\.5: 0.714rem; /* 10px - spacing['2.5'] */
+  --spacing-3: 0.857rem; /* 12px - spacing['3'] */
 
   /* Medium spacing (4-6) */
-  --spacing-4: 1rem; /* 16px - spacing['4'] */
-  --spacing-5: 1.125rem; /* 18px - spacing['5'] */
-  --spacing-6: 1.25rem; /* 20px - spacing['6'] */
+  --spacing-4: 1.143rem; /* 16px - spacing['4'] */
+  --spacing-5: 1.286rem; /* 18px - spacing['5'] */
+  --spacing-6: 1.429rem; /* 20px - spacing['6'] */
 
   /* Extended medium spacing (7-11) */
-  --spacing-7: 1.375rem; /* 22px - spacing['7'] */
-  --spacing-9: 1.625rem; /* 26px - spacing['9'] */
-  --spacing-11: 1.875rem; /* 30px - spacing['11'] */
+  --spacing-7: 1.571rem; /* 22px - spacing['7'] */
+  --spacing-9: 1.857rem; /* 26px - spacing['9'] */
+  --spacing-11: 2.143rem; /* 30px - spacing['11'] */
 
   /* Large spacing (8-14) */
-  --spacing-8: 1.5rem; /* 24px - spacing['8'] */
-  --spacing-10: 1.75rem; /* 28px - spacing['10'] */
-  --spacing-12: 2rem; /* 32px - spacing['12'] */
-  --spacing-14: 2.25rem; /* 36px - spacing['14'] */
+  --spacing-8: 1.714rem; /* 24px - spacing['8'] */
+  --spacing-10: 2rem; /* 28px - spacing['10'] */
+  --spacing-12: 2.286rem; /* 32px - spacing['12'] */
+  --spacing-14: 2.571rem; /* 36px - spacing['14'] */
 
   /* Extra large spacing (16-28) */
-  --spacing-16: 2.5rem; /* 40px - spacing['16'] */
-  --spacing-20: 3rem; /* 48px - spacing['20'] */
-  --spacing-24: 3.5rem; /* 56px - spacing['24'] */
-  --spacing-28: 4rem; /* 64px - spacing['28'] */
+  --spacing-16: 2.857rem; /* 40px - spacing['16'] */
+  --spacing-20: 3.429rem; /* 48px - spacing['20'] */
+  --spacing-24: 4rem; /* 56px - spacing['24'] */
+  --spacing-28: 4.571rem; /* 64px - spacing['28'] */
 
   /* Huge spacing (32-48) */
-  --spacing-32: 4.5rem; /* 72px - spacing['32'] */
-  --spacing-36: 5rem; /* 80px - spacing['36'] */
-  --spacing-40: 5.5rem; /* 88px - spacing['40'] */
-  --spacing-44: 6rem; /* 96px - spacing['44'] */
-  --spacing-48: 6.5rem; /* 104px - spacing['48'] */
+  --spacing-32: 5.143rem; /* 72px - spacing['32'] */
+  --spacing-36: 5.714rem; /* 80px - spacing['36'] */
+  --spacing-40: 6.286rem; /* 88px - spacing['40'] */
+  --spacing-44: 6.857rem; /* 96px - spacing['44'] */
+  --spacing-48: 7.429rem; /* 104px - spacing['48'] */
 
   /* Extra huge spacing (52-64) */
-  --spacing-52: 7rem; /* 112px - spacing['52'] */
-  --spacing-56: 7.5rem; /* 120px - spacing['56'] */
-  --spacing-60: 8rem; /* 128px - spacing['60'] */
-  --spacing-64: 8.5rem; /* 136px - spacing['64'] */
+  --spacing-52: 8rem; /* 112px - spacing['52'] */
+  --spacing-56: 8.571rem; /* 120px - spacing['56'] */
+  --spacing-60: 9.143rem; /* 128px - spacing['60'] */
+  --spacing-64: 9.714rem; /* 136px - spacing['64'] */
 
   /* Maximum spacing (72-96) */
-  --spacing-72: 9.5rem; /* 152px - spacing['72'] */
-  --spacing-80: 10.5rem; /* 168px - spacing['80'] */
-  --spacing-96: 13rem; /* 208px - spacing['96'] */
+  --spacing-72: 10.857rem; /* 152px - spacing['72'] */
+  --spacing-80: 12rem; /* 168px - spacing['80'] */
+  --spacing-96: 14.857rem; /* 208px - spacing['96'] */
 
   /* Height scale overrides for components (independent of spacing) */
   /* These ensure buttons and other components maintain correct pixel sizes */
@@ -560,17 +575,10 @@ html[data-density="compact"] [data-slot="card"] {
     height: 2.571rem;
   }
 
-  /* Compact table density utilities */
-  .size-3\.5 {
-    width: 0.875rem; /* 14px at 14px base */
-    height: 0.875rem; /* 14px at 14px base */
-  }
-
-  /* Tighter vertical padding for compact layouts */
-  .py-2\.5 {
-    padding-top: 0.625rem; /* 10px at 14px base */
-    padding-bottom: 0.625rem; /* 10px at 14px base */
-  }
+  /* `.size-3\.5` and `.py-2\.5` used to be redefined here, to 14px and 10px.
+     Both are what the scale now generates on its own (3.5 and 2.5 of a 4px
+     unit), so the overrides are gone — and with them the quiet bug that an
+     override with no responsive counterpart beats `sm:py-2\.5`. */
 
   /* Toolbar control height — tap-comfortable on phones, compact from `sm` up.
      This exists as its own utility because `.h-8` / `.h-9` are redefined above
@@ -663,7 +671,7 @@ html[data-density="compact"] [data-slot="card"] {
 
 /* More vertical spacing between nav items in icon-only mode */
 [data-collapsible="icon"] [data-sidebar="menu"] {
-  gap: 0.5rem; /* 8px between items */
+  gap: 0.571rem; /* 8px between items */
 }
 
 /* ===================================================================

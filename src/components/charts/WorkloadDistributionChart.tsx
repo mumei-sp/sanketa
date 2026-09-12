@@ -237,7 +237,7 @@ export function WorkloadDistributionChart({
         <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
           <CardHeader className="flex-shrink-0 pb-0">
             <h3 className="text-section-title">Workload Distribution</h3>
-            <CardAction>
+            <CardAction data-compact>
               <div className="flex gap-2">
                 <Skeleton className="h-8 w-[110px]" />
                 <Skeleton className="h-8 w-[110px]" />
@@ -259,7 +259,7 @@ export function WorkloadDistributionChart({
       <Card className="h-full min-h-[260px] w-full pt-4 pb-2 flex flex-col gap-0">
         <CardHeader className="flex-shrink-0 pb-0">
           <h3 className="text-section-title">Workload Distribution</h3>
-          <CardAction>
+          <CardAction data-compact>
             <div className="flex gap-2">
               <Select value={subject} onValueChange={setSubject}>
                 <SelectTrigger className={cn(PANEL_SELECT_TRIGGER, 'w-[110px]')}>

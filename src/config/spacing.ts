@@ -5,12 +5,29 @@
  * Spacing values are reduced by approximately one Tailwind step to improve
  * information density while maintaining visual clarity.
  *
- * All values are in rem units, relative to 14px base font size.
+ * All values are in rem units, relative to the 14px root this app sets in
+ * `index.css`. The px in each comment is what that token actually renders.
  *
  * This is the SINGLE SOURCE OF TRUTH for all spacing values in the application.
  * All spacing (Tailwind classes, inline styles, CSS variables) should reference this config.
  *
- * Formula: Original Tailwind value * 0.875 (14px/16px base ratio) * 0.9-0.95 (compact reduction)
+ * ── The rem values were a step short of their own comments ─────────────
+ * They were written as though the root were 16px: `'4': '1rem'` annotated
+ * "16px", which at a 14px root is 14. Every token in the scale landed 12.5%
+ * under what it said, and because the whole app spaces itself through here, so
+ * did every card, gap and inset in it — on top of the compact reduction below,
+ * which was deliberate and is still applied.
+ *
+ * Nothing was obviously broken, which is why it lasted: a uniform shortfall
+ * reads as a house style rather than a bug. It surfaced when the Access screen
+ * was measured against a design drawn at 16px-root spacing and came up short
+ * everywhere at once, by the same 12.5%.
+ *
+ * `typography.ts` never had this problem — it states `1.143rem` for 16px, the
+ * root correctly accounted for. This file now matches that convention.
+ *
+ * Formula: intended px ÷ 14 (the root), where the intended px is the original
+ * Tailwind value * 0.875 * 0.9-0.95 (the compact reduction).
  */
 
 /**
@@ -26,54 +43,54 @@ export const spacing = {
 
   // Ultra compact (0-1)
   '0': '0',
-  '0.5': '0.125rem', // 2px (was 0.125rem)
-  '1': '0.25rem', // 4px (was 0.25rem)
+  '0.5': '0.143rem', // 2px
+  '1': '0.286rem', // 4px
 
   // Small spacing (1.5-3)
-  '1.5': '0.375rem', // 6px (was 0.375rem)
-  '2': '0.5rem', // 8px (was 0.5rem)
-  '2.5': '0.625rem', // 10px (was 0.625rem)
-  '3': '0.75rem', // 12px (was 0.75rem)
+  '1.5': '0.429rem', // 6px
+  '2': '0.571rem', // 8px
+  '2.5': '0.714rem', // 10px
+  '3': '0.857rem', // 12px
 
   // Medium spacing (4-6)
-  '4': '1rem', // 16px (was 1rem, now equivalent to p-4)
-  '5': '1.125rem', // 18px (was 1.25rem)
-  '6': '1.25rem', // 20px (was 1.5rem, now equivalent to p-5)
+  '4': '1.143rem', // 16px
+  '5': '1.286rem', // 18px
+  '6': '1.429rem', // 20px
 
   // Extended medium spacing (7-11)
-  '7': '1.375rem', // 22px (was 1.75rem)
-  '9': '1.625rem', // 26px (was 2.25rem)
-  '11': '1.875rem', // 30px (was 2.75rem)
+  '7': '1.571rem', // 22px
+  '9': '1.857rem', // 26px
+  '11': '2.143rem', // 30px
 
   // Large spacing (8-14)
-  '8': '1.5rem', // 24px (was 2rem, now equivalent to p-6)
-  '10': '1.75rem', // 28px (was 2.5rem)
-  '12': '2rem', // 32px (was 3rem, now equivalent to p-8)
-  '14': '2.25rem', // 36px (was 3.5rem)
+  '8': '1.714rem', // 24px
+  '10': '2rem', // 28px
+  '12': '2.286rem', // 32px
+  '14': '2.571rem', // 36px
 
   // Extra large spacing (16-28)
-  '16': '2.5rem', // 40px (was 4rem)
-  '20': '3rem', // 48px (was 5rem)
-  '24': '3.5rem', // 56px (was 6rem)
-  '28': '4rem', // 64px (was 7rem)
+  '16': '2.857rem', // 40px
+  '20': '3.429rem', // 48px
+  '24': '4rem', // 56px
+  '28': '4.571rem', // 64px
 
   // Huge spacing (32-48)
-  '32': '4.5rem', // 72px (was 8rem)
-  '36': '5rem', // 80px (was 9rem)
-  '40': '5.5rem', // 88px (was 10rem)
-  '44': '6rem', // 96px (was 11rem)
-  '48': '6.5rem', // 104px (was 12rem)
+  '32': '5.143rem', // 72px
+  '36': '5.714rem', // 80px
+  '40': '6.286rem', // 88px
+  '44': '6.857rem', // 96px
+  '48': '7.429rem', // 104px
 
   // Extra huge spacing (52-64)
-  '52': '7rem', // 112px (was 13rem)
-  '56': '7.5rem', // 120px (was 14rem)
-  '60': '8rem', // 128px (was 15rem)
-  '64': '8.5rem', // 136px (was 16rem)
+  '52': '8rem', // 112px
+  '56': '8.571rem', // 120px
+  '60': '9.143rem', // 128px
+  '64': '9.714rem', // 136px
 
   // Maximum spacing (72-96)
-  '72': '9.5rem', // 152px (was 18rem)
-  '80': '10.5rem', // 168px (was 20rem)
-  '96': '13rem', // 208px (was 24rem)
+  '72': '10.857rem', // 152px
+  '80': '12rem', // 168px
+  '96': '14.857rem', // 208px
 } as const
 
 /**
