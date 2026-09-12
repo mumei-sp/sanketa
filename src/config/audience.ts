@@ -50,6 +50,14 @@ export interface AudienceReach {
   sides?: ContextSide[]
   /** Which grade levels — `'7'`, `'8'`. Absent or empty means all of them. */
   grades?: string[]
+  /**
+   * Particular people, by profile id.
+   *
+   * The other two axes describe a group; this names individuals, and it is the
+   * one axis that *widens*. See `audienceReaches` for why, and for what it
+   * means on its own.
+   */
+  profileIds?: string[]
 }
 
 /** What the app knows about whoever is reading, in the terms a reach speaks. */
@@ -68,14 +76,30 @@ export interface AudienceViewer {
   grades: string[]
   /** True when no grade narrows them — a principal, an administrator. */
   everyGrade: boolean
+  /** This reader's profile id here, for an item that names people. */
+  profileId: string | null
 }
 
 /**
  * Whether this item reaches this viewer.
  *
- * Ordered deliberately: the administrator's bypass first, then the side, then
- * the grades. Checking grades before sides would let a principal — who reaches
- * every grade — through a `family` restriction on that strength alone.
+ * ── Two kinds of axis, and why they compose the way they do ────────────
+ * `sides` and `grades` describe a *group*, and each one narrows it: "families"
+ * and then "in year 9" is a smaller set than either alone, so they are an AND.
+ *
+ * `profileIds` names *people*, and naming somebody widens. It is a "To:" line:
+ * a notice for the whole staff room that also names three parents reaches the
+ * staff room and those three parents, which is the only reading of it that is
+ * not a trap for whoever wrote it.
+ *
+ * That leaves one case worth stating outright. Naming people and describing no
+ * group at all means **exactly those people** — not everybody, which is what
+ * an OR against a vacuous group would otherwise give, and which would turn the
+ * most precise thing an author can say into the widest.
+ *
+ * Order matters inside the group: the administrator's bypass first, then the
+ * side, then the grades. Checking grades before sides would let a principal —
+ * who reaches every grade — through a `family` restriction on that alone.
  */
 export function audienceReaches(
   reach: AudienceReach | undefined,
@@ -84,6 +108,26 @@ export function audienceReaches(
   if (viewer.seesEverything) return true
   if (!reach) return true
 
+  const named =
+    reach.profileIds !== undefined &&
+    reach.profileIds.length > 0 &&
+    viewer.profileId !== null &&
+    reach.profileIds.includes(viewer.profileId)
+
+  const describesGroup =
+    (reach.sides !== undefined && reach.sides.length > 0) ||
+    (reach.grades !== undefined && reach.grades.length > 0)
+
+  // Named people and nothing else: the addressees are the audience.
+  if (!describesGroup) {
+    return reach.profileIds !== undefined && reach.profileIds.length > 0 ? named : true
+  }
+
+  return named || matchesGroup(reach, viewer)
+}
+
+/** The `sides` ∧ `grades` half, which narrows. */
+function matchesGroup(reach: AudienceReach, viewer: AudienceViewer): boolean {
   if (reach.sides !== undefined && reach.sides.length > 0) {
     // No side means no role here, and an item addressed to a particular side
     // is not addressed to somebody who is not in one.
@@ -115,5 +159,6 @@ export const AudienceReachSchema = z
   .object({
     sides: z.array(z.enum(['staff', 'family'])).optional(),
     grades: z.array(z.string()).optional(),
+    profileIds: z.array(z.string()).optional(),
   })
   .optional()

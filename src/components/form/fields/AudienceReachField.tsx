@@ -24,11 +24,14 @@
  */
 
 import * as React from 'react'
+import { X } from 'lucide-react'
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { useSchoolConfig } from '@/config/SchoolConfigContext'
 import { getUniqueGrades } from '@/utils/class-section-helpers'
+import { Input } from '@/components/ui/input'
+import { fetchDirectory, type DirectoryEntry } from '@/api/services/directory-service'
 import type { AudienceReach } from '@/config/audience'
 import type { ContextSide } from '@/config/permissions'
 
@@ -43,6 +46,131 @@ function choiceOf(reach: AudienceReach | undefined): string {
   const sides = reach?.sides
   if (!sides || sides.length === 0 || sides.length > 1) return 'everyone'
   return sides[0]
+}
+
+
+/** How many matches to put on screen at once. A list nobody scrolls is a list. */
+const MATCH_LIMIT = 8
+
+/**
+ * Naming particular people.
+ *
+ * A search box rather than a list, because a school is eleven hundred people
+ * and a `<select>` of eleven hundred is not a control. Nothing renders until
+ * somebody types, so the common case — an audience described by side and year
+ * — costs one line of text and no list at all.
+ */
+function PeoplePicker({
+  selected,
+  onChange,
+}: {
+  selected: string[]
+  onChange: (next: string[]) => void
+}) {
+  const [directory, setDirectory] = React.useState<DirectoryEntry[]>([])
+  const [query, setQuery] = React.useState('')
+
+  React.useEffect(() => {
+    let cancelled = false
+    void fetchDirectory()
+      .then(rows => {
+        if (!cancelled) setDirectory(rows)
+      })
+      .catch(() => {
+        // Nothing to offer beats a half-list: a caller who may not read the
+        // roster gets an empty directory from the service anyway.
+        if (!cancelled) setDirectory([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const byId = React.useMemo(
+    () => new Map(directory.map(entry => [entry.profileId, entry])),
+    [directory],
+  )
+
+  const matches = React.useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (needle.length < 2) return []
+    return directory
+      .filter(entry => !selected.includes(entry.profileId))
+      .filter(entry => entry.name.toLowerCase().includes(needle))
+      .slice(0, MATCH_LIMIT)
+  }, [directory, query, selected])
+
+  const add = (profileId: string) => {
+    onChange([...selected, profileId])
+    setQuery('')
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-caption text-muted-foreground">
+        Named people — they see it whatever the choices above say.
+      </p>
+
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map(profileId => (
+            <span
+              key={profileId}
+              className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-caption font-semibold"
+              style={{
+                borderColor: 'var(--border)',
+                backgroundColor: 'var(--secondary)',
+                color: 'var(--heading)',
+              }}
+            >
+              {/* A tag for somebody no longer in the directory still shows its
+                  id, so a stale addressee is visible rather than silently
+                  vanishing from the audience it is part of. */}
+              {byId.get(profileId)?.name ?? profileId}
+              <button
+                type="button"
+                onClick={() => onChange(selected.filter(id => id !== profileId))}
+                aria-label={`Remove ${byId.get(profileId)?.name ?? profileId}`}
+                className="rounded-full p-0.5 transition-opacity hover:opacity-60"
+              >
+                <X className="size-3" aria-hidden />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="relative">
+        <Input
+          value={query}
+          onChange={event => setQuery(event.target.value)}
+          placeholder="Search people by name…"
+          aria-label="Search people to add to this audience"
+        />
+        {matches.length > 0 && (
+          <ul
+            className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
+            style={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)' }}
+          >
+            {matches.map(entry => (
+              <li key={entry.profileId}>
+                <button
+                  type="button"
+                  onClick={() => add(entry.profileId)}
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition-colors hover:bg-muted"
+                >
+                  <span className="text-sm font-medium" style={{ color: 'var(--heading)' }}>
+                    {entry.name}
+                  </span>
+                  <span className="text-caption text-muted-foreground">{entry.detail}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export interface AudienceReachFieldProps<T extends FieldValues> {
@@ -85,6 +213,7 @@ export function AudienceReachField<T extends FieldValues>({
           const cleaned: AudienceReach = {}
           if (next.sides && next.sides.length > 0) cleaned.sides = next.sides
           if (next.grades && next.grades.length > 0) cleaned.grades = next.grades
+          if (next.profileIds && next.profileIds.length > 0) cleaned.profileIds = next.profileIds
           field.onChange(Object.keys(cleaned).length > 0 ? cleaned : undefined)
         }
 
@@ -95,7 +224,7 @@ export function AudienceReachField<T extends FieldValues>({
           // Sorted numerically so '10' sits after '9' rather than after '1',
           // which is where a plain string sort puts it.
           next.sort((a, b) => Number(a) - Number(b))
-          commit({ sides: reach?.sides, grades: next })
+          commit({ sides: reach?.sides, grades: next, profileIds: reach?.profileIds })
         }
 
         return (
@@ -110,7 +239,7 @@ export function AudienceReachField<T extends FieldValues>({
                     key={option.id}
                     type="button"
                     aria-pressed={active}
-                    onClick={() => commit({ sides: option.sides, grades: selectedGrades })}
+                    onClick={() => commit({ sides: option.sides, grades: selectedGrades, profileIds: reach?.profileIds })}
                     className={cn(
                       'flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -161,6 +290,13 @@ export function AudienceReachField<T extends FieldValues>({
                 })}
               </div>
             </div>
+
+            <PeoplePicker
+              selected={reach?.profileIds ?? []}
+              onChange={profileIds =>
+                commit({ sides: reach?.sides, grades: selectedGrades, profileIds })
+              }
+            />
 
             {description && <p className="text-caption text-muted-foreground">{description}</p>}
           </div>

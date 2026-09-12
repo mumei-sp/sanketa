@@ -39,7 +39,7 @@ function gradeOfSection(label: string): string | undefined {
 export function callerAudience(subject: Subject): AudienceViewer {
   const session = authUtils.getUser()
   if (!session) {
-    return { seesEverything: false, side: null, grades: [], everyGrade: false }
+    return { seesEverything: false, side: null, grades: [], everyGrade: false, profileId: null }
   }
 
   const side = resolveActiveSide(session.id)
@@ -65,5 +65,7 @@ export function callerAudience(subject: Subject): AudienceViewer {
     side,
     grades: [...new Set(grades)],
     everyGrade: side === 'staff' && access.assignedClasses.length === 0,
+    // Their row at this school, which is what an item naming people names.
+    profileId: access.profileId,
   }
 }
