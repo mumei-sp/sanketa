@@ -38,6 +38,9 @@ import type { ClassTimetable, TimetableSlot, TimetableException } from '@/featur
 import { DEFAULT_PERIODS, DEFAULT_SCHOOL_DAYS } from '@/config/school-config'
 import { teachersData } from '@/mocks/tenant/teachers/teachers'
 import { sectionsAsConfig, curriculumFor, listSubjects } from '@/mocks/tenant/academic'
+import { listRooms } from '@/mocks/tenant/scheduling/store'
+import type { Room } from '@/mocks/tenant/scheduling/types'
+import { SPECIALIST_SUBJECTS, tagOf, type RoomTag } from '@/mocks/schools/_generate/scheduling'
 import { departmentOf } from '@/mocks/tenant/teachers/assignments'
 import { currentAcademicYear, academicYearStart, isoDate, relativeIso } from '@/mocks/_shared/date-helpers'
 import { rng, int, pick } from '@/mocks/schools/_generate/random'
@@ -70,29 +73,27 @@ const quotaFor = (grade: string) =>
 // ── Rooms ─────────────────────────────────────────────────────────────
 
 /**
- * Where a period happens.
+ * Where a period happens — a room, not a string.
  *
- * A class has a home room it spends most of its week in, and the practical
- * subjects have theirs. A grid where every cell says "Room 201" is a grid
- * nobody has to read twice.
+ * ── What this replaced ─────────────────────────────────────────────────
+ * A function returning `'Lab 1'`, `'Ground'`, `'Room 901'`. Nothing pointed at
+ * anything, so nothing could check, and nothing did: it put three classes in
+ * Lab 1 at once, 57 times at one school and 14 at the other. The generator
+ * refused to double-book a teacher and had no idea a room could be
+ * double-booked at all.
+ *
+ * Now a class has a homeroom and specialist subjects book a shared room, which
+ * holds one class at a time. That is a second hard constraint on placement:
+ * one computer lab means at most one class doing Computer Science in any
+ * period, whatever the teachers are doing.
  */
-function roomFor(subjectId: string, grade: string, section: string): string {
-  switch (subjectId) {
-    case 'sci':
-      return `Lab ${((Number(grade) - 1) % 3) + 1}`
-    case 'cs':
-      return 'Computer Lab'
-    case 'pe':
-      return 'Ground'
-    case 'art':
-      return 'Art Room'
-    case 'music':
-      return 'Music Room'
-    case 'library':
-      return 'Library'
-    default:
-      return `Room ${grade}${section === 'A' ? '01' : section === 'B' ? '02' : '03'}`
-  }
+function roomsByTag(): Map<RoomTag, Room[]> {
+  const byTag = new Map<RoomTag, Room[]>()
+  listRooms().forEach(room => {
+    const tag = tagOf(room)
+    byTag.set(tag, [...(byTag.get(tag) ?? []), room])
+  })
+  return byTag
 }
 
 // ── Generation ────────────────────────────────────────────────────────
@@ -119,6 +120,9 @@ export function generateTimetables(): ClassTimetable[] {
 
   // A teacher's week: which (day, period) pairs they are already teaching in.
   const teacherBusy = new Map<string, Set<string>>()
+  // A room's week, the same shape as a teacher's. Specialist rooms are the
+  // scarce thing after staff: one art room means one art class at a time.
+  const roomBusy = new Map<string, Set<string>>()
   const key = (day: number, period: string) => `${day}|${period}`
   const isFree = (teacherId: string, day: number, period: string) =>
     !teacherBusy.get(teacherId)?.has(key(day, period))
@@ -129,6 +133,51 @@ export function generateTimetables(): ClassTimetable[] {
   }
   const release = (teacherId: string, day: number, period: string) => {
     teacherBusy.get(teacherId)?.delete(key(day, period))
+  }
+
+  const byTag = roomsByTag()
+  const homerooms = new Map(
+    (byTag.get('homeroom') ?? []).map(room => [room.roomName ?? room.id, room]),
+  )
+
+  /**
+   * Book a room for one cell, or say there is none free.
+   *
+   * A homeroom is the class's own and never contended. A specialist room is
+   * taken from the pool for that tag, first one free — and `undefined` means
+   * the subject cannot run in this cell at all, which is the answer the
+   * placement loop needs to hear.
+   */
+  const bookRoom = (
+    subjectId: string,
+    entry: { grade: string; section: string },
+    day: number,
+    period: string,
+  ): Room | undefined => {
+    const tag = SPECIALIST_SUBJECTS[subjectId]
+    if (!tag) {
+      return homerooms.get(`Class ${entry.grade} ${entry.section}`)
+    }
+    const free = (byTag.get(tag) ?? []).find(
+      room => !roomBusy.get(room.id)?.has(key(day, period)),
+    )
+    if (free) {
+      const week = roomBusy.get(free.id) ?? new Set<string>()
+      week.add(key(day, period))
+      roomBusy.set(free.id, week)
+    }
+    return free
+  }
+
+  const releaseRoom = (roomId: string | undefined, day: number, period: string) => {
+    if (roomId) roomBusy.get(roomId)?.delete(key(day, period))
+  }
+
+  /** Asked before placing, so a cell is never taken and then found roomless. */
+  const hasFreeRoom = (subjectId: string, day: number, period: string): boolean => {
+    const tag = SPECIALIST_SUBJECTS[subjectId]
+    if (!tag) return true
+    return (byTag.get(tag) ?? []).some(room => !roomBusy.get(room.id)?.has(key(day, period)))
   }
 
   const classes = sectionsAsConfig().map(section => ({
@@ -246,11 +295,15 @@ export function generateTimetables(): ClassTimetable[] {
           if (!allowConsecutive && grid.slots[dayIndex][p - 1]?.subjectId === candidate.subjectId) {
             return false
           }
-          return isFree(candidate.teacher.teacherId, DAYS[dayIndex], period)
+          if (!isFree(candidate.teacher.teacherId, DAYS[dayIndex], period)) return false
+          // A specialist subject with every room of its kind already taken
+          // cannot run here, however free the teacher is.
+          return hasFreeRoom(candidate.subjectId, DAYS[dayIndex], period)
         })
         if (!chosen?.teacher) continue
 
         const subject = listSubjects().find(one => one.code === chosen.subjectId)
+        const room = bookRoom(chosen.subjectId, entry, DAYS[dayIndex], period)
         grid.slots[dayIndex][p] = {
           dayOfWeek: DAYS[dayIndex],
           periodId: period,
@@ -258,7 +311,8 @@ export function generateTimetables(): ClassTimetable[] {
           subjectName: subject?.name ?? chosen.subjectId,
           teacherId: chosen.teacher.teacherId,
           teacherName: chosen.teacher.fullName ?? chosen.teacher.displayName ?? chosen.teacher.teacherId,
-          room: roomFor(chosen.subjectId, entry.grade, entry.section),
+          roomId: room?.id,
+          room: room?.roomName ?? room?.roomNumber,
         }
         occupy(chosen.teacher.teacherId, DAYS[dayIndex], period)
         remaining.set(chosen.subjectId, chosen.left - 1)
@@ -276,6 +330,8 @@ export function generateTimetables(): ClassTimetable[] {
           isFree(teacher.teacherId, DAYS[dayIndex], period),
         )
         if (!subject || !cover) continue
+        if (!hasFreeRoom(candidate.subjectId, DAYS[dayIndex], period)) continue
+        const coverRoom = bookRoom(candidate.subjectId, entry, DAYS[dayIndex], period)
         grid.slots[dayIndex][p] = {
           dayOfWeek: DAYS[dayIndex],
           periodId: period,
@@ -283,7 +339,8 @@ export function generateTimetables(): ClassTimetable[] {
           subjectName: subject.name,
           teacherId: cover.teacherId,
           teacherName: cover.fullName ?? cover.displayName ?? cover.teacherId,
-          room: roomFor(candidate.subjectId, entry.grade, entry.section),
+          roomId: coverRoom?.id,
+          room: coverRoom?.roomName ?? coverRoom?.roomNumber,
         }
         occupy(cover.teacherId, DAYS[dayIndex], period)
         remaining.set(candidate.subjectId, candidate.left - 1)
@@ -331,14 +388,40 @@ export function generateTimetables(): ClassTimetable[] {
               if (!isFree(donor.teacherId, DAYS[dayIndex], period)) continue
               if (!isFree(teacher.teacherId, DAYS[d2], donorPeriod)) continue
 
+              // Rooms move with the periods. A swap that took the teachers
+              // and left the rooms behind would put the donor's class in a
+              // lab it is no longer booked into.
+              releaseRoom(donor.roomId, DAYS[d2], donorPeriod)
+              if (!hasFreeRoom(donor.subjectId, DAYS[dayIndex], period)) {
+                // Put it back — this swap is not available.
+                if (donor.roomId) {
+                  const week = roomBusy.get(donor.roomId) ?? new Set<string>()
+                  week.add(key(DAYS[d2], donorPeriod))
+                  roomBusy.set(donor.roomId, week)
+                }
+                continue
+              }
+              if (!hasFreeRoom(subjectId, DAYS[d2], donorPeriod)) {
+                if (donor.roomId) {
+                  const week = roomBusy.get(donor.roomId) ?? new Set<string>()
+                  week.add(key(DAYS[d2], donorPeriod))
+                  roomBusy.set(donor.roomId, week)
+                }
+                continue
+              }
+
               release(donor.teacherId, DAYS[d2], donorPeriod)
+              const movedRoom = bookRoom(donor.subjectId, entry, DAYS[dayIndex], period)
               grid.slots[dayIndex][p] = {
                 ...donor,
                 dayOfWeek: DAYS[dayIndex],
                 periodId: period,
+                roomId: movedRoom?.id,
+                room: movedRoom?.roomName ?? movedRoom?.roomNumber,
               }
               occupy(donor.teacherId, DAYS[dayIndex], period)
 
+              const takenRoom = bookRoom(subjectId, entry, DAYS[d2], donorPeriod)
               grid.slots[d2][p2] = {
                 dayOfWeek: DAYS[d2],
                 periodId: donorPeriod,
@@ -346,7 +429,8 @@ export function generateTimetables(): ClassTimetable[] {
                 subjectName: subject.name,
                 teacherId: teacher.teacherId,
                 teacherName: teacher.fullName ?? teacher.displayName ?? teacher.teacherId,
-                room: roomFor(subjectId, entry.grade, entry.section),
+                roomId: takenRoom?.id,
+                room: takenRoom?.roomName ?? takenRoom?.roomNumber,
               }
               occupy(teacher.teacherId, DAYS[d2], donorPeriod)
               remaining.set(subjectId, (remaining.get(subjectId) ?? 1) - 1)

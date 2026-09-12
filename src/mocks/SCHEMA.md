@@ -231,12 +231,49 @@ neither branch designs. It is kept apart from the five above so nobody mistakes
 it for a port. It has to live somewhere: the period counts were two constants
 inside the timetable generator, which made a curriculum the app's opinion.
 
+## Tenant schema — `time-table`
+
+| Table | Purpose | Status | Mocked |
+|---|---|---|---|
+| `time_slots` | The bell — periods and breaks, per school | designed (Postgres) | yes |
+| `rooms` | **Where a class is**, with a capacity and a type | designed (Postgres) | yes |
+| `calendar_categories` | Colour and icon per kind of event | designed (Postgres) | yes |
+| `calendar_events` | Every scheduled thing, with academic context | designed (Postgres) | yes |
+| `timetable` | The weekly pattern that generates those events | designed (Postgres) | yes |
+| `event_attendees` | Who is invited, and what they answered | designed (Postgres) | yes |
+
+### What a room being a string was costing
+
+A room was text on a slot — `'Lab 1'`, `'Ground'`, `'Room 901'`. Nothing
+pointed at anything, so nothing could check, and nothing did: the timetabler
+put **three classes in Lab 1 at once, 57 times at one school and 14 at the
+other**. It refused to double-book a teacher and had no idea a room could be
+double-booked at all.
+
+With `rooms` as rows, a class has a homeroom and a specialist subject books a
+shared room that holds one class at a time. That is a second hard constraint on
+placement — one computer lab means at most one class doing Computer Science in
+any period, whatever the teachers are doing — and both schools now schedule
+with **zero** room conflicts.
+
+`time_slots` moves the bell out of the app's shared config, where two schools
+in two cities rang it at the same minute.
+
+### The pattern and its occurrences
+
+The schema's own comment calls `timetable` rows "weekly patterns that generate
+calendar events", and `timetable.calendar_event_id` is the link: a row is the
+rule, an event is one occurrence. The mock holds the rule — 570 rows at
+Kendriya, 360 at Vidya Mandir — and generating a term's occurrences from it is
+a backend job.
+
+`event_attendees` had no mock at all, so the RSVP the schema designs was a
+table nothing had ever written a row into. Staff meetings carry one now.
+
 ## Modules with a designed schema and no mock table yet
 
-`time-table` (`time_slots`, `rooms`, `calendar_categories`, `calendar_events`,
-`timetable`, `event_attendees`) and `communication`
-(`user_communication_preferences`) are designed on the Postgres branch. The
-mocks for those features predate the schema and do not match it yet.
+`communication` (`user_communication_preferences`) is designed on the Postgres
+branch and has no mock.
 
 ## Backend work this implies
 

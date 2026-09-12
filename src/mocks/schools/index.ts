@@ -38,6 +38,7 @@ export function tenantFixtures(): TenantFixtures {
       transport: { drivers: [], vehicles: [], routes: [], feeStructures: [] },
       expenses: { expenses: [], reimbursements: [], trend: [], breakdown: [] },
       academic: { years: [], terms: [], gradeLevels: [], sections: [], subjects: [] },
+      scheduling: { rooms: [], timeSlots: [] },
       config: {},
       notices: [],
       calendar: [],

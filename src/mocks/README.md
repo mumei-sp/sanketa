@@ -30,6 +30,8 @@ src/mocks/
 ├── tenant/          the PER-SCHOOL database — shared tables, per-school rows
 │   ├── academic/        academic_years · terms · grade_levels ·
 │   │                    class_sections · subjects  ← what the rest hangs off
+│   ├── scheduling/      time_slots · rooms · calendar_categories ·
+│   │                    calendar_events · timetable · event_attendees
 │   ├── profiles/        user_profiles · staff · profile_types · profile_roles
 │   ├── students/ teachers/ parents/         the capacity tables
 │   ├── roles/ access-log/
@@ -41,9 +43,9 @@ src/mocks/
 │   ├── types.ts         TenantFixtures: the contract a school folder fills
 │   ├── _generate/       random · names · roster · faculty · transport ·
 │   │                    expenses · calendar
-│   ├── kendriya/        academic students teachers transport expenses
-│   │                    config notices calendar todos index
-│   └── vidya-mandir/    ← the same ten files
+│   ├── kendriya/        academic scheduling students teachers transport
+│   │                    expenses config notices calendar todos index
+│   └── vidya-mandir/    ← the same eleven files
 │
 └── auth/            sign-in, and the PASETO tenant-context token
 ```
@@ -64,7 +66,7 @@ into individual files.
 
 ### Adding a school
 
-A folder under `schools/` with the ten files, a line in `BY_CODE` in
+A folder under `schools/` with the eleven files, a line in `BY_CODE` in
 `schools/index.ts`, and a row in the global `tenants` store. Nothing else: the
 tables already exist.
 
@@ -151,6 +153,9 @@ rather than being shadowed by the copy already in `localStorage`.
   `schools/<school>/academic.ts`. Everything downstream follows: the roster
   fills those sections, the timetable covers them and teaches those subjects
   for those many periods, and the faculty is sized for the result.
+- **A school's rooms or bell times** — `schools/<school>/scheduling.ts`. How
+  many labs and grounds it has is a hard limit on how many classes can take
+  that subject at once, so the timetable follows from it.
 - **A school's name** — `schools/<school>/config.ts`, which is now only what
   is genuinely a setting.
 - **Who can sign in** — the `access` block in `schools/<school>/index.ts`
@@ -207,6 +212,15 @@ student you were looking at is somebody else after a refresh.
 | `listSections()` · `findSectionByLabel('8B')` | the sections, with capacity and class teacher |
 | `sectionsAsConfig()` | the flat `{ id, grade, section, label }` the UI speaks |
 | `listSubjects()` · `curriculumFor('junior')` | what the school teaches, and how much |
+
+### Rooms and the bell (`tenant/scheduling`)
+
+| Helper | Use |
+|---|---|
+| `listRooms()` · `findRoom(id)` · `roomLabel(id)` | the rooms, with capacity and type |
+| `listTeachingSlots()` | the periods actually taught in |
+| `listTimetable()` | the weekly grid as rows |
+| `listEvents()` · `attendeesOf(id)` | the calendar, and who was invited |
 
 ### Tenancy (`_shared/tenant-context.ts`)
 

@@ -73,8 +73,16 @@ export interface TimetableSlot {
   teacherId: string
   /** Teacher display name */
   teacherName: string
-  /** Optional room/location */
+  /** Room display name — `Science Lab 2`. Kept for anything that renders it. */
   room?: string
+  /**
+   * → `rooms.id`.
+   *
+   * The room was only ever its name, so nothing could ask whether two classes
+   * were in it at once — and three of them were, 57 times over. The id is
+   * what makes that a question with an answer.
+   */
+  roomId?: string
 }
 
 /** Weekly timetable template for one class section */

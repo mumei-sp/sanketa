@@ -27,6 +27,8 @@ import type {
 } from '@/features/timetable/types'
 import { sectionsAsConfig } from '@/mocks/tenant/academic'
 import { generateTimetables, generateExceptions } from './generate'
+import { replaceTimetable, listTimeSlots } from '@/mocks/tenant/scheduling/store'
+import { currentYear, currentTerm } from '@/mocks/tenant/academic'
 
 // ============================================================================
 // Subjects Registry — colors from theme tokens, never hardcoded hex
@@ -81,6 +83,45 @@ export const classSections: ClassSection[] = sectionsAsConfig().map(section => (
  * plausible cells. Mutable, because the timetable editor writes to it.
  */
 export const classTimetables: ClassTimetable[] = generateTimetables()
+
+/**
+ * The same grid, as `timetable` rows.
+ *
+ * The nested shape above is what the screen renders; this is what the schema
+ * has — one row per (section, slot, day), which is what its
+ * `UNIQUE(class_section_id, time_slot_id, day_of_week, academic_year_id)`
+ * constrains. Both are the same data, so it is projected rather than stated
+ * twice.
+ *
+ * `day_of_week` is 1–7 with Monday at 1, as the schema has it; the grid counts
+ * from 0. One of them had to convert and it is better done once, here, than
+ * everywhere a row is read.
+ */
+replaceTimetable(
+  (() => {
+    // The slot's real id, not `slot-${periodId}`. Ids carry the school's
+    // prefix — `vidya-mandir-slot-p1` — so building one by hand pointed every
+    // one of 360 rows at a time slot that does not exist, at exactly one of
+    // the two schools.
+    const slotIdFor = new Map(
+      listTimeSlots().map(slot => [slot.id.replace(/^.*slot-/, ''), slot.id]),
+    )
+    return classTimetables.flatMap(timetable =>
+    timetable.slots.map(slot => ({
+      id: `tt-${timetable.classSectionId}-${slot.periodId}-${slot.dayOfWeek}`,
+      classSectionId: timetable.classSectionId,
+      subjectId: slot.subjectId,
+      teacherId: slot.teacherId,
+      timeSlotId: slotIdFor.get(slot.periodId) ?? slot.periodId,
+      dayOfWeek: slot.dayOfWeek + 1,
+      roomId: slot.roomId,
+      academicYearId: currentYear()?.id ?? '',
+      termId: currentTerm()?.id,
+      isActive: true,
+    })),
+    )
+  })(),
+)
 
 // ============================================================================
 // Exceptions (deviations from normal schedule)

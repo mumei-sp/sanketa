@@ -16,6 +16,7 @@ import type { FleetFixtures } from './_generate/transport'
 import type { ExpenseFixtures } from './_generate/expenses'
 import type { SchoolConfig } from '@/config/school-config'
 import type { AcademicFixtures } from '@/mocks/tenant/academic/types'
+import type { Room, TimeSlot } from '@/mocks/tenant/scheduling/types'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 import type { CalendarEvent } from '@/features/calendar/types'
 import type { TodoItem } from '@/features/dashboard/types'
@@ -156,6 +157,14 @@ export interface TenantFixtures {
    * rather than a table.
    */
   academic: AcademicFixtures
+  /**
+   * `time-table` — the school's rooms and its bell.
+   *
+   * Only the half a school states. The grid and the calendar events are
+   * produced from them and handed to the store, because neither can be
+   * written out for 570 cells.
+   */
+  scheduling: { rooms: Room[]; timeSlots: TimeSlot[] }
   config: Partial<SchoolConfig>
   /**
    * What the school has put on its board.
