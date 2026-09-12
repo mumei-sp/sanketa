@@ -31,6 +31,7 @@ import {
   Lock,
   Pencil,
   Info,
+  ChevronDown,
   Users,
   SlidersHorizontal,
   Copy,
@@ -295,6 +296,14 @@ export function RolesTab({
   const [pendingDelete, setPendingDelete] = React.useState<Role | null>(null)
   /** Open only while somebody is actually changing the name. */
   const [renaming, setRenaming] = React.useState(false)
+  /**
+   * Which permission groups are open, where somebody has said so.
+   *
+   * An override rather than the whole truth: unset, a group follows whether it
+   * grants anything, so a role opens showing what it HAS and stays quiet about
+   * what it has not.
+   */
+  const [groupOpen, setGroupOpen] = React.useState<Record<string, boolean>>({})
   const [isSaving, setIsSaving] = React.useState(false)
   const [query, setQuery] = React.useState('')
 
@@ -997,13 +1006,13 @@ export function RolesTab({
                   )}
                 </div>
 
-                {/* A built-in role's description ships with the app; a custom
-                    one has nowhere else to say what it is for. */}
-                {selected.builtin ? (
-                  selected.description && (
-                    <p className="text-caption text-muted-foreground">{selected.description}</p>
-                  )
-                ) : (
+                {/* A built-in role's shipped description is not drawn: for the
+                    roles that have one it restates the permission list below it
+                    — "Full access, including settings and roles" above a card
+                    already reading 33 of 33. A custom role keeps the field,
+                    because a school naming its own role has nowhere else to say
+                    what it is for. */}
+                {!selected.builtin && (
                   <div>
                     <Label htmlFor="role-description">What it is for</Label>
                     <Textarea
@@ -1197,31 +1206,73 @@ export function RolesTab({
                   ).length
                   const all = granted === permissions.length
 
+                  // Open unless a group grants nothing. A section at 0 of N is
+                  // the one you are least likely to have come for, and six open
+                  // sections is the scroll this card was trying to stop being.
+                  const open = groupOpen[group] ?? granted > 0
+
                   return (
-                    <div key={group}>
-                      <div className="mb-2 flex items-center gap-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          {group}
-                        </p>
-                        <span className="text-[11px] tabular-nums" style={{ color: text.muted }}>
-                          {granted}/{permissions.length}
-                        </span>
-                        <span className="flex-1" />
+                    <div
+                      key={group}
+                      className="overflow-hidden rounded-lg border"
+                      style={{ borderColor: border.default }}
+                    >
+                      {/* The header IS the group's control: its name, how much of
+                          it is granted, and the disclosure — one band rather than
+                          a caption floating above a box. "Grant all" waits for a
+                          hover so the resting row stays the four things the
+                          design draws. */}
+                      <div className="group/grp relative">
+                        <button
+                          type="button"
+                          onClick={() => setGroupOpen(prev => ({ ...prev, [group]: !open }))}
+                          aria-expanded={open}
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted"
+                          style={{ backgroundColor: 'var(--muted)' }}
+                        >
+                          <span className="text-body font-semibold" style={{ color: 'var(--heading)' }}>
+                            {group}
+                          </span>
+                          <span className="flex-1" />
+                          <CoverageBar
+                            value={granted}
+                            total={permissions.length}
+                            className="w-14 shrink-0"
+                          />
+                          <span
+                            className="shrink-0 text-caption tabular-nums"
+                            style={{ color: text.muted }}
+                          >
+                            {granted}/{permissions.length}
+                          </span>
+                          {/* Spacer the chevron sits in, so "Grant all" can be
+                              laid over the header without nesting a button
+                              inside a button. */}
+                          <span className="w-9 shrink-0" />
+                        </button>
+
+                        <ChevronDown
+                          aria-hidden
+                          className={cn(
+                            'pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 transition-transform',
+                            open && 'rotate-180',
+                          )}
+                          style={{ color: text.muted }}
+                        />
+
                         <button
                           type="button"
                           disabled={isSaving}
                           onClick={() => setGroup(permissions, !all)}
-                          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                          className="absolute right-10 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-md bg-card px-1.5 py-0.5 text-[11px] font-medium opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 disabled:opacity-50 group-hover/grp:opacity-100"
                           style={{ color: 'var(--heading)' }}
                         >
                           <SlidersHorizontal className="size-3" aria-hidden />
                           {all ? 'Clear all' : 'Grant all'}
                         </button>
                       </div>
-                      <div
-                        className="flex flex-col rounded-lg border"
-                        style={{ borderColor: border.default }}
-                      >
+
+                      <div className={cn('flex flex-col', !open && 'hidden')}>
                         {permissions.map((definition, index) => {
                           const held = selected.permissions.includes(definition.id as Permission)
                           // Reading is included in managing, so show it on and
@@ -1232,9 +1283,9 @@ export function RolesTab({
                           return (
                             <div
                               key={definition.id}
-                              className="flex items-center gap-3 px-3 py-2.5"
+                              className="flex items-center gap-3 px-3 py-3"
                               style={
-                                index > 0 ? { borderTop: `1px solid ${border.default}` } : undefined
+                                index > 0 ? { borderTop: `1px solid ${border.subtle}` } : undefined
                               }
                             >
                               <div className="min-w-0 flex-1">
