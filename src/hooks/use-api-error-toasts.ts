@@ -22,10 +22,18 @@
  *   401 never arrives. The interceptor signs the session out and returns
  *   before `onError`, so an expired token is a redirect, not a toast.
  *
- *   Repeats collapse. The id is the error's own `code`, so six panels failing
- *   one network outage produce one toast rather than six — and a retried
- *   request that fails the same way twice replaces its toast instead of
- *   stacking a second.
+ *   Repeats collapse, but only real ones. The id is the message the reader
+ *   would actually see, so six panels failing one network outage produce one
+ *   toast rather than six, and a retried request that fails the same way twice
+ *   replaces its toast instead of stacking a second.
+ *
+ *   It is NOT the error's `code`, which was the first thing this used and was
+ *   wrong: `client.ts` stamps `UNKNOWN_ERROR` on any response whose body
+ *   carries no code of its own, so a 404 on students and a 500 on fees
+ *   collapsed into one toast and whichever arrived second overwrote the first.
+ *   Two different problems, one of them silently dropped. Keying on what is
+ *   displayed separates those and still collapses a true repeat, because a
+ *   true repeat says the same thing.
  *
  * ── The one thing worth knowing ────────────────────────────────────────
  * `client.ts` calls `onError` BEFORE it decides whether to retry, so a blip
@@ -57,7 +65,8 @@ export function useApiErrorToasts(): void {
   React.useEffect(
     () =>
       errorEmitter.onError(error => {
-        showError(messageFor(error), { id: `api-error:${error.code}` })
+        const message = messageFor(error)
+        showError(message, { id: `api-error:${error.code}:${message}` })
       }),
     [showError],
   )

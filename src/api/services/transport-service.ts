@@ -300,12 +300,28 @@ export async function deleteFeeStructure(id: string): Promise<boolean> {
  *
  * @apiRoute GET /api/v1/students/{studentId}/transport
  */
-export async function fetchStudentRide(studentId: string): Promise<{
+/**
+ * What a family may know about their child's bus.
+ *
+ * Narrowed on purpose, and named so it cannot widen by accident. The doc below
+ * explains why a parent is not given `transport.read`: it would hand them the
+ * drivers' names, phone numbers and licence numbers. Returning the whole
+ * `TransportDriver`, `Vehicle` and `TransportRoute` gave them the same thing
+ * through the side door — a licence number, expiry and home address; a GPS
+ * device id, insurance and fitness expiry; and `route.stops`, which with the
+ * pickup times is a map of where the other children on the route wait.
+ *
+ * The card draws four things. This returns four things. `assignment` stays
+ * whole because it is this child's own row and nothing else's.
+ */
+export interface StudentRide {
   assignment: StudentTransportAssignment
-  route: TransportRoute | null
-  vehicle: Vehicle | null
-  driver: TransportDriver | null
-} | null> {
+  route: Pick<TransportRoute, 'id' | 'name'> | null
+  vehicle: Pick<Vehicle, 'id' | 'registrationNumber'> | null
+  driver: Pick<TransportDriver, 'id' | 'firstName' | 'lastName'> | null
+}
+
+export async function fetchStudentRide(studentId: string): Promise<StudentRide | null> {
   return mockOrHttp(
     async () => {
       await withLatency()
@@ -328,24 +344,30 @@ export async function fetchStudentRide(studentId: string): Promise<{
       if (!mine) return null
 
       const route = mockServer.listRoutes().find(row => row.id === mine.routeId) ?? null
+      const vehicle = route
+        ? (mockServer.listVehicles().find(row => row.id === route.vehicleId) ?? null)
+        : null
+      const driver = route
+        ? (mockServer.listDrivers().find(row => row.id === route.driverId) ?? null)
+        : null
+      // Projected here rather than left to the caller: a field that never
+      // leaves the service cannot be read off the wire by somebody who is not
+      // the caller.
       return {
         assignment: mine,
-        route,
-        vehicle: route
-          ? (mockServer.listVehicles().find(row => row.id === route.vehicleId) ?? null)
-          : null,
-        driver: route
-          ? (mockServer.listDrivers().find(row => row.id === route.driverId) ?? null)
-          : null,
+        route: route && { id: route.id, name: route.name },
+        vehicle: vehicle && { id: vehicle.id, registrationNumber: vehicle.registrationNumber },
+        driver: driver && {
+          id: driver.id,
+          firstName: driver.firstName,
+          lastName: driver.lastName,
+        },
       }
     },
     async () => {
-      const { data } = await apiClient.get<{
-        assignment: StudentTransportAssignment
-        route: TransportRoute | null
-        vehicle: Vehicle | null
-        driver: TransportDriver | null
-      } | null>(`/students/${studentId}/transport`)
+      const { data } = await apiClient.get<StudentRide | null>(
+        `/students/${studentId}/transport`,
+      )
       return data
     },
   )
