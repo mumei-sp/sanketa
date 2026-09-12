@@ -58,6 +58,78 @@ interface ContextsValue {
 
 const Contexts = React.createContext<ContextsValue | null>(null)
 
+/**
+ * Remembers that this tab has already tried to rescue itself.
+ *
+ * The rescue below is a page load, so an in-memory flag would not survive it —
+ * and without one, a recovery that failed to stick would reload forever.
+ * Cleared the moment a context resolves, so a *later* stranding (a role revoked
+ * while somebody is working) gets its own attempt rather than inheriting this
+ * one's verdict.
+ */
+const RECOVERY_KEY = 'sanketa:context-recovery-attempted'
+
+function markRecovery(attempted: boolean): void {
+  try {
+    if (attempted) sessionStorage.setItem(RECOVERY_KEY, '1')
+    else sessionStorage.removeItem(RECOVERY_KEY)
+  } catch {
+    // Private mode. The rescue then runs at most once per document anyway,
+    // because the reload it performs lands somewhere that resolves or does
+    // not, and the `active === null` branch below stops asking either way.
+  }
+}
+
+function recoveryAttempted(): boolean {
+  try {
+    return sessionStorage.getItem(RECOVERY_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Put somebody back where they can actually work.
+ *
+ * Holding two memberships and a role at only one of them leaves exactly one
+ * context, so the chooser does not ask — `needsChoice` wants more than one —
+ * and nothing stops the app opening at the *other* school. What arrives is a
+ * Forbidden page, an empty sidebar, and a notice advising them to switch school
+ * beside a switcher that is not rendered, because that hides below two contexts
+ * too. No way forward and no way out but signing out.
+ *
+ * One way in is not a choice, and that holds for recovery as much as for the
+ * chooser: if there is precisely one place this person can be, put them in it
+ * rather than asking. This is the same correction `applyTenantContext` makes
+ * one layer up, where a stored tenant the token cannot honour is replaced
+ * instead of stranding the session on it.
+ *
+ * Nothing is done when there is nowhere to go — no roles anywhere is a real
+ * state, and `NoRoleHereNotice` is then telling the truth.
+ */
+function recoverIfStranded(answer: TenantContexts[]): void {
+  const all = flattenContexts(answer)
+  const side = activeSide()
+  const resolves = all.some(
+    context => context.tenantSchema === activeTenant() && context.side === side,
+  )
+
+  if (resolves) {
+    markRecovery(false)
+    return
+  }
+  // More than one and nobody has chosen is the chooser's job, not a stranding.
+  if (all.length !== 1 || recoveryAttempted()) return
+
+  markRecovery(true)
+  const only = all[0]
+  if (only.tenantSchema !== activeTenant()) {
+    switchTenant(only.tenantCode)
+  }
+  setActiveSide(only.side)
+  enterSession()
+}
+
 export function ContextsProvider() {
   const currentUser = useCurrentUser()
   const [tenants, setTenants] = React.useState<TenantContexts[]>([])
@@ -83,6 +155,8 @@ export function ContextsProvider() {
         if (side !== null && !isContextAvailable(answer, activeTenant(), side)) {
           clearActiveSide()
         }
+
+        recoverIfStranded(answer)
       })
       .catch((error: unknown) => {
         if (cancelled) return

@@ -11,12 +11,20 @@
  * So this says which it is. Rendered outside every permission gate, for the
  * same reason `PreviewBanner` is: a person with no permissions here can reach
  * no screen that could tell them why.
+ *
+ * ── What it no longer says ─────────────────────────────────────────────
+ * It used to end "Switch school, or ask an administrator" — and the switcher
+ * hides below two contexts, so somebody with a role at only one of their two
+ * schools read that advice beside no control that could take it. They are
+ * moved to the school they can work in now (`recoverIfStranded`), which means
+ * by the time this bar renders there is genuinely nowhere else to be, and the
+ * only true thing left to say is who to ask.
  */
 
 import { Info } from 'lucide-react'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { listTenants } from '@/mocks/global'
-import { resolveTenantAccess } from '@/mocks/tenant/profiles'
+import { resolveActiveAccess } from '@/mocks/tenant/profiles'
 import { activeTenant } from '@/mocks/_shared/tenant-context'
 
 export function NoRoleHereNotice() {
@@ -24,7 +32,9 @@ export function NoRoleHereNotice() {
   if (!currentUser) return null
 
   const schema = activeTenant()
-  const { roleIds } = resolveTenantAccess(currentUser.id)
+  // The session's access, like every other reader of this — a bar about what
+  // you can do here has to ask the same question the services are answering.
+  const { roleIds } = resolveActiveAccess(currentUser.id)
   if (roleIds.length > 0) return null
 
   // Somebody holding no role anywhere is a different problem — an account
@@ -53,8 +63,8 @@ export function NoRoleHereNotice() {
       >
         <Info className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         <p className="text-caption">
-          You have no role at <span className="font-semibold">{name}</span> yet, so there is
-          nothing here to show. Switch school, or ask an administrator there to give you one.
+          You have no role at <span className="font-semibold">{name}</span> yet, so there is nothing
+          here to show. An administrator there can give you one.
         </p>
       </div>
     </div>
