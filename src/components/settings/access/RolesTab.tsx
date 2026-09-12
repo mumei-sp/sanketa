@@ -86,20 +86,8 @@ import {
 } from '@/config/permissions'
 import type { Person } from '@/api/services/user-service'
 import type { RecordAccessEvent } from './AccessSettingsSection'
-import { AvatarStack, CoverageBar, SearchField } from './parts'
+import { AvatarStack, CoverageBar } from './parts'
 import { describePermissionChange } from './helpers'
-
-/** Does this permission match what someone typed into the search box? */
-function matches(definition: PermissionDefinition, query: string): boolean {
-  if (!query) return true
-  const needle = query.toLowerCase()
-  return (
-    definition.label.toLowerCase().includes(needle) ||
-    definition.description.toLowerCase().includes(needle) ||
-    definition.group.toLowerCase().includes(needle) ||
-    definition.id.toLowerCase().includes(needle)
-  )
-}
 
 // ── Compare view ──────────────────────────────────────────────────────
 
@@ -305,7 +293,6 @@ export function RolesTab({
    */
   const [groupOpen, setGroupOpen] = React.useState<Record<string, boolean>>({})
   const [isSaving, setIsSaving] = React.useState(false)
-  const [query, setQuery] = React.useState('')
 
   const selected = roles.find(role => role.id === selectedId) ?? roles[0] ?? null
 
@@ -355,8 +342,31 @@ export function RolesTab({
     [refresh, showError],
   )
 
+  /**
+   * A rename belongs to the role it was opened on.
+   *
+   * `renaming` and `nameDraft` are component state and the selected role is
+   * not; without this, switching roles mid-rename leaves the field open over
+   * whichever role is now selected, with the previous role's draft still in
+   * it. Blur happens to save us on the roster path — it fires before the
+   * click lands and commits against the old selection — but that is focus
+   * order doing the work, and focus order is not a guarantee. `CompareGrid`
+   * already changes the selection without touching the field.
+   */
+  React.useEffect(() => {
+    setRenaming(false)
+    setNameDraft(null)
+  }, [selected?.id])
+
   const commitName = () => {
     if (!selected || nameDraft === null) return
+    // Built-in roles are not renameable, and this is where that is enforced —
+    // not only on the menu item that opens the field. An entry-point guard
+    // holds exactly as long as the state it gates cannot outlive the entry,
+    // and `renaming` is component state that survives a change of selection.
+    // `undo.ts` refuses to DELETE a built-in for the same reason; renaming one
+    // is the same kind of edit to the same kind of row.
+    if (selected.builtin) return
     const name = nameDraft.trim()
     setNameDraft(null)
     // An empty name would leave a role nobody can identify in the picker.
@@ -584,12 +594,6 @@ export function RolesTab({
     }
   }
 
-  const visibleGroups = groups
-    .map(({ group, permissions }) => ({
-      group,
-      permissions: permissions.filter(definition => matches(definition, query)),
-    }))
-    .filter(({ permissions }) => permissions.length > 0)
 
   return (
     // `@container`, not a viewport breakpoint. This screen lives inside the
@@ -1178,29 +1182,7 @@ export function RolesTab({
                   </span>
                 </div>
 
-                {/* Twenty-four switches is a scroll. Search first, then the list. */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <SearchField
-                    value={query}
-                    onChange={setQuery}
-                    placeholder="Search permissions…"
-                    label="Search permissions"
-                  />
-                  <span
-                    className="shrink-0 rounded-full px-2.5 py-1 text-caption font-medium tabular-nums"
-                    style={{ backgroundColor: 'var(--muted)', color: 'var(--heading)' }}
-                  >
-                    {selected.permissions.length}/{ALL_PERMISSIONS.length} granted
-                  </span>
-                </div>
-
-                {visibleGroups.length === 0 && (
-                  <p className="text-caption text-muted-foreground">
-                    No permission matches “{query}”.
-                  </p>
-                )}
-
-                {visibleGroups.map(({ group, permissions }) => {
+                {groups.map(({ group, permissions }) => {
                   const granted = permissions.filter(definition =>
                     selected.permissions.includes(definition.id as Permission),
                   ).length
