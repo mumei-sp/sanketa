@@ -19,13 +19,13 @@ export const calendarFixtures: CalendarEvent[] = [
     'evt-01', 'Science Project Submission Deadline', 'Academic',
     calDay(1), '10:00 AM', undefined,
     'Room 101', 'Submit all science projects via the online portal.',
-    { priority: 'high', link: 'https://portal.school.edu/submissions', attendees: 'Grade 9 & 10 Students' },
+    { priority: 'high', link: 'https://portal.school.edu/submissions', attendees: 'Grade 9 & 10 Students', reach: { grades: ['9', '10'] } },
   ),
   createEvent(
     'evt-02', 'Monthly Expense Review', 'Finance',
     calDay(1), '03:00 PM', '04:00 PM',
     'Conference Room B', 'Review monthly budget allocations and expenditures.',
-    { priority: 'medium', attendees: 'Finance Committee', reminder: '15min' },
+    { priority: 'medium', attendees: 'Finance Committee', reach: { sides: ['staff'] }, reminder: '15min' },
   ),
 
   // ── Week 2 (Mar 4–10) ────────────────────────────────────────────────
@@ -45,13 +45,13 @@ export const calendarFixtures: CalendarEvent[] = [
     'evt-05', 'Staff Meeting', 'Administration',
     calDay(7), '02:00 PM', '03:30 PM',
     'Board Room', 'Monthly staff alignment meeting with department heads.',
-    { link: 'https://meet.school.edu/staff-monthly', priority: 'medium', attendees: 'Department Heads' },
+    { link: 'https://meet.school.edu/staff-monthly', priority: 'medium', attendees: 'Department Heads', reach: { sides: ['staff'] } },
   ),
   createEvent(
     'evt-06', 'Teacher Development Workshop', 'Administration',
     calDay(9), '01:00 PM', '05:00 PM',
     'Training Center', 'Professional development session for all teaching staff.',
-    { description: 'Workshop on modern pedagogical techniques and classroom management.', priority: 'low', attendees: 'All Teaching Staff', reminder: '1hr' },
+    { description: 'Workshop on modern pedagogical techniques and classroom management.', priority: 'low', attendees: 'All Teaching Staff', reach: { sides: ['staff'] }, reminder: '1hr' },
   ),
 
   // ── Week 3 (Mar 11–17) ───────────────────────────────────────────────
@@ -65,7 +65,7 @@ export const calendarFixtures: CalendarEvent[] = [
     'evt-08', 'Parent-Teacher Meeting (Grade 7 & 8)', 'Events',
     calDay(12), '02:00 PM', '04:00 PM',
     'School Auditorium', 'Parents are requested to arrive 15 minutes early for registration.',
-    { description: 'Discuss student progress, upcoming curriculum changes, and extra-curricular activities.', priority: 'high', attendees: 'Grade 7 & 8 Parents, Class Teachers', link: 'https://portal.school.edu/ptm-schedule' },
+    { description: 'Discuss student progress, upcoming curriculum changes, and extra-curricular activities.', priority: 'high', attendees: 'Grade 7 & 8 Parents, Class Teachers', reach: { grades: ['7', '8'] }, link: 'https://portal.school.edu/ptm-schedule' },
   ),
   createEvent(
     'evt-09', 'History Exam', 'Academic',
@@ -85,13 +85,13 @@ export const calendarFixtures: CalendarEvent[] = [
     'evt-11', 'Monthly Staff Appraisal', 'Administration',
     calDay(20), '02:00 PM', '04:00 PM',
     'Board Room', 'Monthly performance review with department heads.',
-    { priority: 'medium', attendees: 'Department Heads, HR' },
+    { priority: 'medium', attendees: 'Department Heads, HR', reach: { sides: ['staff'] } },
   ),
   createAllDayEvent(
     'evt-12', 'Grade 9 Fee Payment Deadline', 'Finance',
     calDay(23),
     'Accounts Office', 'Last date for fee submission without late penalty.',
-    { priority: 'high', link: 'https://portal.school.edu/fee-payment', attendees: 'Grade 9 Parents' },
+    { priority: 'high', link: 'https://portal.school.edu/fee-payment', attendees: 'Grade 9 Parents', reach: { grades: ['9'] } },
   ),
 
   // ── Week 5 (Mar 25–31) ───────────────────────────────────────────────
@@ -105,7 +105,7 @@ export const calendarFixtures: CalendarEvent[] = [
     'evt-14', 'Quarterly Performance Review Meeting', 'Administration',
     calDay(28), '01:00 PM', '03:00 PM',
     'Conference Room A', 'Q1 academic performance review with department heads.',
-    { priority: 'medium', attendees: 'Administration, Department Heads', reminder: '30min' },
+    { priority: 'medium', attendees: 'Administration, Department Heads', reach: { sides: ['staff'] }, reminder: '30min' },
   ),
   createEvent(
     'evt-15', 'Final Exam – Chemistry', 'Academic',

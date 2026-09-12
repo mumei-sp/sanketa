@@ -1,3 +1,4 @@
+import type { AudienceReach } from '@/config/audience'
 import type { EventInput } from '@fullcalendar/core'
 
 export type EventCategory = 'Academic' | 'Events' | 'Finance' | 'Administration'
@@ -24,7 +25,13 @@ export interface CalendarEventExtendedProps {
   description?: string
   link?: string
   isAllDay?: boolean
+  /** Who is expected, as the school wrote it. What everyone reads. */
   attendees?: string
+  /**
+   * The same thing, in terms the app can match on. Absent means everybody —
+   * see `config/audience.ts`.
+   */
+  reach?: AudienceReach
   priority?: EventPriority
   reminder?: EventReminder
 }

@@ -9,6 +9,8 @@ import apiClient from '@/api/client'
 import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency } from '@/mocks/_shared'
+import { callerAudience } from '@/mocks/_shared/audience'
+import { audienceReaches } from '@/config/audience'
 import { mockCalendarEvents } from '@/mocks/tenant/calendar'
 import { categoryConfig } from '@/features/calendar/utils/category-config'
 import { background } from '@/theme/colors'
@@ -28,13 +30,25 @@ export async function fetchCalendarEvents(): Promise<CalendarEvent[]> {
   return mockOrHttp(
     async () => {
       await withLatency()
-      return [...mockCalendarEvents]
+      return visibleEvents()
     },
     async () => {
       const { data } = await apiClient.get<CalendarEvent[]>('/calendar/events')
       return data
     },
   )
+}
+
+/**
+ * The events this caller is actually part of.
+ *
+ * An undeclared reach is everybody's — a calendar is a shared thing — so this
+ * only removes the occasions addressed elsewhere. The staff ones are the point:
+ * a parent's month carried the appraisal schedule and the finance review.
+ */
+function visibleEvents(): CalendarEvent[] {
+  const viewer = callerAudience('CalendarEvent')
+  return mockCalendarEvents.filter(event => audienceReaches(event.extendedProps.reach, viewer))
 }
 
 /**
@@ -48,7 +62,7 @@ export async function fetchCalendarEventsByCategory(
   return mockOrHttp(
     async () => {
       await withLatency()
-      return mockCalendarEvents.filter(e => e.extendedProps.category === category)
+      return visibleEvents().filter(e => e.extendedProps.category === category)
     },
     async () => {
       const { data } = await apiClient.get<CalendarEvent[]>('/calendar/events', {
@@ -71,7 +85,7 @@ export async function fetchCalendarEventsByRange(
   return mockOrHttp(
     async () => {
       await withLatency()
-      return mockCalendarEvents.filter(e => {
+      return visibleEvents().filter(e => {
         const eventDate = e.start.split('T')[0]
         return eventDate >= startDate && eventDate <= endDate
       })

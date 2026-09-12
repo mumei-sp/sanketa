@@ -13,6 +13,7 @@
  */
 
 import { categoryConfig } from '@/features/calendar/utils/category-config'
+import type { AudienceReach } from '@/config/audience'
 import { background } from '@/theme/colors'
 import type {
   CalendarEvent,
@@ -46,6 +47,8 @@ interface EventExtras {
   description?: string
   link?: string
   attendees?: string
+  /** Who it actually reaches, beside the prose that says who it is for. */
+  reach?: AudienceReach
   priority?: EventPriority
   reminder?: EventReminder
 }
@@ -85,6 +88,7 @@ export function createEvent(
       description: extras?.description,
       link: extras?.link,
       attendees: extras?.attendees,
+      reach: extras?.reach,
       priority: extras?.priority,
       reminder: extras?.reminder,
     },
@@ -123,6 +127,7 @@ export function createAllDayEvent(
       description: extras?.description,
       link: extras?.link,
       attendees: extras?.attendees,
+      reach: extras?.reach,
       priority: extras?.priority,
       reminder: extras?.reminder,
     },

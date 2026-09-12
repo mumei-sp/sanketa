@@ -14,6 +14,7 @@
 
 import type { CalendarEvent } from '@/features/calendar/types'
 import { calDay, createEvent, createAllDayEvent } from '../_generate/calendar'
+import { gradeRange } from '@/config/audience'
 
 export const calendarFixtures: CalendarEvent[] = [
   // ── Week 1 ────────────────────────────────────────────────────────────
@@ -27,7 +28,7 @@ export const calendarFixtures: CalendarEvent[] = [
     'vm-evt-02', 'Staff Briefing — Dasara Arrangements', 'Administration',
     calDay(3), '03:30 PM', '04:15 PM',
     'Staff Room', 'Holiday roster, procession-day transport and exam rescheduling.',
-    { priority: 'medium', attendees: 'All Teaching Staff' },
+    { priority: 'medium', attendees: 'All Teaching Staff', reach: { sides: ['staff'] } },
   ),
 
   // ── Week 2 ────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ export const calendarFixtures: CalendarEvent[] = [
     'vm-evt-04', 'Inter-house Throwball Final', 'Events',
     calDay(11), '08:00 AM', '10:30 AM',
     'School Ground', 'Houses Kaveri and Tunga in the final. Parents welcome.',
-    { priority: 'low', attendees: 'Classes 6 to 10' },
+    { priority: 'low', attendees: 'Classes 6 to 10', reach: { grades: gradeRange(6, 10) } },
   ),
 
   // ── Week 3 ────────────────────────────────────────────────────────────
@@ -53,14 +54,14 @@ export const calendarFixtures: CalendarEvent[] = [
       description:
         'Half-yearly progress, reading levels and the switch to written examinations in Class 4.',
       priority: 'high',
-      attendees: 'Parents of Classes 1 to 5',
+      attendees: 'Parents of Classes 1 to 5', reach: { sides: ['family'], grades: gradeRange(1, 5) },
     },
   ),
   createAllDayEvent(
     'vm-evt-06', 'Term 2 Fee — Last Date Without Penalty', 'Finance',
     calDay(16),
     'Accounts Office', 'Cheques accepted until 1 PM; online payment until midnight.',
-    { priority: 'high', attendees: 'All Parents' },
+    { priority: 'high', attendees: 'All Parents', reach: { sides: ['family'] } },
   ),
 
   // ── Week 4 ────────────────────────────────────────────────────────────
@@ -72,7 +73,7 @@ export const calendarFixtures: CalendarEvent[] = [
       description:
         'Classes 6 and 7, accompanied by four teachers. Two buses; the Chamundi Hill climb is optional.',
       priority: 'medium',
-      attendees: 'Classes 6 & 7',
+      attendees: 'Classes 6 & 7', reach: { grades: ['6', '7'] },
       reminder: '1day',
     },
   ),
@@ -88,6 +89,6 @@ export const calendarFixtures: CalendarEvent[] = [
     'vm-evt-09', 'Management Review — Half Yearly Results', 'Administration',
     calDay(26), '11:00 AM', '01:00 PM',
     'Principal’s Office', 'Class-wise results and the intervention list for Classes 9 and 10.',
-    { priority: 'medium', attendees: 'Principal, Department Heads', reminder: '30min' },
+    { priority: 'medium', attendees: 'Principal, Department Heads', reach: { sides: ['staff'] }, reminder: '30min' },
   ),
 ]

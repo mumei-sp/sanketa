@@ -17,6 +17,7 @@
 
 import type { NoticeBoardEntry, NoticeCategory } from '@/features/notice-board/types'
 import { relativeDisplay } from '@/mocks/_shared/date-helpers'
+import { gradeRange } from '@/config/audience'
 
 /** The tag palette, named once rather than repeated on every notice. */
 type Tag = { label: NoticeCategory; color: string }
@@ -49,6 +50,7 @@ export const noticeFixtures: NoticeBoardEntry[] = [
     title: 'Half Yearly Examination Timetable',
     tags: [ACADEMIC],
     audience: 'Classes 6 to 10',
+    reach: { grades: gradeRange(6, 10) },
     postDate: relativeDisplay(-4),
     expiryDate: relativeDisplay(14),
     createdBy: 'Examination Cell',
@@ -65,6 +67,7 @@ export const noticeFixtures: NoticeBoardEntry[] = [
     title: 'Field Visit — Mysuru Palace and Chamundi Hill',
     tags: [ANNOUNCEMENT, EVENTS],
     audience: 'Classes 6 & 7',
+    reach: { grades: ['6', '7'] },
     postDate: relativeDisplay(-2),
     expiryDate: relativeDisplay(9),
     createdBy: 'Class Advisor',
@@ -80,6 +83,7 @@ export const noticeFixtures: NoticeBoardEntry[] = [
     title: 'Term 2 Fee — Last Date Without Penalty',
     tags: [FINANCE],
     audience: 'All Parents',
+    reach: { sides: ['family'] },
     postDate: relativeDisplay(-8),
     expiryDate: relativeDisplay(6),
     createdBy: 'Accounts Office',
@@ -110,6 +114,7 @@ export const noticeFixtures: NoticeBoardEntry[] = [
     title: 'Library — Reading Challenge for Classes 1 to 5',
     tags: [ANNOUNCEMENT],
     audience: 'Classes 1 to 5',
+    reach: { grades: gradeRange(1, 5) },
     postDate: relativeDisplay(-3),
     expiryDate: relativeDisplay(25),
     createdBy: 'Library',

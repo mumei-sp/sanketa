@@ -8,6 +8,8 @@ import { mockOrHttp } from './_adapter'
 import { emitDomainEvent } from './notification-service'
 import { withLatency, newId, displayDate } from '@/mocks/_shared'
 import { noticeBoardEntries } from '@/mocks/tenant/notices'
+import { callerAudience } from '@/mocks/_shared/audience'
+import { audienceReaches } from '@/config/audience'
 import type { NoticeBoardEntry } from '@/features/notice-board/types'
 import type { NoticeFormValues } from '@/features/notice-board/schemas/notice-schema'
 
@@ -37,7 +39,11 @@ export async function fetchNoticeBoardEntries(): Promise<NoticeBoardEntry[]> {
   return mockOrHttp(
     async () => {
       await withLatency({ min: 200, max: 500 })
-      return [...noticeBoardEntries]
+      // The board a person is standing in front of, not the whole wall. An
+      // undeclared reach is public — see `config/audience.ts` — so this only
+      // removes what was actually addressed elsewhere.
+      const viewer = callerAudience('Notice')
+      return noticeBoardEntries.filter(entry => audienceReaches(entry.reach, viewer))
     },
     async () => {
       const { data } = await apiClient.get<NoticeBoardEntry[]>('/notices')
