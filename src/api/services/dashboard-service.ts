@@ -45,11 +45,22 @@ export async function fetchDashboardStats(): Promise<DashboardStat[]> {
   )
 }
 
-/** @apiRoute GET /api/v1/dashboard/performance */
+/**
+ * @apiRoute GET /api/v1/dashboard/performance
+ *
+ * Guarded on Grade, not on Student. The series is marks — the grade sheet
+ * summed by band — so `grades.read` is the permission it spends, and being
+ * allowed to see who is on the roll is not the same as being allowed to see
+ * how they did. An Accountant holds `students.read` and no grade permission,
+ * and the Student guard served them the school's academic results.
+ *
+ * Same drift as `fetchStudentAttendance`: the aggregate was guarded on the
+ * subject its *rows* are about rather than on the subject it *sums*.
+ */
 export async function fetchStudentPerformance(): Promise<PerformanceDataset[]> {
   return mockOrHttp(
     async () => {
-      if (!callerSeesEveryRow('read', 'Student')) return []
+      if (!callerSeesEveryRow('read', 'Grade')) return []
       await withLatency({ min: 150, max: 350 })
       // Rebuild each call so admin-configured grades appear live.
       return buildPerformanceDatasets().map(d => ({ ...d, data: [...d.data] }))
@@ -92,11 +103,23 @@ export async function fetchGenderDistribution(): Promise<GenderDataset[]> {
   )
 }
 
-/** @apiRoute GET /api/v1/dashboard/attendance */
+/**
+ * @apiRoute GET /api/v1/dashboard/attendance
+ *
+ * Guarded on Attendance, not on Student. It sums attendance, so attendance is
+ * what the caller has to be allowed to read — and the two are not the same
+ * permission. An Accountant holds `students.read` and no attendance permission
+ * whatsoever, and was served the school's attendance figures by the Student
+ * guard: the exact failure `seesEveryRow` was written to stop, fixed for the
+ * list reads and missed on this one aggregate.
+ *
+ * `attendance-service` has always asked for Attendance here. This is the copy
+ * that drifted.
+ */
 export async function fetchStudentAttendance(): Promise<AttendanceDataset[]> {
   return mockOrHttp(
     async () => {
-      if (!callerSeesEveryRow('read', 'Student')) return []
+      if (!callerSeesEveryRow('read', 'Attendance')) return []
       await withLatency({ min: 150, max: 350 })
       return attendanceDatasets.map(d => ({ ...d, data: [...d.data] }))
     },

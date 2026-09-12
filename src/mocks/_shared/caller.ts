@@ -24,7 +24,13 @@
 import { authUtils } from '@/api/utils/auth'
 import { listRoles } from '@/mocks/tenant/roles/store'
 import { resolveActiveAccess } from '@/mocks/tenant/profiles'
-import { defineAbilityFor, subjectFor, type AppAbility, type SubjectFields } from '@/config/ability'
+import {
+  defineAbilityFor,
+  seesEveryRow,
+  subjectFor,
+  type AppAbility,
+  type SubjectFields,
+} from '@/config/ability'
 import { findRole, type Action, type Subject } from '@/config/permissions'
 
 /**
@@ -93,34 +99,6 @@ export function visibleToCaller<T>(
     if (!fields) return false
     return ability.can(action, subjectFor(subject, fields))
   })
-}
-
-/**
- * May this caller see every row of this kind?
- *
- * True only when they hold a rule with no conditions on it — one that matches
- * any record. That is the question, and getting it wrong is what let two
- * aggregates leak.
- *
- * The first version asked the opposite one, "is this caller *narrowed*", as
- * `rules.length > 0 && rules.every(has conditions)`. A caller holding no rule
- * at all scores false there, exactly like an admin, because there is nothing
- * to be narrowed. So a Teacher — who holds no finance permission whatsoever —
- * passed the fee-stats guard and received the school's totals, and an
- * Accountant with no attendance permission received every attendance record.
- * The list reads gave both of them nothing, which is what kept it hidden.
- *
- * `can(action, subject)` cannot stand in for this: with a bare subject name it
- * answers "anywhere?", which a narrowed caller also answers yes to.
- *
- * Inverted rules (`cannot`) are excluded. Nothing writes one today, but one
- * would be a *removal* of access, and counting it as permission to see
- * everything is the same failing-open shape as the bug above.
- */
-function seesEveryRow(ability: AppAbility, action: Action, subject: Subject): boolean {
-  return ability
-    .rulesFor(action, subject)
-    .some(rule => rule.conditions === undefined && !rule.inverted)
 }
 
 /**

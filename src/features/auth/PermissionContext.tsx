@@ -18,8 +18,9 @@
 
 import * as React from 'react'
 import { fetchRoles } from '@/api/services/role-service'
-import { findRole, type Permission, type Role } from '@/config/permissions'
+import { findRole, type Action, type Permission, type Role, type Subject } from '@/config/permissions'
 import {
+  seesEveryRow,
   defineAbilityFor,
   permissionDefinition,
   subjectFor,
@@ -102,6 +103,19 @@ interface PermissionContextValue {
    */
   can: (permission: Permission, scope?: PermissionScope) => boolean
   canAny: (permissions: Permission[]) => boolean
+  /**
+   * May this caller see a school-wide aggregate of this kind?
+   *
+   * The question a *panel* has to ask, as opposed to a button. `can` answers
+   * "anywhere?", which a teacher narrowed to her own sections answers yes to —
+   * and the services then refuse her the sum, because `callerSeesEveryRow`
+   * asks this instead. Gating a chart on `can` therefore draws an empty chart.
+   *
+   * Same predicate the services use (`seesEveryRow` in `@/config/ability`), so
+   * what the page decides to render and what the service decides to compute
+   * cannot drift apart.
+   */
+  canSeeEveryRow: (action: Action, subject: Subject) => boolean
   /** Re-reads the table after the role editor saves. */
   refresh: () => Promise<void>
 }
@@ -264,6 +278,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       isReady,
       can,
       canAny: permissions => permissions.some(permission => can(permission)),
+      canSeeEveryRow: (action, subject) => seesEveryRow(ability, action, subject),
       refresh: load,
     }
   }, [ability, role, realRole, preview, roles, isReady, load])

@@ -211,3 +211,39 @@ export function subjectFor(subject: Subject, fields?: SubjectFields): AppSubject
   const present = Object.values(fields).some(value => value !== undefined)
   return present ? asSubject(subject, fields) : subject
 }
+
+/**
+ * May this caller see every row of this kind?
+ *
+ * True only when they hold a rule with no conditions on it — one that matches
+ * any record. That is the question, and getting it wrong is what let two
+ * aggregates leak.
+ *
+ * The first version asked the opposite one, "is this caller *narrowed*", as
+ * `rules.length > 0 && rules.every(has conditions)`. A caller holding no rule
+ * at all scores false there, exactly like an admin, because there is nothing
+ * to be narrowed. So a Teacher — who holds no finance permission whatsoever —
+ * passed the fee-stats guard and received the school's totals, and an
+ * Accountant with no attendance permission received every attendance record.
+ * The list reads gave both of them nothing, which is what kept it hidden.
+ *
+ * `can(action, subject)` cannot stand in for this: with a bare subject name it
+ * answers "anywhere?", which a narrowed caller also answers yes to.
+ *
+ * Inverted rules (`cannot`) are excluded. Nothing writes one today, but one
+ * would be a *removal* of access, and counting it as permission to see
+ * everything is the same failing-open shape as the bug above.
+ *
+ * ── Why it lives here rather than beside the services ──────────────────
+ * Two callers need the same answer for opposite reasons. A service asks it to
+ * decide whether to *compute* an aggregate; the dashboard asks it to decide
+ * whether to *draw* one. They have to agree, or a panel renders a chart of the
+ * empty array the service just refused to fill — which is exactly what the
+ * dashboard did to every teacher who ever opened it. One predicate, so the
+ * page shows what the services will answer.
+ */
+export function seesEveryRow(ability: AppAbility, action: Action, subject: Subject): boolean {
+  return ability
+    .rulesFor(action, subject)
+    .some(rule => rule.conditions === undefined && !rule.inverted)
+}

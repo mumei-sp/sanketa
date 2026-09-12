@@ -70,8 +70,48 @@ function SchoolDashboard() {
   // modal — a menu should not offer a dish that is off. Memoised on `can`
   // rather than recomputed per render, because `useTileSelection` treats a new
   // array as a new registry.
-  const { can } = usePermissions()
+  const { can, canSeeEveryRow } = usePermissions()
   const tiles = React.useMemo(() => visibleTiles(dashboardTileRegistry, can), [can])
+
+  /**
+   * Which panels this caller can actually be shown something in.
+   *
+   * A panel is absent, not empty. Every chart below is an *aggregate*, and the
+   * dashboard services refuse to compute one for a caller who may not see
+   * every row — so a refused panel used to render a chart of the `[]` it was
+   * handed. An Accountant was shown an empty Student Attendance chart; a
+   * Teacher an empty Earnings one. That is not a permission working, it is a
+   * page pretending it has data.
+   *
+   * Each is asked about the subject the service actually SUMS, which is not
+   * always the subject its rows are about — that mismatch was itself the bug.
+   * `fetchStudentPerformance` sums marks, so it spends `grades.read`, and
+   * `fetchStudentAttendance` sums registers, so it spends `attendance.read`;
+   * both used to ask about `Student`, which let an Accountant holding only
+   * `students.read` read the school's results and its attendance.
+   *
+   * Asked with `canSeeEveryRow` rather than `can` on purpose: `can` with a bare
+   * permission answers "anywhere?", which a caller narrowed to their own
+   * records also answers yes to. The gate has to ask the question the service
+   * asks, and it is the same predicate on both sides so the two cannot drift.
+   *
+   * The last two are different in kind and asked differently. Calendar events
+   * and notices are *rows*, not sums — their services filter rather than refuse
+   * — so a plain permission is the right test. The to-do list and the activity
+   * feed carry no test at all: the feed is already filtered to what its reader
+   * may know about, and the to-do list is the school's own.
+   */
+  const panels = React.useMemo(
+    () => ({
+      performance: canSeeEveryRow('read', 'Grade'),
+      earnings: canSeeEveryRow('read', 'Finance'),
+      gender: canSeeEveryRow('read', 'Student'),
+      attendance: canSeeEveryRow('read', 'Attendance'),
+      calendar: can('calendar.read'),
+      notices: can('notices.read'),
+    }),
+    [can, canSeeEveryRow],
+  )
 
   /**
    * The four to start with, from the tiles this caller actually has.
@@ -120,15 +160,17 @@ function SchoolDashboard() {
     async function loadData() {
       try {
         setIsLoading(true)
+        // Not fetched when not drawn. The services would answer `[]` anyway,
+        // so this is four round trips a teacher no longer waits through.
         const [perfData, earnData, genderData, attendData, eventsData, todosData, noticesData] =
           await Promise.all([
-            fetchStudentPerformance(),
-            fetchEarnings(),
-            fetchGenderDistribution(),
-            fetchStudentAttendance(),
-            fetchCalendarEvents(),
+            panels.performance ? fetchStudentPerformance() : [],
+            panels.earnings ? fetchEarnings() : [],
+            panels.gender ? fetchGenderDistribution() : [],
+            panels.attendance ? fetchStudentAttendance() : [],
+            panels.calendar ? fetchCalendarEvents() : [],
             fetchTodoItems(),
-            fetchNoticeBoardEntries(),
+            panels.notices ? fetchNoticeBoardEntries() : [],
           ])
         setPerformance(perfData)
         setEarnings(earnData)
@@ -145,7 +187,7 @@ function SchoolDashboard() {
     }
 
     loadData()
-  }, [])
+  }, [panels])
 
   const MONTH_NAMES = [
     'January',
@@ -186,9 +228,16 @@ function SchoolDashboard() {
 
       {/* ───── Unified Dashboard Grid ───── */}
       {/*
+        Placement is by ORDER and width, never by col-start/row-start.
+        Pinning a panel to a cell means a panel this caller may not see leaves
+        a hole in the grid, and the row below does not move up to fill it. With
+        auto-placement the same widths produce the same layout when everything
+        is present, and close up when something is not — which is the whole
+        point of the `panels` gate above.
+
         Desktop (lg): 12-col grid, calendar/events on right spanning 3 rows
           Row 1: Stat cards (9 cols, nested 4-col grid) + Calendar/Events (3, row-span-3)
-          Row 2: Performance (5) + Earnings (4)
+          Row 2: Performance (4) + Earnings (5)
           Row 3: Gender (3) + Attendance (3) + TodoList (3)
         Tablet (md): 12-col grid
           Row 1: Stat cards (full width, nested 4-col grid)
@@ -203,7 +252,7 @@ function SchoolDashboard() {
         <Tile
           id="stats-container"
           width={{ default: 1, md: 12, lg: 9 }}
-          className="md:order-1 lg:col-start-1 lg:row-start-1"
+          className="md:order-1 lg:order-1"
         >
           <div className="flex items-center gap-2 mb-1">
             <div className="flex-1" />
@@ -272,84 +321,96 @@ function SchoolDashboard() {
         />
 
         {/* Calendar + Events — Desktop: row1-3 col10-12 | Tablet: row4 col1-5 */}
-        <Tile
-          id="calendar-events-grid"
-          width={{ default: 1, md: 5, lg: 3 }}
-          height={{ default: 1, lg: 3 }}
-          className="md:order-6 lg:col-start-10 lg:row-start-1"
-        >
-          <Card
-            className="pt-4 pb-2 flex flex-col gap-3 h-full"
-            style={{
-              backgroundColor: 'color-mix(in srgb, var(--accent) 45%, var(--card))',
-            }}
+        {panels.calendar && (
+  <Tile
+            id="calendar-events-grid"
+            width={{ default: 1, md: 5, lg: 3 }}
+            height={{ default: 1, lg: 3 }}
+            className="md:order-6 lg:order-2"
           >
-            <DashboardCalendar
-              embedded
-              selectedDate={new Date(2035, 2, 8)}
-              highlightedDates={highlightedDates}
-              currentDate={calendarDate}
-              onMonthChange={setCalendarDate}
-            />
-            <div
-              className="rounded-xl mx-2 px-2 pt-3 pb-3 flex-1 min-h-0 flex flex-col"
-              style={{ backgroundColor: 'var(--card)' }}
+            <Card
+              className="pt-4 pb-2 flex flex-col gap-3 h-full"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--accent) 45%, var(--card))',
+              }}
             >
-              <EventsList embedded events={filteredEvents} isLoading={isLoading} />
-            </div>
-          </Card>
-        </Tile>
+              <DashboardCalendar
+                embedded
+                selectedDate={new Date(2035, 2, 8)}
+                highlightedDates={highlightedDates}
+                currentDate={calendarDate}
+                onMonthChange={setCalendarDate}
+              />
+              <div
+                className="rounded-xl mx-2 px-2 pt-3 pb-3 flex-1 min-h-0 flex flex-col"
+                style={{ backgroundColor: 'var(--card)' }}
+              >
+                <EventsList embedded events={filteredEvents} isLoading={isLoading} />
+              </div>
+            </Card>
+          </Tile>
+        )}
 
         {/* Student Performance — Desktop: row2 col1-4 | Tablet: row2 col1-7 */}
-        <Tile
-          id="perf-grid"
-          width={{ default: 1, md: 7, lg: 4 }}
-          className="md:order-2 lg:col-start-1 lg:row-start-2"
-        >
-          <StudentPerformanceChart datasets={performance} isLoading={isLoading} />
-        </Tile>
+        {panels.performance && (
+  <Tile
+            id="perf-grid"
+            width={{ default: 1, md: 7, lg: 4 }}
+            className="md:order-2 lg:order-3"
+          >
+            <StudentPerformanceChart datasets={performance} isLoading={isLoading} />
+          </Tile>
+        )}
 
         {/* Earnings — Desktop: row2 col5-9 | Tablet: row3 col1-6 */}
-        <Tile
-          id="earnings-grid"
-          width={{ default: 1, md: 6, lg: 5 }}
-          className="md:order-4 lg:col-start-5 lg:row-start-2"
-        >
-          <EarningsChart datasets={earnings} isLoading={isLoading} />
-        </Tile>
+        {panels.earnings && (
+  <Tile
+            id="earnings-grid"
+            width={{ default: 1, md: 6, lg: 5 }}
+            className="md:order-4 lg:order-4"
+          >
+            <EarningsChart datasets={earnings} isLoading={isLoading} />
+          </Tile>
+        )}
 
         {/* Students by Gender — Desktop: row3 col1-3 | Tablet: row2 col8-12 */}
-        <Tile
-          id="gender-grid"
-          width={{ default: 1, md: 5, lg: 3 }}
-          className="md:order-3 lg:col-start-1 lg:row-start-3"
-        >
-          <StudentsByGenderChart datasets={gender} isLoading={isLoading} />
-        </Tile>
+        {panels.gender && (
+  <Tile
+            id="gender-grid"
+            width={{ default: 1, md: 5, lg: 3 }}
+            className="md:order-3 lg:order-5"
+          >
+            <StudentsByGenderChart datasets={gender} isLoading={isLoading} />
+          </Tile>
+        )}
 
         {/* Student Attendance — Desktop: row3 col4-6 | Tablet: row3 col7-12 */}
-        <Tile
-          id="attendance-grid"
-          width={{ default: 1, md: 6, lg: 3 }}
-          className="md:order-5 lg:col-start-4 lg:row-start-3"
-        >
-          <StudentAttendanceChart datasets={attendance} isLoading={isLoading} />
-        </Tile>
+        {panels.attendance && (
+  <Tile
+            id="attendance-grid"
+            width={{ default: 1, md: 6, lg: 3 }}
+            className="md:order-5 lg:order-6"
+          >
+            <StudentAttendanceChart datasets={attendance} isLoading={isLoading} />
+          </Tile>
+        )}
 
         {/* Events — tablet only, beside the calendar: row4 col6-12 */}
-        <Tile
-          id="events-tablet-grid"
-          width={{ default: 1, md: 7 }}
-          className="hidden md:order-7 md:block lg:hidden"
-        >
-          <EventsList events={filteredEvents} isLoading={isLoading} />
-        </Tile>
+        {panels.calendar && (
+  <Tile
+            id="events-tablet-grid"
+            width={{ default: 1, md: 7 }}
+            className="hidden md:order-7 md:block lg:hidden"
+          >
+            <EventsList events={filteredEvents} isLoading={isLoading} />
+          </Tile>
+        )}
 
         {/* To Do List — Desktop: row3 col7-9 | Tablet: row5, full width */}
         <Tile
           id="todo-grid"
           width={{ default: 1, md: 12, lg: 3 }}
-          className="md:order-8 lg:col-start-7 lg:row-start-3"
+          className="md:order-8 lg:order-7"
         >
           <DashboardTodoList items={todos} isLoading={isLoading} />
         </Tile>
@@ -357,10 +418,15 @@ function SchoolDashboard() {
 
       {/* ───── Row 3: Notice Board + Recent Activity ───── */}
       <TileWrapper columns={{ default: 1, md: 12 }} gap={12}>
-        <Tile id="notice-grid" width={{ default: 1, md: 9 }}>
-          <NoticeBoard items={notices} isLoading={isLoading} />
-        </Tile>
-        <Tile id="activity-grid" width={{ default: 1, md: 3 }}>
+        {panels.notices && (
+          <Tile id="notice-grid" width={{ default: 1, md: 9 }}>
+            <NoticeBoard items={notices} isLoading={isLoading} />
+          </Tile>
+        )}
+        {/* Takes the whole row when there is no notice board beside it, rather
+            than sitting in a quarter of one. The feed needs no permission of
+            its own — it is already filtered to what its reader may know. */}
+        <Tile id="activity-grid" width={{ default: 1, md: panels.notices ? 3 : 12 }}>
           <RecentActivity />
         </Tile>
       </TileWrapper>
