@@ -103,9 +103,17 @@ const REASON_LIMIT = 140
  * Different for the two cases because they are asked in different situations:
  * a temporary role almost always has a story, and a permanent one usually has
  * a reason that is really a job description.
+ *
+ * Named nobody, deliberately. The first version read "Acting head while
+ * Nandini Rao is on leave", which is exactly the sentence a school would
+ * write — and which the app then offered to Nandini Rao while giving Nandini
+ * Rao a role. A placeholder that borrows a real name from the seed will
+ * eventually be shown to that person.
  */
 function placeholderFor(temporary: boolean): string {
-  return temporary ? 'Acting head while Nandini Rao is on leave' : 'Took over admissions this year'
+  return temporary
+    ? 'Covering while the head of department is on leave'
+    : 'Took over admissions this year'
 }
 
 export function GrantRoleDialog({
