@@ -1,0 +1,29 @@
+[sqlfluff]
+dialect = postgres
+templater = placeholder
+max_line_length = 120
+# ST06: select-column order is noise for DDL.
+exclude_rules = ST06
+
+[sqlfluff:templater:placeholder]
+param_regex = \$\{(?P<param_name>[a-zA-Z_:]+)\}
+flyway:defaultSchema = tenant_school_001
+app_role = sanketa_tenant_app
+schema = tenant_school_001
+
+[sqlfluff:indentation]
+indent_unit = space
+tab_space_size = 4
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = upper
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = upper
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
+[sqlfluff:rules:convention.terminator]
+require_final_semicolon = True

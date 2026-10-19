@@ -1,0 +1,14 @@
+# Local environment
+.env
+*.local
+
+# Flyway / tooling output
+flyway.conf
+reports/
+*.log
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.iml

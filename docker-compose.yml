@@ -1,0 +1,37 @@
+name: sanketa-db
+
+services:
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-18}
+    container_name: sanketa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Builtin C.UTF-8: collation that never changes under OS/glibc upgrades
+      # (glibc collation drift silently corrupts text indexes).
+      POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale-provider=builtin --builtin-locale=C.UTF-8
+    command:
+      - postgres
+      - -c
+      - timezone=UTC
+      - -c
+      - log_timezone=UTC
+      - -c
+      - log_statement=ddl
+      - -c
+      - log_lock_waits=on
+      - -c
+      - idle_in_transaction_session_timeout=60s
+    ports:
+      - "${LOCAL_PORT:-5433}:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql
+      - ./docker/postgres:/opt/sanketa:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pg-data:

@@ -1,0 +1,48 @@
+name: db-ci
+
+on:
+  pull_request:
+    branches: [db/schema]
+  workflow_call:
+
+# Cancel superseded PR runs only; never a verify step inside a CD run.
+concurrency:
+  group: db-ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Merged migrations are immutable
+        if: github.event_name == 'pull_request'
+        run: scripts/check-immutable.sh "origin/${{ github.base_ref }}"
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install "sqlfluff==3.*"
+      - run: sqlfluff lint migrations seeds
+
+  migrate:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Local topology (global + 2 tenant instances, from .env.example)
+        run: cp .env.example .env
+      - name: Fresh database reports pending (or nothing to do)
+        run: scripts/db-sync.sh --check || [ $? -eq 3 ]
+      - name: Apply from empty, with seeds
+        run: scripts/db-sync.sh --with-seeds
+      - name: Second run is a no-op
+        run: scripts/db-sync.sh
+      - name: Nothing pending afterwards
+        run: scripts/db-sync.sh --check
+      - name: A brand-new tenant comes up at latest
+        run: scripts/db-sync.sh --tenant sanketa_db_2:tenant_ci_new
+      - if: failure()
+        run: docker logs sanketa-postgres 2>&1 | tail -200

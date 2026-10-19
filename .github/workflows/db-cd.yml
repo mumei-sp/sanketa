@@ -1,0 +1,50 @@
+# Push to db/schema  -> verify -> staging -> production (manual approval).
+# Manual run         -> verify -> chosen environment, check or apply.
+name: db-cd
+
+on:
+  push:
+    branches: [db/schema]
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+      mode:
+        type: choice
+        options: [check, apply]
+        default: check
+
+# One deploy at a time; never cancel a migration mid-flight.
+concurrency:
+  group: db-cd
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    uses: ./.github/workflows/db-ci.yml
+
+  staging:
+    needs: verify
+    if: github.ref == 'refs/heads/db/schema' && (github.event_name == 'push' || inputs.environment == 'staging')
+    uses: ./.github/workflows/db-deploy.yml
+    with:
+      environment: staging
+      mode: ${{ github.event_name == 'push' && 'apply' || inputs.mode }}
+    secrets: inherit
+
+  production:
+    needs: [verify, staging]
+    if: >-
+      always() && github.ref == 'refs/heads/db/schema' && needs.verify.result == 'success' &&
+      (github.event_name == 'push' && needs.staging.result == 'success' ||
+       github.event_name == 'workflow_dispatch' && inputs.environment == 'production')
+    uses: ./.github/workflows/db-deploy.yml
+    with:
+      environment: production
+      mode: ${{ github.event_name == 'push' && 'apply' || inputs.mode }}
+    secrets: inherit

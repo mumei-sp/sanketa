@@ -1,0 +1,46 @@
+# Deploys this branch's schema to ONE environment (Global DB + every tenant
+# instance in it). Called by db-cd.yml.
+name: db-deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment: { type: string, required: true }
+      mode:        { type: string, default: apply }   # apply | check
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: ${{ inputs.environment }} (${{ inputs.mode }})
+    # Private DBs? Point DB_RUNNER at a self-hosted runner inside the VPC.
+    runs-on: ${{ vars.DB_RUNNER || 'ubuntu-latest' }}
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # The number of tenant instances varies per environment, so config is
+      # loaded by name pattern rather than listed here. Secrets stay masked.
+      - name: Load environment config
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: |
+          pattern='^(DB_SSLMODE|LOCK_TIMEOUT|GLOBAL_[A-Z0-9_]+|TENANT_[A-Z0-9_]+|[A-Z0-9_]+_(HOST|PORT|NAME|SSLMODE|MIGRATOR_USER|MIGRATOR_PASSWORD|APP_ROLE))$'
+          for json in "$VARS_JSON" "$SECRETS_JSON"; do
+            jq -r --arg p "$pattern" \
+              'to_entries[] | select(.key | test($p)) | "\(.key)<<__CFG_EOF__\n\(.value)\n__CFG_EOF__"' \
+              <<< "$json" >> "$GITHUB_ENV"
+          done
+          echo "DB_TARGET=remote" >> "$GITHUB_ENV"
+
+      - name: Plan (what is pending)
+        run: scripts/db-sync.sh --check || [ $? -eq 3 ]
+      - name: Apply
+        if: inputs.mode == 'apply'
+        run: scripts/db-sync.sh
+      - name: Verify in sync
+        if: inputs.mode == 'apply'
+        run: scripts/db-sync.sh --check

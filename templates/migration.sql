@@ -1,0 +1,15 @@
+-- =============================================================================
+-- V{{VERSION}} :: {{SCOPE}} :: {{DESCRIPTION}}
+-- -----------------------------------------------------------------------------
+-- Why:      <ticket / reason>
+-- Rollback: <forward-fix plan; Flyway Community has no undo>
+-- Locking:  <tables touched, lock taken, approx rows; online-safe?>
+-- =============================================================================
+-- Conventions: docs/CONVENTIONS.md
+-- Postgres DDL is transactional: this whole file commits or rolls back as one.
+-- CREATE INDEX CONCURRENTLY can't run in a transaction: give it its own file
+-- plus a sibling `<same name>.sql.conf` containing `executeInTransaction=false`,
+-- and make it retry-safe (a failed CONCURRENTLY build leaves an INVALID index):
+--   DROP INDEX CONCURRENTLY IF EXISTS ix_t__c;
+--   CREATE INDEX CONCURRENTLY ix_t__c ON t (c);
+
