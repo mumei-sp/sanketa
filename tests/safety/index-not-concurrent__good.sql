@@ -1,7 +1,7 @@
 -- expect: none
 -- New table in the same file: a plain index is fine.
 CREATE TABLE guardians (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    id UUID NOT NULL DEFAULT uuidv7(),
     email TEXT NOT NULL,
     CONSTRAINT pk_guardians PRIMARY KEY (id)
 );

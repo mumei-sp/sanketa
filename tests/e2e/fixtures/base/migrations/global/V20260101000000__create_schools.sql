@@ -1,6 +1,6 @@
 -- e2e fixture: a global table.
 CREATE TABLE schools (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    id UUID NOT NULL DEFAULT uuidv7(),
     code TEXT NOT NULL,
     title TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

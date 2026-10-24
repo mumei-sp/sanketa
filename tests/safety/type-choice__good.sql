@@ -1,6 +1,6 @@
 -- expect: none
 CREATE TABLE payments (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    id UUID NOT NULL DEFAULT uuidv7(),
     paid_at TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
     due_at TIMESTAMP WITH TIME ZONE,
     amount NUMERIC(19, 4) NOT NULL,

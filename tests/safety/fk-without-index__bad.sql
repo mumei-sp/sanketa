@@ -1,8 +1,8 @@
 -- expect: fk-without-index
 CREATE TABLE enrolments (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
-    student_id BIGINT NOT NULL REFERENCES students (id),
-    course_id BIGINT NOT NULL,
+    id UUID NOT NULL DEFAULT uuidv7(),
+    student_id UUID NOT NULL REFERENCES students (id),
+    course_id UUID NOT NULL,
     CONSTRAINT pk_enrolments PRIMARY KEY (id),
     CONSTRAINT fk_enrolments__courses FOREIGN KEY (course_id) REFERENCES courses (id)
 );

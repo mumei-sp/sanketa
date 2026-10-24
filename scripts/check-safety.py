@@ -353,7 +353,7 @@ def check_file(path):
 
     # Types discouraged by docs/CONVENTIONS.md.
     types = [
-        (r"\b(?:BIG|SMALL)?SERIAL[248]?\b", "identity: BIGINT GENERATED ALWAYS AS IDENTITY"),
+        (r"\b(?:BIG|SMALL)?SERIAL[248]?\b", "id UUID NOT NULL DEFAULT uuidv7()"),
         (r"\bTIMESTAMP\b(?!\s*(?:\(\s*\d+\s*\)\s*)?WITH\s+TIME\s+ZONE)", "TIMESTAMPTZ"),
         (r"\bMONEY\b", "NUMERIC(19,4) + currency CHAR(3)"),
         (r"\b(?:REAL|DOUBLE\s+PRECISION|FLOAT[48]?)\b", "NUMERIC(p,s)"),

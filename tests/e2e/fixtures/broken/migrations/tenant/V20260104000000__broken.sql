@@ -1,8 +1,8 @@
 -- e2e fixture: BROKEN on purpose. The table is created, then the file fails;
 -- the whole file must roll back and stop the run.
 CREATE TABLE broken_partial (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    id UUID NOT NULL DEFAULT uuidv7(),
     CONSTRAINT pk_broken_partial PRIMARY KEY (id)
 );
 
-INSERT INTO no_such_table (id) VALUES (1);
+INSERT INTO no_such_table (id) VALUES (uuidv7());

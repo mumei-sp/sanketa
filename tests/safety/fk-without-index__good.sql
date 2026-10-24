@@ -1,9 +1,9 @@
 -- expect: none
 CREATE TABLE grades (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
-    student_id BIGINT NOT NULL,
-    term_id BIGINT NOT NULL,
-    exam_id BIGINT NOT NULL,
+    id UUID NOT NULL DEFAULT uuidv7(),
+    student_id UUID NOT NULL,
+    term_id UUID NOT NULL,
+    exam_id UUID NOT NULL,
     CONSTRAINT pk_grades PRIMARY KEY (id),
     CONSTRAINT uq_grades__term_id__student_id UNIQUE (term_id, student_id),
     CONSTRAINT fk_grades__students FOREIGN KEY (student_id) REFERENCES students (id),
