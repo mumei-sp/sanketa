@@ -100,6 +100,9 @@ run rsync -a --exclude .git --exclude .secrets --exclude snapshots/.backups \
   --exclude mise.local.toml --exclude 'mise.*.local.toml' "$SRC/" "$WORK/"
 expect_exit 0
 cd "$WORK" || exit 1
+# Fixtures only: the suite tests the tooling, so the real schema (which grows)
+# must not change its expected counts. CI applies the real schema separately.
+rm -f migrations/global/V* migrations/tenant/V* seeds/global/R__* seeds/tenant/R__*
 add_fixture base
 
 # Based on mise.ci.toml: own stack, port and tenant names.
@@ -375,19 +378,24 @@ mrun $P check:safety
 expect_exit 0
 expect_output "check-safety: 2 file\(s\), 0 error\(s\)"
 
-step "check:immutable: edited merged migration fails, revert passes"
-mrun $P check:immutable
-expect_exit 0; expect_output "OK: no merged migration was modified"
+step "check:immutable: editable before release, frozen after db-release tag"
 merged=migrations/tenant/V20260101000100__create_classes_and_students.sql
-echo "-- edited after merge" >> "$merged"
+echo "-- edited before release" >> "$merged"
+mrun $P check:immutable
+expect_exit 0; expect_output "OK: pre-release"
+git checkout -q -- "$merged"
+git tag db-release-1
+mrun $P check:immutable
+expect_exit 0; expect_output "OK: no migration released in db-release-1 was modified"
+echo "-- edited after release" >> "$merged"
 mrun $P check:immutable
 expect_exit 1; expect_output "M\s+$merged"
-gitc commit -q --no-verify -am "edit merged migration" >/dev/null
+gitc commit -q --no-verify -am "edit released migration" >/dev/null
 mrun $P check:immutable
 expect_exit 1; expect_output "M\s+$merged"
 git reset -q --hard HEAD~1
 mrun $P check:immutable
-expect_exit 0; expect_output "OK: no merged migration was modified"
+expect_exit 0
 
 step "check:lint"
 mrun $P check:lint

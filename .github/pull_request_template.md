@@ -2,7 +2,7 @@
 <!-- ticket, module, intent -->
 
 ## Checklist
-- [ ] New `V<timestamp>__*.sql` only — no edits to merged migrations
+- [ ] Pre-release: baseline edited in place. After release: new `V<timestamp>__*.sql` only, no edits to released migrations
 - [ ] Scope is right: `global` (Global DB: identity, tenants, routing) or `tenant` (every school schema on every instance)
 - [ ] No cross-database references (tenant → global by id only)
 - [ ] Follows `docs/CONVENTIONS.md` (naming, identity + uuidv7, timestamptz, text)

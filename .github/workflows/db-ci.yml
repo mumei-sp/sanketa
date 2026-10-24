@@ -27,11 +27,20 @@ jobs:
       - uses: jdx/mise-action@v5
       - name: Lint, safety rules, immutability
         run: mise run check:all
-      # On a direct push the base is the pushed branch itself; compare with the previous tip.
-      - name: Immutability vs previous push
-        if: github.event_name == 'push'
-        run: mise run check:immutable "${{ github.event.before }}"
 
+  # The real schema in migrations/ applies from scratch, every tenant identical.
+  schema:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v5
+      - run: mise run dev:start
+      - run: mise run db:check
+      - run: mise run db:diff
+      - run: mise run tenant:list
+
+  # The tooling itself, on fixture migrations.
   e2e:
     needs: checks
     runs-on: ubuntu-latest

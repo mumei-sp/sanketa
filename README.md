@@ -340,7 +340,7 @@ docs/                   CONVENTIONS.md (read before writing a table) · adr/
 
 ## Rules that are enforced
 
-1. **Merged migrations are immutable.** CI fails on any modify/rename/delete of a merged `V*` file. Fix forward.
+1. **Released migrations are immutable.** Until the first release there is one baseline file per scope (`V1__global_baseline.sql`, `V1__tenant_baseline.sql`), edited in place. Releasing = tagging the deployed commit `db-release-N`; from then on CI fails on any modify/rename/delete of a released `V*` file. Fix forward with a new `db:new` file.
 2. **Timestamp versions** (`V20261019153000__…`), so parallel branches never collide.
 3. **No `clean`.** Flyway's drop-everything command is disabled. Local reset is `dev:reset`, and only where `ALLOW_RESET=true`.
 4. **Least privilege, per database.** Migrators run DDL; app roles do DML only, and only on their own kind of database.

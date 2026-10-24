@@ -27,3 +27,6 @@ extended_capitalisation_policy = lower
 aliasing = explicit
 [sqlfluff:rules:convention.terminator]
 require_final_semicolon = True
+[sqlfluff:rules:references.keywords]
+# Non-reserved in Postgres; required by the conventions (JPA @Version).
+ignore_words = version
