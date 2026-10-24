@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#MISE description="Run every check (lint, safety, immutable, safety tests); fail if any fails"
+set -uo pipefail
+# Run each check even if an earlier one fails, then summarise.
+results=()
+run() {
+  local label="$1"; shift
+  echo "==> $label"
+  if "$@"; then results+=("✓ $label"); else results+=("✗ $label"); failed=1; fi
+  echo
+}
+failed=0
+run "check:lint"       mise-tasks/check/lint
+run "check:safety"     mise-tasks/check/safety
+run "check:immutable"  mise-tasks/check/immutable
+run "safety tests"     tests/safety/run.sh
+printf '%s\n' "${results[@]}"
+exit "$failed"

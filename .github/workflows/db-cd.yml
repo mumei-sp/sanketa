@@ -1,20 +1,19 @@
-# Push to db/schema  -> verify -> staging -> production (manual approval).
-# Manual run         -> verify -> chosen environment, check or apply.
+# Manual deploy to a remote profile (mise.<profile>.toml must exist).
+# Mirrors `mise -E <profile> run deploy:plan|deploy:apply` from a laptop.
+# Not triggered on push until real environments exist.
 name: db-cd
 
 on:
-  push:
-    branches: [db/schema]
   workflow_dispatch:
     inputs:
-      environment:
-        type: choice
-        options: [staging, production]
-        default: staging
+      profile:
+        description: "Profile (mise.<profile>.toml), also the GitHub environment name"
+        required: true
+        type: string
       mode:
         type: choice
-        options: [check, apply]
-        default: check
+        options: [plan, apply]
+        default: plan
 
 # One deploy at a time; never cancel a migration mid-flight.
 concurrency:
@@ -25,26 +24,39 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    uses: ./.github/workflows/db-ci.yml
+  deploy:
+    name: ${{ inputs.profile }} (${{ inputs.mode }})
+    if: github.ref == 'refs/heads/db/schema'
+    # Private DBs: set DB_RUNNER to a self-hosted runner label inside the network.
+    runs-on: ${{ vars.DB_RUNNER || 'ubuntu-latest' }}
+    environment: ${{ inputs.profile }}
+    timeout-minutes: 60
+    env:
+      MISE_ENV: ${{ inputs.profile }}
+      SECRETS_SOURCE: env
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v5
 
-  staging:
-    needs: verify
-    if: github.ref == 'refs/heads/db/schema' && (github.event_name == 'push' || inputs.environment == 'staging')
-    uses: ./.github/workflows/db-deploy.yml
-    with:
-      environment: staging
-      mode: ${{ github.event_name == 'push' && 'apply' || inputs.mode }}
-    secrets: inherit
+      # Passwords come from this GitHub environment's secrets (*_PASSWORD);
+      # topology comes from the committed mise.<profile>.toml.
+      - name: Load secrets
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: |
+          jq -r 'to_entries[] | select(.key | test("_PASSWORD$")) | "\(.key)<<__S__\n\(.value)\n__S__"' \
+            <<< "$SECRETS_JSON" >> "$GITHUB_ENV"
 
-  production:
-    needs: [verify, staging]
-    if: >-
-      always() && github.ref == 'refs/heads/db/schema' && needs.verify.result == 'success' &&
-      (github.event_name == 'push' && needs.staging.result == 'success' ||
-       github.event_name == 'workflow_dispatch' && inputs.environment == 'production')
-    uses: ./.github/workflows/db-deploy.yml
-    with:
-      environment: production
-      mode: ${{ github.event_name == 'push' && 'apply' || inputs.mode }}
-    secrets: inherit
+      - name: Plan
+        run: mise run deploy:plan
+      - name: Apply
+        if: inputs.mode == 'apply'
+        run: mise run deploy:apply --yes
+      # Keep the pre-deploy schema snapshot (BACKUP_BEFORE_MIGRATE); the runner is thrown away.
+      - name: Upload snapshot
+        if: always() && inputs.mode == 'apply'
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-${{ inputs.profile }}-${{ github.run_id }}
+          path: snapshots/.backups/
+          if-no-files-found: ignore

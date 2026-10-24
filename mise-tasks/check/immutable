@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Fail if a merged V* migration was modified, renamed or deleted"
+#USAGE arg "[base]" help="Base ref to compare against" default="origin/db/schema"
+set -euo pipefail
+exec scripts/check-immutable.sh "${usage_base:-origin/db/schema}"

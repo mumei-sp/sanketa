@@ -11,7 +11,7 @@
 - [ ] New constraints on existing tables use `NOT VALID` + `VALIDATE`
 - [ ] Destructive change uses expand → migrate → contract across releases
 - [ ] Seeds (if any) are `R__` and idempotent
-- [ ] `make reset && make check` passes locally
+- [ ] `mise run check:all` and `mise run dev:reset --yes` pass locally
 
 ## Deploy notes
 <!-- table sizes, expected lock time, ordering with app release -->

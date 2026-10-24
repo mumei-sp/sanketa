@@ -19,7 +19,7 @@ slug="$(echo "$desc" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/
 file="migrations/${kind}/V${version}__${slug}.sql"
 
 [[ -n "$slug" ]] || { echo "description must contain letters or digits" >&2; exit 2; }
-safe_desc="$(printf '%s' "$desc" | sed 's/[\/&|]/\\&/g')"
+safe_desc="$(printf '%s' "$desc" | sed 's/[\/&|\\]/\\&/g')"
 sed -e "s|{{DESCRIPTION}}|${safe_desc}|" -e "s|{{SCOPE}}|${kind}|" -e "s|{{VERSION}}|${version}|" \
   templates/migration.sql > "$file"
 echo "$file"

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#MISE description="Apply migrations, then load dev seed data (needs ALLOW_SEEDS=true)"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+require_local "data:seed"
+require_allowed ALLOW_SEEDS "Seeding"
+exec scripts/db-sync.sh --with-seeds

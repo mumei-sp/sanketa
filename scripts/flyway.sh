@@ -5,7 +5,7 @@
 #   scripts/flyway.sh tenant sanketa_db_1 tenant_school_001 info
 #   scripts/flyway.sh tenant sanketa_db_1 tenant_school_001 repair   # after fixing a failed migration
 source "$(dirname "$0")/lib.sh"
-load_env
+load_config
 
 kind="${1:?global|tenant}"; shift
 case "$kind" in
@@ -14,4 +14,9 @@ case "$kind" in
   *) die "kind must be global|tenant" ;;
 esac
 [[ "$*" == *clean* ]] && die "clean is disabled"
+# Anything beyond read-only commands on a remote profile needs a typed confirmation.
+case " $* " in
+  *" info "*|*" validate "*) ;;
+  *) [[ "$DB_TARGET" == remote ]] && is_true "${REQUIRE_CONFIRM:-true}" && confirm_typed "$DB_PROFILE" ;;
+esac
 run_flyway "$kind" "$schema" "$@"

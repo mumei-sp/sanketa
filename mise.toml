@@ -1,0 +1,31 @@
+# Shared config for every profile. Profile files (mise.<profile>.toml) layer
+# on top; select one with `mise -E <profile> run …` (default: dev).
+# Never put passwords here; they come from .secrets/<profile>.env.
+
+[tools]
+"pipx:sqlfluff" = "3"
+
+[env]
+POSTGRES_VERSION = "18"
+FLYWAY_IMAGE = "flyway/flyway:11-alpine"
+LOCK_TIMEOUT = "{{ get_env(name='LOCK_TIMEOUT', default='5s') }}"
+
+# Global DB
+GLOBAL_DB_PORT = "5432"
+GLOBAL_DB_NAME = "sanketa_global"
+GLOBAL_SCHEMA = "global"
+GLOBAL_DB_MIGRATOR_USER = "sanketa_global_migrator"
+GLOBAL_DB_APP_ROLE = "sanketa_global_app"
+
+# Tenant instances: shared defaults, overridable per instance (<INSTANCE>_HOST …)
+TENANT_DB_PORT = "5432"
+TENANT_DB_MIGRATOR_USER = "sanketa_tenant_migrator"
+TENANT_DB_APP_ROLE = "sanketa_tenant_app"
+
+# Safety defaults: deny. Profiles opt in.
+ALLOW_SEEDS = "false"
+ALLOW_RESET = "false"
+REQUIRE_CONFIRM = "true"
+BACKUP_BEFORE_MIGRATE = "false"
+# Overridable from the real environment (CI injects secrets with SECRETS_SOURCE=env).
+SECRETS_SOURCE = "{{ get_env(name='SECRETS_SOURCE', default='file') }}"

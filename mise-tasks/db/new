@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#MISE description="Create a new migration from the template (prompts for anything missing)"
+#USAGE arg "[scope]" help="Which databases it runs on" {
+#USAGE   choices "global" "tenant"
+#USAGE }
+#USAGE arg "[description]" help="Short description, becomes the file name slug"
+#USAGE flag "--concurrent-index" help="Non-transactional file for CREATE INDEX CONCURRENTLY (adds the .conf sibling)"
+set -euo pipefail
+source scripts/lib.sh
+
+scope="${usage_scope:-}"; desc="${usage_description:-}"
+[[ -n "$scope" ]] || pick scope "Scope of the migration?" global tenant
+[[ -n "$desc" ]] || ask desc "Description (e.g. add index on students admission_no)?"
+[[ -n "$desc" ]] || die "A description is required"
+
+file="$(scripts/new-migration.sh "$scope" "$desc")"
+
+if [[ "${usage_concurrent_index:-}" == "true" ]]; then
+  # Flyway reads <file>.conf; CONCURRENTLY can't run inside a transaction.
+  echo "executeInTransaction=false" > "${file}.conf"
+  cat >> "$file" <<'SQL'
+-- executeInTransaction=false (see the sibling .conf): keep this file to the
+-- index only. Uncomment and fill in:
+-- DROP INDEX CONCURRENTLY IF EXISTS ix_<table>__<cols>;
+-- CREATE INDEX CONCURRENTLY ix_<table>__<cols> ON <table> (<cols>);
+SQL
+  log "Created $file (+ ${file##*/}.conf)"
+else
+  log "Created $file"
+fi
+echo "$file"
+warn "Fill in the header: Why / Rollback / Locking"

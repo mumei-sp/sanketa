@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#MISE description="Static check of migrations for risky DDL (locks, rewrites, conventions)"
+#USAGE flag "--all" help="Check every migration, not only those changed vs the base ref"
+#USAGE flag "--base <ref>" help="Base ref for changed files" default="origin/db/schema"
+#USAGE arg "[paths]" var=#true help="Files or directories to check instead"
+set -euo pipefail
+args=(--base "${usage_base:-origin/db/schema}")
+[[ "${usage_all:-}" == "true" ]] && args+=(--all)
+# Variadic args arrive shell-quoted in one string.
+[[ -n "${usage_paths:-}" ]] && eval "args+=($usage_paths)"
+exec python3 scripts/check-safety.py "${args[@]}"

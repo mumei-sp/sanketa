@@ -11,7 +11,8 @@ if ! git rev-parse --verify --quiet "$base" >/dev/null; then
   exit 0
 fi
 
-changed="$(git diff --name-status "$base"...HEAD -- 'migrations/**/V*' | grep -vE '^A' || true)"
+# Merge base vs the working tree, so uncommitted edits are caught before a push too.
+changed="$(git diff --name-status "$(git merge-base "$base" HEAD)" -- 'migrations/**/V*' | grep -vE '^A' || true)"
 if [[ -n "$changed" ]]; then
   echo "Versioned migrations are immutable once merged. Offending changes:" >&2
   echo "$changed" >&2

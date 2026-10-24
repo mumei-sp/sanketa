@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#MISE description="Open psql on a database of the active profile (read-only on remote)"
+#MISE raw=true
+#USAGE arg "[target]" help="'global' or a tenant instance name (prompted if omitted)"
+#USAGE flag "--write" help="Remote profiles: allow writes (default is read-only)"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+banner
+
+target="${usage_target:-}"
+# shellcheck disable=SC2046
+[[ -n "$target" ]] || pick target "Which database?" global $(tenant_instances)
+if [[ "$target" == global || "$target" == "$GLOBAL_DB_NAME" ]]; then use_global; else use_instance "$target"; fi
+
+# -t only with a terminal, so piping SQL in also works.
+it=(-i); [[ -t 0 ]] && it+=(-t)
+
+if [[ "$DB_TARGET" == local ]]; then
+  docker ps -q --filter "name=^/${LOCAL_CONTAINER}$" | grep -q . \
+    || die "${LOCAL_CONTAINER} is not running: 'mise run dev:start'"
+  exec docker exec "${it[@]}" "$LOCAL_CONTAINER" psql -U postgres -d "$T_DB"
+fi
+
+# Remote: connect as that database's migrator, read-only unless --write.
+opts="-c default_transaction_read_only=on"
+if [[ "${usage_write:-}" == "true" ]]; then
+  opts=""; warn "Write access to ${T_LABEL} (${T_HOST}/${T_DB}) as ${T_USER}"
+else
+  log "Read-only session (pass --write to allow changes)"
+fi
+# Password via inherited env, not argv (visible in `ps`).
+PGPASSWORD="$T_PASS" PGOPTIONS="$opts" exec docker run --rm "${it[@]}" ${NET_ARGS[@]+"${NET_ARGS[@]}"} \
+  -e PGPASSWORD -e PGOPTIONS \
+  "postgres:${POSTGRES_VERSION}" \
+  psql "host=$T_HOST port=$T_PORT dbname=$T_DB user=$T_USER sslmode=$T_SSL connect_timeout=5 application_name=sanketa-dev-psql"

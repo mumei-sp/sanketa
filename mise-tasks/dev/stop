@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#MISE description="Stop this profile's local Postgres (data is kept)"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+require_local "dev:stop"
+log "Stopping ${LOCAL_CONTAINER} (volume kept; 'mise run dev:reset' wipes it)"
+compose down

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Read-only: every schema's applied vs latest migration version (no Flyway)"
+#USAGE flag "-i --instance <name>" help="Only this tenant instance"
+set -euo pipefail
+args=()
+[[ -n "${usage_instance:-}" ]] && args+=(--instance "$usage_instance")
+exec scripts/tenant-list.sh ${args[@]+"${args[@]}"}

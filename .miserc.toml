@@ -1,0 +1,2 @@
+# Default profile when none is selected with -E / MISE_ENV.
+env = ["dev"]

@@ -1,0 +1,23 @@
+# Template for a remote profile (staging, prod, …). To add one:
+#   cp config/mise.remote.toml.example mise.<profile>.toml   then edit
+#   create .secrets/<profile>.env with the *_PASSWORD keys (or SECRETS_SOURCE=env)
+#   mise -E <profile> run deploy:config     # check the resolved config
+[env]
+DB_PROFILE = "staging"
+DB_TARGET = "remote"            # never starts/creates anything
+DB_SSLMODE = "require"          # verify-full also needs the server CA mounted into the containers
+
+GLOBAL_DB_HOST = "global-db.staging.internal"
+# GLOBAL_DB_NAME / GLOBAL_DB_MIGRATOR_USER … inherit from mise.toml unless set
+
+TENANT_INSTANCES = "sanketa_db_1,sanketa_db_2"
+TENANT_DB_HOST = "tenant-db.staging.internal"
+# Per-instance overrides:
+# SANKETA_DB_2_HOST = "tenant-db-2.staging.internal"
+# SANKETA_DB_2_MIGRATOR_USER = "sanketa_db_2_migrator"
+
+ALLOW_SEEDS = "false"
+ALLOW_RESET = "false"
+REQUIRE_CONFIRM = "true"        # deploy:apply asks you to type the profile name
+BACKUP_BEFORE_MIGRATE = "true"  # schema snapshot before each deploy (snapshots/.backups/)
+# SECRETS_SOURCE: file (default) | env (CI sets it) | vault (planned)

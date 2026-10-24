@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Lint SQL style with sqlfluff (migrations + seeds)"
+#USAGE flag "--fix" help="Rewrite files with 'sqlfluff fix' instead of only reporting"
+set -euo pipefail
+command -v sqlfluff >/dev/null || { echo "sqlfluff not found: run 'mise install' (pinned in mise.toml)" >&2; exit 1; }
+if [[ "${usage_fix:-}" == "true" ]]; then
+  exec sqlfluff fix migrations seeds
+fi
+exec sqlfluff lint migrations seeds

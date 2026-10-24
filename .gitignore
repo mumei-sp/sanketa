@@ -1,9 +1,16 @@
-# Local environment
-.env
-*.local
+# Secrets (one file per profile, see config/secrets.local.example)
+.secrets/*
+!.secrets/README.md
 
-# Flyway / tooling output
-flyway.conf
+# Personal mise overrides
+mise.local.toml
+mise.*.local.toml
+
+# Pre-deploy schema snapshots (committed snapshots live in snapshots/<profile>/)
+snapshots/.backups/
+snapshots/**/*.tmp
+
+# Tooling output
 reports/
 *.log
 

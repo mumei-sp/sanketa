@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#MISE description="Guarded deploy to the active profile: plan, confirm, snapshot, migrate, verify (never seeds)"
+#USAGE flag "--yes" help="Skip the typed confirmation (CI)"
+set -euo pipefail
+source scripts/lib.sh
+[[ "${usage_yes:-}" == "true" ]] && export ASSUME_YES=1
+load_config
+
+# 1. Plan (db-sync prints the profile banner). Exit 3 = something to deploy.
+tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
+set +e
+{ scripts/db-sync.sh --check --verbose 2>&1 1>&3 3>&- | tee "$tmp" >&2; rc=${PIPESTATUS[0]}; } 3>&1
+set -e
+case "$rc" in
+  0) log "Nothing to do: profile '$DB_PROFILE' is already in sync"; exit 0 ;;
+  3) n="$(grep -oE '[0-9]+ pending migration' "$tmp" | grep -oE '^[0-9]+' | tail -1)" ;;
+  *) die "Plan failed (db-sync exit $rc); nothing was applied" ;;
+esac
+
+# 2. Confirm
+if is_true "${REQUIRE_CONFIRM:-true}"; then
+  warn "About to apply ${n:-?} pending migration(s) to profile '$DB_PROFILE' ($DB_TARGET)"
+  confirm_typed "$DB_PROFILE"
+fi
+
+# 3. Pre-deploy schema snapshot (restore reference, not a data backup)
+backup="-"
+if is_true "${BACKUP_BEFORE_MIGRATE:-false}"; then
+  backup="snapshots/.backups/${DB_PROFILE}-$(date -u +%Y%m%dT%H%M%SZ)"
+  log "Writing pre-deploy schema snapshot to $backup"
+  scripts/schema-dump.sh --out "$backup" || die "Pre-deploy snapshot failed; nothing was applied"
+fi
+
+# 4. Apply, then 5. verify nothing is left pending
+scripts/db-sync.sh || die "Deploy to '$DB_PROFILE' failed (snapshot: $backup)"
+log "Verifying"
+scripts/db-sync.sh --check >"$tmp" 2>&1 || { cat "$tmp" >&2; die "Verification failed: '$DB_PROFILE' still has pending or failed migrations"; }
+
+printf '\nDeployed %s migration(s) to profile %s (%s). Verified in sync.\nPre-deploy snapshot: %s\n' \
+  "${n:-?}" "$DB_PROFILE" "$DB_TARGET" "$backup"

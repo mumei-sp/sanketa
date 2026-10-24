@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#MISE description="Show whether local Postgres is running and every schema's migration version"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+banner
+
+if [[ "$DB_TARGET" == local ]]; then
+  state="$(docker ps --filter "name=^/${LOCAL_CONTAINER}$" --format '{{.Status}}' 2>/dev/null || true)"
+  if [[ -z "$state" ]]; then
+    warn "local Postgres (${LOCAL_CONTAINER}): stopped. Run 'mise run dev:start'"
+    exit 0
+  fi
+  ok "local Postgres (${LOCAL_CONTAINER}): ${state}  ${C_DIM}localhost:${LOCAL_PORT}${C_R}"
+fi
+
+echo
+exec scripts/tenant-list.sh

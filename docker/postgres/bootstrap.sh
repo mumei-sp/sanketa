@@ -3,6 +3,8 @@
 # db-sync on every local sync, as the docker superuser.
 #
 # This is also the reference for what infra must provision in staging/prod.
+# Local profiles use the shared TENANT_DB_* roles (per-instance overrides are
+# for remote profiles).
 set -euo pipefail
 
 psql_su() { psql -v ON_ERROR_STOP=1 -XAtq -U postgres -d "${1:-postgres}"; }
@@ -12,6 +14,8 @@ ensure_role() {  # name password
 DO \$\$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '$1') THEN
     CREATE ROLE $1 LOGIN PASSWORD '$2';
+  ELSE
+    ALTER ROLE $1 PASSWORD '$2';  -- keep in sync with .secrets/<profile>.env
   END IF;
 END \$\$;
 SQL
@@ -34,7 +38,7 @@ ensure_role "$TENANT_DB_MIGRATOR_USER" "$TENANT_DB_MIGRATOR_PASSWORD"
 ensure_role "$TENANT_DB_APP_ROLE"      "$TENANT_DB_APP_PASSWORD"
 
 ensure_database "$GLOBAL_DB_NAME" "$GLOBAL_DB_MIGRATOR_USER" "$GLOBAL_DB_APP_ROLE"
-IFS=',' read -ra INSTANCES <<< "$TENANT_INSTANCES"
+IFS=',' read -ra INSTANCES <<< "${TENANT_INSTANCES// /}"
 for db in "${INSTANCES[@]}"; do
   ensure_database "$db" "$TENANT_DB_MIGRATOR_USER" "$TENANT_DB_APP_ROLE"
 done

@@ -1,0 +1,17 @@
+# Profile: dev (your laptop). Everything runs in local Docker.
+[env]
+DB_PROFILE = "dev"
+DB_TARGET = "local"
+DB_SSLMODE = "disable"
+LOCAL_PORT = "5433"
+
+GLOBAL_DB_HOST = "postgres"
+TENANT_DB_HOST = "postgres"
+TENANT_INSTANCES = "sanketa_db_1,sanketa_db_2"
+# Created if missing, so each local instance has a school to work with.
+SANKETA_DB_1_TENANTS = "tenant_school_001"
+SANKETA_DB_2_TENANTS = "tenant_school_002"
+
+ALLOW_SEEDS = "true"
+ALLOW_RESET = "true"
+REQUIRE_CONFIRM = "false"

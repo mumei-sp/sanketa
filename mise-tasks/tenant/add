@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#MISE description="Create (or migrate) one school's tenant schema on a tenant instance"
+#USAGE arg "[name]" help="School/tenant name, e.g. school_042 (tenant_ prefix added if missing)"
+#USAGE flag "-i --instance <name>" help="Tenant instance to create it on"
+#USAGE flag "-y --yes" help="Skip the typed confirmation on remote profiles (CI)"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+banner
+[[ "${usage_yes:-}" == "true" ]] && export ASSUME_YES=1
+
+name="${usage_name:-}"
+[[ -n "$name" ]] || ask name "Tenant name (e.g. school_042)?"
+name="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+[[ "$name" == tenant_* ]] || name="tenant_$name"
+[[ "$name" =~ $TENANT_RE ]] || die "Invalid tenant name '$name' (must match $TENANT_RE)"
+
+inst="${usage_instance:-}"
+if [[ -z "$inst" ]]; then
+  # shellcheck disable=SC2046
+  pick inst "Which tenant instance?" $(tenant_instances)
+fi
+use_instance "$inst"   # validates the instance name
+
+# Local: start + bootstrap Postgres (no-op if running) so the check below can connect.
+if [[ "$DB_TARGET" == local ]]; then
+  scripts/db-sync.sh --check >/dev/null 2>&1 || [[ $? == 3 ]] || die "Local Postgres failed to start (try: mise run dev:start)"
+fi
+
+# A school lives on exactly one instance.
+for other in $(tenant_instances); do
+  [[ "$other" == "$inst" ]] && continue
+  use_instance "$other"
+  if ! hit="$(psql_q "SELECT 1 FROM pg_namespace WHERE nspname = '$name'" 2>&1)"; then
+    # A database that doesn't exist yet can't hold the schema.
+    [[ "$hit" == *"database \"$T_DB\" does not exist"* ]] && continue
+    die "[$other] cannot check for '$name': ${hit##*FATAL:  }"
+  fi
+  [[ "$hit" == 1 ]] && die "'$name' already exists on instance '$other'; a tenant lives on exactly one instance"
+done
+
+if [[ "$DB_TARGET" == remote ]] && is_true "${REQUIRE_CONFIRM:-true}"; then
+  warn "This creates/migrates '$name' on '$inst' AND applies any pending global migrations"
+  confirm_typed "$name"
+fi
+
+scripts/db-sync.sh --tenant "$inst:$name"
+
+printf '\n%s is ready on %s.\n' "$name" "$inst"
+warn "Routing is not created by this: add the tenants / tenant_database_mapping rows in the Global DB so fabric can route to $inst/$name"

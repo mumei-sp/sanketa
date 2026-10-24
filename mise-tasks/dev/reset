@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Wipe this profile's local Postgres (volume included) and rebuild it"
+#USAGE flag "-y --yes" help="Skip the confirmation prompt (CI)"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+require_local "dev:reset"
+require_allowed ALLOW_RESET "Resetting the database"
+banner
+
+[[ "${usage_yes:-}" == "true" ]] && ASSUME_YES=1
+warn "This deletes every database in ${LOCAL_CONTAINER} (volume sanketa-db-${DB_PROFILE}_pg-data)."
+confirm_typed "$DB_PROFILE"
+
+log "Removing the local stack and its volume"
+compose down -v
+exec mise-tasks/dev/start

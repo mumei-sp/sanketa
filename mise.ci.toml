@@ -1,0 +1,16 @@
+# Profile: ci (GitHub Actions). Throwaway local Docker, no prompts.
+[env]
+DB_PROFILE = "ci"
+DB_TARGET = "local"
+DB_SSLMODE = "disable"
+LOCAL_PORT = "5434"
+
+GLOBAL_DB_HOST = "postgres"
+TENANT_DB_HOST = "postgres"
+TENANT_INSTANCES = "sanketa_db_1,sanketa_db_2"
+SANKETA_DB_1_TENANTS = "tenant_ci_a"
+SANKETA_DB_2_TENANTS = "tenant_ci_b"
+
+ALLOW_SEEDS = "true"
+ALLOW_RESET = "true"
+REQUIRE_CONFIRM = "false"

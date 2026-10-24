@@ -1,9 +1,10 @@
-name: sanketa-db
+# One isolated stack (container, network, volume) per local profile.
+name: sanketa-db-${DB_PROFILE:?run through mise}
 
 services:
   postgres:
     image: postgres:${POSTGRES_VERSION:-18}
-    container_name: sanketa-postgres
+    container_name: sanketa-postgres-${DB_PROFILE}
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -27,8 +28,9 @@ services:
     volumes:
       - pg-data:/var/lib/postgresql
       - ./docker/postgres:/opt/sanketa:ro
+    # TCP check: the socket is up during initdb's temporary server, TCP isn't.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
       interval: 3s
       timeout: 3s
       retries: 30

@@ -1,11 +1,13 @@
+# Same commands you run locally, on the `ci` profile (throwaway Docker).
 name: db-ci
 
 on:
   pull_request:
     branches: [db/schema]
-  workflow_call:
+  push:
+    branches: [db/schema]
 
-# Cancel superseded PR runs only; never a verify step inside a CD run.
+# Cancel superseded PR runs only.
 concurrency:
   group: db-ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -13,36 +15,32 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  MISE_ENV: ci
+
 jobs:
-  lint:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - name: Merged migrations are immutable
-        if: github.event_name == 'pull_request'
-        run: scripts/check-immutable.sh "origin/${{ github.base_ref }}"
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install "sqlfluff==3.*"
-      - run: sqlfluff lint migrations seeds
+      - uses: jdx/mise-action@v5
+      - name: Lint, safety rules, immutability
+        run: mise run check:all
+      # On a direct push the base is the pushed branch itself; compare with the previous tip.
+      - name: Immutability vs previous push
+        if: github.event_name == 'push'
+        run: mise run check:immutable "${{ github.event.before }}"
 
-  migrate:
-    needs: lint
+  e2e:
+    needs: checks
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Local topology (global + 2 tenant instances, from .env.example)
-        run: cp .env.example .env
-      - name: Fresh database reports pending (or nothing to do)
-        run: scripts/db-sync.sh --check || [ $? -eq 3 ]
-      - name: Apply from empty, with seeds
-        run: scripts/db-sync.sh --with-seeds
-      - name: Second run is a no-op
-        run: scripts/db-sync.sh
-      - name: Nothing pending afterwards
-        run: scripts/db-sync.sh --check
-      - name: A brand-new tenant comes up at latest
-        run: scripts/db-sync.sh --tenant sanketa_db_2:tenant_ci_new
+      - uses: jdx/mise-action@v5
+      # Every command against real Postgres: migrate, drift, tenants, guards, recovery, deploy.
+      - name: End-to-end suite
+        run: mise run test:e2e
       - if: failure()
-        run: docker logs sanketa-postgres 2>&1 | tail -200
+        run: tail -200 "$HOME/.cache/sanketa-db-e2e/e2e.log" || true

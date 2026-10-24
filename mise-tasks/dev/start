@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#MISE description="Start local Postgres, migrate (+ seeds if allowed), print connection info"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+require_local "dev:start"
+
+args=()
+is_true "${ALLOW_SEEDS:-false}" && args+=(--with-seeds)
+scripts/db-sync.sh ${args[@]+"${args[@]}"}
+
+# Connection info.
+row() { printf '  %-16s %-26s %s\n' "$@"; }
+echo
+echo "${C_B}Postgres is up: localhost:${LOCAL_PORT}${C_R}  ${C_DIM}container ${LOCAL_CONTAINER} · superuser postgres${C_R}"
+printf '%s' "$C_DIM"; row Database Migrator "App role"; printf '%s' "$C_R"
+row "$GLOBAL_DB_NAME" "$GLOBAL_DB_MIGRATOR_USER" "$GLOBAL_DB_APP_ROLE"
+for inst in $(tenant_instances); do
+  use_instance "$inst"; row "$T_DB" "$T_USER" "$T_APP_ROLE"
+done
+echo "  ${C_DIM}passwords in .secrets/${DB_PROFILE}.env${C_R}"
+echo
+echo "${C_DIM}Next: ${C_R}mise run${C_DIM} for the menu · ${C_R}mise run dev:psql${C_DIM} for a SQL shell${C_R}"

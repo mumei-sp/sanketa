@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="End-to-end test of every task on a throwaway copy + Docker stack (profile e2e, ~4 min)"
+#USAGE flag "--keep" help="Keep the working copy and Docker stack afterwards (E2E_KEEP=1)"
+set -euo pipefail
+[[ "${usage_keep:-}" == "true" ]] && export E2E_KEEP=1
+exec tests/e2e/run.sh

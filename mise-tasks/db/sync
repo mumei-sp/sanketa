@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Apply pending migrations to the active profile (global, then every tenant)"
+#USAGE flag "-i --instance <name>" help="Only this tenant instance (repeat by running again)"
+#USAGE flag "-t --tenant <instance:schema>" help="Only this tenant schema, created if new"
+#USAGE flag "--seeds" help="Also load seed data (needs ALLOW_SEEDS)"
+set -euo pipefail
+source scripts/lib.sh
+load_config
+# Remote profiles go through the guarded deploy flow instead.
+[[ "$DB_TARGET" == local ]] || die "Profile '$DB_PROFILE' is remote: use 'mise run deploy:apply'"
+args=()
+[[ -n "${usage_instance:-}" ]] && args+=(--instance "$usage_instance")
+[[ -n "${usage_tenant:-}" ]] && args+=(--tenant "$usage_tenant")
+[[ "${usage_seeds:-}" == "true" ]] && args+=(--with-seeds)
+exec scripts/db-sync.sh ${args[@]+"${args[@]}"}

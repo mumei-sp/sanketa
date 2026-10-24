@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Schema-only, normalised dump to snapshots/<profile>/ for review"
+#USAGE flag "-o --out <dir>" help="Write here instead of snapshots/<profile>/"
+set -euo pipefail
+args=()
+[[ -n "${usage_out:-}" ]] && args+=(--out "$usage_out")
+exec scripts/schema-dump.sh ${args[@]+"${args[@]}"}

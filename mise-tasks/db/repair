@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="After fixing a failed migration: clear Flyway's failed entry for one schema"
+#USAGE arg "<target>" help="'global', or <instance>:<schema> e.g. sanketa_db_1:tenant_school_001"
+#USAGE flag "-y --yes" help="Skip the typed confirmation on remote profiles (CI)"
+set -euo pipefail
+source scripts/lib.sh
+[[ "${usage_yes:-}" == "true" ]] && export ASSUME_YES=1
+if [[ "$usage_target" == global ]]; then
+  scripts/flyway.sh global repair
+else
+  [[ "$usage_target" == *:* ]] || die "Target must be 'global' or <instance>:<schema>"
+  scripts/flyway.sh tenant "${usage_target%%:*}" "${usage_target#*:}" repair
+fi
+log "Repaired. Re-run: mise -E ${DB_PROFILE} run db:sync"

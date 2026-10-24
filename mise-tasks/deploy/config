@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+#MISE description="Show the fully resolved config for the active profile (secrets masked)"
+set -euo pipefail
+source scripts/lib.sh
+[[ -n "${DB_PROFILE:-}" ]] || die "No profile loaded. Run through mise: 'mise -E <profile> run deploy:config'"
+
+PROBLEMS=()
+problem() { PROBLEMS+=("$1"); }
+
+# Load config without dying: secrets or required keys may be missing.
+if err="$( (load_config) 2>&1 >/dev/null)"; then
+  load_config >/dev/null 2>&1
+else
+  # Missing passwords are reported per key below.
+  [[ "$err" == *PASSWORD* ]] || problem "${err##*\[0m }"
+  # Best effort: the same defaults load_config applies, plus whatever secrets load.
+  config_defaults
+  if (load_secrets) >/dev/null 2>&1; then load_secrets >/dev/null 2>&1; fi
+fi
+
+secret_key() { [[ "$1" != SECRETS_SOURCE && "$1" =~ PASSWORD|SECRET|TOKEN ]]; }
+# show KEY [VALUE]   (value defaults to $KEY; secrets show set/MISSING only)
+show() {
+  local k="$1" v
+  if [[ $# -ge 2 ]]; then v="$2"; else v="${!k:-}"; fi
+  if secret_key "$k"; then
+    [[ -n "$v" ]] && v="**** (set)" || v="MISSING"
+  fi
+  printf '  %-34s %s\n' "$k" "${v:-<unset>}"
+}
+section() { printf '\n\033[1m%s\033[0m\n' "$1"; }
+
+section "Profile & safety"
+for k in DB_PROFILE DB_TARGET DB_SSLMODE LOCK_TIMEOUT POSTGRES_VERSION FLYWAY_IMAGE \
+         ALLOW_SEEDS ALLOW_RESET REQUIRE_CONFIRM BACKUP_BEFORE_MIGRATE; do show "$k"; done
+[[ "$DB_TARGET" == local ]] && { show LOCAL_PORT; show POSTGRES_PASSWORD; }
+
+section "Global DB"
+for k in GLOBAL_DB_HOST GLOBAL_DB_PORT GLOBAL_DB_NAME GLOBAL_SCHEMA; do show "$k"; done
+show GLOBAL_DB_SSLMODE "${GLOBAL_DB_SSLMODE:-${DB_SSLMODE}}"
+for k in GLOBAL_DB_MIGRATOR_USER GLOBAL_DB_MIGRATOR_PASSWORD GLOBAL_DB_APP_ROLE; do show "$k"; done
+[[ "$DB_TARGET" == local ]] && show GLOBAL_DB_APP_PASSWORD
+[[ -z "${GLOBAL_DB_MIGRATOR_PASSWORD:-}" ]] && problem "GLOBAL_DB_MIGRATOR_PASSWORD is missing"
+
+section "Tenant instances"
+show TENANT_INSTANCES
+[[ "$DB_TARGET" == local ]] && { show TENANT_DB_MIGRATOR_PASSWORD; show TENANT_DB_APP_PASSWORD; }
+for inst in $(tenant_instances); do
+  p="$(upper "$inst")"; seeds="${p}_TENANTS"
+  # use_instance dies on a missing password; a placeholder lets us still show
+  # the rest of the resolved settings, and report the password as MISSING.
+  if out="$(
+      a="${p}_MIGRATOR_PASSWORD"
+      [[ -n "${!a:-}${TENANT_DB_MIGRATOR_PASSWORD:-}" ]] || TENANT_DB_MIGRATOR_PASSWORD=__MISSING__
+      use_instance "$inst" 2>&1 && printf '%s|%s|%s|%s|%s|%s|%s' "$T_HOST" "$T_PORT" "$T_DB" "$T_SSL" "$T_USER" "$T_APP_ROLE" "$T_PASS"
+    )"; then
+    IFS='|' read -r h po db ssl u role pw <<<"$out"
+    [[ "$pw" == __MISSING__ ]] && { pw=""; problem "$inst: migrator password is missing (${p}_MIGRATOR_PASSWORD or TENANT_DB_MIGRATOR_PASSWORD)"; }
+    printf '  %s\n' "$inst"
+    show "  host" "$h"; show "  port" "$po"; show "  database" "$db"; show "  sslmode" "$ssl"
+    show "  migrator user" "$u"; show "  MIGRATOR_PASSWORD" "$pw"; show "  app role" "$role"
+    [[ -n "${!seeds:-}" ]] && show "  ${seeds}" "${!seeds}"
+  else
+    printf '  %s: %s\n' "$inst" "${out##*\[0m }"; problem "$inst: ${out##*\[0m }"
+  fi
+done
+
+section "Secrets source"
+show SECRETS_SOURCE "${SECRETS_SOURCE:-file}"
+if [[ "${SECRETS_SOURCE:-file}" == file ]]; then
+  f=".secrets/${DB_PROFILE}.env"
+  if [[ -f "$f" ]]; then
+    show "file" "$f"
+    # Key names only, never values.
+    for k in $(sed -nE 's/^([A-Z_][A-Z0-9_]*)=.*/\1/p' "$f"); do show "$k"; done
+  else
+    show "file" "$f (MISSING)"
+  fi
+fi
+
+echo
+if [[ ${#PROBLEMS[@]} -gt 0 ]]; then
+  for p in "${PROBLEMS[@]}"; do warn "$p"; done
+  warn "Config is incomplete for profile '$DB_PROFILE'"
+else
+  log "Config for profile '$DB_PROFILE' is complete"
+fi

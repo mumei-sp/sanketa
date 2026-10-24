@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Schema diff: tenant drift check, or live vs committed snapshots (--against)"
+#USAGE flag "--against <profile>" help="Compare live global + tenant with snapshots/<profile>/"
+set -euo pipefail
+args=()
+[[ -n "${usage_against:-}" ]] && args+=(--against "$usage_against")
+exec scripts/schema-diff.sh ${args[@]+"${args[@]}"}

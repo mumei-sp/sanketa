@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="List pending migrations everywhere, changing nothing (exit 3 if any)"
+set -euo pipefail
+exec scripts/db-sync.sh --check --verbose
