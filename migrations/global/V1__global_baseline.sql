@@ -453,3 +453,53 @@ COMMENT ON COLUMN database_instances.name IS 'Instance name, e.g. sanketa_db_1; 
 COMMENT ON COLUMN database_instances.ssl_mode IS 'libpq sslmode: disable (local dev only) | require | verify-ca | verify-full';
 COMMENT ON COLUMN database_instances.status IS 'open (takes new schools) | closed (no new schools) | retired';
 COMMENT ON COLUMN database_instances.max_tenants IS 'Optional capacity limit when placing new schools';
+
+-- ---- tenant_placements ---------------------------------------------------------
+-- Where each school's data lives: which instance and which schema. Every request
+-- for a school routes through the one active placement. A move (rebalancing, or
+-- to another country's server) prepares a provisioning placement while the active
+-- one keeps serving, then switches; the old one is retired, kept as history.
+CREATE TABLE tenant_placements (
+    id UUID NOT NULL DEFAULT uuidv7() CONSTRAINT pk_tenant_placements PRIMARY KEY,
+    tenant_id UUID NOT NULL CONSTRAINT fk_tenant_placements__tenants REFERENCES tenants (id),
+    database_instance_id UUID NOT NULL CONSTRAINT fk_tenant_placements__database_instances REFERENCES database_instances (id),
+    -- Derived from the school code at onboarding (dps-rkpuram -> tenant_dps_rkpuram)
+    -- but stored, so routing never depends on recomputing it.
+    schema_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'provisioning',
+    activated_at TIMESTAMPTZ,
+    retired_at TIMESTAMPTZ,
+
+    -- Audit: who (users.id) and when. No deleted_at: placement history stays.
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by UUID,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_by UUID,
+    version INTEGER NOT NULL DEFAULT 0,
+
+    -- Same rule the sanketa-db tooling uses to find school schemas.
+    CONSTRAINT ck_tenant_placements__schema_name CHECK (schema_name ~ '^tenant_[a-z0-9_]{1,55}$'),
+    -- provisioning: being created/copied, never routed to | active: live |
+    -- retired: old location after a move (or an abandoned move).
+    CONSTRAINT ck_tenant_placements__status CHECK (status IN ('provisioning', 'active', 'retired')),
+    CONSTRAINT ck_tenant_placements__active_has_activated_at CHECK (status <> 'active' OR activated_at IS NOT NULL),
+    CONSTRAINT ck_tenant_placements__provisioning_not_activated CHECK (status <> 'provisioning' OR activated_at IS NULL),
+    CONSTRAINT ck_tenant_placements__retired_at CHECK ((status = 'retired') = (retired_at IS NOT NULL)),
+    CONSTRAINT ck_tenant_placements__retired_after_activated CHECK (retired_at >= activated_at)
+);
+
+-- Exactly one place to route a school to.
+CREATE UNIQUE INDEX uq_tenant_placements__active ON tenant_placements (tenant_id) WHERE status = 'active';
+-- One move at a time.
+CREATE UNIQUE INDEX uq_tenant_placements__provisioning
+ON tenant_placements (tenant_id) WHERE status = 'provisioning';
+-- Two schools never share a schema; also serves "schools on this instance".
+CREATE UNIQUE INDEX uq_tenant_placements__instance_schema
+ON tenant_placements (database_instance_id, schema_name) WHERE status <> 'retired';
+
+CREATE TRIGGER tg_tenant_placements__updated_at BEFORE UPDATE ON tenant_placements
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+COMMENT ON TABLE tenant_placements IS 'Which instance and schema each school lives on; one active placement per school';
+COMMENT ON COLUMN tenant_placements.schema_name IS 'School schema, e.g. tenant_dps_rkpuram (tenant_ + code with - as _)';
+COMMENT ON COLUMN tenant_placements.status IS 'provisioning (never routed to) | active (live) | retired (after a move)';
