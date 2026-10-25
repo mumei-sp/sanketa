@@ -397,3 +397,59 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 COMMENT ON TABLE tenant_memberships IS 'Which schools each person belongs to; roles live in the school schema';
 COMMENT ON COLUMN tenant_memberships.status IS 'active | suspended (blocked by the school) | ended (left)';
 COMMENT ON COLUMN tenant_memberships.ended_at IS 'When the person left the school; set exactly when status = ended';
+
+-- ---- database_instances --------------------------------------------------------
+-- Tenant database servers (sanketa_db_1, ...); every school lives on one. fabric
+-- reads this to connect; onboarding uses it to place a new school. Live health is
+-- monitoring's job (not stored here), and tenant counts come from
+-- tenant_database_mapping (no stored counter to drift).
+CREATE TABLE database_instances (
+    id UUID NOT NULL DEFAULT uuidv7() CONSTRAINT pk_database_instances PRIMARY KEY,
+    -- Same names as the sanketa-db profiles' TENANT_INSTANCES.
+    name TEXT NOT NULL,
+    host TEXT NOT NULL,
+    port INTEGER NOT NULL DEFAULT 5432,
+    database_name TEXT NOT NULL,
+    -- libpq sslmode; 'disable' only for local development instances.
+    ssl_mode TEXT NOT NULL DEFAULT 'verify-full',
+    -- Where the server is: schools are placed on an instance in their own country.
+    country_code TEXT NOT NULL DEFAULT 'IN',
+    status TEXT NOT NULL DEFAULT 'open',
+    -- Optional capacity limit used when placing new schools.
+    max_tenants INTEGER,
+
+    -- Audit: who (users.id) and when. No deleted_at: an instance is retired, never
+    -- deleted, so the history of where schools lived stays explainable.
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by UUID,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_by UUID,
+    version INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT uq_database_instances__name UNIQUE (name),
+    -- The same physical database can't be registered twice.
+    CONSTRAINT uq_database_instances__location UNIQUE (host, port, database_name),
+    -- Postgres identifier rules (lower-case, starts with a letter, max 63).
+    CONSTRAINT ck_database_instances__name CHECK (name ~ '^[a-z][a-z0-9_]{2,62}$'),
+    CONSTRAINT ck_database_instances__database_name CHECK (database_name ~ '^[a-z][a-z0-9_]{0,62}$'),
+    -- Hostname or IP address, no spaces or scheme.
+    CONSTRAINT ck_database_instances__host CHECK (
+        char_length(host) BETWEEN 1 AND 253 AND host ~ '^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$'
+    ),
+    CONSTRAINT ck_database_instances__port CHECK (port BETWEEN 1 AND 65535),
+    CONSTRAINT ck_database_instances__ssl_mode CHECK (ssl_mode IN ('disable', 'require', 'verify-ca', 'verify-full')),
+    CONSTRAINT ck_database_instances__country_code CHECK (country_code ~ '^[A-Z]{2}$'),
+    -- open: takes new schools | closed: serves its schools, takes no new ones |
+    -- retired: empty, out of use.
+    CONSTRAINT ck_database_instances__status CHECK (status IN ('open', 'closed', 'retired')),
+    CONSTRAINT ck_database_instances__max_tenants CHECK (max_tenants > 0)
+);
+
+CREATE TRIGGER tg_database_instances__updated_at BEFORE UPDATE ON database_instances
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+COMMENT ON TABLE database_instances IS 'Tenant database servers; where each school''s schema lives';
+COMMENT ON COLUMN database_instances.name IS 'Instance name, e.g. sanketa_db_1; matches sanketa-db TENANT_INSTANCES';
+COMMENT ON COLUMN database_instances.ssl_mode IS 'libpq sslmode: disable (local dev only) | require | verify-ca | verify-full';
+COMMENT ON COLUMN database_instances.status IS 'open (takes new schools) | closed (no new schools) | retired';
+COMMENT ON COLUMN database_instances.max_tenants IS 'Optional capacity limit when placing new schools';
