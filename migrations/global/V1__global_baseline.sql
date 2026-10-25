@@ -260,3 +260,47 @@ COMMENT ON COLUMN user_identity_documents.document_type IS 'aadhaar | pan | driv
 COMMENT ON COLUMN user_identity_documents.number_encrypted IS 'Vault Transit ciphertext; decrypt only for official exports';
 COMMENT ON COLUMN user_identity_documents.number_hash IS 'HMAC-SHA256 hex of the normalised number; finds duplicates';
 COMMENT ON COLUMN user_identity_documents.number_last4 IS 'Last 4 characters, for masked display';
+
+-- ---- user_guardians ------------------------------------------------------------
+-- Family links between people (parent -> child), kept globally because a family
+-- spans schools: siblings at different schools, one parent login showing every
+-- child, and DPDP consent for a minor needing their legal guardian. School-specific
+-- rules (who may pick up, who gets fee receipts, contact order) live in each school.
+CREATE TABLE user_guardians (
+    id UUID NOT NULL DEFAULT uuidv7() CONSTRAINT pk_user_guardians PRIMARY KEY,
+    guardian_user_id UUID NOT NULL CONSTRAINT fk_user_guardians__guardian_users REFERENCES users (id),
+    ward_user_id UUID NOT NULL CONSTRAINT fk_user_guardians__ward_users REFERENCES users (id),
+    -- What the guardian is to the ward: 'mother' = guardian is the ward's mother.
+    relationship TEXT NOT NULL,
+    -- Can give consent for a minor (DPDP); true for parents, not e.g. a pickup uncle.
+    is_legal_guardian BOOLEAN NOT NULL DEFAULT FALSE,
+
+    -- Audit: who (users.id) and when. An ended relationship (e.g. custody change)
+    -- is soft-deleted, so history stays.
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by UUID,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_by UUID,
+    deleted_at TIMESTAMPTZ,
+    version INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT ck_user_guardians__not_self CHECK (guardian_user_id <> ward_user_id),
+    CONSTRAINT ck_user_guardians__relationship CHECK (
+        relationship IN ('mother', 'father', 'grandparent', 'sibling', 'relative', 'legal_guardian', 'other')
+    ),
+    -- A court-appointed / legal guardian always has consent rights.
+    CONSTRAINT ck_user_guardians__legal_guardian_flag CHECK (relationship <> 'legal_guardian' OR is_legal_guardian)
+);
+
+-- One live link per guardian-child pair; also serves "this parent's children".
+CREATE UNIQUE INDEX uq_user_guardians__guardian_ward
+ON user_guardians (guardian_user_id, ward_user_id) WHERE deleted_at IS NULL;
+-- "This child's guardians".
+CREATE INDEX ix_user_guardians__ward_user_id ON user_guardians (ward_user_id) WHERE deleted_at IS NULL;
+
+CREATE TRIGGER tg_user_guardians__updated_at BEFORE UPDATE ON user_guardians
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+COMMENT ON TABLE user_guardians IS 'Family links (guardian -> ward) across schools; basis for parental consent';
+COMMENT ON COLUMN user_guardians.relationship IS 'What the guardian is to the ward (mother = guardian is the mother)';
+COMMENT ON COLUMN user_guardians.is_legal_guardian IS 'May consent on behalf of a minor (DPDP Act)';
