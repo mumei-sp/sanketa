@@ -1,7 +1,9 @@
 [sqlfluff]
 dialect = postgres
 templater = placeholder
-max_line_length = 130
+max_line_length = 140
+# Never skip big files (the default skips anything over 20 KB, silently).
+large_file_skip_byte_limit = 0
 # ST06: select-column order is noise for DDL.
 exclude_rules = ST06
 
@@ -28,5 +30,5 @@ aliasing = explicit
 [sqlfluff:rules:convention.terminator]
 require_final_semicolon = True
 [sqlfluff:rules:references.keywords]
-# Non-reserved in Postgres; required by the conventions (JPA @Version).
-ignore_words = version
+# Non-reserved in Postgres, so valid column names: version (JPA @Version), name, host.
+ignore_words = version,name,host

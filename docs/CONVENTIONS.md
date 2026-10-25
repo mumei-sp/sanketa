@@ -93,7 +93,7 @@ COMMENT ON TABLE students IS 'Student enrolled in this school';
 
 ## Migrations
 
-- **Before the first release** each scope is one baseline file (`V1__global_baseline.sql`, `V1__tenant_baseline.sql`), edited in place. After the release tag (`db-release-N`) it is frozen and changes are new files.
+- **Before the first release** each scope is a set of baseline files split by area (`V1_1__functions.sql`, `V1_2__people.sql`, …), edited in place. Files run in version order, so a table may only reference tables in its own or an earlier file. After the release tag (`db-release-N`) they are frozen and changes are new files.
 
 - Postgres DDL is **transactional**: each file commits or rolls back as a whole. Group a feature's DDL in one file.
 - Index on an existing, populated table → `CREATE INDEX CONCURRENTLY`, alone in its own file, with a sibling `.sql.conf` containing `executeInTransaction=false`. Precede it with `DROP INDEX CONCURRENTLY IF EXISTS` so a retry after failure is clean.
