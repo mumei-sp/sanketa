@@ -33,6 +33,7 @@ Identifiers are lower-case and never quoted. Max 63 chars.
   - UUIDv7 is time-ordered, so it indexes well, and unguessable, so it's safe to expose. `uuidv7()` is built into PG 18; the app may also generate one before inserting (e.g. offline sync).
   - Measured on 2M rows vs `bigint`: keys/indexes ~20–30% larger, big joins ~5% slower, everyday joins no difference. Accepted for one ID that can't leak and never clashes across databases.
   - Humans (support, logs) use readable identifiers such as `users.login_id`, not UUIDs.
+- **Primary and foreign keys are declared inline on their column**, always named (`CONSTRAINT pk_<table> PRIMARY KEY`, `CONSTRAINT fk_<table>__<ref> REFERENCES …`). Checks and multi-column rules go at the bottom of the table.
 - **Postgres does not index FK columns automatically.** Every FK gets an explicit index unless it's the leading column of another index.
 - FK actions default to `ON DELETE RESTRICT`. Use `CASCADE` only for true ownership (e.g. invoice line items) and say so in the header.
 - **No cross-database or cross-schema references.** The Global DB and tenant instances are separate databases (often separate servers), so there are no FKs, joins or views across them. Tenant tables reference global rows by id only (e.g. `global_user_id`), and `fabric` enforces integrity.
@@ -73,18 +74,17 @@ Every column is `NOT NULL` unless null means something. Add `COMMENT ON` for any
 
 ```sql
 CREATE TABLE students (
-    id            UUID        NOT NULL DEFAULT uuidv7(),
-    class_section_id UUID     NOT NULL,
-    admission_no  TEXT        NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    created_by    UUID,
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_by    UUID,
-    deleted_at    TIMESTAMPTZ,
-    version       INTEGER     NOT NULL DEFAULT 0,
-    CONSTRAINT pk_students PRIMARY KEY (id),
-    CONSTRAINT fk_students__class_sections FOREIGN KEY (class_section_id) REFERENCES class_sections (id),
-    CONSTRAINT ck_students__admission_no_len CHECK (char_length(admission_no) <= 32)
+    id UUID NOT NULL DEFAULT uuidv7() CONSTRAINT pk_students PRIMARY KEY,
+    class_section_id UUID NOT NULL CONSTRAINT fk_students__class_sections REFERENCES class_sections (id),
+    admission_no TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by UUID,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_by UUID,
+    deleted_at TIMESTAMPTZ,
+    version INTEGER NOT NULL DEFAULT 0,
+    -- Checks and multi-column rules at the bottom; keys inline on their column.
+    CONSTRAINT ck_students__admission_no_length CHECK (char_length(admission_no) BETWEEN 1 AND 32)
 );
 CREATE INDEX ix_students__class_section_id ON students (class_section_id);
 CREATE UNIQUE INDEX uq_students__admission_no ON students (admission_no) WHERE deleted_at IS NULL;

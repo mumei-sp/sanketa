@@ -1,7 +1,7 @@
 [sqlfluff]
 dialect = postgres
 templater = placeholder
-max_line_length = 120
+max_line_length = 130
 # ST06: select-column order is noise for DDL.
 exclude_rules = ST06
 
