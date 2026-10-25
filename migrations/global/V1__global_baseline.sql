@@ -304,3 +304,57 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 COMMENT ON TABLE user_guardians IS 'Family links (guardian -> ward) across schools; basis for parental consent';
 COMMENT ON COLUMN user_guardians.relationship IS 'What the guardian is to the ward (mother = guardian is the mother)';
 COMMENT ON COLUMN user_guardians.is_legal_guardian IS 'May consent on behalf of a minor (DPDP Act)';
+
+-- ---- tenants -------------------------------------------------------------------
+-- One school campus (each branch of a chain is its own tenant, as each has its own
+-- UDISE+ code, admissions and staff). Only what's needed to identify, route and
+-- control a school lives here; its details (address, board, logo, settings) live
+-- in the school's own schema. Chains can later be grouped via an organization.
+CREATE TABLE tenants (
+    id UUID NOT NULL DEFAULT uuidv7() CONSTRAINT pk_tenants PRIMARY KEY,
+    -- Readable, permanent slug for URLs, logs and support: dps-rkpuram.
+    code TEXT NOT NULL,
+    name TEXT NOT NULL,
+    -- Government school code (11 digits); optional for pre-schools / new schools.
+    udise_code TEXT,
+    status TEXT NOT NULL DEFAULT 'onboarding',
+    -- Where the school is: decides data location (e.g. Gulf CBSE schools) and the
+    -- local time for attendance cut-offs and scheduled messages.
+    country_code TEXT NOT NULL DEFAULT 'IN',
+    timezone TEXT NOT NULL DEFAULT 'Asia/Kolkata',
+
+    -- Audit: who (users.id) and when. No deleted_at: a school is closed, never
+    -- deleted (its records have legal retention periods).
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by UUID,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_by UUID,
+    version INTEGER NOT NULL DEFAULT 0,
+
+    -- Across closed schools too: a code is never handed to another school.
+    CONSTRAINT uq_tenants__code UNIQUE (code),
+    CONSTRAINT uq_tenants__udise_code UNIQUE (udise_code),
+    CONSTRAINT ck_tenants__code_length CHECK (char_length(code) BETWEEN 3 AND 30),
+    -- Lower-case letters and digits, '-' only between them: no 'dps-', 'dps--rk'.
+    CONSTRAINT ck_tenants__code_format CHECK (code ~ '^[a-z][a-z0-9]*(-[a-z0-9]+)*$'),
+    CONSTRAINT ck_tenants__name_length CHECK (char_length(name) BETWEEN 3 AND 200),
+    CONSTRAINT ck_tenants__name_trimmed CHECK (name = btrim(name)),
+    CONSTRAINT ck_tenants__udise_code CHECK (udise_code ~ '^[0-9]{11}$'),
+    -- UDISE+ is India's school register; schools abroad have no such code.
+    CONSTRAINT ck_tenants__udise_only_in CHECK (udise_code IS NULL OR country_code = 'IN'),
+    -- onboarding: being set up, not usable | active | suspended: login blocked
+    -- (e.g. unpaid) | closed: offboarded, data retained.
+    CONSTRAINT ck_tenants__status CHECK (status IN ('onboarding', 'active', 'suspended', 'closed')),
+    CONSTRAINT ck_tenants__country_code CHECK (country_code ~ '^[A-Z]{2}$'),
+    -- IANA name shape (Asia/Kolkata); the app checks it against the real zone list.
+    CONSTRAINT ck_tenants__timezone CHECK (timezone ~ '^[A-Za-z]+(/[A-Za-z0-9_+-]+)+$')
+);
+
+CREATE TRIGGER tg_tenants__updated_at BEFORE UPDATE ON tenants
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+COMMENT ON TABLE tenants IS 'One school campus: identity, routing and lifecycle only; details live in its schema';
+COMMENT ON COLUMN tenants.code IS 'Permanent readable slug, e.g. dps-rkpuram; used in URLs and logs, never reused';
+COMMENT ON COLUMN tenants.udise_code IS 'UDISE+ government school code (11 digits), optional';
+COMMENT ON COLUMN tenants.status IS 'onboarding | active | suspended | closed';
+COMMENT ON COLUMN tenants.timezone IS 'IANA time zone for attendance cut-offs and scheduled messages';
