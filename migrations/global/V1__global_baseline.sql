@@ -358,3 +358,42 @@ COMMENT ON COLUMN tenants.code IS 'Permanent readable slug, e.g. dps-rkpuram; us
 COMMENT ON COLUMN tenants.udise_code IS 'UDISE+ government school code (11 digits), optional';
 COMMENT ON COLUMN tenants.status IS 'onboarding | active | suspended | closed';
 COMMENT ON COLUMN tenants.timezone IS 'IANA time zone for attendance cut-offs and scheduled messages';
+
+-- ---- tenant_memberships --------------------------------------------------------
+-- Which schools a person belongs to: the first lookup after login. A student,
+-- parent, teacher or admin each has one per school. What they are at that school
+-- (student, teacher, principal, ...) lives in the school's own schema, since one
+-- person can be a teacher at one school and a parent at another.
+CREATE TABLE tenant_memberships (
+    id UUID NOT NULL DEFAULT uuidv7() CONSTRAINT pk_tenant_memberships PRIMARY KEY,
+    user_id UUID NOT NULL CONSTRAINT fk_tenant_memberships__users REFERENCES users (id),
+    tenant_id UUID NOT NULL CONSTRAINT fk_tenant_memberships__tenants REFERENCES tenants (id),
+    status TEXT NOT NULL DEFAULT 'active',
+    -- When they left (graduated, transferred, resigned); set with status = ended.
+    ended_at TIMESTAMPTZ,
+
+    -- Audit: who (users.id) and when. Ended memberships stay as history; rejoining
+    -- creates a new row.
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by UUID,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_by UUID,
+    version INTEGER NOT NULL DEFAULT 0,
+
+    -- active | suspended: blocked by the school | ended: left the school.
+    CONSTRAINT ck_tenant_memberships__status CHECK (status IN ('active', 'suspended', 'ended')),
+    CONSTRAINT ck_tenant_memberships__ended_at CHECK ((status = 'ended') = (ended_at IS NOT NULL))
+);
+
+-- One current membership per person per school; also serves "my schools" at login.
+CREATE UNIQUE INDEX uq_tenant_memberships__user_tenant
+ON tenant_memberships (user_id, tenant_id) WHERE status <> 'ended';
+-- "This school's members".
+CREATE INDEX ix_tenant_memberships__tenant_id ON tenant_memberships (tenant_id) WHERE status <> 'ended';
+
+CREATE TRIGGER tg_tenant_memberships__updated_at BEFORE UPDATE ON tenant_memberships
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+COMMENT ON TABLE tenant_memberships IS 'Which schools each person belongs to; roles live in the school schema';
+COMMENT ON COLUMN tenant_memberships.status IS 'active | suspended (blocked by the school) | ended (left)';
+COMMENT ON COLUMN tenant_memberships.ended_at IS 'When the person left the school; set exactly when status = ended';
